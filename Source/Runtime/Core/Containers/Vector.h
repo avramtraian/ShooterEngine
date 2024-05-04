@@ -8,6 +8,8 @@
 #include "Core/Containers/Span.h"
 #include "Core/Memory/MemoryOperations.h"
 
+#include <initializer_list>
+
 namespace SE {
 
 //
@@ -85,6 +87,14 @@ public:
         other.m_count = 0;
     }
 
+    ALWAYS_INLINE Vector(std::initializer_list<T> init_list)
+        : m_capacity(init_list.size())
+        , m_count(init_list.size())
+    {
+        m_elements = allocate_memory(m_capacity);
+        copy_elements(m_elements, init_list.begin(), m_count);
+    }
+
     ALWAYS_INLINE Vector& operator=(const Vector& other)
     {
         clear();
@@ -106,6 +116,15 @@ public:
         other.m_capacity = 0;
         other.m_count = 0;
 
+        return *this;
+    }
+
+    ALWAYS_INLINE Vector& operator=(std::initializer_list<T> init_list)
+    {
+        clear();
+        re_allocate_if_required(init_list.size());
+        m_count = init_list.size();
+        copy_elements(m_elements, init_list.begin(), m_count);
         return *this;
     }
 
