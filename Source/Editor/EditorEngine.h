@@ -7,11 +7,9 @@
 
 #include "Engine/Engine.h"
 
-namespace SE
-{
+namespace SE {
 
-class EditorEngine final : public Engine
-{
+class EditorEngine final : public Engine {
 public:
     EditorEngine() = default;
     virtual ~EditorEngine() override = default;

@@ -8,8 +8,7 @@
 #include "Core/Containers/Span.h"
 #include "Core/EngineAPI.h"
 
-namespace SE
-{
+namespace SE {
 
 SHOOTER_API void copy_memory(void* destination, const void* source, usize byte_count);
 

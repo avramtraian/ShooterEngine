@@ -18,10 +18,10 @@ namespace SE {
 template<typename T>
 class Vector {
 public:
-    using Iterator              = T*;
-    using ConstIterator         = const T*;
-    using ReverseIterator       = T*;
-    using ReverseConstIterator  = const T*;
+    using Iterator = T*;
+    using ConstIterator = const T*;
+    using ReverseIterator = T*;
+    using ReverseConstIterator = const T*;
 
 public:
     NODISCARD ALWAYS_INLINE static Vector create_with_initial_capacity(usize initial_capacity)
@@ -108,10 +108,7 @@ public:
         return *this;
     }
 
-    ALWAYS_INLINE ~Vector()
-    {
-        clear_and_shrink();
-    }
+    ALWAYS_INLINE ~Vector() { clear_and_shrink(); }
 
 public:
     NODISCARD ALWAYS_INLINE T* elements() { return m_elements; }
@@ -224,9 +221,8 @@ public:
     {
         SE_ASSERT(m_count >= count);
         const usize remove_offset = m_count - count;
-        for (usize index = 0; index < count; ++index) {
+        for (usize index = 0; index < count; ++index)
             m_elements[remove_offset + index].~T();
-        }
         m_count -= count;
     }
 
@@ -245,9 +241,8 @@ public:
 public:
     ALWAYS_INLINE void clear()
     {
-        for (usize index = 0; index < m_count; ++index) {
+        for (usize index = 0; index < m_count; ++index)
             m_elements[index].~T();
-        }
         m_count = 0;
     }
 
@@ -287,8 +282,7 @@ public:
     //
     ALWAYS_INLINE void set_fixed_capacity(usize fixed_capacity)
     {
-        if (fixed_capacity == m_capacity)
-        {
+        if (fixed_capacity == m_capacity) {
             // No action needed. Calling re_allocate_to_fixed() in this case would actually trigger an assertion.
             return;
         }
@@ -335,8 +329,7 @@ private:
 
     ALWAYS_INLINE static void move_elements(T* destination, T* source, usize count)
     {
-        for (usize index = 0; index < count; ++index)
-        {
+        for (usize index = 0; index < count; ++index) {
             new (destination + index) T(move(source[index]));
             source[index].~T();
         }
@@ -382,8 +375,7 @@ private:
 
     ALWAYS_INLINE void re_allocate_if_required(usize required_capacity)
     {
-        if (required_capacity > m_capacity)
-        {
+        if (required_capacity > m_capacity) {
             const usize new_capacity = get_next_capacity(required_capacity);
             re_allocate_to_fixed(new_capacity);
         }

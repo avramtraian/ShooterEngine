@@ -5,8 +5,7 @@
 
 #include "EditorEngine.h"
 
-namespace SE
-{
+namespace SE {
 
 EditorEngine* g_editor_engine = nullptr;
 

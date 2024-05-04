@@ -6,26 +6,23 @@
 #include "Core/Containers/Span.h"
 #include "EditorEngine.h"
 
-namespace SE
-{
+namespace SE {
 
 //
 // The non-native entry point of the editor. It is directly invoked by the native entry point
 // and represents the entire lifetime of the application.
-// 
+//
 // Unlike the 'main' function, the first command line argument passed to this function is
 // not the path of the executable.
 //
-static int32 guarded_main(Span<char*> command_line_arguments)
+static i32 guarded_main(Span<char*> command_line_arguments)
 {
-    if (!Engine::instantiate<EditorEngine>())
-    {
+    if (!Engine::instantiate<EditorEngine>()) {
         // TODO: Log error message.
         return 1;
     }
 
-    if (!g_engine->initialize())
-    {
+    if (!g_engine->initialize()) {
         // TODO: Log error message.
         return 1;
     }
@@ -43,6 +40,6 @@ static int32 guarded_main(Span<char*> command_line_arguments)
 int main(int argument_count, char** arguments)
 {
     SE::Span<char*> command_line_arguments(arguments + 1, argument_count - 1);
-    SE::int32 return_code = SE::guarded_main(command_line_arguments);
+    SE::i32 return_code = SE::guarded_main(command_line_arguments);
     return static_cast<int>(return_code);
 }

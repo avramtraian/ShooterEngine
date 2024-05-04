@@ -8,18 +8,16 @@
 #include "Core/CoreTypes.h"
 #include "Core/EngineAPI.h"
 
-namespace SE
-{
+namespace SE {
 
-class Engine
-{
+class Engine {
     SE_MAKE_NONCOPYABLE(Engine);
     SE_MAKE_NONMOVABLE(Engine);
 
 public:
     template<typename T>
     ALWAYS_INLINE static bool instantiate();
-    
+
     SHOOTER_API static void destroy();
 
 public:

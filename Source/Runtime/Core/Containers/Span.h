@@ -8,17 +8,15 @@
 #include "Core/Assertions.h"
 #include "Core/CoreTypes.h"
 
-namespace SE
-{
+namespace SE {
 
 template<typename T>
-class Span
-{
+class Span {
 public:
-    using Iterator              = T*;
-    using ConstIterator         = const T*;
-    using ReverseIterator       = T*;
-    using ReverseConstIterator  = const T*;
+    using Iterator = T*;
+    using ConstIterator = const T*;
+    using ReverseIterator = T*;
+    using ReverseConstIterator = const T*;
 
 public:
     ALWAYS_INLINE constexpr Span()
@@ -59,14 +57,10 @@ public:
     NODISCARD ALWAYS_INLINE const T* operator*() const { return elements(); }
 
     NODISCARD ALWAYS_INLINE usize count() const { return m_count; }
-    NODISCARD ALWAYS_INLINE bool is_empty() const { return (m_count == 0); }
+    NODISCARD ALWAYS_INLINE static constexpr usize element_size() { return sizeof(T); }
 
-    template<typename Q>
-    requires (sizeof(T) % sizeof(Q) == 0)
-    NODISCARD ALWAYS_INLINE Span<Q> as() const
-    {
-         return Span<Q>((Q*)(m_elements), (m_count * sizeof(T)) / sizeof(Q));
-    }
+    NODISCARD ALWAYS_INLINE bool is_empty() const { return (m_count == 0); }
+    NODISCARD ALWAYS_INLINE bool has_elements() const { return (m_count > 0); }
 
 public:
     NODISCARD ALWAYS_INLINE T& at(usize index)
@@ -83,6 +77,7 @@ public:
 
     NODISCARD ALWAYS_INLINE T& operator[](usize index) { return at(index); }
     NODISCARD ALWAYS_INLINE const T& operator[](usize index) const { return at(index); }
+
 
 public:
     NODISCARD ALWAYS_INLINE Iterator begin() { return m_elements; }
@@ -102,7 +97,7 @@ private:
     usize m_count;
 };
 
-using ReadonlyByteSpan  = Span<ReadonlyByte>;
+using ReadonlyByteSpan = Span<ReadonlyByte>;
 using WriteonlyByteSpan = Span<WriteonlyByte>;
 using ReadWriteByteSpan = Span<ReadWriteByte>;
 

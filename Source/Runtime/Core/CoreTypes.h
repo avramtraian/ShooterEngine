@@ -7,50 +7,72 @@
 
 #include "Core/CoreDefines.h"
 
-namespace SE
-{
+namespace SE {
 
 #if SE_PLATFORM_WINDOWS
-    using uint8         = unsigned char;
-    using uint16        = unsigned short;
-    using uint32        = unsigned int;
-    using uint64        = unsigned long long;
 
-    using int8          = signed char;
-    using int16         = signed short;
-    using int32         = signed int;
-    using int64         = signed long long;
+using u8 = unsigned char;
+using u16 = unsigned short;
+using u32 = unsigned int;
+using u64 = unsigned long long;
 
-    using usize         = unsigned long long;
-    using ssize         = signed long long;
-    using uintptr       = unsigned long long;
+using i8 = signed char;
+using i16 = signed short;
+using i32 = signed int;
+using i64 = signed long long;
 
-    using float32       = float;
-    using float64       = double;
+using usize = unsigned long long;
+using ssize = signed long long;
+using uintptr = unsigned long long;
+
+using f32 = float;
+using f64 = double;
+
 #endif // Platform switch.
 
-using ReadonlyByte      = const uint8;
-using WriteonlyByte     = uint8;
-using ReadWriteByte     = uint8;
+using ReadonlyByte = const u8;
+using WriteonlyByte = u8;
+using ReadWriteByte = u8;
 
-using ReadonlyBytes     = ReadonlyByte*;
-using WriteonlyBytes    = WriteonlyByte*;
-using ReadWriteBytes    = ReadWriteByte*;
+using ReadonlyBytes = ReadonlyByte*;
+using WriteonlyBytes = WriteonlyByte*;
+using ReadWriteBytes = ReadWriteByte*;
 
-namespace Internal
-{
+using UnicodeCodepoint = u32;
 
-template<typename T> struct RemoveReference         { using Type = T; };
-template<typename T> struct RemoveReference<T&>     { using Type = T; };
-template<typename T> struct RemoveReference<T&&>    { using Type = T; };
+constexpr usize invalid_size = static_cast<usize>(-1);
+constexpr UnicodeCodepoint invalid_unicode_codepoint = static_cast<UnicodeCodepoint>(-1);
 
-template<typename T> struct RemoveConst             { using Type = T; };
-template<typename T> struct RemoveConst<const T>    { using Type = T; };
+namespace Internal {
+
+template<typename T>
+struct RemoveReference {
+    using Type = T;
+};
+template<typename T>
+struct RemoveReference<T&> {
+    using Type = T;
+};
+template<typename T>
+struct RemoveReference<T&&> {
+    using Type = T;
+};
+
+template<typename T>
+struct RemoveConst {
+    using Type = T;
+};
+template<typename T>
+struct RemoveConst<const T> {
+    using Type = T;
+};
 
 } // namespace Internal
 
-template<typename T> using RemoveReference  = typename Internal::RemoveReference<T>::Type;
-template<typename T> using RemoveConst      = typename Internal::RemoveConst<T>::Type;
+template<typename T>
+using RemoveReference = typename Internal::RemoveReference<T>::Type;
+template<typename T>
+using RemoveConst = typename Internal::RemoveConst<T>::Type;
 
 template<typename T>
 NODISCARD ALWAYS_INLINE constexpr RemoveReference<T>&& move(T&& value)
@@ -73,33 +95,33 @@ NODISCARD ALWAYS_INLINE constexpr T&& forward(RemoveReference<T>&& value)
     return static_cast<T&&>(value);
 }
 
-#define SE_MAKE_NONCOPYABLE(type_name)          \
-    type_name(const type_name&) = delete;       \
+#define SE_MAKE_NONCOPYABLE(type_name)    \
+    type_name(const type_name&) = delete; \
     type_name& operator=(const type_name&) = delete;
 
-#define SE_MAKE_NONMOVABLE(type_name)           \
-    type_name(type_name&&) noexcept = delete;   \
+#define SE_MAKE_NONMOVABLE(type_name)         \
+    type_name(type_name&&) noexcept = delete; \
     type_name& operator=(type_name&&) noexcept = delete;
 
 //
 // Ensure that the fixed primitive types are matching the expected size.
 //
 
-static_assert(sizeof(uint8) == 1);
-static_assert(sizeof(uint16) == 2);
-static_assert(sizeof(uint32) == 4);
-static_assert(sizeof(uint64) == 8);
+static_assert(sizeof(u8) == 1);
+static_assert(sizeof(u16) == 2);
+static_assert(sizeof(u32) == 4);
+static_assert(sizeof(u64) == 8);
 
-static_assert(sizeof(int8) == 1);
-static_assert(sizeof(int16) == 2);
-static_assert(sizeof(int32) == 4);
-static_assert(sizeof(int64) == 8);
+static_assert(sizeof(i8) == 1);
+static_assert(sizeof(i16) == 2);
+static_assert(sizeof(i32) == 4);
+static_assert(sizeof(i64) == 8);
 
 static_assert(sizeof(usize) == sizeof(void*));
 static_assert(sizeof(ssize) == sizeof(void*));
 static_assert(sizeof(uintptr) == sizeof(void*));
 
-static_assert(sizeof(float32) == 4);
-static_assert(sizeof(float64) == 8);
+static_assert(sizeof(f32) == 4);
+static_assert(sizeof(f64) == 8);
 
 } // namespace SE
