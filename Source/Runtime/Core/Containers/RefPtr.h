@@ -99,16 +99,20 @@ public:
     NODISCARD ALWAYS_INLINE bool is_valid() const { return (m_instance != nullptr); }
     NODISCARD ALWAYS_INLINE operator bool() const { return is_valid(); }
 
-    NODISCARD ALWAYS_INLINE T& get() const
+    NODISCARD ALWAYS_INLINE T* get()
     {
         SE_ASSERT(is_valid());
-        return *m_instance;
+        return m_instance;
     }
 
-    NODISCARD ALWAYS_INLINE T* operator->() const { return &get(); }
-    NODISCARD ALWAYS_INLINE T& operator*() const { return get(); }
+    NODISCARD ALWAYS_INLINE const T* get() const
+    {
+        SE_ASSERT(is_valid());
+        return m_instance;
+    }
 
-    NODISCARD ALWAYS_INLINE T* raw() const { return m_instance; }
+    NODISCARD ALWAYS_INLINE T* operator->() { return get(); }
+    NODISCARD ALWAYS_INLINE const T* operator->() const { return get(); }
 
     ALWAYS_INLINE void clear()
     {
