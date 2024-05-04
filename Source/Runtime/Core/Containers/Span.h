@@ -78,6 +78,29 @@ public:
     NODISCARD ALWAYS_INLINE T& operator[](usize index) { return at(index); }
     NODISCARD ALWAYS_INLINE const T& operator[](usize index) const { return at(index); }
 
+    NODISCARD ALWAYS_INLINE T& first()
+    {
+        SE_ASSERT(has_elements());
+        return m_elements[0];
+    }
+
+    NODISCARD ALWAYS_INLINE const T& first() const
+    {
+        SE_ASSERT(has_elements());
+        return m_elements[0];
+    }
+
+    NODISCARD ALWAYS_INLINE T& last()
+    {
+        SE_ASSERT(has_elements());
+        return m_elements[m_count - 1];
+    }
+
+    NODISCARD ALWAYS_INLINE const T& last() const
+    {
+        SE_ASSERT(has_elements());
+        return m_elements[m_count - 1];
+    }
 
 public:
     NODISCARD ALWAYS_INLINE Iterator begin() { return m_elements; }
