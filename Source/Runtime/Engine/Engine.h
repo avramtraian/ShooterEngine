@@ -32,7 +32,7 @@ protected:
     Engine() = default;
 
 protected:
-    bool m_is_running;
+    bool m_is_running = false;
 };
 
 SHOOTER_API extern Engine* g_engine;
