@@ -20,6 +20,10 @@ project "SE-Engine"
     staticruntime "Off"
     location (engine_root.."/Source/Runtime")
 
+    pchheader ("EnginePCH.h")
+    pchsource ("../../Source/Runtime/EnginePCH.cpp")
+    forceincludes { "EnginePCH.h" }
+
     files {
         "%{prj.location}/**.cpp",
         "%{prj.location}/**.h",
