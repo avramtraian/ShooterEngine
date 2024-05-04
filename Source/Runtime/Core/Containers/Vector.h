@@ -6,6 +6,7 @@
 #pragma once
 
 #include "Core/Containers/Span.h"
+#include "Core/Memory/MemoryOperations.h"
 
 namespace SE {
 
@@ -236,6 +237,25 @@ public:
     {
         remove_last(count);
         shrink_to_fit();
+    }
+
+    ALWAYS_INLINE void remove(usize remove_index, usize remove_count = 1)
+    {
+        SE_ASSERT(remove_index + remove_count <= m_count);
+        for (usize index = remove_index; index < remove_index + remove_count; ++index)
+            m_elements[index].~T();
+
+        const usize elements_to_move = m_count - (remove_index + remove_count);
+        move_elements(m_elements + remove_index, m_elements + remove_index + remove_count, elements_to_move);
+        m_count -= remove_count;
+    }
+
+    ALWAYS_INLINE void remove(ConstIterator remove_iterator)
+    {
+        // Iterator out of bounds.
+        SE_ASSERT(begin() <= remove_iterator && remove_iterator < end());
+        const usize index = remove_iterator - begin();
+        remove(index);
     }
 
 public:
