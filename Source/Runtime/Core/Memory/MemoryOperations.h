@@ -8,6 +8,8 @@
 #include "Core/Containers/Span.h"
 #include "Core/EngineAPI.h"
 
+#include <new>
+
 namespace SE {
 
 SHOOTER_API void copy_memory(void* destination, const void* source, usize byte_count);
@@ -23,8 +25,3 @@ ALWAYS_INLINE static void copy_memory_from_span(void* destination, Span<T> span)
 }
 
 } // namespace SE
-
-ALWAYS_INLINE void* operator new(SE::usize, void* memory_block) noexcept
-{
-    return memory_block;
-}
