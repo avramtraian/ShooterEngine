@@ -20,13 +20,13 @@ project "SE-Editor"
     location (engine_root.."/Source/Editor")
 
     files {
-        (engine_root.."/Source/Editor/**.cpp"),
-        (engine_root.."/Source/Editor/**.h"),
-        (engine_root.."/Source/Editor/**.inl")
+        "%{prj.location}/**.cpp",
+        "%{prj.location}/**.h",
+        "%{prj.location}/**.inl"
     }
 
     includedirs {
-        (engine_root.."/Source/Editor"),
+        ("%{prj.location}"),
         (engine_root.."/Source/Runtime")
     }
 

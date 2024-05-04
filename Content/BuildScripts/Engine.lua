@@ -21,13 +21,13 @@ project "SE-Engine"
     location (engine_root.."/Source/Runtime")
 
     files {
-        (engine_root.."/Source/Runtime/**.cpp"),
-        (engine_root.."/Source/Runtime/**.h"),
-        (engine_root.."/Source/Runtime/**.inl")
+        "%{prj.location}/**.cpp",
+        "%{prj.location}/**.h",
+        "%{prj.location}/**.inl"
     }
 
     includedirs {
-        (engine_root.."/Source/Runtime")
+        "%{prj.location}"
     }
 
     defines {
