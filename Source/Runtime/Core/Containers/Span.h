@@ -103,6 +103,38 @@ public:
     }
 
 public:
+    NODISCARD ALWAYS_INLINE Span<T> slice(usize offset)
+    {
+        SE_ASSERT(offset <= m_count);
+        return Span<T>(m_elements + offset, m_count - offset);
+    }
+
+    NODISCARD ALWAYS_INLINE Span<const T> slice(usize offset) const
+    {
+        SE_ASSERT(offset <= m_count);
+        return Span<const T>(m_elements + offset, m_count - offset);
+    }
+
+    NODISCARD ALWAYS_INLINE Span<T> slice(usize offset, usize count)
+    {
+        SE_ASSERT(count + offset <= m_count);
+        return Span<T>(m_elements + offset, count);
+    }
+
+    NODISCARD ALWAYS_INLINE Span<const T> slice(usize offset, usize count) const
+    {
+        SE_ASSERT(count + offset <= m_count);
+        return Span<const T>(m_elements + offset, count);
+    }
+
+    template<typename Q>
+    requires (sizeof(T) % sizeof(Q) == 0)
+    NODISCARD ALWAYS_INLINE Span<Q> as() const
+    {
+        return Span<Q>((Q*)(m_elements), (m_count * sizeof(T)) / sizeof(Q));
+    }
+
+public:
     NODISCARD ALWAYS_INLINE Iterator begin() { return m_elements; }
     NODISCARD ALWAYS_INLINE Iterator end() { return m_elements + m_count; }
 
