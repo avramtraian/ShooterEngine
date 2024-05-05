@@ -4,6 +4,7 @@
  */
 
 #include "Core/Containers/Span.h"
+#include "Core/Platform/Platform.h"
 #include "EditorEngine.h"
 
 namespace SE {
@@ -17,6 +18,9 @@ namespace SE {
 //
 static i32 guarded_main(Span<char*> command_line_arguments)
 {
+    if (!Platform::initialize())
+        return 1;
+
     if (!Engine::instantiate<EditorEngine>()) {
         // TODO: Log error message.
         return 1;
@@ -32,6 +36,8 @@ static i32 guarded_main(Span<char*> command_line_arguments)
 
     g_engine->destroy();
     Engine::destroy();
+
+    Platform::shutdown();
     return 0;
 }
 
