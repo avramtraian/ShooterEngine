@@ -6,3 +6,4 @@
 #pragma once
 
 #include "Core/CoreDefines.h"
+#include "Core/Log.h"
