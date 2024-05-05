@@ -14,20 +14,24 @@ namespace SE {
 
 class Logger {
 public:
-    enum class Severity : u8 {
-        Trace = 0,
-        Info = 1,
-        Warn = 2,
-        Error = 3,
-        Fatal = 4,
+    struct Severity {
+        enum Type : u8 {
+            Trace = 0,
+            Info = 1,
+            Warn = 2,
+            Error = 3,
+            Fatal = 4,
+
+            EnumCount
+        };
     };
 
 public:
-    SHOOTER_API static void log_message(Severity severity, StringView message);
-    SHOOTER_API static void log_tagged_message(Severity severity, StringView tag, StringView message);
+    SHOOTER_API static void log_message(Severity::Type severity, StringView message);
+    SHOOTER_API static void log_tagged_message(Severity::Type severity, StringView tag, StringView message);
 
     template<typename... Args>
-    ALWAYS_INLINE static void log_message(Severity severity, StringView message, Args&&... args)
+    ALWAYS_INLINE static void log_message(Severity::Type severity, StringView message, Args&&... args)
     {
         Optional<String> formatted_message = format(message, forward<Args>(args)...);
         if (!formatted_message.has_value())
@@ -36,7 +40,8 @@ public:
     }
 
     template<typename... Args>
-    ALWAYS_INLINE static void log_tagged_message(Severity severity, StringView tag, StringView message, Args&&... args)
+    ALWAYS_INLINE static void
+    log_tagged_message(Severity::Type severity, StringView tag, StringView message, Args&&... args)
     {
         Optional<String> formatted_message = format(message, forward<Args>(args)...);
         if (!formatted_message.has_value())
