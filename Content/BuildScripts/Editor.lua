@@ -19,6 +19,10 @@ project "SE-Editor"
     staticruntime "Off"
     location (engine_root.."/Source/Editor")
 
+    pchheader ("EditorPCH.h")
+    pchsource ("../../Source/Editor/EditorPCH.cpp")
+    forceincludes { "EditorPCH.h" }
+
     files {
         "%{prj.location}/**.cpp",
         "%{prj.location}/**.h",
