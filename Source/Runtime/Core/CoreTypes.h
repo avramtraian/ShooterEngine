@@ -67,12 +67,66 @@ struct RemoveConst<const T> {
     using Type = T;
 };
 
+template<typename T>
+struct IsIntegral {
+    static constexpr bool value = false;
+    static constexpr bool is_signed = false;
+};
+
+template<>
+struct IsIntegral<u8> {
+    static constexpr bool value = true;
+    static constexpr bool is_signed = false;
+};
+template<>
+struct IsIntegral<u16> {
+    static constexpr bool value = true;
+    static constexpr bool is_signed = false;
+};
+template<>
+struct IsIntegral<u32> {
+    static constexpr bool value = true;
+    static constexpr bool is_signed = false;
+};
+template<>
+struct IsIntegral<u64> {
+    static constexpr bool value = true;
+    static constexpr bool is_signed = false;
+};
+template<>
+struct IsIntegral<i8> {
+    static constexpr bool value = true;
+    static constexpr bool is_signed = true;
+};
+template<>
+struct IsIntegral<i16> {
+    static constexpr bool value = true;
+    static constexpr bool is_signed = true;
+};
+template<>
+struct IsIntegral<i32> {
+    static constexpr bool value = true;
+    static constexpr bool is_signed = true;
+};
+template<>
+struct IsIntegral<i64> {
+    static constexpr bool value = true;
+    static constexpr bool is_signed = true;
+};
+
 } // namespace Internal
 
 template<typename T>
 using RemoveReference = typename Internal::RemoveReference<T>::Type;
 template<typename T>
 using RemoveConst = typename Internal::RemoveConst<T>::Type;
+
+template<typename T>
+constexpr bool is_integral = Internal::IsIntegral<T>::value;
+template<typename T>
+constexpr bool is_signed_integral = is_integral<T> && Internal::IsIntegral<T>::is_signed;
+template<typename T>
+constexpr bool is_unsigned_integral = is_integral<T> && !Internal::IsIntegral<T>::is_signed;
 
 template<typename T>
 NODISCARD ALWAYS_INLINE constexpr RemoveReference<T>&& move(T&& value)
