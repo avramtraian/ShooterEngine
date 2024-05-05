@@ -15,6 +15,7 @@ bool EditorEngine::initialize()
         return false;
     g_editor_engine = this;
 
+    SE_LOG_INFO("Creating the primary window..."sv);
     return g_editor_engine->create_window();
     return true;
 }
@@ -32,19 +33,24 @@ void EditorEngine::tick()
     for (OwnPtr<Window>& window : m_window_stack)
         window->pump_messages();
 
-    usize active_window_count = m_window_stack.count();
     for (auto it = m_window_stack.rbegin(); it != m_window_stack.rend(); --it) {
         OwnPtr<Window>& window = *it;
         if (window->should_close()) {
             window.release();
             m_window_stack.remove(it);
-            --active_window_count;
         }
     }
 
-    if (active_window_count == 0 || m_window_stack.first()->should_close()) {
+    if (m_window_stack.is_empty()) {
+        m_is_running = false;
+        SE_LOG_INFO("All windows have been closed. Exiting the main loop..."sv);
+        return;
+    }
+
+    if (m_window_stack.first()->should_close()) {
         m_window_stack.clear_and_shrink();
         m_is_running = false;
+        SE_LOG_INFO("The primary window has been closed. Exiting the main loop..."sv);
         return;
     }
 
@@ -65,6 +71,7 @@ Window* EditorEngine::create_window()
         return nullptr;
     }
 
+    SE_LOG_INFO("Sucessfully created a window with the title '{}'."sv, window_info.title);
     return window.get();
 }
 
