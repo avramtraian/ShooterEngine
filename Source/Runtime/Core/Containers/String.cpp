@@ -60,6 +60,53 @@ String::String(StringView string_view)
     destination_buffer[m_byte_count - 1] = 0;
 }
 
+#define SE_FILEPATH_DELIMITATOR '/'
+#define SE_FILEPATH_EXTENSION_DELIMITATOR '.'
+
+StringView String::path_parent() const
+{
+    const StringView this_as_view = view();
+
+    const usize delimitator_position = this_as_view.find_last(SE_FILEPATH_DELIMITATOR);
+    if (delimitator_position == invalid_size)
+        return {};
+
+    return this_as_view.slice(0, delimitator_position);
+}
+
+StringView String::path_filename() const
+{
+    const StringView this_as_view = view();
+
+    const usize delimitator_position = this_as_view.find_last(SE_FILEPATH_DELIMITATOR);
+    if (delimitator_position == invalid_size)
+        return this_as_view;
+
+    return this_as_view.slice(delimitator_position + 1);
+}
+
+StringView String::path_stem() const
+{
+    const StringView filename = path_filename();
+
+    const usize extension_delimitator_position = filename.find(SE_FILEPATH_EXTENSION_DELIMITATOR);
+    if (extension_delimitator_position == invalid_size)
+        return filename;
+
+    return filename.slice(0, extension_delimitator_position);
+}
+
+StringView String::path_extension() const
+{
+    const StringView filename = path_filename();
+
+    const usize extension_delimitator_position = filename.find(SE_FILEPATH_EXTENSION_DELIMITATOR);
+    if (extension_delimitator_position == invalid_size)
+        return {};
+
+    return filename.slice(extension_delimitator_position + 1);
+}
+
 String& String::operator=(const String& other)
 {
     *this = other.view();

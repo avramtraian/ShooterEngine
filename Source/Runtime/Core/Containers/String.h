@@ -93,6 +93,12 @@ public:
     NODISCARD ALWAYS_INLINE bool is_stored_inline() const { return m_byte_count <= inline_capacity; }
     NODISCARD ALWAYS_INLINE bool is_stored_on_heap() const { return m_byte_count > inline_capacity; }
 
+public: // String filepath API
+    NODISCARD SHOOTER_API StringView path_parent() const;
+    NODISCARD SHOOTER_API StringView path_filename() const;
+    NODISCARD SHOOTER_API StringView path_stem() const;
+    NODISCARD SHOOTER_API StringView path_extension() const;
+
 public:
     NODISCARD ALWAYS_INLINE bool operator==(const String& other) const { return (view() == other.view()); }
     NODISCARD ALWAYS_INLINE bool operator==(StringView string_view) const { return (view() == string_view); }
