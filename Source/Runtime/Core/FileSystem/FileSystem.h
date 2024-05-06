@@ -90,7 +90,7 @@ private:
 
 class FileSystem {
 public:
-    SHOOTER_API NODISCARD static bool file_exists(const String& filepath);
+    SHOOTER_API NODISCARD static bool exists(const String& filepath);
 
     // If the provided filepath is not valid, this function will return an empty optional.
     SHOOTER_API NODISCARD static Optional<bool> is_directory(const String& filepath);
