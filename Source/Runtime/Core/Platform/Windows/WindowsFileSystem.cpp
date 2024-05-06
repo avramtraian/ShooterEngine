@@ -43,6 +43,26 @@ static FileError read_from_file(HANDLE file_handle, WriteonlyByteSpan output_buf
     return FileError::Success;
 }
 
+static FileError write_to_file(HANDLE file_handle, ReadonlyByteSpan byte_buffer_to_write)
+{
+    usize byte_offset = 0;
+    while (byte_offset < byte_buffer_to_write.count())
+    {
+        constexpr usize max_bytes_to_write = static_cast<DWORD>(-1);
+        const usize bytes_to_write = Math::min(byte_buffer_to_write.count() - byte_offset, max_bytes_to_write);
+
+        DWORD bytes_written;
+        BOOL write_success = WriteFile(file_handle, byte_buffer_to_write.elements(), (DWORD)(bytes_to_write), &bytes_written, NULL);
+        if (!write_success || bytes_written != bytes_to_write)
+            return FileError::Unknown;
+
+        byte_offset += bytes_written;
+    }
+
+    SE_ASSERT(byte_offset == byte_buffer_to_write.count());
+    return FileError::Success;
+}
+
 //==============================================================================================================
 // FILE READER.
 //==============================================================================================================
@@ -217,6 +237,96 @@ FileError FileReader::try_read(WriteonlyByteSpan output_buffer, usize read_offse
         return file_error;
 
     out_number_of_read_bytes = number_of_bytes_to_read;
+    return FileError::Success;
+}
+
+//==============================================================================================================
+// FILE WRITER.
+//==============================================================================================================
+
+FileWriter::FileWriter()
+    : m_native_handle(INVALID_HANDLE_VALUE)
+    , m_handle_is_opened(false)
+{}
+
+FileWriter::~FileWriter()
+{
+    close();
+}
+
+static FileError create_directory_recusively(const String& directory_filepath)
+{
+    if (!FileSystem::exists(directory_filepath))
+    {
+        FileError file_error = create_directory_recusively(directory_filepath.path_parent());
+        if (file_error != FileError::Success)
+            return file_error;
+        
+        if (!CreateDirectoryA(filepath_to_cstr(directory_filepath), nullptr))
+            return FileError::Unknown;
+    }
+    
+    return FileError::Success;
+}
+
+FileError FileWriter::open(const String& filepath, OpenPolicy open_policy /*= OpenPolicy::CreateIfNotExisting*/, SharePolicy share_policy /*= SharePolicy::Exclusive*/)
+{
+    // Close the previously opened file handle.
+    close();
+
+    DWORD share_mode = 0;
+    DWORD creation_disposition = 0;
+
+    switch (share_policy)
+    {
+        case SharePolicy::Exclusive: share_mode = 0; break;
+        case SharePolicy::ReadOnly:  share_mode = FILE_SHARE_READ; break;
+        case SharePolicy::ReadWrite: share_mode = FILE_SHARE_READ | FILE_SHARE_WRITE; break;
+    }
+
+    switch (open_policy)
+    {
+        case OpenPolicy::OpenExisting:        creation_disposition = OPEN_EXISTING; break;
+        case OpenPolicy::CreateIfNotExisting: creation_disposition = OPEN_ALWAYS; break;
+        case OpenPolicy::CreateNew:           creation_disposition = CREATE_NEW; break;
+    }
+
+    if (open_policy != OpenPolicy::OpenExisting)
+    {
+        FileError file_error = create_directory_recusively(filepath.path_parent());
+        if (file_error != FileError::Success)
+            return file_error;
+    }
+
+    m_native_handle = CreateFileA(filepath_to_cstr(filepath), GENERIC_WRITE, share_mode, NULL, creation_disposition, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (m_native_handle == INVALID_HANDLE_VALUE)
+            return FileError::FileNotFound;
+
+    m_handle_is_opened = true;
+    return FileError::Success;
+}
+
+void FileWriter::close()
+{
+    if (!m_handle_is_opened && m_native_handle == INVALID_HANDLE_VALUE)
+        return;
+
+    CloseHandle(m_native_handle);
+    m_native_handle = INVALID_HANDLE_VALUE;
+    m_handle_is_opened = false;
+}
+
+FileError FileWriter::write(ReadonlyByteSpan bytes_to_write)
+{
+    // Ensure that the file handle is ready for writing.
+    if (!m_handle_is_opened)
+        return FileError::FileHandleNotOpened;
+    SE_ASSERT(m_native_handle != INVALID_HANDLE_VALUE);
+    
+    FileError file_error = write_to_file(m_native_handle, bytes_to_write);
+    if (file_error != FileError::Success)
+        return file_error;
+    
     return FileError::Success;
 }
 

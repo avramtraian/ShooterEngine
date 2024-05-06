@@ -95,6 +95,44 @@ private:
     OpenPolicy m_open_policy;
 };
 
+class FileWriter {
+public:
+    enum class OpenPolicy : u8 {
+        // Only opens the file is it exists on disk. Otherwise, the operation is considered failed.
+        OpenExisting,
+
+        // Creates a new file if it doesn't already exist on disk. It will recursively generate directories
+        // until the parent path is completed.
+        CreateIfNotExisting,
+
+        // Always create a new file. It will recursively generate directories until the parent path is completed.
+        CreateNew,
+    };
+
+    enum class SharePolicy : u8 {
+        // This file can't be open by any other process.
+        Exclusive,
+        // Other processes can only open this file for reading.
+        ReadOnly,
+        // Other processes can open this file with full read/write access.
+        ReadWrite,
+    };
+
+public:
+    SHOOTER_API FileWriter();
+    SHOOTER_API ~FileWriter();
+
+    SHOOTER_API FileError open(const String& filepath, OpenPolicy open_policy = OpenPolicy::CreateIfNotExisting, SharePolicy share_policy = SharePolicy::Exclusive);
+    SHOOTER_API void close();
+    ALWAYS_INLINE bool is_opened() const { return m_handle_is_opened; }
+
+    SHOOTER_API FileError write(ReadonlyByteSpan bytes_to_write);
+
+private:
+    void* m_native_handle;
+    bool m_handle_is_opened;
+};
+
 class FileSystem {
 public:
     SHOOTER_API NODISCARD static bool exists(const String& filepath);
