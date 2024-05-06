@@ -26,13 +26,13 @@ public:
         : m_instance(nullptr)
     {}
 
-    ALWAYS_INLINE OwnPtr(OwnPtr&& other)
+    ALWAYS_INLINE OwnPtr(OwnPtr&& other) noexcept
         : m_instance(other.m_instance)
     {
         other.m_instance = nullptr;
     }
 
-    ALWAYS_INLINE OwnPtr& operator=(OwnPtr&& other)
+    ALWAYS_INLINE OwnPtr& operator=(OwnPtr&& other) noexcept
     {
         release();
         m_instance = other.m_instance;
