@@ -262,6 +262,17 @@ public:
     ALWAYS_INLINE ValueType& operator[](const KeyType& key) { return get_or_add(key); }
 
 public:
+    ALWAYS_INLINE void clear()
+    {
+        m_buckets.clear();
+    }
+
+    ALWAYS_INLINE void clear_and_shrink()
+    {
+        m_buckets.clear_and_shrink();
+    }
+
+public:
     NODISCARD ALWAYS_INLINE Iterator begin() { return Iterator(m_buckets.begin()); }
     NODISCARD ALWAYS_INLINE Iterator end() { return Iterator(m_buckets.end()); }
 
