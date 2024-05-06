@@ -22,6 +22,13 @@ enum class FileError : u32 {
     ReadOutOfBounds,
 };
 
+#define SE_CHECK_FILE_ERROR(expression)           \
+    if ((expression) != ::SE::FileError::Success) \
+    {                                             \
+        SE_LOG_ERROR("File error occured!"sv);    \
+        SE_ASSERT(false);                         \
+    }
+
 //
 // Abstraction over the platform API that allows reading from disk files.
 //
