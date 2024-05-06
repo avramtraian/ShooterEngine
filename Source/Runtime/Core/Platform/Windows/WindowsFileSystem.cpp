@@ -226,6 +226,10 @@ FileError FileReader::try_read(WriteonlyByteSpan output_buffer, usize read_offse
 
 bool FileSystem::exists(const String& filepath)
 {
+    // An empty filepath always exists.
+    if (filepath.byte_span().is_empty())
+        return true;
+
     const DWORD file_attributes = GetFileAttributesA(filepath_to_cstr(filepath));
     return (file_attributes != INVALID_FILE_ATTRIBUTES);
 }
