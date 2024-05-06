@@ -91,7 +91,6 @@ enum class HashTableRemoveResult {
 template<typename T, typename HasherForT = Hasher<RemoveConst<T>>>
 class HashTable {
     template<typename KeyType, typename ValueType>
-    requires (!is_reference<KeyType>)
     friend class HashMap;
 
 public:
