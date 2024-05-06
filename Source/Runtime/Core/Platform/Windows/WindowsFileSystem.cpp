@@ -83,7 +83,7 @@ FileError FileReader::open(const String& filepath, OpenPolicy open_policy /*= Op
 
 void FileReader::close()
 {
-    if (m_native_handle == INVALID_HANDLE_VALUE)
+    if (!m_handle_is_opened && m_native_handle == INVALID_HANDLE_VALUE)
         return;
 
     CloseHandle(m_native_handle);
