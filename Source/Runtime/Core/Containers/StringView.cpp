@@ -52,6 +52,18 @@ usize StringView::find(UnicodeCodepoint codepoint_to_find) const
     return invalid_position;
 }
 
+usize StringView::find_last(char ascii_character) const
+{
+    ReadonlyByteSpan span = byte_span();
+    for (auto byte_it = span.rbegin(); byte_it != span.rend(); --byte_it)
+    {
+        if (*byte_it == ascii_character)
+            return (byte_it - span.begin());
+    }
+
+    return invalid_size;
+}
+
 StringView StringView::slice(usize offset_in_bytes) const
 {
     SE_ASSERT(offset_in_bytes <= m_byte_count);

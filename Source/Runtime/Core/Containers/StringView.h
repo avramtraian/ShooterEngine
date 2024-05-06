@@ -71,6 +71,8 @@ public:
     NODISCARD SHOOTER_API usize find(char ascii_character) const;
     NODISCARD SHOOTER_API usize find(UnicodeCodepoint codepoint) const;
 
+    NODISCARD SHOOTER_API usize find_last(char ascii_character) const;
+
     NODISCARD SHOOTER_API StringView slice(usize offset_in_bytes) const;
     NODISCARD SHOOTER_API StringView slice(usize offset_in_bytes, usize bytes_count) const;
 
