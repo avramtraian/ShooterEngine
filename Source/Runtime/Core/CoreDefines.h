@@ -60,6 +60,8 @@
 #define LIKELY       [[likely]]
 #define UNLIKELY     [[unlikely]]
 
+#define SE_ARRAY_COUNT(x) (sizeof(x) / sizeof((x)[0]))
+
 #if SE_COMPILER_MSVC
     #define SE_FUNCTION   __FUNCSIG__
     #define ALWAYS_INLINE __forceinline
