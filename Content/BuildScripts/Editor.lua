@@ -18,6 +18,7 @@ project "SE-Editor"
 
     staticruntime "Off"
     location (engine_root.."/Source/Editor")
+    debugdir (engine_root.."/Binaries/%{cfg.buildcfg}")
 
     pchheader ("EditorPCH.h")
     pchsource ("../../Source/Editor/EditorPCH.cpp")
