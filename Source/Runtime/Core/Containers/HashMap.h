@@ -138,7 +138,7 @@ public:
     {
         auto slot_index = find(key);
         if (slot_index.has_value()) {
-            return m_buckets.m_slots[slot_index];
+            return m_buckets.m_slots[slot_index].value();
         }
         return {};
     }
@@ -147,7 +147,7 @@ public:
     {
         auto slot_index = find(key);
         if (slot_index.has_value()) {
-            return m_buckets.m_slots[slot_index];
+            return m_buckets.m_slots[slot_index].value();
         }
         return {};
     }
