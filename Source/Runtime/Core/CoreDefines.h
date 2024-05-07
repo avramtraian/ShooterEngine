@@ -64,5 +64,6 @@
 
 #if SE_COMPILER_MSVC
     #define SE_FUNCTION   __FUNCSIG__
+    #define SE_DEBUGBREAK __debugbreak()
     #define ALWAYS_INLINE __forceinline
 #endif // Compiler switch.
