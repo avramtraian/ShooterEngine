@@ -18,7 +18,7 @@ public:
     virtual ~D3D11Context() override;
 
 private:
-    IDXGISwapChain* m_swapchain;
+    IDXGISwapChain1* m_swapchain;
     u32 m_back_buffer_count;
     class Window* m_window;
 };

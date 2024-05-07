@@ -17,21 +17,25 @@ D3D11Context::D3D11Context(const RenderingContextInfo& info)
 {
     m_back_buffer_count = 2;
 
-    DXGI_SWAP_CHAIN_DESC swapchain_descriptor = {};
-    swapchain_descriptor.BufferDesc.Width = m_window->get_width();
-    swapchain_descriptor.BufferDesc.Height = m_window->get_height();
-    swapchain_descriptor.BufferDesc.RefreshRate.Numerator = 144;
-    swapchain_descriptor.BufferDesc.RefreshRate.Denominator = 1;
-    swapchain_descriptor.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
-    swapchain_descriptor.SampleDesc.Count = 1;
-    swapchain_descriptor.SampleDesc.Quality = 0;
-    swapchain_descriptor.BufferUsage = DXGI_USAGE_BACK_BUFFER;
-    swapchain_descriptor.BufferCount = (UINT)(m_back_buffer_count);
-    swapchain_descriptor.OutputWindow = (HWND)(info.window->get_native_handle());
-    swapchain_descriptor.Windowed = true;
-    swapchain_descriptor.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+    DXGI_SWAP_CHAIN_DESC1 swapchain_description = {};
+    swapchain_description.Width = m_window->get_width();
+    swapchain_description.Height = m_window->get_height();
+    swapchain_description.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    swapchain_description.SampleDesc.Count = 1;
+    swapchain_description.SampleDesc.Quality = 0;
+    swapchain_description.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    swapchain_description.BufferCount = (UINT)(m_back_buffer_count);
+    swapchain_description.Scaling = DXGI_SCALING_STRETCH;
+    swapchain_description.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
-    SE_D3D11_CHECK(D3D11Renderer::get_dxgi_factory()->CreateSwapChain(D3D11Renderer::get_device(), &swapchain_descriptor, &m_swapchain));
+    DXGI_SWAP_CHAIN_FULLSCREEN_DESC swapchain_fullscreen_description = {};
+    swapchain_fullscreen_description.Scaling = DXGI_MODE_SCALING_CENTERED;
+    swapchain_fullscreen_description.Windowed = true;
+
+    SE_D3D11_CHECK(D3D11Renderer::get_dxgi_factory()->CreateSwapChainForHwnd(
+        D3D11Renderer::get_device(), (HWND)(info.window->get_native_handle()),
+        &swapchain_description, &swapchain_fullscreen_description, nullptr, &m_swapchain
+    ));
 }
 
 D3D11Context::~D3D11Context()
