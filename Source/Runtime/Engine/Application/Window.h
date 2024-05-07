@@ -34,6 +34,11 @@ public:
     virtual void* get_native_handle() const = 0;
     virtual bool should_close() const = 0;
 
+    virtual u32 get_width() const = 0;
+    virtual u32 get_height() const = 0;
+    virtual i32 get_position_x() const = 0;
+    virtual i32 get_position_y() const = 0;
+
 protected:
     Window() = default;
 };

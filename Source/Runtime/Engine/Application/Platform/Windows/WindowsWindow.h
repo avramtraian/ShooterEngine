@@ -25,6 +25,11 @@ public:
     virtual void* get_native_handle() const { return m_native_handle; }
     virtual bool should_close() const { return m_should_close; }
 
+    virtual u32 get_width() const override { return m_client_area_width; }
+    virtual u32 get_height() const override { return m_client_area_height; }
+    virtual i32 get_position_x() const override { return m_client_area_position_x; }
+    virtual i32 get_position_y() const override { return m_client_area_position_y; }
+
 private:
     HWND m_native_handle = nullptr;
     bool m_should_close = false;
