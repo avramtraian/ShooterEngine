@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "Renderer/Platform/D3D11/D3D11Context.h"
 #include "Renderer/Platform/D3D11/D3D11Headers.h"
 #include "Renderer/RendererInterface.h"
 
@@ -33,7 +34,9 @@ public:
     static String get_error_message(HRESULT result);
 
     static ID3D11Device* get_device();
-    static IDXGIFactory* get_dxgi_factory();
+    static ID3D11DeviceContext* get_device_context();
+    static IDXGIFactory2* get_dxgi_factory();
+    static D3D11Context* get_active_context();
 };
 
 } // namespace SE

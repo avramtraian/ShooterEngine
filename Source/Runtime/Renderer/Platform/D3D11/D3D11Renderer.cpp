@@ -4,6 +4,7 @@
  */
 
 #include "Renderer/Platform/D3D11/D3D11Renderer.h"
+#include "Renderer/Renderer.h"
 
 #include <comdef.h>
 #include <system_error>
@@ -14,8 +15,9 @@ namespace SE
 struct D3D11RendererData
 {
     ID3D11Device* device;
+    ID3D11DeviceContext* device_context;
     D3D_FEATURE_LEVEL device_feature_level;
-    IDXGIFactory* dxgi_factory;
+    IDXGIFactory2* dxgi_factory;
 };
 
 static OwnPtr<D3D11RendererData> s_d3d11_renderer;
@@ -40,7 +42,7 @@ bool D3D11Renderer::initialize()
     const HRESULT device_result = D3D11CreateDevice(
         nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, device_flags,
         feature_levels, SE_ARRAY_COUNT(feature_levels), D3D11_SDK_VERSION,
-        &s_d3d11_renderer->device, &s_d3d11_renderer->device_feature_level, nullptr);
+        &s_d3d11_renderer->device, &s_d3d11_renderer->device_feature_level, &s_d3d11_renderer->device_context);
     
     if (device_result != S_OK)
     {
@@ -48,7 +50,7 @@ bool D3D11Renderer::initialize()
         return false;
     }
 
-    const HRESULT dxgi_factory_result = CreateDXGIFactory(IID_PPV_ARGS(&s_d3d11_renderer->dxgi_factory));
+    const HRESULT dxgi_factory_result = CreateDXGIFactory1(IID_PPV_ARGS(&s_d3d11_renderer->dxgi_factory));
     if (dxgi_factory_result != S_OK)
     {
         SE_LOG_TAG_ERROR("D3D11"sv, "Failed to create the DXGI factory!"sv);
@@ -65,6 +67,9 @@ void D3D11Renderer::shutdown()
 
     s_d3d11_renderer->dxgi_factory->Release();
     s_d3d11_renderer->dxgi_factory = nullptr;
+
+    s_d3d11_renderer->device_context->Release();
+    s_d3d11_renderer->device_context = nullptr;
 
     s_d3d11_renderer->device->Release();
     s_d3d11_renderer->device = nullptr;
@@ -84,10 +89,23 @@ ID3D11Device* D3D11Renderer::get_device()
     return s_d3d11_renderer->device;
 }
 
-IDXGIFactory* D3D11Renderer::get_dxgi_factory()
+ID3D11DeviceContext* D3D11Renderer::get_device_context()
+{
+    SE_ASSERT_DEBUG(s_d3d11_renderer->device_context != nullptr);
+    return s_d3d11_renderer->device_context;
+}
+
+IDXGIFactory2* D3D11Renderer::get_dxgi_factory()
 {
     SE_ASSERT_DEBUG(s_d3d11_renderer->dxgi_factory != nullptr);
     return s_d3d11_renderer->dxgi_factory;
+}
+
+D3D11Context* D3D11Renderer::get_active_context()
+{
+    RenderingContext* active_context = Renderer::get_active_context();
+    SE_ASSERT_DEBUG(active_context);
+    return static_cast<D3D11Context*>(active_context);
 }
 
 } // namespace SE
