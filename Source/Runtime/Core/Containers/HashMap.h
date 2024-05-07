@@ -235,16 +235,20 @@ public:
         const u64 bucket_hash = InternalHashTable::get_element_hash(key_as_bucket);
         const u8 low_bucket_hash = InternalHashTable::get_low_hash(bucket_hash);
 
-        usize slot_index =
-            m_buckets.unchecked_find_element_or_first_available_slot(key_as_bucket, bucket_hash, low_bucket_hash);
+        usize slot_index = invalid_size;
+        
+        if (m_buckets.m_occupied_slot_count != 0)
+        {
+            slot_index = m_buckets.unchecked_find_element_or_first_available_slot(key_as_bucket, bucket_hash, low_bucket_hash);
 
-        if (m_buckets.m_slots_metadata[slot_index] == low_bucket_hash) {
-            // NOTE: The key already exists, so no more action is needed.
-            return m_buckets.m_slots[slot_index].value();
+            if (m_buckets.m_slots_metadata[slot_index] == low_bucket_hash && m_buckets.m_slots[slot_index].key() == key) {
+                // NOTE: The key already exists, so no more action is needed.
+                return m_buckets.m_slots[slot_index].value();
+            }
         }
 
         bool has_re_allocated = m_buckets.re_allocate_if_overloaded(m_buckets.m_occupied_slot_count + 1);
-        if (has_re_allocated) {
+        if (has_re_allocated || slot_index == invalid_size) {
             // NOTE: We already know that the element doesn't exist in the table.
             slot_index = m_buckets.unchecked_find_first_available_slot(bucket_hash);
         }

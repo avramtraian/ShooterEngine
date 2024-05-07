@@ -287,11 +287,17 @@ public:
 
     ALWAYS_INLINE HashTableAddResult add_if_not_existing(const T& element)
     {
+        if (m_occupied_slot_count == 0)
+        {
+            add(element);
+            return HashTableAddResult::InsertedNewEntry;
+        }
+
         const u64 element_hash = get_element_hash(element);
         const u8 low_hash = get_low_hash(element_hash);
 
         usize slot_index = unchecked_find_element_or_first_available_slot(element, element_hash, low_hash);
-        if (m_slots_metadata[slot_index] == low_hash) {
+        if (m_slots_metadata[slot_index] == low_hash && m_slots[slot_index] == element) {
             // The element already exists in the table.
             return HashTableAddResult::EntryAlreadyExists;
         }
@@ -311,11 +317,17 @@ public:
 
     ALWAYS_INLINE HashTableAddResult add_if_not_existing(T&& element)
     {
+        if (m_occupied_slot_count == 0)
+        {
+            add(element);
+            return HashTableAddResult::InsertedNewEntry;
+        }
+
         const u64 element_hash = get_element_hash(element);
         const u8 low_hash = get_low_hash(element_hash);
 
         usize slot_index = unchecked_find_element_or_first_available_slot(element, element_hash, low_hash);
-        if (m_slots_metadata[slot_index] == low_hash) {
+        if (m_slots_metadata[slot_index] == low_hash && m_slots[slot_index] == element) {
             // The element already exists in the table.
             return HashTableAddResult::EntryAlreadyExists;
         }
