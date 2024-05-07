@@ -4,6 +4,7 @@
  */
 
 #include "EditorEngine.h"
+#include "Renderer/Renderer.h"
 
 namespace SE {
 
@@ -15,14 +16,31 @@ bool EditorEngine::initialize()
         return false;
     g_editor_engine = this;
 
+    if (!Renderer::initialize())
+    {
+        SE_LOG_ERROR("Failed to initialize the renderer!"sv);
+        return false;
+    }
+
     SE_LOG_INFO("Creating the primary window..."sv);
-    return g_editor_engine->create_window();
+    if (!g_editor_engine->create_window())
+    {
+        SE_LOG_ERROR("Failed to create the primary window!"sv);
+        return false;
+    }
+
+    Renderer::create_context_for_window(m_window_stack.first().get());
+    RenderingContext* primary_window_rendering_context = Renderer::get_rendering_context_for_window(m_window_stack.first().get());
+    Renderer::set_active_context(primary_window_rendering_context);
+
     return true;
 }
 
 void EditorEngine::shutdown()
 {
     m_window_stack.clear_and_shrink();
+
+    Renderer::shutdown();
 
     g_editor_engine = nullptr;
     Engine::shutdown();
