@@ -41,6 +41,11 @@ project "SE-Engine"
     filter "platforms:Windows"
         systemversion "latest"
         defines { "SE_PLATFORM_WINDOWS=1" }
+
+        links {
+            "d3d11.lib",
+            "dxgi.lib"
+        }
     filter {}
 
     filter "configurations:Debug"
