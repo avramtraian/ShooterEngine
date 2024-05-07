@@ -5,9 +5,8 @@
 
 #pragma once
 
+#include "Renderer/Platform/D3D11/D3D11Headers.h"
 #include "Renderer/RenderingContext.h"
-
-#include <d3d11.h>
 
 namespace SE
 {
