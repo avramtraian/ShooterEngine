@@ -10,8 +10,10 @@
 
 namespace SE {
 
-template<typename T>
 class RefCounted {
+    SE_MAKE_NONCOPYABLE(RefCounted);
+    SE_MAKE_NONMOVABLE(RefCounted);
+
 public:
     RefCounted()
         : m_reference_count(0)
@@ -31,8 +33,7 @@ public:
         SE_ASSERT_DEBUG(m_reference_count > 0);
 
         if (--m_reference_count == 0) {
-            auto* self = static_cast<T*>(this);
-            delete self;
+            delete this;
             return true;
         }
 
@@ -53,6 +54,8 @@ template<typename T>
 class RefPtr {
     template<typename Q>
     friend RefPtr<Q> adopt_ref(Q*);
+    template<typename Q>
+    friend class RefPtr;
 
 public:
     ALWAYS_INLINE RefPtr()
@@ -80,7 +83,7 @@ public:
 
     ALWAYS_INLINE RefPtr& operator=(const RefPtr& other)
     {
-        clear();
+        release();
         m_instance = other.m_instance;
         if (m_instance)
             increment_reference_count();
@@ -89,7 +92,7 @@ public:
 
     ALWAYS_INLINE RefPtr& operator=(RefPtr&& other) noexcept
     {
-        clear();
+        release();
         m_instance = other.m_instance;
         other.m_instance = nullptr;
         return *this;
@@ -114,12 +117,19 @@ public:
     NODISCARD ALWAYS_INLINE T* operator->() { return get(); }
     NODISCARD ALWAYS_INLINE const T* operator->() const { return get(); }
 
-    ALWAYS_INLINE void clear()
+    ALWAYS_INLINE void release()
     {
         if (m_instance) {
             decrement_reference_count();
             m_instance = nullptr;
         }
+    }
+
+    template<typename Q>
+    NODISCARD ALWAYS_INLINE RefPtr<Q> as()
+    {
+        Q* casted_raw_pointer = (Q*)(m_instance);
+        return RefPtr<Q>(casted_raw_pointer);
     }
 
 private:
@@ -130,8 +140,8 @@ private:
             increment_reference_count();
     }
 
-    void increment_reference_count() { static_cast<RefCounted<T>*>(m_instance)->increment_reference_count(); }
-    void decrement_reference_count() { static_cast<RefCounted<T>*>(m_instance)->decrement_reference_count(); }
+    void increment_reference_count() { static_cast<RefCounted*>(m_instance)->increment_reference_count(); }
+    void decrement_reference_count() { static_cast<RefCounted*>(m_instance)->decrement_reference_count(); }
 
 private:
     T* m_instance;
