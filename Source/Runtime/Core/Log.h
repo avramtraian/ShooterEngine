@@ -46,7 +46,7 @@ public:
         Optional<String> formatted_message = format(message, forward<Args>(args)...);
         if (!formatted_message.has_value())
             return;
-        log_message(severity, tag, formatted_message.value().view());
+        log_tagged_message(severity, tag, formatted_message.value().view());
     }
 };
 
