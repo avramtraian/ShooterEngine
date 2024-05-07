@@ -21,7 +21,7 @@ struct Hasher {
 
 template<>
 struct Hasher<void*> {
-    NODISCARD ALWAYS_INLINE static u64 get_hash(const void*& value)
+    NODISCARD ALWAYS_INLINE static u64 get_hash(const void* const& value)
     {
         // TODO: Provide a better hashing function for raw pointers.
         return reinterpret_cast<u64>(value);
