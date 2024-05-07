@@ -213,15 +213,15 @@ public:
 
 public:
     template<typename... Args>
-    ALWAYS_INLINE void emplace(Args&&... args)
+    ALWAYS_INLINE T& emplace(Args&&... args)
     {
         re_allocate_if_required(m_count + 1);
         new (m_elements + m_count) T(forward<Args>(args)...);
-        ++m_count;
+        return m_elements[m_count++];
     }
 
-    ALWAYS_INLINE void add(const T& element) { emplace(element); }
-    ALWAYS_INLINE void add(T&& element) { emplace(move(element)); }
+    ALWAYS_INLINE T& add(const T& element) { return emplace(element); }
+    ALWAYS_INLINE T& add(T&& element) { return emplace(move(element)); }
 
     ALWAYS_INLINE void add_span(Span<const T> elements)
     {
