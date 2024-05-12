@@ -6,8 +6,10 @@
 #pragma once
 
 #include "Engine/Application/Window.h"
+#include "Renderer/IndexBuffer.h"
 #include "Renderer/RenderingContext.h"
 #include "Renderer/RenderPass.h"
+#include "Renderer/VertexBuffer.h"
 
 namespace SE
 {
@@ -27,6 +29,8 @@ public:
 public:
     static void begin_render_pass(RefPtr<RenderPass> render_pass);
     static void end_render_pass();
+
+    static void draw_indexed(RefPtr<VertexBuffer> vertex_buffer, RefPtr<IndexBuffer> index_buffer, u32 index_count);
 };
 
 } // namespace SE

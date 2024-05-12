@@ -205,4 +205,34 @@ void D3D11Renderer::end_render_pass()
     s_d3d11_renderer->active_render_pass.release();
 }
 
+void D3D11Renderer::draw_indexed(RefPtr<VertexBuffer> vertex_buffer, RefPtr<IndexBuffer> index_buffer, u32 index_count)
+{
+    // A render pass must be active.
+    SE_ASSERT(s_d3d11_renderer->active_render_pass.is_valid());
+
+    RefPtr<D3D11VertexBuffer> d3d11_vertex_buffer = vertex_buffer.as<D3D11VertexBuffer>();
+    RefPtr<D3D11IndexBuffer> d3d11_index_buffer = index_buffer.as<D3D11IndexBuffer>();
+
+    // Bind the vertex buffer.
+    const u32 vertex_stride = s_d3d11_renderer->active_render_pass->get_pipeline()->get_vertex_stride();
+    ID3D11Buffer* vertex_buffers[1] = { d3d11_vertex_buffer->get_handle() };
+    UINT strides[1] = { vertex_stride };
+    UINT offsets[1] = { 0 };
+
+    s_d3d11_renderer->device_context->IASetVertexBuffers(0, SE_ARRAY_COUNT(vertex_buffers), vertex_buffers, strides, offsets);
+
+    DXGI_FORMAT index_format = DXGI_FORMAT_UNKNOWN;
+    switch (d3d11_index_buffer->get_index_type())
+    {
+        case IndexType::UInt16: index_format = DXGI_FORMAT_R16_UINT; break;
+        case IndexType::UInt32: index_format = DXGI_FORMAT_R32_UINT; break;
+    }
+
+    // Bind the index buffer.
+    s_d3d11_renderer->device_context->IASetIndexBuffer(d3d11_index_buffer->get_handle(), index_format, 0);
+
+    // Draw.
+    s_d3d11_renderer->device_context->DrawIndexed(index_count, 0, 0);
+}
+
 } // namespace SE

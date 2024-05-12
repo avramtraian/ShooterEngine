@@ -41,6 +41,8 @@ public:
 public:
     virtual void begin_render_pass(RefPtr<RenderPass> render_pass) override;
     virtual void end_render_pass() override;
+
+    virtual void draw_indexed(RefPtr<VertexBuffer> vertex_buffer, RefPtr<IndexBuffer> index_buffer, u32 index_count) override;
 };
 
 } // namespace SE
