@@ -22,8 +22,6 @@ public:
 
     void increment_reference_count()
     {
-        SE_ASSERT_DEBUG(m_reference_count > 0);
-
         // TODO: Ensure that addition would not overflow.
         ++m_reference_count;
     }
