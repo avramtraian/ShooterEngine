@@ -34,7 +34,7 @@ static i32 guarded_main(Span<char*> command_line_arguments)
     while (g_engine->is_running())
         g_engine->tick();
 
-    g_engine->destroy();
+    g_engine->shutdown();
     Engine::destroy();
 
     Platform::shutdown();
