@@ -80,6 +80,19 @@ void Renderer::set_active_context(RenderingContext* context)
     s_renderer->active_rendering_context = context;
 }
 
+void Renderer::begin_frame()
+{
+    // A rendering context must be bound before beginning a new frame.
+    SE_ASSERT(s_renderer->active_rendering_context);
+}
+
+void Renderer::end_frame()
+{
+    // A rendering context must be bound in order to end the frame.
+    SE_ASSERT(s_renderer->active_rendering_context);
+    s_renderer->renderer_interface->present(s_renderer->active_rendering_context);
+}
+
 void Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
 {
     s_renderer->renderer_interface->begin_render_pass(render_pass);

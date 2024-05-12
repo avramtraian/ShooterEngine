@@ -39,6 +39,8 @@ public:
     static D3D11Context* get_active_context();
 
 public:
+    virtual void present(RenderingContext* rendering_context) override;
+
     virtual void begin_render_pass(RefPtr<RenderPass> render_pass) override;
     virtual void end_render_pass() override;
 

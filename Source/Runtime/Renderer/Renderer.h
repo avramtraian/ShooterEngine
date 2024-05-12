@@ -27,6 +27,9 @@ public:
     SHOOTER_API static void set_active_context(RenderingContext* context);
 
 public:
+    SHOOTER_API static void begin_frame();
+    SHOOTER_API static void end_frame();
+
     static void begin_render_pass(RefPtr<RenderPass> render_pass);
     static void end_render_pass();
 

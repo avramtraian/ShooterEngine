@@ -124,6 +124,12 @@ D3D11Context* D3D11Renderer::get_active_context()
     return static_cast<D3D11Context*>(active_context);
 }
 
+void D3D11Renderer::present(RenderingContext* rendering_context)
+{
+    D3D11Context* context = static_cast<D3D11Context*>(rendering_context);
+    context->get_swapchain()->Present(0, 0);
+}
+
 void D3D11Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
 {
     // Another render pass is already active.
