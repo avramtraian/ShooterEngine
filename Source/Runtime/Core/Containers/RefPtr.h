@@ -140,8 +140,8 @@ private:
             increment_reference_count();
     }
 
-    void increment_reference_count() { static_cast<RefCounted*>(m_instance)->increment_reference_count(); }
-    void decrement_reference_count() { static_cast<RefCounted*>(m_instance)->decrement_reference_count(); }
+    void increment_reference_count() { ((RefCounted*)(m_instance))->increment_reference_count(); }
+    void decrement_reference_count() { ((RefCounted*)(m_instance))->decrement_reference_count(); }
 
 private:
     T* m_instance;
