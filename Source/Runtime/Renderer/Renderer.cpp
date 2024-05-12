@@ -14,7 +14,7 @@ namespace SE
 
 struct RendererData
 {
-    OwnPtr<RendererInterface> interface;
+    OwnPtr<RendererInterface> renderer_interface;
     HashMap<void*, OwnPtr<RenderingContext>> context_table;
     RenderingContext* active_rendering_context = nullptr;
 };
@@ -30,8 +30,8 @@ bool Renderer::initialize()
     RendererAPI renderer_api = get_recommended_renderer_api_for_current_platform();
     set_current_renderer_api(renderer_api);
 
-    s_renderer->interface = RendererInterface::create();
-    if (!s_renderer->interface->initialize())
+    s_renderer->renderer_interface = RendererInterface::create();
+    if (!s_renderer->renderer_interface->initialize())
     {
         SE_LOG_ERROR("Failed to create the renderer interface!"sv);
         return false;
@@ -47,8 +47,8 @@ void Renderer::shutdown()
 
     s_renderer->context_table.clear();
 
-    s_renderer->interface->shutdown();
-    s_renderer->interface.release();
+    s_renderer->renderer_interface->shutdown();
+    s_renderer->renderer_interface.release();
 
     s_renderer.release();
 }
