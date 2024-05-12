@@ -126,7 +126,7 @@ public:
     }
 
     template<typename Q>
-    NODISCARD ALWAYS_INLINE RefPtr<Q> as()
+    NODISCARD ALWAYS_INLINE RefPtr<Q> as() const
     {
         Q* casted_raw_pointer = (Q*)(m_instance);
         return RefPtr<Q>(casted_raw_pointer);
