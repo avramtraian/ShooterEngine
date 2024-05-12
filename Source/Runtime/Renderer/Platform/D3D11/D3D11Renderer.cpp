@@ -14,10 +14,10 @@ namespace SE
 
 struct D3D11RendererData
 {
-    ID3D11Device* device;
-    ID3D11DeviceContext* device_context;
-    D3D_FEATURE_LEVEL device_feature_level;
-    IDXGIFactory2* dxgi_factory;
+    ID3D11Device*        device               = nullptr;
+    ID3D11DeviceContext* device_context       = nullptr;
+    IDXGIFactory2*       dxgi_factory         = nullptr;
+    D3D_FEATURE_LEVEL    device_feature_level;
 };
 
 static OwnPtr<D3D11RendererData> s_d3d11_renderer;
@@ -70,6 +70,14 @@ void D3D11Renderer::shutdown()
 
     s_d3d11_renderer->device_context->Release();
     s_d3d11_renderer->device_context = nullptr;
+
+#if SE_CONFIGURATION_DEBUG
+    ID3D11Debug* debug_interface;
+    SE_D3D11_CHECK(s_d3d11_renderer->device->QueryInterface(IID_PPV_ARGS(&debug_interface)));
+    debug_interface->ReportLiveDeviceObjects(D3D11_RLDO_SUMMARY);
+    debug_interface->Release();
+    debug_interface = nullptr;
+#endif // SE_CONFIGURATION_DEBUG
 
     s_d3d11_renderer->device->Release();
     s_d3d11_renderer->device = nullptr;
