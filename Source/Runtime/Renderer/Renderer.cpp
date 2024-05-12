@@ -80,4 +80,14 @@ void Renderer::set_active_context(RenderingContext* context)
     s_renderer->active_rendering_context = context;
 }
 
+void Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
+{
+    s_renderer->renderer_interface->begin_render_pass(render_pass);
+}
+
+void Renderer::end_render_pass()
+{
+    s_renderer->renderer_interface->end_render_pass();
+}
+
 } // namespace SE

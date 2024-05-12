@@ -7,6 +7,7 @@
 
 #include "Engine/Application/Window.h"
 #include "Renderer/RenderingContext.h"
+#include "Renderer/RenderPass.h"
 
 namespace SE
 {
@@ -22,6 +23,10 @@ public:
     
     SHOOTER_API static RenderingContext* get_active_context();
     SHOOTER_API static void set_active_context(RenderingContext* context);
+
+public:
+    static void begin_render_pass(RefPtr<RenderPass> render_pass);
+    static void end_render_pass();
 };
 
 } // namespace SE

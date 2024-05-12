@@ -3,7 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
+#include "Renderer/Platform/D3D11/D3D11Framebuffer.h"
+#include "Renderer/Platform/D3D11/D3D11IndexBuffer.h"
+#include "Renderer/Platform/D3D11/D3D11Pipeline.h"
 #include "Renderer/Platform/D3D11/D3D11Renderer.h"
+#include "Renderer/Platform/D3D11/D3D11RenderPass.h"
+#include "Renderer/Platform/D3D11/D3D11Shader.h"
+#include "Renderer/Platform/D3D11/D3D11VertexBuffer.h"
 #include "Renderer/Renderer.h"
 
 #include <comdef.h>
@@ -18,6 +24,8 @@ struct D3D11RendererData
     ID3D11DeviceContext* device_context       = nullptr;
     IDXGIFactory2*       dxgi_factory         = nullptr;
     D3D_FEATURE_LEVEL    device_feature_level;
+
+    RefPtr<D3D11RenderPass> active_render_pass;
 };
 
 static OwnPtr<D3D11RendererData> s_d3d11_renderer;
@@ -114,6 +122,87 @@ D3D11Context* D3D11Renderer::get_active_context()
     RenderingContext* active_context = Renderer::get_active_context();
     SE_ASSERT_DEBUG(active_context);
     return static_cast<D3D11Context*>(active_context);
+}
+
+void D3D11Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
+{
+    // Another render pass is already active.
+    SE_ASSERT(!s_d3d11_renderer->active_render_pass.is_valid());
+    s_d3d11_renderer->active_render_pass = render_pass.as<D3D11RenderPass>();
+
+    RefPtr<D3D11RenderPass> d3d11_render_pass = render_pass.as<D3D11RenderPass>();
+    RefPtr<D3D11Pipeline> pipeline = d3d11_render_pass->get_pipeline();
+    RefPtr<D3D11Shader> shader = pipeline->get_shader();
+    RefPtr<D3D11Framebuffer> framebuffer = d3d11_render_pass->get_target_framebuffer();
+
+    //
+    // Set pipeline input layout.
+    //
+
+    D3D11_PRIMITIVE_TOPOLOGY primitive_topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    switch (pipeline->get_primitive_topology())
+    {
+        case PrimitiveTopology::TriangleList: primitive_topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST; break;
+    }
+
+    s_d3d11_renderer->device_context->IASetInputLayout(pipeline->get_input_layout());
+    s_d3d11_renderer->device_context->IASetPrimitiveTopology(primitive_topology);
+
+    //
+    // Set shaders.
+    //
+
+    ID3D11DeviceChild* vertex_shader = shader->get_handle(ShaderStageType::Vertex);
+    s_d3d11_renderer->device_context->VSSetShader((ID3D11VertexShader*)(vertex_shader), nullptr, 0);
+
+    ID3D11DeviceChild* fragment_shader = shader->get_handle(ShaderStageType::Fragment);
+    s_d3d11_renderer->device_context->PSSetShader((ID3D11PixelShader*)(fragment_shader), nullptr, 0);
+
+    //
+    // Set the viewport.
+    //
+
+    D3D11_VIEWPORT viewport = {};
+    viewport.TopLeftX = 0;
+    viewport.TopLeftY = 0;
+    viewport.Width = (FLOAT)(framebuffer->get_width());
+    viewport.Height = (FLOAT)(framebuffer->get_height());
+    viewport.MinDepth = 0.0F;
+    viewport.MaxDepth = 1.0F;
+
+    s_d3d11_renderer->device_context->RSSetViewports(1, &viewport);
+
+    //
+    // Set render targets.
+    //
+
+    Vector<ID3D11RenderTargetView*> render_target_views;
+    render_target_views.ensure_capacity(framebuffer->get_attachments().count());
+    for (const auto& attachment : framebuffer->get_attachments())
+        render_target_views.add(attachment.view);
+
+    s_d3d11_renderer->device_context->OMSetRenderTargets(
+        (UINT)(render_target_views.count()),
+        render_target_views.elements(),
+        nullptr
+    );
+
+    //
+    // Clear the render targets.
+    //
+
+    for (const auto& attachment : framebuffer->get_attachments())
+    {
+        FLOAT clear_color[4] = { 0.075F, 0.075F, 0.075F, 1.0F };
+        s_d3d11_renderer->device_context->ClearRenderTargetView(attachment.view, clear_color);
+    }
+}
+
+void D3D11Renderer::end_render_pass()
+{
+    SE_ASSERT(s_d3d11_renderer->active_render_pass.is_valid());
+    // NOTE: Ending the render pass does nothing when using the D3D11 renderer API.
+    s_d3d11_renderer->active_render_pass.release();
 }
 
 } // namespace SE
