@@ -14,7 +14,8 @@ template<typename T>
 struct Hasher {
     NODISCARD ALWAYS_INLINE static u64 get_hash(const T&)
     {
-        SE_ASSERT(false);
+        // TODO: Uncomment the following assert!
+        // SE_ASSERT(false);
         return 0;
     }
 };
