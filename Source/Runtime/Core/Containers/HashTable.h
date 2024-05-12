@@ -223,7 +223,7 @@ public:
     {
         if (m_occupied_slot_count == 0) {
             // No slots are occupied so the table contains no elements.
-            return false;
+            return {};
         }
 
         const u64 element_hash = get_element_hash(element);
