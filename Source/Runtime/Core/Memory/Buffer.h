@@ -34,6 +34,11 @@ public:
         other.m_byte_count = 0;
     }
 
+    ALWAYS_INLINE Buffer(const void* in_bytes, usize in_byte_count)
+        : m_bytes((ReadWriteBytes)(in_bytes))
+        , m_byte_count(in_byte_count)
+    {}
+
     ALWAYS_INLINE Buffer& operator=(const Buffer& other)
     {
         m_bytes = other.m_bytes;
