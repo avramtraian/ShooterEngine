@@ -330,6 +330,32 @@ public:
         re_allocate_to_fixed(fixed_capacity);
     }
 
+    ALWAYS_INLINE void set_count(usize new_count)
+    {
+        re_allocate_if_required(new_count);
+
+        for (usize index = new_count; index < m_count; ++index)
+            m_elements[index].~T();
+
+        for (usize index = m_count; index < new_count; ++index)
+            new (m_elements + index) T();
+
+        m_count = new_count;
+    }
+
+    ALWAYS_INLINE void set_count(usize new_count, const T& constructor_element)
+    {
+        re_allocate_if_required(new_count);
+
+        for (usize index = new_count; index < m_count; ++index)
+            m_elements[index].~T();
+
+        for (usize index = m_count; index < new_count; ++index)
+            new (m_elements + index) T(constructor_element);
+
+        m_count = new_count;
+    }
+
 public:
     NODISCARD ALWAYS_INLINE Iterator begin() { return Iterator(m_elements); }
     NODISCARD ALWAYS_INLINE Iterator end() { return Iterator(m_elements + m_count); }
