@@ -44,7 +44,8 @@ project "SE-Engine"
 
         links {
             "d3d11.lib",
-            "dxgi.lib"
+            "dxgi.lib",
+            "d3dcompiler.lib"
         }
     filter {}
 
