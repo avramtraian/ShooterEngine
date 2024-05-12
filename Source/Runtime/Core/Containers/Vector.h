@@ -52,12 +52,12 @@ public:
         return vector;
     }
 
-    NODISCARD ALWAYS_INLINE static Vector create_filled(usize initial_count, const T& template_element)
+    NODISCARD ALWAYS_INLINE static Vector create_filled(usize initial_count, const T& constructor_element)
     {
         Vector vector = create_with_initial_capacity(initial_count);
         vector.m_count = initial_count;
         for (usize index = 0; index < vector.m_count; ++index)
-            new (vector.m_elements + index) T(template_element);
+            new (vector.m_elements + index) T(constructor_element);
         return vector;
     }
 
