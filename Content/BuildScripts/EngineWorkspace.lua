@@ -27,6 +27,7 @@ workspace "ShooterEngine"
 
     group "Core"
         include "Engine"
+        include "Content"
     group "Tools"
         include "Editor"
     group ""
