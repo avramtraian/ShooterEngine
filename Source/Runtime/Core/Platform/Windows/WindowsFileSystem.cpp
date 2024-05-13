@@ -4,7 +4,7 @@
  */
 
 #include "Core/FileSystem/FileSystem.h"
-#include "Core/Math/MathUtils.h"
+#include "Core/Math/Math.h"
 #include "Core/Platform/Windows/WindowsHeaders.h"
 
 namespace SE {
