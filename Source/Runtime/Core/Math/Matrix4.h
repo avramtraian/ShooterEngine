@@ -27,6 +27,17 @@ public:
         );
     }
 
+    NODISCARD ALWAYS_INLINE static Matrix4 transpose(const Matrix4& matrix);
+    NODISCARD ALWAYS_INLINE static Matrix4 inverse_and_determinant(const Matrix4& matrix, float& out_determinant);
+    NODISCARD ALWAYS_INLINE static Matrix4 inverse(const Matrix4& matrix);
+    NODISCARD ALWAYS_INLINE static float determinant(const Matrix4& matrix);
+
+    NODISCARD ALWAYS_INLINE static Matrix4 translate(float offset_x, float offset_y, float offset_z);
+    NODISCARD ALWAYS_INLINE static Matrix4 rotate_x(float angle);
+    NODISCARD ALWAYS_INLINE static Matrix4 rotate_y(float angle);
+    NODISCARD ALWAYS_INLINE static Matrix4 rotate_z(float angle);
+    NODISCARD ALWAYS_INLINE static Matrix4 scale(float scale_x, float scale_y, float scale_z);
+
 public:
     // Initializes to the null matrix (all elements are zero).
     ALWAYS_INLINE Matrix4()
@@ -49,6 +60,10 @@ public:
         rows[3] = other.rows[3];
         return *this;
     }
+
+public:
+    NODISCARD ALWAYS_INLINE Matrix4 operator*(const Matrix4& right) const;
+    NODISCARD ALWAYS_INLINE Matrix4& operator*=(const Matrix4& right);
 
 public:
     union
