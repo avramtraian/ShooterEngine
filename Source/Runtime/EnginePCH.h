@@ -7,3 +7,4 @@
 
 #include "Core/CoreDefines.h"
 #include "Core/Log.h"
+#include "Core/Math/ShooterMath.h"
