@@ -51,13 +51,66 @@ String::String(StringView string_view)
 {
     char* destination_buffer = m_inline_buffer;
 
-    if (is_stored_on_heap()) {
+    if (is_stored_on_heap())
+    {
         m_heap_buffer = allocate_memory(m_byte_count);
         destination_buffer = m_heap_buffer;
     }
 
     copy_memory_from_span(destination_buffer, string_view.byte_span());
     destination_buffer[m_byte_count - 1] = 0;
+}
+
+String& String::append(StringView view_to_append)
+{
+    if (view_to_append.is_empty())
+        return *this;
+
+    const usize new_byte_count = m_byte_count + view_to_append.byte_span().count();
+
+    if (new_byte_count <= inline_capacity)
+    {
+        SE_ASSERT_DEBUG(m_byte_count > 0);
+        copy_memory_from_span(m_inline_buffer + m_byte_count - 1, view_to_append.byte_span());
+        m_byte_count = new_byte_count;
+        m_inline_buffer[m_byte_count - 1] = 0;
+        return *this;
+    }
+
+    char* new_heap_buffer = allocate_memory(new_byte_count);
+    copy_memory_from_span(new_heap_buffer, byte_span());
+    SE_ASSERT_DEBUG(m_byte_count > 0);
+    copy_memory_from_span(new_heap_buffer + m_byte_count - 1, view_to_append.byte_span());
+    new_heap_buffer[new_byte_count - 1] = 0;
+
+    if (is_stored_on_heap())
+        release_memory(m_heap_buffer, m_byte_count);
+
+    m_heap_buffer = new_heap_buffer;
+    m_byte_count = new_byte_count;
+    return *this;
+}
+
+String String::operator+(StringView view_to_append) const
+{
+    const usize byte_count = m_byte_count + view_to_append.byte_span().count();
+
+    String result;
+    char* destination_buffer = result.m_inline_buffer;
+
+    if (byte_count > inline_capacity)
+    {
+        result.m_heap_buffer = allocate_memory(byte_count);
+        destination_buffer = result.m_heap_buffer;
+    }
+
+    copy_memory_from_span(destination_buffer, byte_span());
+    SE_ASSERT_DEBUG(m_byte_count > 0);
+    copy_memory_from_span(destination_buffer + m_byte_count - 1, view_to_append.byte_span());
+    destination_buffer[byte_count - 1] = 0;
+
+    result.m_byte_count = byte_count;
+    return result;
 }
 
 #define SE_FILEPATH_DELIMITATOR '/'
@@ -133,18 +186,24 @@ String& String::operator=(StringView string_view)
     usize byte_count = string_view.byte_span().count() + 1;
     char* destination_buffer = m_inline_buffer;
 
-    if (is_stored_inline()) {
-        if (byte_count > inline_capacity) {
+    if (is_stored_inline())
+    {
+        if (byte_count > inline_capacity)
+        {
             m_heap_buffer = allocate_memory(byte_count);
             destination_buffer = m_heap_buffer;
         }
     }
-    else {
-        if (byte_count <= inline_capacity) {
+    else
+    {
+        if (byte_count <= inline_capacity)
+        {
             release_memory(m_heap_buffer, m_byte_count);
         }
-        else {
-            if (m_byte_count != byte_count) {
+        else
+        {
+            if (m_byte_count != byte_count)
+            {
                 release_memory(m_heap_buffer, m_byte_count);
                 m_heap_buffer = allocate_memory(byte_count);
             }

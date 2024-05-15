@@ -18,7 +18,8 @@ namespace SE {
 // be instead stored inline. This allows small strings to be very efficient in terms
 // of performance, as copying and creating them would be very cheap.
 //
-class String {
+class String
+{
 public:
     static constexpr usize inline_capacity = sizeof(char*);
     static_assert(inline_capacity > 0);
@@ -93,7 +94,14 @@ public:
     NODISCARD ALWAYS_INLINE bool is_stored_inline() const { return m_byte_count <= inline_capacity; }
     NODISCARD ALWAYS_INLINE bool is_stored_on_heap() const { return m_byte_count > inline_capacity; }
 
-public: // String filepath API
+public:
+    NODISCARD SHOOTER_API String& append(StringView view_to_append);
+    NODISCARD SHOOTER_API String operator+(StringView view_to_append) const;
+
+    NODISCARD ALWAYS_INLINE String& append(const String& string_to_append) { return append(string_to_append.view()); }
+    NODISCARD ALWAYS_INLINE String operator+(const String& string_to_append) const { return (*this) + string_to_append.view(); }
+
+public: // Filepath API
     NODISCARD SHOOTER_API StringView path_parent() const;
     NODISCARD SHOOTER_API StringView path_filename() const;
     NODISCARD SHOOTER_API StringView path_stem() const;
@@ -111,7 +119,8 @@ private:
     static void release_memory(char* heap_buffer, usize byte_count);
 
 private:
-    union {
+    union
+    {
         char m_inline_buffer[inline_capacity];
         char* m_heap_buffer;
     };
