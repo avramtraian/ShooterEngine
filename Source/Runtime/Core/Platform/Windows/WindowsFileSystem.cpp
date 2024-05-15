@@ -142,9 +142,9 @@ FileError FileReader::read_entire(Buffer& out_buffer)
     return FileError::Success;
 }
 
-FileError FileReader::try_read_entire(WriteonlyByteSpan output_buffer, usize& out_number_of_read_bytes)
+FileError FileReader::try_read_entire(WriteonlyByteSpan output_buffer, Optional<usize>& out_number_of_read_bytes)
 {
-    out_number_of_read_bytes = invalid_size;
+    out_number_of_read_bytes.clear();
 
     // Ensure that the file stream is ready to read.
     if (!m_handle_is_opened)
@@ -161,10 +161,7 @@ FileError FileReader::try_read_entire(WriteonlyByteSpan output_buffer, usize& ou
 
     // Check if the provided output buffer is large enough.
     if (output_buffer.count() < file_size)
-    {
-        out_number_of_read_bytes = 0;
         return FileError::Success;
-    }
 
     // Read from the file.
     FileError file_error = read_from_file(m_native_handle, output_buffer, 0, file_size);
@@ -175,7 +172,38 @@ FileError FileReader::try_read_entire(WriteonlyByteSpan output_buffer, usize& ou
     return FileError::Success;
 }
 
-FileError FileReader::read(Buffer& out_buffer, usize read_offset_in_bytes, usize number_of_bytes_to_read)
+FileError FileReader::read(WriteonlyByteSpan output_buffer, usize read_offset_in_bytes, usize number_of_bytes_to_read)
+{
+    // Ensure that the file stream is ready to read.
+    if (!m_handle_is_opened)
+        return FileError::FileHandleNotOpened;
+
+    if (m_native_handle == INVALID_HANDLE_VALUE && m_open_policy == OpenPolicy::NonExistingFileIsEmpty)
+        return FileError::Success;
+
+    // Get the size of the file.
+    LARGE_INTEGER file_size_large_integer;
+    if (!GetFileSizeEx(m_native_handle, &file_size_large_integer))
+        return FileError::Unknown;
+    const usize file_size = file_size_large_integer.QuadPart;
+
+    // Ensure that the reading region is between the file bounds.
+    if (read_offset_in_bytes + number_of_bytes_to_read > file_size)
+        return FileError::ReadOutOfBounds;
+
+    // Check if the provided output buffer is large enough.
+    if (output_buffer.count() < number_of_bytes_to_read)
+        return FileError::BufferNotLargeEnough;
+
+    // Read from the file.
+    FileError file_error = read_from_file(m_native_handle, output_buffer, read_offset_in_bytes, number_of_bytes_to_read);
+    if (file_error != FileError::Success)
+        return file_error;
+
+    return FileError::Success;
+}
+
+FileError FileReader::read_to_new_buffer(Buffer& out_buffer, usize read_offset_in_bytes, usize number_of_bytes_to_read)
 {
     SE_ASSERT(out_buffer.is_empty());
 
@@ -210,34 +238,21 @@ FileError FileReader::read(Buffer& out_buffer, usize read_offset_in_bytes, usize
     return FileError::Success;
 }
 
-FileError FileReader::try_read(WriteonlyByteSpan output_buffer, usize read_offset_in_bytes, usize number_of_bytes_to_read, usize& out_number_of_read_bytes)
+FileError FileReader::read_entire_and_close(Buffer& out_buffer)
 {
-    out_number_of_read_bytes = invalid_size;
+    const FileError file_error = read_entire(out_buffer);
+    if (file_error == FileError::Success)
+        close();
+    return file_error;
+}
 
-    // Ensure that the file stream is ready to read.
-    if (!m_handle_is_opened)
-        return FileError::FileHandleNotOpened;
+FileError FileReader::try_read_entire_and_close(WriteonlyByteSpan output_buffer, Optional<usize>& out_number_of_read_bytes)
+{
+    const FileError file_error = try_read_entire(output_buffer, out_number_of_read_bytes);
+    if (file_error == FileError::Success && out_number_of_read_bytes.has_value())
+        close();
 
-    if (m_native_handle == INVALID_HANDLE_VALUE && m_open_policy == OpenPolicy::NonExistingFileIsEmpty)
-        return FileError::Success;
-
-    // Get the size of the file.
-    LARGE_INTEGER file_size_large_integer;
-    if (!GetFileSizeEx(m_native_handle, &file_size_large_integer))
-        return FileError::Unknown;
-    const usize file_size = file_size_large_integer.QuadPart;
-
-    // Ensure that the reading regions is between the file bounds.
-    if (read_offset_in_bytes + number_of_bytes_to_read > file_size)
-        return FileError::ReadOutOfBounds;
-
-    // Read from the file.
-    FileError file_error = read_from_file(m_native_handle, output_buffer, read_offset_in_bytes, number_of_bytes_to_read);
-    if (file_error != FileError::Success)
-        return file_error;
-
-    out_number_of_read_bytes = number_of_bytes_to_read;
-    return FileError::Success;
+    return file_error;
 }
 
 //==============================================================================================================
@@ -328,6 +343,14 @@ FileError FileWriter::write(ReadonlyByteSpan bytes_to_write)
         return file_error;
     
     return FileError::Success;
+}
+
+SHOOTER_API FileError FileWriter::write_and_close(ReadonlyByteSpan bytes_to_write)
+{
+    const FileError file_error = write(bytes_to_write);
+    if (file_error == FileError::Success)
+        close();
+    return file_error;
 }
 
 //==============================================================================================================

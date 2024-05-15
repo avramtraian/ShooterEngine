@@ -5,12 +5,25 @@
 
 #pragma once
 
-#include "Core/CoreTypes.h"
-#include "Core/EngineAPI.h"
 #include "Core/Memory/Buffer.h"
+
+//
+// Macro the checks if the return value is FileError::Success.
+// If not, an error message is logged and an assertions is triggered.
+//
+#define SE_CHECK_FILE_ERROR(expression)           \
+    if ((expression) != ::SE::FileError::Success) \
+    {                                             \
+        SE_LOG_ERROR("File error occured!"sv);    \
+        SE_ASSERT(false);                         \
+    }
 
 namespace SE {
 
+//
+// Error codes for file I/O operations.
+// All abstractions over the platform layer that can fail will return one of these error codes.
+//
 enum class FileError : u32 {
     Success = 0,
     Unknown = 1,
@@ -20,14 +33,8 @@ enum class FileError : u32 {
     FileAlreadyInUse,
     PermissionDenied,
     ReadOutOfBounds,
+    BufferNotLargeEnough,
 };
-
-#define SE_CHECK_FILE_ERROR(expression)           \
-    if ((expression) != ::SE::FileError::Success) \
-    {                                             \
-        SE_LOG_ERROR("File error occured!"sv);    \
-        SE_ASSERT(false);                         \
-    }
 
 //
 // Abstraction over the platform API that allows reading from disk files.
@@ -72,23 +79,35 @@ public:
     // will be set to zero and FileError::Success will be returned (if there are no other file IO errors).
     // If an error occurs while reading the file, the number of read bytes parameter will be set to 'invalid_size'.
     //
-    SHOOTER_API FileError try_read_entire(WriteonlyByteSpan output_buffer, usize& out_number_of_read_bytes);
+    SHOOTER_API FileError try_read_entire(WriteonlyByteSpan output_buffer, Optional<usize>& out_number_of_read_bytes);
     
     //
-    // Reads the from the file and stores its contents in a newly allocated buffer.
+    // Reads from the file and stores the content in the given output buffer.
+    // If the provided buffer is not large enough to stored the requested number of bytes, FileError::BufferNotLargeEnough
+    // will be returned. If the region (determined by the offset and the number of bytes) to read exceeds the total file
+    // size, FileError::ReadOutOfBounds is returned.
+    //
+    SHOOTER_API FileError read(WriteonlyByteSpan output_buffer, usize read_offset_in_bytes, usize number_of_bytes_to_read);
+
+    //
+    // Reads from the file and stores the content in a newly allocated buffer.
     // It is the responsibility of the caller to manage the lifetime of the provided buffer.
     // The provided buffer object must be empty, otherwise an assert will be triggered.
     //
-    SHOOTER_API FileError read(Buffer& out_buffer, usize read_offset_in_bytes, usize number_of_bytes_to_read);
+    SHOOTER_API FileError read_to_new_buffer(Buffer& out_buffer, usize read_offset_in_bytes, usize number_of_bytes_to_read);
     
     //
-    // Tries to read from the file and store the contents in the provided buffer. If the provided
-    // buffer is not large enough, nothing will be written. In this case, the number of read bytes parameter
-    // will be set to zero and FileError::Success will be returned (if there are no other file IO errors).
-    // If an error occurs while reading the file, the number of read bytes parameter will be set to 'invalid_size'.
+    // Reads the entire file and closes the file handle if the operation is successful.
+    // It directly wraps around the 'read_entire' and 'close' functions.
     //
-    SHOOTER_API FileError try_read(WriteonlyByteSpan output_buffer, usize read_offset_in_bytes, usize number_of_bytes_to_read, usize& out_number_of_read_bytes);
-    
+    SHOOTER_API FileError read_entire_and_close(Buffer& out_buffer);
+
+    //
+    // Tries to read the entire file and if succeeds closes the file handle.
+    // It directly wraps around the 'try_read_entire' and 'close' functions.
+    //
+    SHOOTER_API FileError try_read_entire_and_close(WriteonlyByteSpan output_buffer, Optional<usize>& out_number_of_read_bytes);
+
 private:
     void* m_native_handle;
     bool m_handle_is_opened;
@@ -126,7 +145,16 @@ public:
     SHOOTER_API void close();
     ALWAYS_INLINE bool is_opened() const { return m_handle_is_opened; }
 
+    //
+    // Writes the given bytes to the end of the file.
+    //
     SHOOTER_API FileError write(ReadonlyByteSpan bytes_to_write);
+
+    //
+    // Writes the given bytes to the end of the file and closes the file handle if the operation is successful.
+    // It directly wraps around the 'write' and 'close' functions.
+    //
+    SHOOTER_API FileError write_and_close(ReadonlyByteSpan bytes_to_write);
 
 private:
     void* m_native_handle;
