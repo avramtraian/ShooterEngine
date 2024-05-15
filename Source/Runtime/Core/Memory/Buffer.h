@@ -6,6 +6,7 @@
 #pragma once
 
 #include "Core/Containers/Span.h"
+#include "Core/EngineAPI.h"
 
 namespace SE
 {
