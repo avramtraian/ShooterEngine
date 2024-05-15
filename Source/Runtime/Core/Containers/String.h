@@ -9,6 +9,9 @@
 #include "Core/Containers/StringView.h"
 #include "Core/EngineAPI.h"
 
+#define SE_FILEPATH_DELIMITATOR           '/'
+#define SE_FILEPATH_EXTENSION_DELIMITATOR '.'
+
 namespace SE {
 
 //
@@ -20,6 +23,8 @@ namespace SE {
 //
 class String
 {
+    friend class StringBuilder;
+
 public:
     static constexpr usize inline_capacity = sizeof(char*);
     static_assert(inline_capacity > 0);

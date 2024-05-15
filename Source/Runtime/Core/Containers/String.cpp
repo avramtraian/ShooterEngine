@@ -113,9 +113,6 @@ String String::operator+(StringView view_to_append) const
     return result;
 }
 
-#define SE_FILEPATH_DELIMITATOR '/'
-#define SE_FILEPATH_EXTENSION_DELIMITATOR '.'
-
 StringView String::path_parent() const
 {
     const StringView this_as_view = view();
