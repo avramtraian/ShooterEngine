@@ -93,23 +93,21 @@ String& String::append(StringView view_to_append)
 
 String String::operator+(StringView view_to_append) const
 {
-    const usize byte_count = m_byte_count + view_to_append.byte_span().count();
-
     String result;
+    result.m_byte_count = m_byte_count + view_to_append.byte_span().count();
     char* destination_buffer = result.m_inline_buffer;
 
-    if (byte_count > inline_capacity)
+    if (result.is_stored_on_heap())
     {
-        result.m_heap_buffer = allocate_memory(byte_count);
+        result.m_heap_buffer = allocate_memory(result.m_byte_count);
         destination_buffer = result.m_heap_buffer;
     }
 
     copy_memory_from_span(destination_buffer, byte_span());
     SE_ASSERT_DEBUG(m_byte_count > 0);
     copy_memory_from_span(destination_buffer + m_byte_count - 1, view_to_append.byte_span());
-    destination_buffer[byte_count - 1] = 0;
+    destination_buffer[result.m_byte_count - 1] = 0;
 
-    result.m_byte_count = byte_count;
     return result;
 }
 
