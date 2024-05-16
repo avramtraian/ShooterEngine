@@ -4,6 +4,7 @@
  */
 
 #include "EditorEngine.h"
+#include "Core/Containers/StringBuilder.h"
 #include "Renderer/Renderer.h"
 
 namespace SE {
@@ -15,6 +16,11 @@ bool EditorEngine::initialize()
     if (!Engine::initialize())
         return false;
     g_editor_engine = this;
+
+    // NOTE: Currently, there is no way to select/set the project you want to open in the
+    //       editor, thus the engine always picks the default example project.
+    m_project_name = "ExampleProject"sv;
+    m_project_root_directory = "Content/ExampleProject"sv;
 
     if (!Renderer::initialize())
     {
@@ -110,6 +116,26 @@ Window* EditorEngine::find_window_by_native_handle(void* native_handle)
     }
 
     return nullptr;
+}
+
+#define SE_PROJECT_FILE_EXTENSION    ".seproject"sv
+#define SE_PROJECT_DIRECTORY_CONTENT "Content"sv
+#define SE_PROJECT_DIRECTORY_SOURCE  "Source"sv
+
+String EditorEngine::get_project_file_filepath() const
+{
+    const String project_file = m_project_name + SE_PROJECT_FILE_EXTENSION;
+    return StringBuilder::path_join({ m_project_root_directory.view(), project_file.view() });
+}
+
+String EditorEngine::get_project_content_directory() const
+{
+    return StringBuilder::path_join({ m_project_root_directory.view(), SE_PROJECT_DIRECTORY_CONTENT });
+}
+
+String EditorEngine::get_project_source_directory() const
+{
+    return StringBuilder::path_join({ m_project_root_directory.view(), SE_PROJECT_DIRECTORY_SOURCE });
 }
 
 } // namespace SE
