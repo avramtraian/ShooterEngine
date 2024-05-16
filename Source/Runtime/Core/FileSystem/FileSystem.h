@@ -171,6 +171,9 @@ public:
     // If the provided filepath is not valid or it doesn't represent a file, this function
     // will return an empty optional.
     SHOOTER_API NODISCARD static Optional<usize> get_file_size(const String& filepath);
+
+public:
+    SHOOTER_API static void set_working_directory(const String& filepath);
 };
 
 } // namespace SE

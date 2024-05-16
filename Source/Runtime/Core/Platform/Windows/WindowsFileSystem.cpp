@@ -389,4 +389,9 @@ Optional<usize> FileSystem::get_file_size(const String& filepath)
     return success ? Optional<usize>(file_size.QuadPart) : Optional<usize>();
 }
 
+void FileSystem::set_working_directory(const String& filepath)
+{
+    SetCurrentDirectoryA(filepath_to_cstr(filepath));
+}
+
 } // namespace SE
