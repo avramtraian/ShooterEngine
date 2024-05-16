@@ -128,6 +128,11 @@ public:
     using ConstIterator = Detail::HashMapIterator<KeyType, const ValueType, InternalHashTable>;
 
 public:
+    NODISCARD ALWAYS_INLINE usize count() const { return m_buckets.count(); }
+    NODISCARD ALWAYS_INLINE bool is_empty() const { return m_buckets.is_empty(); }
+    NODISCARD ALWAYS_INLINE bool has_elements() const { return m_buckets.has_elements(); }
+
+public:
     NODISCARD ALWAYS_INLINE Optional<usize> find(const KeyType& key)
     {
         const Bucket& key_as_bucket = unsafe_bucket_from_key(key);

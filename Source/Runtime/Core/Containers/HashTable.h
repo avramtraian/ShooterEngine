@@ -219,6 +219,11 @@ public:
     }
 
 public:
+    NODISCARD ALWAYS_INLINE usize count() const { return m_occupied_slot_count; }
+    NODISCARD ALWAYS_INLINE bool is_empty() const { return (m_occupied_slot_count == 0); }
+    NODISCARD ALWAYS_INLINE bool has_elements() const { return (m_occupied_slot_count > 0); }
+
+public:
     NODISCARD ALWAYS_INLINE Optional<usize> find(const T& element) const
     {
         if (m_occupied_slot_count == 0) {
