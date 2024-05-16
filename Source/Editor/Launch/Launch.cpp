@@ -4,6 +4,7 @@
  */
 
 #include "Core/Containers/Span.h"
+#include "Core/FileSystem/FileSystem.h"
 #include "Core/Platform/Platform.h"
 #include "EditorEngine.h"
 
@@ -20,6 +21,9 @@ static i32 guarded_main(Span<char*> command_line_arguments)
 {
     if (!Platform::initialize())
         return 1;
+
+    // Set the engine root as the process working directory.
+    FileSystem::set_working_directory("../../"sv);
 
     if (!Engine::instantiate<EditorEngine>()) {
         // TODO: Log error message.
