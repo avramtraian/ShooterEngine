@@ -20,6 +20,7 @@ public:
 
 public:
     SHOOTER_API static StringView create_from_utf8(const char* characters, usize byte_count);
+    SHOOTER_API static StringView create_from_utf8(ReadonlyByteSpan characters_byte_span);
     SHOOTER_API static StringView create_from_utf8(const char* null_terminated_characters);
 
     NODISCARD ALWAYS_INLINE static constexpr StringView

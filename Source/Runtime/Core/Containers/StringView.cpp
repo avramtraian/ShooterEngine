@@ -16,6 +16,11 @@ StringView StringView::create_from_utf8(const char* characters, usize byte_count
     return unsafe_create_from_utf8(characters, byte_count);
 }
 
+StringView StringView::create_from_utf8(ReadonlyByteSpan characters_byte_span)
+{
+    return create_from_utf8(characters_byte_span.as<const char>().elements(), characters_byte_span.count());
+}
+
 StringView StringView::create_from_utf8(const char* null_terminated_characters)
 {
     usize byte_count = UTF8::byte_count(reinterpret_cast<ReadonlyBytes>(null_terminated_characters));
