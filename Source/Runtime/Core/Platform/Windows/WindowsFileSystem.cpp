@@ -177,7 +177,10 @@ FileError FileReader::read_entire_to_string(String& out_string)
     Buffer file_buffer;
     const FileError file_error = read_entire(file_buffer);
     if (file_error != FileError::Success)
+    {
+        out_string.clear();
         return file_error;
+    }
 
     out_string = StringView::create_from_utf8(file_buffer.readonly_span());
     file_buffer.release();

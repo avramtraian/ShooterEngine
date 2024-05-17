@@ -81,6 +81,10 @@ public:
     //
     SHOOTER_API FileError try_read_entire(WriteonlyByteSpan output_buffer, Optional<usize>& out_number_of_read_bytes);
     
+    //
+    // Reads the entire file and stores its content in a string.
+    // If an error occurs while reading the file, the given string will be cleared.
+    //
     SHOOTER_API FileError read_entire_to_string(String& out_string);
 
     //
