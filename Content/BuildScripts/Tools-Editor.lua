@@ -34,12 +34,20 @@ project "SE-Editor"
     {
         ("%{prj.location}"),
         (engine_root.."/Source"),
-        (engine_root.."/Source/Runtime")
+        (engine_root.."/Source/Runtime"),
+
+        (engine_root.."/Source/ThirdParty/yaml-cpp/include")
+    }
+
+    defines
+    {
+        "YAML_CPP_STATIC_DEFINE"
     }
 
     links
     {
-        "SE-Engine"
+        "SE-Engine",
+        "SE-YamlCPP"
     }
 
     filter "platforms:Windows"
