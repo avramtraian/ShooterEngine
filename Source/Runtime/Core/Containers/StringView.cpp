@@ -24,9 +24,10 @@ StringView StringView::create_from_utf8(ReadonlyByteSpan characters_byte_span)
 StringView StringView::create_from_utf8(const char* null_terminated_characters)
 {
     usize byte_count = UTF8::byte_count(reinterpret_cast<ReadonlyBytes>(null_terminated_characters));
-    SE_ASSERT(byte_count != invalid_size);
+    SE_ASSERT(byte_count != invalid_size && byte_count != 0);
 
-    return unsafe_create_from_utf8(null_terminated_characters, byte_count);
+    // NOTE: The number of bytes also includes the null-termination character.
+    return unsafe_create_from_utf8(null_terminated_characters, byte_count - 1);
 }
 
 usize StringView::find(char ascii_character) const
