@@ -133,10 +133,16 @@ public:
     NODISCARD ALWAYS_INLINE bool has_elements() const { return m_buckets.has_elements(); }
 
 public:
-    NODISCARD ALWAYS_INLINE Optional<usize> find(const KeyType& key)
+    NODISCARD ALWAYS_INLINE Optional<usize> find(const KeyType& key) const
     {
         const Bucket& key_as_bucket = unsafe_bucket_from_key(key);
         return m_buckets.find(key_as_bucket);
+    }
+
+    NODISCARD ALWAYS_INLINE bool contains(const KeyType& key) const
+    {
+        Optional<usize> optional_index = find(key);
+        return optional_index.has_value();
     }
 
     NODISCARD ALWAYS_INLINE Optional<ValueType&> get_if_exists(const KeyType& key)
