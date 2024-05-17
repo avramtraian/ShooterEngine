@@ -309,7 +309,7 @@ FileWriter::~FileWriter()
     close();
 }
 
-FileError FileWriter::open(const String& filepath, OpenPolicy open_policy /*= OpenPolicy::CreateIfNotExisting*/, SharePolicy share_policy /*= SharePolicy::Exclusive*/)
+FileError FileWriter::open(const String& filepath, bool append /*= false*/, OpenPolicy open_policy /*= OpenPolicy::CreateIfNotExisting*/, SharePolicy share_policy /*= SharePolicy::Exclusive*/)
 {
     // Close the previously opened file handle.
     close();
@@ -324,14 +324,23 @@ FileError FileWriter::open(const String& filepath, OpenPolicy open_policy /*= Op
         case SharePolicy::ReadWrite: share_mode = FILE_SHARE_READ | FILE_SHARE_WRITE; break;
     }
 
-    switch (open_policy)
+    if (append)
     {
-        case OpenPolicy::OpenExisting:        creation_disposition = OPEN_EXISTING; break;
-        case OpenPolicy::CreateIfNotExisting: creation_disposition = OPEN_ALWAYS; break;
-        case OpenPolicy::CreateNew:           creation_disposition = CREATE_NEW; break;
+        switch (open_policy)
+        {
+            case OpenPolicy::OpenExisting:        creation_disposition = OPEN_EXISTING; break;
+            case OpenPolicy::CreateIfNotExisting: creation_disposition = OPEN_ALWAYS; break;
+        }
+    }
+    else
+    {
+        if (FileSystem::exists(filepath))
+            creation_disposition = TRUNCATE_EXISTING;
+        else
+            creation_disposition = CREATE_NEW;
     }
 
-    if (open_policy != OpenPolicy::OpenExisting)
+    if (open_policy == OpenPolicy::CreateIfNotExisting)
     {
         FileError file_error = create_directory_recusively(filepath.path_parent());
         if (file_error != FileError::Success)

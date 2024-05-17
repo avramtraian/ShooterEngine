@@ -135,10 +135,7 @@ public:
 
         // Creates a new file if it doesn't already exist on disk. It will recursively generate directories
         // until the parent path is completed.
-        CreateIfNotExisting,
-
-        // Always create a new file. It will recursively generate directories until the parent path is completed.
-        CreateNew,
+        CreateIfNotExisting
     };
 
     enum class SharePolicy : u8 {
@@ -154,7 +151,7 @@ public:
     SHOOTER_API FileWriter();
     SHOOTER_API ~FileWriter();
 
-    SHOOTER_API FileError open(const String& filepath, OpenPolicy open_policy = OpenPolicy::CreateIfNotExisting, SharePolicy share_policy = SharePolicy::Exclusive);
+    SHOOTER_API FileError open(const String& filepath, bool append = false, OpenPolicy open_policy = OpenPolicy::CreateIfNotExisting, SharePolicy share_policy = SharePolicy::Exclusive);
     SHOOTER_API void close();
     ALWAYS_INLINE bool is_opened() const { return m_handle_is_opened; }
 
