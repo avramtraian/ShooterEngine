@@ -81,6 +81,8 @@ public:
     //
     SHOOTER_API FileError try_read_entire(WriteonlyByteSpan output_buffer, Optional<usize>& out_number_of_read_bytes);
     
+    SHOOTER_API FileError read_entire_to_string(String& out_string);
+
     //
     // Reads from the file and stores the content in the given output buffer.
     // If the provided buffer is not large enough to stored the requested number of bytes, FileError::BufferNotLargeEnough
@@ -107,6 +109,12 @@ public:
     // It directly wraps around the 'try_read_entire' and 'close' functions.
     //
     SHOOTER_API FileError try_read_entire_and_close(WriteonlyByteSpan output_buffer, Optional<usize>& out_number_of_read_bytes);
+
+    //
+    // Reads the entire file as a string and closes the file handle if the operation is successful.
+    // It directly wraps around the 'try_read_entire' and 'close' functions.
+    //
+    SHOOTER_API FileError read_entire_to_string_and_close(String& out_string);
 
 private:
     void* m_native_handle;

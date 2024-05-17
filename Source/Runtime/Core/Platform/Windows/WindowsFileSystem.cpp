@@ -172,6 +172,19 @@ FileError FileReader::try_read_entire(WriteonlyByteSpan output_buffer, Optional<
     return FileError::Success;
 }
 
+FileError FileReader::read_entire_to_string(String& out_string)
+{
+    Buffer file_buffer;
+    const FileError file_error = read_entire(file_buffer);
+    if (file_error != FileError::Success)
+        return file_error;
+
+    out_string = StringView::create_from_utf8(file_buffer.readonly_span());
+    file_buffer.release();
+    
+    return FileError::Success;
+}
+
 FileError FileReader::read(WriteonlyByteSpan output_buffer, usize read_offset_in_bytes, usize number_of_bytes_to_read)
 {
     // Ensure that the file stream is ready to read.
@@ -250,6 +263,15 @@ FileError FileReader::try_read_entire_and_close(WriteonlyByteSpan output_buffer,
 {
     const FileError file_error = try_read_entire(output_buffer, out_number_of_read_bytes);
     if (file_error == FileError::Success && out_number_of_read_bytes.has_value())
+        close();
+
+    return file_error;
+}
+
+FileError FileReader::read_entire_to_string_and_close(String& out_string)
+{
+    const FileError file_error = read_entire_to_string(out_string);
+    if (file_error == FileError::Success)
         close();
 
     return file_error;
