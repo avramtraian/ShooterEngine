@@ -27,7 +27,10 @@ String StringBuilder::join(std::initializer_list<StringView> views_list)
 
     usize byte_offset = 0;
     for (StringView view : views_list)
+    {
         copy_memory_from_span(destination_buffer + byte_offset, view.byte_span());
+        byte_offset += view.byte_span().count();
+    }
     destination_buffer[result.m_byte_count - 1] = 0;
 
     return result;
@@ -36,14 +39,15 @@ String StringBuilder::join(std::initializer_list<StringView> views_list)
 String StringBuilder::path_join(std::initializer_list<StringView> paths_list)
 {
     usize result_byte_count = 0;
-    for (StringView path : paths_list)
+    for (usize path_index = 0; path_index < paths_list.size(); ++path_index)
     {
+        const StringView& path = paths_list.begin()[path_index];
         if (path.is_empty())
             continue;
 
         result_byte_count += path.byte_span().count();
 
-        if (path.byte_span().first() != SE_FILEPATH_DELIMITATOR)
+        if (path_index != 0 && path.byte_span().first() != SE_FILEPATH_DELIMITATOR)
             result_byte_count += sizeof(SE_FILEPATH_DELIMITATOR);
     }
     result_byte_count += sizeof('\0');
@@ -59,18 +63,20 @@ String StringBuilder::path_join(std::initializer_list<StringView> paths_list)
     }
 
     usize byte_offset = 0;
-    for (StringView path : paths_list)
+    for (usize path_index = 0; path_index < paths_list.size(); ++path_index)
     {
+        const StringView& path = paths_list.begin()[path_index];
         if (path.is_empty())
             continue;
 
-        if (path.byte_span().first() != SE_FILEPATH_DELIMITATOR)
+        if (path_index != 0 && path.byte_span().first() != SE_FILEPATH_DELIMITATOR)
         {
             destination_buffer[byte_offset] = SE_FILEPATH_DELIMITATOR;
             byte_offset += sizeof(SE_FILEPATH_DELIMITATOR);
         }
 
         copy_memory_from_span(destination_buffer + byte_offset, path.byte_span());
+        byte_offset += path.byte_span().count();
     }
 
     destination_buffer[result.m_byte_count - 1] = 0;
