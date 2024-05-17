@@ -73,6 +73,13 @@ public:
     //
     SHOOTER_API FileError read_entire(Buffer& out_buffer);
 
+
+    //
+    // Reads the entire file and closes the file handle if the operation is successful.
+    // It directly wraps around the 'read_entire' and 'close' functions.
+    //
+    SHOOTER_API FileError read_entire_and_close(Buffer& out_buffer);
+
     //
     // Tries to read the entire file and store its contents in the provided buffer. If the provided
     // buffer is not large enough, nothing will be written. In this case, the number of read bytes parameter
@@ -80,12 +87,24 @@ public:
     // If an error occurs while reading the file, the number of read bytes parameter will be set to 'invalid_size'.
     //
     SHOOTER_API FileError try_read_entire(WriteonlyByteSpan output_buffer, Optional<usize>& out_number_of_read_bytes);
-    
+
+    //
+    // Tries to read the entire file and if succeeds closes the file handle.
+    // It directly wraps around the 'try_read_entire' and 'close' functions.
+    //
+    SHOOTER_API FileError try_read_entire_and_close(WriteonlyByteSpan output_buffer, Optional<usize>& out_number_of_read_bytes);
+
     //
     // Reads the entire file and stores its content in a string.
     // If an error occurs while reading the file, the given string will be cleared.
     //
     SHOOTER_API FileError read_entire_to_string(String& out_string);
+
+    //
+    // Reads the entire file as a string and closes the file handle if the operation is successful.
+    // It directly wraps around the 'try_read_entire' and 'close' functions.
+    //
+    SHOOTER_API FileError read_entire_to_string_and_close(String& out_string);
 
     //
     // Reads from the file and stores the content in the given output buffer.
@@ -101,24 +120,6 @@ public:
     // The provided buffer object must be empty, otherwise an assert will be triggered.
     //
     SHOOTER_API FileError read_to_new_buffer(Buffer& out_buffer, usize read_offset_in_bytes, usize number_of_bytes_to_read);
-    
-    //
-    // Reads the entire file and closes the file handle if the operation is successful.
-    // It directly wraps around the 'read_entire' and 'close' functions.
-    //
-    SHOOTER_API FileError read_entire_and_close(Buffer& out_buffer);
-
-    //
-    // Tries to read the entire file and if succeeds closes the file handle.
-    // It directly wraps around the 'try_read_entire' and 'close' functions.
-    //
-    SHOOTER_API FileError try_read_entire_and_close(WriteonlyByteSpan output_buffer, Optional<usize>& out_number_of_read_bytes);
-
-    //
-    // Reads the entire file as a string and closes the file handle if the operation is successful.
-    // It directly wraps around the 'try_read_entire' and 'close' functions.
-    //
-    SHOOTER_API FileError read_entire_to_string_and_close(String& out_string);
 
 private:
     void* m_native_handle;

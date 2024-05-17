@@ -43,6 +43,21 @@ static FileError read_from_file(HANDLE file_handle, WriteonlyByteSpan output_buf
     return FileError::Success;
 }
 
+static FileError create_directory_recusively(const String& directory_filepath)
+{
+    if (!FileSystem::exists(directory_filepath))
+    {
+        FileError file_error = create_directory_recusively(directory_filepath.path_parent());
+        if (file_error != FileError::Success)
+            return file_error;
+
+        if (!CreateDirectoryA(filepath_to_cstr(directory_filepath), nullptr))
+            return FileError::Unknown;
+    }
+
+    return FileError::Success;
+}
+
 static FileError write_to_file(HANDLE file_handle, ReadonlyByteSpan byte_buffer_to_write)
 {
     usize byte_offset = 0;
@@ -142,6 +157,14 @@ FileError FileReader::read_entire(Buffer& out_buffer)
     return FileError::Success;
 }
 
+FileError FileReader::read_entire_and_close(Buffer& out_buffer)
+{
+    const FileError file_error = read_entire(out_buffer);
+    if (file_error == FileError::Success)
+        close();
+    return file_error;
+}
+
 FileError FileReader::try_read_entire(WriteonlyByteSpan output_buffer, Optional<usize>& out_number_of_read_bytes)
 {
     out_number_of_read_bytes.clear();
@@ -172,6 +195,15 @@ FileError FileReader::try_read_entire(WriteonlyByteSpan output_buffer, Optional<
     return FileError::Success;
 }
 
+FileError FileReader::try_read_entire_and_close(WriteonlyByteSpan output_buffer, Optional<usize>& out_number_of_read_bytes)
+{
+    const FileError file_error = try_read_entire(output_buffer, out_number_of_read_bytes);
+    if (file_error == FileError::Success && out_number_of_read_bytes.has_value())
+        close();
+
+    return file_error;
+}
+
 FileError FileReader::read_entire_to_string(String& out_string)
 {
     Buffer file_buffer;
@@ -186,6 +218,15 @@ FileError FileReader::read_entire_to_string(String& out_string)
     file_buffer.release();
     
     return FileError::Success;
+}
+
+FileError FileReader::read_entire_to_string_and_close(String& out_string)
+{
+    const FileError file_error = read_entire_to_string(out_string);
+    if (file_error == FileError::Success)
+        close();
+
+    return file_error;
 }
 
 FileError FileReader::read(WriteonlyByteSpan output_buffer, usize read_offset_in_bytes, usize number_of_bytes_to_read)
@@ -254,32 +295,6 @@ FileError FileReader::read_to_new_buffer(Buffer& out_buffer, usize read_offset_i
     return FileError::Success;
 }
 
-FileError FileReader::read_entire_and_close(Buffer& out_buffer)
-{
-    const FileError file_error = read_entire(out_buffer);
-    if (file_error == FileError::Success)
-        close();
-    return file_error;
-}
-
-FileError FileReader::try_read_entire_and_close(WriteonlyByteSpan output_buffer, Optional<usize>& out_number_of_read_bytes)
-{
-    const FileError file_error = try_read_entire(output_buffer, out_number_of_read_bytes);
-    if (file_error == FileError::Success && out_number_of_read_bytes.has_value())
-        close();
-
-    return file_error;
-}
-
-FileError FileReader::read_entire_to_string_and_close(String& out_string)
-{
-    const FileError file_error = read_entire_to_string(out_string);
-    if (file_error == FileError::Success)
-        close();
-
-    return file_error;
-}
-
 //==============================================================================================================
 // FILE WRITER.
 //==============================================================================================================
@@ -292,21 +307,6 @@ FileWriter::FileWriter()
 FileWriter::~FileWriter()
 {
     close();
-}
-
-static FileError create_directory_recusively(const String& directory_filepath)
-{
-    if (!FileSystem::exists(directory_filepath))
-    {
-        FileError file_error = create_directory_recusively(directory_filepath.path_parent());
-        if (file_error != FileError::Success)
-            return file_error;
-        
-        if (!CreateDirectoryA(filepath_to_cstr(directory_filepath), nullptr))
-            return FileError::Unknown;
-    }
-    
-    return FileError::Success;
 }
 
 FileError FileWriter::open(const String& filepath, OpenPolicy open_policy /*= OpenPolicy::CreateIfNotExisting*/, SharePolicy share_policy /*= SharePolicy::Exclusive*/)
