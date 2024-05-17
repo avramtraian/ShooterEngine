@@ -28,8 +28,7 @@ String::String()
 
 String::~String()
 {
-    if (is_stored_on_heap())
-        release_memory(m_heap_buffer, m_byte_count);
+    clear();
 }
 
 String::String(const String& other)
@@ -109,6 +108,15 @@ String String::operator+(StringView view_to_append) const
     destination_buffer[result.m_byte_count - 1] = 0;
 
     return result;
+}
+
+void String::clear()
+{
+    if (is_stored_on_heap())
+        release_memory(m_heap_buffer, m_byte_count);
+
+    m_byte_count = 1;
+    m_inline_buffer[0] = 0;
 }
 
 StringView String::path_parent() const

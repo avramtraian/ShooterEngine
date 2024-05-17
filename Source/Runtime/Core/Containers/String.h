@@ -106,6 +106,8 @@ public:
     NODISCARD ALWAYS_INLINE String& append(const String& string_to_append) { return append(string_to_append.view()); }
     NODISCARD ALWAYS_INLINE String operator+(const String& string_to_append) const { return (*this) + string_to_append.view(); }
 
+    SHOOTER_API void clear();
+
 public: // Filepath API
     NODISCARD SHOOTER_API StringView path_parent() const;
     NODISCARD SHOOTER_API StringView path_filename() const;
