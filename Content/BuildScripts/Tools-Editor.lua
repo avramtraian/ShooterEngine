@@ -3,10 +3,12 @@
 -- SPDX-License-Identifier: Apache-2.0.
 --
 
-project "SE-Engine"
+project "SE-Editor"
     language "C++"
     cppdialect "C++20"
-    
+    location (engine_root.."/Source/Editor")
+
+    staticruntime "Off"
     rtti "Off"
     exceptionhandling "Off"
     characterset "Unicode"
@@ -14,55 +16,51 @@ project "SE-Engine"
 
     targetdir (engine_root.."/Binaries/%{cfg.buildcfg}")
     objdir (engine_root.."/Intermediate")
-    targetname "SE-Engine"
 
-    kind "SharedLib"
-    staticruntime "Off"
-    location (engine_root.."/Source/Runtime")
+    pchheader ("EditorPCH.h")
+    pchsource ("../../Source/Editor/EditorPCH.cpp")
+    forceincludes { "EditorPCH.h" }
+    
+    debugdir (engine_root.."/Binaries/%{cfg.buildcfg}")
 
-    pchheader ("EnginePCH.h")
-    pchsource ("../../Source/Runtime/EnginePCH.cpp")
-    forceincludes { "EnginePCH.h" }
-
-    files {
+    files
+    {
         "%{prj.location}/**.cpp",
         "%{prj.location}/**.h",
         "%{prj.location}/**.inl"
     }
 
-    includedirs {
-        "%{prj.location}"
+    includedirs
+    {
+        ("%{prj.location}"),
+        (engine_root.."/Source"),
+        (engine_root.."/Source/Runtime")
     }
 
-    defines {
-        "SE_EXPORT_ENGINE_API"
+    links
+    {
+        "SE-Engine"
     }
 
     filter "platforms:Windows"
         systemversion "latest"
         defines { "SE_PLATFORM_WINDOWS=1" }
-
-        links {
-            "d3d11.lib",
-            "dxgi.lib",
-            "d3dcompiler.lib"
-        }
     filter {}
 
     filter "configurations:Debug"
+        kind "ConsoleApp"
         optimize "off"
         symbols "on"
         defines { "SE_CONFIGURATION_DEBUG=1" }
     filter {}
 
     filter "configurations:Development"
+        kind "ConsoleApp"
         optimize "on"
         symbols "on"
         defines { "SE_CONFIGURATION_DEVELOPMENT=1" }
     filter {}
 
     filter "configurations:Shipping"
-        optimize "speed"
-        symbols "off"
-        defines { "SE_CONFIGURATION_SHIPPING=1" }
+        kind "None"
     filter {}

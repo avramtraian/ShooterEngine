@@ -6,7 +6,7 @@
 @echo off
 pushd "%~dp0"
 
-call "Binaries/ThirdParty/Premake/Win64/premake5.exe" --file="Content/BuildScripts/EngineWorkspace.lua" vs2022
+call "Binaries/ThirdParty/Premake/Win64/premake5.exe" --file="Content/BuildScripts/Workspace-Engine.lua" vs2022
 
 popd
 pause
