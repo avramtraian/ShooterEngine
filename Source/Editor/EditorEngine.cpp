@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
+#include "EditorAsset/EditorAssetManager.h"
 #include "EditorEngine.h"
 #include "Core/Containers/StringBuilder.h"
 #include "Renderer/Renderer.h"
@@ -21,6 +22,13 @@ bool EditorEngine::initialize()
     //       editor, thus the engine always picks the default example project.
     m_project_name = "ExampleProject"sv;
     m_project_root_directory = "Content/ExampleProject"sv;
+
+    AssetManager::instantiate<EditorAssetManager>();
+    if (!g_asset_manager->initialize())
+    {
+        SE_LOG_ERROR("Failed to initialize the asset manager!"sv);
+        return false;
+    }
 
     if (!Renderer::initialize())
     {
@@ -47,6 +55,7 @@ void EditorEngine::shutdown()
     m_window_stack.clear_and_shrink();
 
     Renderer::shutdown();
+    g_asset_manager->shutdown();
 
     g_editor_engine = nullptr;
     Engine::shutdown();
