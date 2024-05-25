@@ -45,11 +45,14 @@ ALWAYS_INLINE static VertexAttributeMetadata get_vertex_attribute_metadata(Verte
 }
 
 D3D11Pipeline::D3D11Pipeline(const PipelineInfo& info)
-    : m_layout(info.layout)
+    : m_input_layout(nullptr)
+    , m_rasterizer_state(nullptr)
+    , m_layout(info.layout)
     , m_vertex_stride(0)
-    , m_input_layout(nullptr)
     , m_shader(info.shader.as<D3D11Shader>())
     , m_primitive_topology(info.primitive_topology)
+    , m_front_face(info.front_face)
+    , m_is_culling_enabled(info.enable_culling)
 {
     Vector<D3D11_INPUT_ELEMENT_DESC> input_element_descriptions;
     input_element_descriptions.ensure_capacity(m_layout.attributes.count());
@@ -95,14 +98,28 @@ D3D11Pipeline::D3D11Pipeline(const PipelineInfo& info)
         vertex_shader_bytecode->elements(), vertex_shader_bytecode->count(),
         &m_input_layout)
     );
+
+    D3D11_RASTERIZER_DESC rasterizer_description = {};
+    rasterizer_description.FillMode = D3D11_FILL_SOLID;
+    rasterizer_description.CullMode = m_is_culling_enabled ? D3D11_CULL_BACK : D3D11_CULL_NONE;
+    rasterizer_description.FrontCounterClockwise = (m_front_face == FrontFace::CounterClockwise);
+    rasterizer_description.DepthClipEnable = false;
+
+    SE_D3D11_CHECK(D3D11Renderer::get_device()->CreateRasterizerState(&rasterizer_description, &m_rasterizer_state));
 }
-    
+
 D3D11Pipeline::~D3D11Pipeline()
 {
     if (m_input_layout)
     {
         m_input_layout->Release();
         m_input_layout = nullptr;
+    }
+
+    if (m_rasterizer_state)
+    {
+        m_rasterizer_state->Release();
+        m_rasterizer_state = nullptr;
     }
 }
 

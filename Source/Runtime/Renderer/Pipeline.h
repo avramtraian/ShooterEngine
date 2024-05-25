@@ -48,11 +48,19 @@ enum class PrimitiveTopology : u8
     TriangleList,
 };
 
+enum class FrontFace : u8
+{
+    CounterClockwise,
+    Clockwise,
+};
+
 struct PipelineInfo
 {
-    PipelineLayout    layout;
-    RefPtr<Shader>    shader;
+    PipelineLayout layout;
+    RefPtr<Shader> shader;
     PrimitiveTopology primitive_topology = PrimitiveTopology::TriangleList;
+    FrontFace front_face = FrontFace::Clockwise;
+    bool enable_culling = false;
 };
 
 class Pipeline : public RefCounted

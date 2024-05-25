@@ -165,7 +165,7 @@ void D3D11Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
     s_d3d11_renderer->device_context->PSSetShader((ID3D11PixelShader*)(fragment_shader), nullptr, 0);
 
     //
-    // Set the viewport.
+    // Set the viewport and the rasterizer state.
     //
 
     D3D11_VIEWPORT viewport = {};
@@ -177,6 +177,7 @@ void D3D11Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
     viewport.MaxDepth = 1.0F;
 
     s_d3d11_renderer->device_context->RSSetViewports(1, &viewport);
+    s_d3d11_renderer->device_context->RSSetState(pipeline->get_rasterizer_state());
 
     //
     // Set render targets.
