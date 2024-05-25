@@ -88,4 +88,42 @@ private:
     usize m_byte_count;
 };
 
+class ScopedBuffer
+{
+    SE_MAKE_NONCOPYABLE(ScopedBuffer);
+    SE_MAKE_NONMOVABLE(ScopedBuffer);
+
+public:
+    ScopedBuffer() = default;
+
+    ALWAYS_INLINE ~ScopedBuffer()
+    {
+        release();
+    }
+
+public:
+    NODISCARD ALWAYS_INLINE ReadWriteBytes bytes() const { return m_buffer.bytes(); }
+    NODISCARD ALWAYS_INLINE ReadonlyBytes readonly_bytes() const { return m_buffer.readonly_bytes(); }
+    NODISCARD ALWAYS_INLINE ReadWriteBytes operator*() const { return *m_buffer; }
+
+    NODISCARD ALWAYS_INLINE usize count() const { return m_buffer.count(); }
+    NODISCARD ALWAYS_INLINE usize byte_count() const { return m_buffer.byte_count(); }
+    NODISCARD ALWAYS_INLINE bool is_empty() const { return m_buffer.is_empty(); }
+
+    NODISCARD ALWAYS_INLINE ReadWriteByteSpan span() const { return m_buffer.span(); }
+    NODISCARD ALWAYS_INLINE ReadonlyByteSpan readonly_span() const { return m_buffer.readonly_span(); }
+
+    template<typename T>
+    NODISCARD ALWAYS_INLINE T* as() const { return m_buffer.as<T>(); }
+
+public:
+    // The buffer must be empty before calling this function. Otherwise, an assert will be triggered.
+    ALWAYS_INLINE void allocate(usize in_byte_count) { m_buffer.allocate(in_byte_count); }
+    ALWAYS_INLINE void release() { m_buffer.release(); }
+    ALWAYS_INLINE void re_allocate(usize in_byte_count) { m_buffer.re_allocate(in_byte_count); }
+
+private:
+    Buffer m_buffer;
+};
+
 } // namespace SE
