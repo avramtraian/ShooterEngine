@@ -49,7 +49,7 @@ public:
         return *this;
     }
 
-private:
+public:
     T x;
     T y;
 };
