@@ -25,7 +25,7 @@ public:
     virtual AssetMetadata& get_asset_metadata(AssetHandle handle) = 0;
 
     template<typename T>
-    NODISCARD ALWAYS_INLINE RefPtr<T> get_asset_sync(AssetHandle handle)
+    ALWAYS_INLINE RefPtr<T> get_asset_sync(AssetHandle handle)
     {
         RefPtr<Asset> asset = get_asset_sync(handle);
         if (!asset.is_valid())
