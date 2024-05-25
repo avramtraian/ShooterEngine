@@ -87,10 +87,10 @@ struct Color4
 {
 public:
     ALWAYS_INLINE constexpr Color4()
-        : r(0)
-        , g(0)
-        , b(0)
-        , a(0)
+        : r(0.0F)
+        , g(0.0F)
+        , b(0.0F)
+        , a(0.0F)
     {}
 
     ALWAYS_INLINE constexpr Color4(const Color4& other)
@@ -100,7 +100,7 @@ public:
         , a(other.a)
     {}
 
-    ALWAYS_INLINE constexpr Color4(float in_r, float in_g, float in_b, float in_a = 1.0F)
+    ALWAYS_INLINE constexpr Color4(float in_r, float in_g, float in_b, float in_a)
         : r(in_r)
         , g(in_g)
         , b(in_b)
