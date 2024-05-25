@@ -13,7 +13,9 @@ namespace SE
 
 D3D11RenderPass::D3D11RenderPass(const RenderPassInfo& info)
     : m_pipeline(info.pipeline.as<D3D11Pipeline>())
-    , m_target_framebuffer(info.target_framebuffer.as<D3D11Framebuffer>())
+    , m_target_framebuffer(info.target.framebuffer.as<D3D11Framebuffer>())
+    , m_should_clear_target(info.target.clear)
+    , m_target_clear_color(info.target.clear_color)
 {
 }
 

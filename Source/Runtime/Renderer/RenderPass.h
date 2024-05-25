@@ -11,10 +11,18 @@
 namespace SE
 {
 
+struct RenderPassTarget
+{
+    RefPtr<Framebuffer> framebuffer;
+    bool clear = true;
+    // Only used when the 'clear' flag is set to true.
+    Color4 clear_color = { 0, 0, 0, 255 };
+};
+
 struct RenderPassInfo
 {
-    RefPtr<Pipeline>    pipeline;
-    RefPtr<Framebuffer> target_framebuffer;
+    RefPtr<Pipeline> pipeline;
+    RenderPassTarget target;
 };
 
 class RenderPass : public RefCounted

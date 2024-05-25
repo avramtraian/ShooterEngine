@@ -198,10 +198,14 @@ void D3D11Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
     // Clear the render targets.
     //
 
-    for (const auto& attachment : framebuffer->get_attachments())
+    if (d3d11_render_pass->should_clear_target())
     {
-        FLOAT clear_color[4] = { 0.075F, 0.075F, 0.075F, 1.0F };
-        s_d3d11_renderer->device_context->ClearRenderTargetView(attachment.view, clear_color);
+        for (const auto& attachment : framebuffer->get_attachments())
+        {
+            const Color4 color = d3d11_render_pass->get_target_clear_color();
+            const FLOAT clear_color[4] = { color.r, color.g, color.b, color.a };
+            s_d3d11_renderer->device_context->ClearRenderTargetView(attachment.view, clear_color);
+        }
     }
 }
 
