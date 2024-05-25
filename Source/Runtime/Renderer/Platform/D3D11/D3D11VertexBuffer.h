@@ -18,10 +18,14 @@ public:
     D3D11VertexBuffer(const VertexBufferInfo& info);
     virtual ~D3D11VertexBuffer() override;
 
+    virtual void update_data(ReadonlyByteSpan data) override;
+
     ALWAYS_INLINE ID3D11Buffer* get_handle() const { return m_buffer; }
 
 private:
     ID3D11Buffer* m_buffer;
+    u32 m_buffer_byte_count;
+    VertexBufferUpdateFrequency m_update_frequency;
 };
 
 } // namespace SE

@@ -10,9 +10,17 @@
 namespace SE
 {
 
+enum class VertexBufferUpdateFrequency
+{
+    Never,
+    Normal,
+    High,
+};
+
 struct VertexBufferInfo
 {
-    usize            byte_count;
+    u32 byte_count = 0;
+    VertexBufferUpdateFrequency update_frequency = VertexBufferUpdateFrequency::Normal;
     ReadonlyByteSpan data;
 };
 
@@ -25,6 +33,7 @@ public:
     static RefPtr<VertexBuffer> create(const VertexBufferInfo& info);
 
 public:
+    virtual void update_data(ReadonlyByteSpan data) = 0;
 };
 
 } // namespace SE
