@@ -8,29 +8,44 @@
 #include "Core/Assertions.h"
 #include "Core/CoreTypes.h"
 
-namespace SE {
+namespace SE
+{
 
-class RefCounted {
+class RefCounted
+{
     SE_MAKE_NONCOPYABLE(RefCounted);
     SE_MAKE_NONMOVABLE(RefCounted);
 
+    template<typename T>
+    friend class RefPtr;
+
 public:
-    RefCounted()
+    ALWAYS_INLINE RefCounted()
         : m_reference_count(0)
     {}
+
     virtual ~RefCounted() = default;
 
-    void increment_reference_count()
+private:
+    NODISCARD ALWAYS_INLINE u32 get_reference_count() const
+    {
+        SE_ASSERT(m_reference_count > 0);
+        return m_reference_count;
+    }
+
+    ALWAYS_INLINE void increment_reference_count()
     {
         // TODO: Ensure that addition would not overflow.
         ++m_reference_count;
     }
 
-    bool decrement_reference_count()
+    // Returns true when the instance is destroyed.
+    ALWAYS_INLINE bool decrement_reference_count()
     {
         SE_ASSERT_DEBUG(m_reference_count > 0);
 
-        if (--m_reference_count == 0) {
+        if (--m_reference_count == 0)
+        {
             delete this;
             return true;
         }
@@ -38,18 +53,13 @@ public:
         return false;
     }
 
-    u32 reference_count() const
-    {
-        SE_ASSERT(m_reference_count > 0);
-        return m_reference_count;
-    }
-
 private:
     u32 m_reference_count;
 };
 
 template<typename T>
-class RefPtr {
+class RefPtr
+{
     template<typename Q>
     friend RefPtr<Q> adopt_ref(Q*);
     template<typename Q>
@@ -117,7 +127,8 @@ public:
 
     ALWAYS_INLINE void release()
     {
-        if (m_instance) {
+        if (m_instance)
+        {
             decrement_reference_count();
             m_instance = nullptr;
         }
