@@ -6,6 +6,7 @@
 #pragma once
 
 #include "Asset/Asset.h"
+#include "Renderer/Texture.h"
 
 namespace SE
 {
@@ -16,11 +17,13 @@ public:
     NODISCARD ALWAYS_INLINE static AssetType get_static_type() { return AssetType::Texture; }
     virtual ~TextureAsset() override = default;
 
-    SHOOTER_API TextureAsset(String texture_filepath);
+    SHOOTER_API TextureAsset(RefPtr<Texture2D> renderer_texture, String texture_filepath);
 
+    NODISCARD ALWAYS_INLINE RefPtr<Texture2D> get_renderer_texture() const { return m_renderer_texture; }
     NODISCARD ALWAYS_INLINE const String& get_texture_filepath() const { return m_texture_filepath; }
 
 private:
+    RefPtr<Texture2D> m_renderer_texture;
     String m_texture_filepath;
 };
 

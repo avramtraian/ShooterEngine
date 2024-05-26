@@ -8,8 +8,9 @@
 namespace SE
 {
 
-TextureAsset::TextureAsset(String texture_filepath)
+TextureAsset::TextureAsset(RefPtr<Texture2D> renderer_texture, String texture_filepath)
     : Asset(AssetType::Texture)
+    , m_renderer_texture(move(renderer_texture))
     , m_texture_filepath(move(texture_filepath))
 {
 }

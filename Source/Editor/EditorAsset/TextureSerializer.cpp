@@ -113,10 +113,11 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
     SE_CHECK_FILE_ERROR(texture_file_reader.open(absolute_texture_filepath));
     SE_CHECK_FILE_ERROR(texture_file_reader.read_entire_and_close(texture_file));
 
-    int width, height, channel_count;
+    int width, height;
+    const u32 channel_count = 4;
     stbi_uc* loaded_texture_bytes = stbi_load_from_memory(
         texture_file.bytes(), (int)(texture_file.count()),
-        &width, &height, &channel_count, STBI_rgb_alpha);
+        &width, &height, nullptr, channel_count);
     texture_file.release();
 
     const usize loaded_texture_byte_count = (usize)(width) * (usize)(height) * (usize)(channel_count);
@@ -124,11 +125,18 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
 
     const u32 texture_width = (u32)(width);
     const u32 texture_height = (u32)(height);
-    const u32 texture_channel_count = (u32)(channel_count);
-    
-    RefPtr<TextureAsset> asset = make_ref<TextureAsset>(texture_filepath);
+    const u32 texture_channel_count = channel_count;
 
+    Texture2DInfo renderer_texture_info = {};
+    renderer_texture_info.width = texture_width;
+    renderer_texture_info.height = texture_width;
+    renderer_texture_info.format = ImageFormat::RGBA8;
+    renderer_texture_info.data = loaded_texture.readonly_span();
+
+    RefPtr<Texture2D> renderer_texture = Texture2D::create(renderer_texture_info);
     loaded_texture.release();
+    
+    RefPtr<TextureAsset> asset = make_ref<TextureAsset>(move(renderer_texture), texture_filepath);
     return asset.as<Asset>();
 }
 
