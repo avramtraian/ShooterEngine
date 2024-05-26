@@ -11,7 +11,8 @@
 
 namespace SE {
 
-class EditorEngine final : public Engine {
+class EditorEngine final : public Engine
+{
 public:
     EditorEngine() = default;
     virtual ~EditorEngine() override = default;
@@ -25,6 +26,7 @@ public:
     virtual Window* find_window_by_native_handle(void* native_handle) override;
 
 public:
+    virtual const String& get_engine_root_directory() const override { return m_engine_root_directory; }
     NODISCARD ALWAYS_INLINE const String& get_project_name() const { return m_project_name; }
     NODISCARD ALWAYS_INLINE const String& get_project_root_directory() const { return m_project_root_directory; }
 
@@ -36,6 +38,7 @@ private:
     // The first element in this vector is always the primary window.
     Vector<OwnPtr<Window>> m_window_stack;
 
+    String m_engine_root_directory;
     String m_project_name;
     String m_project_root_directory;
 };

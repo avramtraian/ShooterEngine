@@ -11,7 +11,8 @@
 
 namespace SE {
 
-class Engine {
+class Engine
+{
     SE_MAKE_NONCOPYABLE(Engine);
     SE_MAKE_NONMOVABLE(Engine);
 
@@ -46,6 +47,9 @@ public:
     // doesn't override this function, it will always return nullptr, as there are no windows.
     //
     SHOOTER_API virtual Window* find_window_by_native_handle(void* native_handle) { return nullptr; }
+
+public:
+    virtual const String& get_engine_root_directory() const = 0;
 
 protected:
     Engine() = default;

@@ -18,10 +18,12 @@ bool EditorEngine::initialize()
         return false;
     g_editor_engine = this;
 
+    // NOTE: The current working is the engine root, so no redirection is necessary.
+    m_engine_root_directory = ""sv;
     // NOTE: Currently, there is no way to select/set the project you want to open in the
     //       editor, thus the engine always picks the default example project.
     m_project_name = "ExampleProject"sv;
-    m_project_root_directory = "Content/ExampleProject"sv;
+    m_project_root_directory = StringBuilder::path_join({ m_engine_root_directory.view(), "Content/ExampleProject"sv });
 
     AssetManager::instantiate<EditorAssetManager>();
     if (!g_asset_manager->initialize())
@@ -42,7 +44,7 @@ bool EditorEngine::initialize()
         SE_LOG_ERROR("Failed to create the primary window!"sv);
         return false;
     }
-
+    
     Renderer::create_context_for_window(m_window_stack.first().get());
     RenderingContext* primary_window_rendering_context = Renderer::get_rendering_context_for_window(m_window_stack.first().get());
     Renderer::set_active_context(primary_window_rendering_context);
