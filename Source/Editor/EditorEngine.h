@@ -8,6 +8,7 @@
 #include "Core/Containers/OwnPtr.h"
 #include "Core/Containers/Vector.h"
 #include "Engine/Engine.h"
+#include "Renderer/WorldRenderer.h"
 
 namespace SE {
 
@@ -41,6 +42,8 @@ private:
     String m_engine_root_directory;
     String m_project_name;
     String m_project_root_directory;
+
+    OwnPtr<WorldRenderer> m_world_renderer;
 };
 
 // It points to the same object as the 'g_engine' global variable.

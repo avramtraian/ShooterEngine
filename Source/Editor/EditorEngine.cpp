@@ -49,11 +49,22 @@ bool EditorEngine::initialize()
     RenderingContext* primary_window_rendering_context = Renderer::get_rendering_context_for_window(m_window_stack.first().get());
     Renderer::set_active_context(primary_window_rendering_context);
 
+    Window* window = m_window_stack.first().get();
+    m_world_renderer = make_own<WorldRenderer>();
+    if (!m_world_renderer->initialize(window->get_width(), window->get_height()))
+    {
+        SE_LOG_ERROR("Failed to initialize the world renderer!"sv);
+        return false;
+    }
+
     return true;
 }
 
 void EditorEngine::shutdown()
 {
+    m_world_renderer->shutdown();
+    m_world_renderer.release();
+
     m_window_stack.clear_and_shrink();
 
     Renderer::shutdown();
@@ -90,6 +101,7 @@ void EditorEngine::tick()
     }
 
     Engine::tick();
+    m_world_renderer->render();
 }
 
 Window* EditorEngine::create_window()
