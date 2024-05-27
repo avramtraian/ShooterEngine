@@ -26,6 +26,11 @@ public:
     static OwnPtr<RenderingContext> create(const RenderingContextInfo& info);
 
 public:
+    //
+    // Resizes the rendering context.
+    // All framebuffers that target swapchain images will be destroyed.
+    //
+    virtual void resize(u32 new_width, u32 new_height) = 0;
 };
 
 } // namespace SE

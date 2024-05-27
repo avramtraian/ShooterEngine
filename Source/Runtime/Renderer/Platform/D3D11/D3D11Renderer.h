@@ -39,6 +39,8 @@ public:
     static D3D11Context* get_active_context();
 
 public:
+    virtual void on_resize(u32 new_width, u32 new_height) override;
+
     virtual void present(RenderingContext* rendering_context) override;
 
     virtual void begin_render_pass(RefPtr<RenderPass> render_pass) override;

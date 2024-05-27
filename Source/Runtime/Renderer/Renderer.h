@@ -19,6 +19,7 @@ class Renderer
 public:
     SHOOTER_API static bool initialize();
     SHOOTER_API static void shutdown();
+    SHOOTER_API static bool is_initialized();
 
     SHOOTER_API static bool create_context_for_window(Window* window);
     SHOOTER_API static RenderingContext* get_rendering_context_for_window(Window* window);
@@ -29,6 +30,8 @@ public:
 public:
     SHOOTER_API static void begin_frame();
     SHOOTER_API static void end_frame();
+
+    SHOOTER_API static void on_resize(u32 new_width, u32 new_height);
 
     static void begin_render_pass(RefPtr<RenderPass> render_pass);
     static void end_render_pass();

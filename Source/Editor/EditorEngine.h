@@ -7,6 +7,7 @@
 
 #include "Core/Containers/OwnPtr.h"
 #include "Core/Containers/Vector.h"
+#include "Engine/Application/Event.h"
 #include "Engine/Engine.h"
 #include "Renderer/WorldRenderer.h"
 
@@ -34,6 +35,9 @@ public:
     String get_project_file_filepath() const;
     String get_project_content_directory() const;
     String get_project_source_directory() const;
+
+private:
+    static void on_event(const Event& in_event);
 
 private:
     // The first element in this vector is always the primary window.

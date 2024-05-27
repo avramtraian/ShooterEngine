@@ -23,6 +23,8 @@ public:
     virtual void shutdown() = 0;
 
 public:
+    virtual void on_resize(u32 new_width, u32 new_height) = 0;
+
     virtual void present(class RenderingContext* rendering_context) = 0;
 
     virtual void begin_render_pass(RefPtr<RenderPass> render_pass) = 0;

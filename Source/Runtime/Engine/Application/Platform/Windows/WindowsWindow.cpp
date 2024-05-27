@@ -4,9 +4,11 @@
  */
 
 #include "Engine/Application/Platform/Windows/WindowsWindow.h"
+#include "Engine/Application/WindowEvent.h"
 #include "Engine/Engine.h"
 
-namespace SE {
+namespace SE
+{
 
 static const char* s_window_class_name = "ShooterWindowClass";
 static bool s_window_class_was_registered = false;
@@ -50,6 +52,8 @@ bool WindowsWindow::initialize(const WindowInfo& window_info)
         return false;
     register_window_class();
 
+    m_event_callback = window_info.event_callback;
+
     const char* window_title = window_info.title.byte_span_with_null_termination().as<const char>().elements();
     const DWORD window_style_flags = get_window_style_flags(window_info);
     if (window_style_flags == 0)
@@ -84,7 +88,8 @@ WindowsWindow::~WindowsWindow()
 void WindowsWindow::pump_messages()
 {
     MSG message = {};
-    while (PeekMessageA(&message, m_native_handle, 0, 0, PM_REMOVE)) {
+    while (PeekMessageA(&message, m_native_handle, 0, 0, PM_REMOVE))
+    {
         TranslateMessage(&message);
         DispatchMessageA(&message);
     }
@@ -98,36 +103,54 @@ void WindowsWindow::pump_messages()
 
 LRESULT WindowsWindow::window_procedure(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param)
 {
-    switch (message) {
+    switch (message)
+    {
         case WM_QUIT:
-        case WM_CLOSE: {
+        case WM_CLOSE:
+        {
             FIND_WINDOW_BY_NATIVE_HANDLE(window);
             window.m_should_close = true;
             return 0;
         }
 
-        case WM_SIZE: {
+        case WM_SIZE:
+        {
             FIND_WINDOW_BY_NATIVE_HANDLE(window);
 
             u32 new_width = LOWORD(l_param);
             u32 new_height = HIWORD(l_param);
 
-            if (window.m_client_area_width != new_width || window.m_client_area_height != new_height) {
+            if (window.m_client_area_width != new_width || window.m_client_area_height != new_height)
+            {
+                if (new_width == 0 || new_height == 0)
+                {
+                    // The window has been minimized. We don't want to propagate window resized events,
+                    // nor update the window dimensions.
+                    return 0;
+                }
+
                 window.m_client_area_width = new_width;
                 window.m_client_area_height = new_height;
-                // TODO: Propagate window size changed event.
+
+                if (window.m_event_callback)
+                {
+                    WindowResizedEvent window_event = WindowResizedEvent(new_width, new_height);
+                    window.m_event_callback(window_event);
+                }
             }
 
             return 0;
         }
 
-        case WM_MOVE: {
+        case WM_MOVE:
+        {
             FIND_WINDOW_BY_NATIVE_HANDLE(window);
 
             POINTS new_position = MAKEPOINTS(l_param);
 
             if (window.m_client_area_position_x != new_position.x ||
-                window.m_client_area_position_y != new_position.y) {
+                window.m_client_area_position_y != new_position.y)
+            {
                 window.m_client_area_position_x = new_position.x;
                 window.m_client_area_position_y = new_position.y;
                 // TODO: Propagate window position changed event.

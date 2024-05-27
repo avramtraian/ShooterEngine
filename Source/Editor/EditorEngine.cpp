@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
+#include "Core/Containers/StringBuilder.h"
 #include "EditorAsset/EditorAssetManager.h"
 #include "EditorEngine.h"
-#include "Core/Containers/StringBuilder.h"
+#include "Engine/Application/WindowEvent.h"
 #include "Renderer/Renderer.h"
 
 namespace SE {
@@ -109,6 +110,7 @@ Window* EditorEngine::create_window()
     WindowInfo window_info = {};
     window_info.start_maximized = true;
     window_info.title = "ShooterEditor (Windows - Debug) | Untitled Scene*"sv;
+    window_info.event_callback = EditorEngine::on_event;
 
     m_window_stack.add(Window::instantiate());
     OwnPtr<Window>& window = m_window_stack.last();
@@ -159,6 +161,33 @@ String EditorEngine::get_project_content_directory() const
 String EditorEngine::get_project_source_directory() const
 {
     return StringBuilder::path_join({ m_project_root_directory.view(), SE_PROJECT_DIRECTORY_SOURCE });
+}
+
+void EditorEngine::on_event(const Event& in_event)
+{
+    switch (in_event.get_type())
+    {
+        case EventType::WindowResized:
+        {
+            const WindowResizedEvent& e = static_cast<const WindowResizedEvent&>(in_event);
+            const u32 new_width = e.get_client_width();
+            const u32 new_height = e.get_client_height();
+            
+            if (Renderer::is_initialized())
+            {
+                // Propagate the event to the renderer.
+                Renderer::on_resize(new_width, new_height);
+            }
+
+            if (g_editor_engine->m_world_renderer.is_valid())
+            {
+                // Propagate the event to the world renderer, if the instance was created.
+                g_editor_engine->m_world_renderer->on_resize(new_width, new_height);
+            }
+
+            break;
+        }
+    }
 }
 
 } // namespace SE

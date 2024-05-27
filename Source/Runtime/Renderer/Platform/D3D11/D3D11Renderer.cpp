@@ -124,6 +124,12 @@ D3D11Context* D3D11Renderer::get_active_context()
     return static_cast<D3D11Context*>(active_context);
 }
 
+void D3D11Renderer::on_resize(u32 new_width, u32 new_height)
+{
+    s_d3d11_renderer->device_context->Flush();
+    s_d3d11_renderer->device_context->ClearState();
+}
+
 void D3D11Renderer::present(RenderingContext* rendering_context)
 {
     D3D11Context* context = static_cast<D3D11Context*>(rendering_context);

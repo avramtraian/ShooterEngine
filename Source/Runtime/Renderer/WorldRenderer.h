@@ -25,6 +25,8 @@ public:
 
     SHOOTER_API bool render();
 
+    SHOOTER_API void on_resize(u32 new_width, u32 new_height);
+
 private:
     OwnPtr<Renderer2D> m_renderer_2d;
 };

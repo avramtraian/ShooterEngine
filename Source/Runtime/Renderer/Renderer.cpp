@@ -53,6 +53,10 @@ void Renderer::shutdown()
     s_renderer.release();
 }
 
+bool Renderer::is_initialized()
+{
+    return s_renderer.is_valid();
+}
 
 bool Renderer::create_context_for_window(Window* window)
 {
@@ -91,6 +95,14 @@ void Renderer::end_frame()
     // A rendering context must be bound in order to end the frame.
     SE_ASSERT(s_renderer->active_rendering_context);
     s_renderer->renderer_interface->present(s_renderer->active_rendering_context);
+}
+
+void Renderer::on_resize(u32 new_width, u32 new_height)
+{
+    s_renderer->renderer_interface->on_resize(new_width, new_height);
+
+    for (auto it : s_renderer->context_table)
+        it.value->resize(new_width, new_height);
 }
 
 void Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)

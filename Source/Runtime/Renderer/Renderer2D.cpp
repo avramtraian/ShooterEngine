@@ -157,6 +157,11 @@ void Renderer2D::end_frame()
     Renderer::end_render_pass();
 }
 
+void Renderer2D::resize_target_framebuffer(u32 new_width, u32 new_height)
+{
+    m_target_framebuffer->resize(new_width, new_height);
+}
+
 void Renderer2D::submit_quad(float x, float y, float width, float height, Color4 color)
 {
     if (m_statistics.quads_in_current_batch >= m_max_quads_per_batch)

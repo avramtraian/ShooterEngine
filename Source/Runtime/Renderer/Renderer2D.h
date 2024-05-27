@@ -42,6 +42,8 @@ public:
     SHOOTER_API void begin_frame();
     SHOOTER_API void end_frame();
 
+    SHOOTER_API void resize_target_framebuffer(u32 new_width, u32 new_height);
+
     //
     // The 'x' and 'y' parameters represent the position of the center of the quad.
     //

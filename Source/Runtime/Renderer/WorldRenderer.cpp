@@ -42,4 +42,10 @@ bool WorldRenderer::render()
     return true;
 }
 
+void WorldRenderer::on_resize(u32 new_width, u32 new_height)
+{
+    // Resize the 2D renderer.
+    m_renderer_2d->resize_target_framebuffer(new_width, new_height);
+}
+
 } // namespace SE

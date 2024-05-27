@@ -44,6 +44,7 @@ public:
     static RefPtr<Framebuffer> create(const FramebufferInfo& info);
 
 public:
+    virtual void resize(u32 new_width, u32 new_height) = 0;
 };
 
 } // namespace SE

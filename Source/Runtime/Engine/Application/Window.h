@@ -7,10 +7,15 @@
 
 #include "Core/Containers/OwnPtr.h"
 #include "Core/Containers/String.h"
+#include "Engine/Application/Event.h"
 
-namespace SE {
+namespace SE
+{
 
-struct WindowInfo {
+using WindowEventCallbackFunction = void(*)(const Event&);
+
+struct WindowInfo
+{
     u32 width = 800;
     u32 height = 500;
     i32 position_x = 600;
@@ -19,9 +24,13 @@ struct WindowInfo {
     bool start_maximized = false;
     bool start_minimized = false;
     bool start_fullscreen = false;
+
+    // Not setting this parameter will cause the events to be discarded.
+    WindowEventCallbackFunction event_callback = nullptr;
 };
 
-class Window {
+class Window
+{
 public:
     SHOOTER_API static OwnPtr<Window> instantiate();
 

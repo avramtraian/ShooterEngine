@@ -8,9 +8,11 @@
 #include "Core/Platform/Windows/WindowsHeaders.h"
 #include "Engine/Application/Window.h"
 
-namespace SE {
+namespace SE
+{
 
-class WindowsWindow final : public Window {
+class WindowsWindow final : public Window
+{
 public:
     static LRESULT window_procedure(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
 
@@ -32,6 +34,7 @@ public:
 
 private:
     HWND m_native_handle = nullptr;
+    WindowEventCallbackFunction m_event_callback;
     bool m_should_close = false;
 
     u32 m_client_area_width = 0;
