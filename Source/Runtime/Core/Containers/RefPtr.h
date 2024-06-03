@@ -141,6 +141,18 @@ public:
         return RefPtr<Q>(casted_raw_pointer);
     }
 
+    NODISCARD ALWAYS_INLINE bool operator==(const RefPtr& other) const
+    {
+        if (!is_valid() || !other.is_valid())
+            return false;
+        return (m_instance == other.m_instance);
+    }
+
+    NODISCARD ALWAYS_INLINE bool operator!=(const RefPtr& other) const
+    {
+        return !(*this == other);
+    }
+
 private:
     ALWAYS_INLINE explicit RefPtr(T* pointer_to_adopt)
         : m_instance(pointer_to_adopt)
