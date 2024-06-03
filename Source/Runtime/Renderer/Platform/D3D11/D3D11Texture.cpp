@@ -46,12 +46,25 @@ D3D11Texture2D::D3D11Texture2D(const Texture2DInfo& info)
     texture_view_description.Texture2D.MipLevels = 1;
     texture_view_description.Texture2D.MostDetailedMip = 0;
 
+    D3D11_SAMPLER_DESC sampler_description = {};
+    sampler_description.Filter = d3d11_image_filtering(info.min_filter, info.mag_filter);
+    sampler_description.AddressU = d3d11_image_address_mode(info.address_mode_u);
+    sampler_description.AddressV = d3d11_image_address_mode(info.address_mode_v);
+    sampler_description.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+
     SE_D3D11_CHECK(D3D11Renderer::get_device()->CreateTexture2D(&texture_description, &initial_data, &m_image_handle));
     SE_D3D11_CHECK(D3D11Renderer::get_device()->CreateShaderResourceView(m_image_handle, &texture_view_description, &m_image_view));
+    SE_D3D11_CHECK(D3D11Renderer::get_device()->CreateSamplerState(&sampler_description, &m_sampler_state));
 }
 
 D3D11Texture2D::~D3D11Texture2D()
 {
+    if (m_sampler_state)
+    {
+        m_sampler_state->Release();
+        m_sampler_state = nullptr;
+    }
+
     if (m_image_view)
     {
         m_image_view->Release();
