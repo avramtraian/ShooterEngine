@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
+#include "Asset/AssetManager.h"
+#include "Asset/TextureAsset.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/WorldRenderer.h"
 
@@ -19,6 +21,7 @@ bool WorldRenderer::initialize(u32 width, u32 height)
         return false;
     }
 
+    m_debug_texture = g_asset_manager->get_asset_sync<TextureAsset>(AssetHandle(61034756314586))->get_renderer_texture();
     return true;
 }
 
@@ -33,9 +36,14 @@ bool WorldRenderer::render()
     Renderer::begin_frame();
     m_renderer_2d->begin_frame();
 
-    m_renderer_2d->submit_quad(-0.6666F, 0.0F, 0.6666F, 1.0F, Color3(0.1F, 0.1F, 0.8F));
-    m_renderer_2d->submit_quad(+0.0F,    0.0F, 0.6666F, 1.0F, Color3(0.8F, 0.8F, 0.1F));
-    m_renderer_2d->submit_quad(+0.6666F, 0.0F, 0.6666F, 1.0F, Color3(0.8F, 0.1F, 0.1F));
+    //
+    // Testing code.
+    //
+
+    m_renderer_2d->submit_quad({ -0.6666F, 0.0F }, { 0.6666F, 1.0F }, {}, Color3(0.1F, 0.1F, 0.8F));
+    m_renderer_2d->submit_quad({ +0.0F,    0.0F }, { 0.6666F, 1.0F }, {}, Color3(0.8F, 0.8F, 0.1F));
+    m_renderer_2d->submit_quad({ +0.6666F, 0.0F }, { 0.6666F, 1.0F }, {}, Color3(0.8F, 0.1F, 0.1F));
+    m_renderer_2d->submit_quad({ 0.0F, 0.25F }, { 1, 1 }, {}, Color3(1.0F, 1.0F, 1.0F), m_debug_texture);
 
     m_renderer_2d->end_frame();
     Renderer::end_frame();

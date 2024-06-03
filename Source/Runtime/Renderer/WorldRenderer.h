@@ -29,6 +29,9 @@ public:
 
 private:
     OwnPtr<Renderer2D> m_renderer_2d;
+
+    // Testing code.
+    RefPtr<Texture2D> m_debug_texture;
 };
 
 } // namespace SE
