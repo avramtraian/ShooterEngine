@@ -35,6 +35,14 @@ public:
         return vector;
     }
 
+    NODISCARD ALWAYS_INLINE static Vector create_from_span(Span<T> element_span)
+    {
+        Vector vector = create_with_initial_capacity(element_span.count());
+        vector.m_count = element_span.count();
+        copy_elements(vector.m_elements, element_span.elements(), element_span.count());
+        return vector;
+    }
+
     NODISCARD ALWAYS_INLINE static Vector create_from_span(Span<const T> element_span)
     {
         Vector vector = create_with_initial_capacity(element_span.count());
