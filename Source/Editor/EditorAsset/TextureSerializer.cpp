@@ -113,6 +113,8 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
     SE_CHECK_FILE_ERROR(texture_file_reader.open(absolute_texture_filepath));
     SE_CHECK_FILE_ERROR(texture_file_reader.read_entire_and_close(texture_file));
 
+    stbi_set_flip_vertically_on_load(true);
+
     int width, height;
     const u32 channel_count = 4;
     stbi_uc* loaded_texture_bytes = stbi_load_from_memory(
