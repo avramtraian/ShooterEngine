@@ -9,6 +9,7 @@
 #include "Renderer/IndexBuffer.h"
 #include "Renderer/RenderingContext.h"
 #include "Renderer/RenderPass.h"
+#include "Renderer/Texture.h"
 #include "Renderer/VertexBuffer.h"
 
 namespace SE
@@ -37,6 +38,10 @@ public:
     static void end_render_pass();
 
     static void draw_indexed(RefPtr<VertexBuffer> vertex_buffer, RefPtr<IndexBuffer> index_buffer, u32 index_count);
+
+public:
+    static RefPtr<Texture2D> get_white_texture();
+    static RefPtr<Texture2D> get_black_texture();
 };
 
 } // namespace SE

@@ -17,6 +17,9 @@ struct RendererData
     OwnPtr<RendererInterface> renderer_interface;
     HashMap<void*, OwnPtr<RenderingContext>> context_table;
     RenderingContext* active_rendering_context = nullptr;
+
+    RefPtr<Texture2D> white_texture;
+    RefPtr<Texture2D> black_texture;
 };
 
 static OwnPtr<RendererData> s_renderer;
@@ -37,6 +40,26 @@ bool Renderer::initialize()
         return false;
     }
 
+    {
+        Texture2DInfo white_texture_info = {};
+        white_texture_info.width = 1;
+        white_texture_info.height = 1;
+        white_texture_info.format = ImageFormat::RGBA8;
+        const u32 white_texture_data = 0xFFFFFFFF;
+        white_texture_info.data = ReadonlyByteSpan(reinterpret_cast<ReadonlyBytes>(&white_texture_data), sizeof(white_texture_data));
+        s_renderer->white_texture = Texture2D::create(white_texture_info);
+    }
+
+    {
+        Texture2DInfo black_texture_info = {};
+        black_texture_info.width = 1;
+        black_texture_info.height = 1;
+        black_texture_info.format = ImageFormat::RGBA8;
+        const u32 black_texture_data = 0xFF000000;
+        black_texture_info.data = ReadonlyByteSpan(reinterpret_cast<ReadonlyBytes>(&black_texture_data), sizeof(black_texture_data));
+        s_renderer->black_texture = Texture2D::create(black_texture_info);
+    }
+
     return true;
 }
 
@@ -44,6 +67,9 @@ void Renderer::shutdown()
 {
     if (!s_renderer.is_valid())
         return;
+
+    s_renderer->white_texture.release();
+    s_renderer->black_texture.release();
 
     s_renderer->context_table.clear();
 
@@ -118,6 +144,18 @@ void Renderer::end_render_pass()
 void Renderer::draw_indexed(RefPtr<VertexBuffer> vertex_buffer, RefPtr<IndexBuffer> index_buffer, u32 index_count)
 {
     s_renderer->renderer_interface->draw_indexed(vertex_buffer, index_buffer, index_count);
+}
+
+RefPtr<Texture2D> Renderer::get_white_texture()
+{
+    SE_ASSERT(s_renderer->white_texture.is_valid());
+    return s_renderer->white_texture;
+}
+
+RefPtr<Texture2D> Renderer::get_black_texture()
+{
+    SE_ASSERT(s_renderer->black_texture.is_valid());
+    return s_renderer->black_texture;
 }
 
 } // namespace SE
