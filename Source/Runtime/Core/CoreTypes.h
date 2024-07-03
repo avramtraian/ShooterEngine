@@ -151,11 +151,11 @@ NODISCARD ALWAYS_INLINE constexpr T&& forward(RemoveReference<T>&& value)
 
 #define SE_MAKE_NONCOPYABLE(type_name)    \
     type_name(const type_name&) = delete; \
-    type_name& operator=(const type_name&) = delete;
+    type_name& operator=(const type_name&) = delete
 
 #define SE_MAKE_NONMOVABLE(type_name)         \
     type_name(type_name&&) noexcept = delete; \
-    type_name& operator=(type_name&&) noexcept = delete;
+    type_name& operator=(type_name&&) noexcept = delete
 
 //
 // Ensure that the fixed primitive types are matching the expected size.
