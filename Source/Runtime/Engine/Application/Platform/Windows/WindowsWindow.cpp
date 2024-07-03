@@ -163,4 +163,6 @@ LRESULT WindowsWindow::window_procedure(HWND window_handle, UINT message, WPARAM
     return DefWindowProcA(window_handle, message, w_param, l_param);
 }
 
+#undef FIND_WINDOW_BY_NATIVE_HANDLE
+
 } // namespace SE
