@@ -123,7 +123,6 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
     texture_file.release();
 
     const usize loaded_texture_byte_count = (usize)(width) * (usize)(height) * (usize)(channel_count);
-    Buffer loaded_texture = Buffer(loaded_texture_bytes, loaded_texture_byte_count);
 
     const u32 texture_width = (u32)(width);
     const u32 texture_height = (u32)(height);
@@ -133,10 +132,10 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
     renderer_texture_info.width = texture_width;
     renderer_texture_info.height = texture_width;
     renderer_texture_info.format = ImageFormat::RGBA8;
-    renderer_texture_info.data = loaded_texture.readonly_span();
+    renderer_texture_info.data = ReadonlyByteSpan(loaded_texture_bytes, loaded_texture_byte_count);
 
     RefPtr<Texture2D> renderer_texture = Texture2D::create(renderer_texture_info);
-    loaded_texture.release();
+    STBI_FREE(loaded_texture_bytes);
     
     RefPtr<TextureAsset> asset = make_ref<TextureAsset>(move(renderer_texture), texture_filepath);
     return asset.as<Asset>();

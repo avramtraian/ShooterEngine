@@ -68,7 +68,7 @@ private:
     u32 m_max_quads_per_batch = 1;
     u32 m_max_quad_textures_per_batch = 1;
     Vector2 m_quad_default_positions[4] = {};
-    ScopedBuffer m_vertices_buffer;
+    Buffer m_vertices_buffer;
     QuadVertex* m_vertices_buffer_pointer = nullptr;
     Vector<RefPtr<Texture2D>> m_quad_textures;
     u32 m_quad_texture_count = 0;

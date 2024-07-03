@@ -113,7 +113,7 @@ bool Renderer2D::initialize(u32 width, u32 height, RefPtr<Framebuffer> target_fr
     // NOTE: Each quad requires 6 indices in order to be rendered.
     const u32 indices_count = 6 * m_max_quads_per_batch;
 
-    ScopedBuffer indices_buffer;
+    Buffer indices_buffer;
     indices_buffer.allocate(indices_count * sizeof(u32));
     u32* buffer_pointer = indices_buffer.as<u32>();
 

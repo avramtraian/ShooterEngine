@@ -13,115 +13,47 @@ namespace SE
 
 class Buffer
 {
-public:
-    static Buffer copy(const Buffer& source);
+	SE_MAKE_NONCOPYABLE(Buffer);
 
 public:
-    ALWAYS_INLINE Buffer()
-        : m_bytes(nullptr)
-        , m_byte_count(0)
-    {}
+	Buffer() = default;
 
-    ALWAYS_INLINE Buffer(const Buffer& other)
-        : m_bytes(other.m_bytes)
-        , m_byte_count(other.m_byte_count)
-    {}
+	SHOOTER_API Buffer(Buffer&& other) noexcept;
+	SHOOTER_API Buffer& operator=(Buffer&& other) noexcept;
 
-    ALWAYS_INLINE Buffer(Buffer&& other) noexcept
-        : m_bytes(other.m_bytes)
-        , m_byte_count(other.m_byte_count)
-    {
-        other.m_bytes = nullptr;
-        other.m_byte_count = 0;
-    }
+	SHOOTER_API ~Buffer();
 
-    ALWAYS_INLINE Buffer(const void* in_bytes, usize in_byte_count)
-        : m_bytes((ReadWriteBytes)(in_bytes))
-        , m_byte_count(in_byte_count)
-    {}
-
-    ALWAYS_INLINE Buffer& operator=(const Buffer& other)
-    {
-        m_bytes = other.m_bytes;
-        m_byte_count = other.m_byte_count;
-        return *this;
-    }
-
-    ALWAYS_INLINE Buffer& operator=(Buffer&& other) noexcept
-    {
-        m_bytes = other.m_bytes;
-        m_byte_count = other.m_byte_count;
-        other.m_bytes = nullptr;
-        other.m_byte_count = 0;
-        return *this;
-    }
+	NODISCARD SHOOTER_API static Buffer copy(const Buffer& source_buffer);
 
 public:
-    NODISCARD ALWAYS_INLINE ReadWriteBytes bytes() const { return m_bytes; }
-    NODISCARD ALWAYS_INLINE ReadonlyBytes readonly_bytes() const { return m_bytes; }
-    NODISCARD ALWAYS_INLINE ReadWriteBytes operator*() const { return bytes(); }
+	NODISCARD ALWAYS_INLINE ReadWriteBytes bytes() { return m_bytes; }
+	NODISCARD ALWAYS_INLINE ReadonlyBytes bytes() const { return m_bytes; }
 
-    NODISCARD ALWAYS_INLINE usize byte_count() const { return m_byte_count; }
-    NODISCARD ALWAYS_INLINE bool is_empty() const { return (m_byte_count == 0); }
+	NODISCARD ALWAYS_INLINE usize byte_count() const { return m_byte_count; }
+	NODISCARD ALWAYS_INLINE bool is_empty() const { return (m_byte_count == 0); }
 
-    NODISCARD ALWAYS_INLINE ReadWriteByteSpan span() const { return ReadWriteByteSpan(bytes(), byte_count()); }
-    NODISCARD ALWAYS_INLINE ReadonlyByteSpan readonly_span() const { return ReadonlyByteSpan(readonly_bytes(), byte_count()); }
+	NODISCARD ALWAYS_INLINE ReadonlyByteSpan readonly_span() const { return ReadonlyByteSpan(bytes(), byte_count()); }
+	NODISCARD ALWAYS_INLINE WriteonlyByteSpan writeonly_write_span() { return WriteonlyByteSpan(bytes(), byte_count()); }
+	NODISCARD ALWAYS_INLINE ReadWriteByteSpan read_write_span() { return ReadWriteByteSpan(bytes(), byte_count()); }
 
-    template<typename T>
-    NODISCARD ALWAYS_INLINE T* as() const { return (T*)(m_bytes); }
+	NODISCARD ALWAYS_INLINE ReadWriteByteSpan span() { return read_write_span(); }
+	NODISCARD ALWAYS_INLINE ReadonlyByteSpan span() const { return readonly_span(); }
+
+	template<typename T>
+	NODISCARD ALWAYS_INLINE T* as() const
+	{
+		SE_ASSERT(sizeof(T) <= m_byte_count);
+		return reinterpret_cast<T*>(m_bytes);
+	}
 
 public:
-    // The buffer must be empty before calling this function. Otherwise, an assert will be triggered.
-    SHOOTER_API void allocate(usize in_byte_count);
-    
-    SHOOTER_API void release();
-    
-    ALWAYS_INLINE void re_allocate(usize in_byte_count)
-    {
-        release();
-        allocate(in_byte_count);
-    }
+	SHOOTER_API void allocate(usize capacity_in_bytes);
+	SHOOTER_API void expand(usize new_capacity_in_bytes);
+	SHOOTER_API void release();
 
 private:
-    ReadWriteBytes m_bytes;
-    usize m_byte_count;
-};
-
-class ScopedBuffer
-{
-    SE_MAKE_NONCOPYABLE(ScopedBuffer);
-    SE_MAKE_NONMOVABLE(ScopedBuffer);
-
-public:
-    ScopedBuffer() = default;
-
-    ALWAYS_INLINE ~ScopedBuffer()
-    {
-        release();
-    }
-
-public:
-    NODISCARD ALWAYS_INLINE ReadWriteBytes bytes() const { return m_buffer.bytes(); }
-    NODISCARD ALWAYS_INLINE ReadonlyBytes readonly_bytes() const { return m_buffer.readonly_bytes(); }
-    NODISCARD ALWAYS_INLINE ReadWriteBytes operator*() const { return *m_buffer; }
-
-    NODISCARD ALWAYS_INLINE usize byte_count() const { return m_buffer.byte_count(); }
-    NODISCARD ALWAYS_INLINE bool is_empty() const { return m_buffer.is_empty(); }
-
-    NODISCARD ALWAYS_INLINE ReadWriteByteSpan span() const { return m_buffer.span(); }
-    NODISCARD ALWAYS_INLINE ReadonlyByteSpan readonly_span() const { return m_buffer.readonly_span(); }
-
-    template<typename T>
-    NODISCARD ALWAYS_INLINE T* as() const { return m_buffer.as<T>(); }
-
-public:
-    // The buffer must be empty before calling this function. Otherwise, an assert will be triggered.
-    ALWAYS_INLINE void allocate(usize in_byte_count) { m_buffer.allocate(in_byte_count); }
-    ALWAYS_INLINE void release() { m_buffer.release(); }
-    ALWAYS_INLINE void re_allocate(usize in_byte_count) { m_buffer.re_allocate(in_byte_count); }
-
-private:
-    Buffer m_buffer;
+	ReadWriteBytes m_bytes { nullptr };
+	usize m_byte_count { 0 };
 };
 
 } // namespace SE
