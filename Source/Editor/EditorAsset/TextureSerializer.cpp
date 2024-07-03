@@ -118,7 +118,7 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
     int width, height;
     const u32 channel_count = 4;
     stbi_uc* loaded_texture_bytes = stbi_load_from_memory(
-        texture_file.bytes(), (int)(texture_file.count()),
+        texture_file.bytes(), (int)(texture_file.byte_count()),
         &width, &height, nullptr, channel_count);
     texture_file.release();
 

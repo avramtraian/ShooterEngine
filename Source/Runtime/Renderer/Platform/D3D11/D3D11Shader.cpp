@@ -53,7 +53,7 @@ D3D11Shader::D3D11Shader(const ShaderInfo& info)
 
         ID3DBlob* error_messages_blob = nullptr;
         const HRESULT compilation_result = D3DCompile(
-            shader_source.bytes(), shader_source.count(),
+            shader_source.bytes(), shader_source.byte_count(),
             nullptr, nullptr, nullptr,
             get_shader_stage_entry_point(stage_info.type), get_shader_stage_target(stage_info.type),
             0, 0, &stage.byte_code, &error_messages_blob);

@@ -61,12 +61,11 @@ public:
     NODISCARD ALWAYS_INLINE ReadonlyBytes readonly_bytes() const { return m_bytes; }
     NODISCARD ALWAYS_INLINE ReadWriteBytes operator*() const { return bytes(); }
 
-    NODISCARD ALWAYS_INLINE usize count() const { return m_byte_count; }
     NODISCARD ALWAYS_INLINE usize byte_count() const { return m_byte_count; }
     NODISCARD ALWAYS_INLINE bool is_empty() const { return (m_byte_count == 0); }
 
-    NODISCARD ALWAYS_INLINE ReadWriteByteSpan span() const { return ReadWriteByteSpan(bytes(), count()); }
-    NODISCARD ALWAYS_INLINE ReadonlyByteSpan readonly_span() const { return ReadonlyByteSpan(readonly_bytes(), count()); }
+    NODISCARD ALWAYS_INLINE ReadWriteByteSpan span() const { return ReadWriteByteSpan(bytes(), byte_count()); }
+    NODISCARD ALWAYS_INLINE ReadonlyByteSpan readonly_span() const { return ReadonlyByteSpan(readonly_bytes(), byte_count()); }
 
     template<typename T>
     NODISCARD ALWAYS_INLINE T* as() const { return (T*)(m_bytes); }
@@ -106,7 +105,6 @@ public:
     NODISCARD ALWAYS_INLINE ReadonlyBytes readonly_bytes() const { return m_buffer.readonly_bytes(); }
     NODISCARD ALWAYS_INLINE ReadWriteBytes operator*() const { return *m_buffer; }
 
-    NODISCARD ALWAYS_INLINE usize count() const { return m_buffer.count(); }
     NODISCARD ALWAYS_INLINE usize byte_count() const { return m_buffer.byte_count(); }
     NODISCARD ALWAYS_INLINE bool is_empty() const { return m_buffer.is_empty(); }
 
