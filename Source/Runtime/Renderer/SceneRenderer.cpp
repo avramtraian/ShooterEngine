@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Asset/AssetManager.h"
-#include "Asset/TextureAsset.h"
-#include "Renderer/Renderer.h"
-#include "Renderer/WorldRenderer.h"
+#include <Asset/AssetManager.h>
+#include <Asset/TextureAsset.h>
+#include <Renderer/Renderer.h>
+#include <Renderer/SceneRenderer.h>
 
 namespace SE
 {
 
-bool WorldRenderer::initialize(u32 width, u32 height)
+bool SceneRenderer::initialize(u32 width, u32 height)
 {
     SE_ASSERT(!m_renderer_2d.is_valid());
     m_renderer_2d = make_own<Renderer2D>();
@@ -25,13 +25,13 @@ bool WorldRenderer::initialize(u32 width, u32 height)
     return true;
 }
 
-void WorldRenderer::shutdown()
+void SceneRenderer::shutdown()
 {
     m_renderer_2d->shutdown();
     m_renderer_2d.release();
 }
 
-bool WorldRenderer::render()
+bool SceneRenderer::render()
 {
     Renderer::begin_frame();
     m_renderer_2d->begin_frame();
@@ -41,7 +41,7 @@ bool WorldRenderer::render()
     //
 
     m_renderer_2d->submit_quad({ -0.6666F, 0.0F }, { 0.6666F, 1.0F }, {}, Color3(0.1F, 0.1F, 0.8F));
-    m_renderer_2d->submit_quad({ +0.0F,    0.0F }, { 0.6666F, 1.0F }, {}, Color3(0.8F, 0.8F, 0.1F));
+    m_renderer_2d->submit_quad({ +0.0F, 0.0F }, { 0.6666F, 1.0F }, {}, Color3(0.8F, 0.8F, 0.1F));
     m_renderer_2d->submit_quad({ +0.6666F, 0.0F }, { 0.6666F, 1.0F }, {}, Color3(0.8F, 0.1F, 0.1F));
     m_renderer_2d->submit_quad({ 0.0F, 0.25F }, { 1, 1 }, {}, Color3(1.0F, 1.0F, 1.0F), m_debug_texture);
 
@@ -50,7 +50,7 @@ bool WorldRenderer::render()
     return true;
 }
 
-void WorldRenderer::on_resize(u32 new_width, u32 new_height)
+void SceneRenderer::on_resize(u32 new_width, u32 new_height)
 {
     // Resize the 2D renderer.
     m_renderer_2d->resize_target_framebuffer(new_width, new_height);

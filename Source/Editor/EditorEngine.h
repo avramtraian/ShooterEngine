@@ -5,13 +5,14 @@
 
 #pragma once
 
-#include "Core/Containers/OwnPtr.h"
-#include "Core/Containers/Vector.h"
-#include "Engine/Application/Event.h"
-#include "Engine/Engine.h"
-#include "Renderer/WorldRenderer.h"
+#include <Core/Containers/OwnPtr.h>
+#include <Core/Containers/Vector.h>
+#include <Engine/Application/Event.h>
+#include <Engine/Engine.h>
+#include <Renderer/SceneRenderer.h>
 
-namespace SE {
+namespace SE
+{
 
 class EditorEngine final : public Engine
 {
@@ -47,7 +48,7 @@ private:
     String m_project_name;
     String m_project_root_directory;
 
-    OwnPtr<WorldRenderer> m_world_renderer;
+    OwnPtr<SceneRenderer> m_world_renderer;
 };
 
 // It points to the same object as the 'g_engine' global variable.

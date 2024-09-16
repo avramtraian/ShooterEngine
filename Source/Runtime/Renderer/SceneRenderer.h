@@ -5,19 +5,19 @@
 
 #pragma once
 
-#include "Core/Containers/OwnPtr.h"
-#include "Core/EngineAPI.h"
-#include "Renderer/Renderer2D.h"
+#include <Core/Containers/OwnPtr.h>
+#include <Core/EngineAPI.h>
+#include <Renderer/Renderer2D.h>
 
 namespace SE
 {
 
-class WorldRenderer
+class SceneRenderer
 {
 public:
-    SE_MAKE_NONCOPYABLE(WorldRenderer);
-    SE_MAKE_NONMOVABLE(WorldRenderer);
-    WorldRenderer() = default;
+    SE_MAKE_NONCOPYABLE(SceneRenderer);
+    SE_MAKE_NONMOVABLE(SceneRenderer);
+    SceneRenderer() = default;
 
 public:
     SHOOTER_API bool initialize(u32 width, u32 height);

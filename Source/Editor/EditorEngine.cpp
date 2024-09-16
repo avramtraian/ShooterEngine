@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Core/Containers/StringBuilder.h"
-#include "EditorAsset/EditorAssetManager.h"
-#include "EditorEngine.h"
-#include "Engine/Application/WindowEvent.h"
-#include "Renderer/Renderer.h"
+#include <Core/Containers/StringBuilder.h>
+#include <EditorAsset/EditorAssetManager.h>
+#include <EditorEngine.h>
+#include <Engine/Application/WindowEvent.h>
+#include <Renderer/Renderer.h>
 
-namespace SE {
+namespace SE
+{
 
 EditorEngine* g_editor_engine = nullptr;
 
@@ -19,10 +20,10 @@ bool EditorEngine::initialize()
         return false;
     g_editor_engine = this;
 
-    // NOTE: The current working is the engine root, so no redirection is necessary.
+    // The current working is the engine root, so no redirection is necessary.
     m_engine_root_directory = ""sv;
-    // NOTE: Currently, there is no way to select/set the project you want to open in the
-    //       editor, thus the engine always picks the default example project.
+    // Currently, there is no way to select/set the project you want to open in the
+    // editor, thus the engine always picks the default example project.
     m_project_name = "ExampleProject"sv;
     m_project_root_directory = StringBuilder::path_join({ m_engine_root_directory.view(), "Content/ExampleProject"sv });
 
@@ -45,13 +46,13 @@ bool EditorEngine::initialize()
         SE_LOG_ERROR("Failed to create the primary window!"sv);
         return false;
     }
-    
+
     Renderer::create_context_for_window(m_window_stack.first().get());
     RenderingContext* primary_window_rendering_context = Renderer::get_rendering_context_for_window(m_window_stack.first().get());
     Renderer::set_active_context(primary_window_rendering_context);
 
     Window* window = m_window_stack.first().get();
-    m_world_renderer = make_own<WorldRenderer>();
+    m_world_renderer = make_own<SceneRenderer>();
     if (!m_world_renderer->initialize(window->get_width(), window->get_height()))
     {
         SE_LOG_ERROR("Failed to initialize the world renderer!"sv);
@@ -80,21 +81,25 @@ void EditorEngine::tick()
     for (OwnPtr<Window>& window : m_window_stack)
         window->pump_messages();
 
-    for (auto it = m_window_stack.rbegin(); it != m_window_stack.rend(); --it) {
+    for (auto it = m_window_stack.rbegin(); it != m_window_stack.rend(); --it)
+    {
         OwnPtr<Window>& window = *it;
-        if (window->should_close()) {
+        if (window->should_close())
+        {
             window.release();
             m_window_stack.remove(it);
         }
     }
 
-    if (m_window_stack.is_empty()) {
+    if (m_window_stack.is_empty())
+    {
         m_is_running = false;
         SE_LOG_INFO("All windows have been closed. Exiting the main loop..."sv);
         return;
     }
 
-    if (m_window_stack.first()->should_close()) {
+    if (m_window_stack.first()->should_close())
+    {
         m_window_stack.clear_and_shrink();
         m_is_running = false;
         SE_LOG_INFO("The primary window has been closed. Exiting the main loop..."sv);
@@ -115,7 +120,8 @@ Window* EditorEngine::create_window()
     m_window_stack.add(Window::instantiate());
     OwnPtr<Window>& window = m_window_stack.last();
 
-    if (!window->initialize(window_info)) {
+    if (!window->initialize(window_info))
+    {
         m_window_stack.remove_last();
         return nullptr;
     }
@@ -135,7 +141,8 @@ Window* EditorEngine::find_window_by_native_handle(void* native_handle)
     if (m_window_stack.last()->get_native_handle() == nullptr)
         return m_window_stack.last().get();
 
-    for (OwnPtr<Window>& window : m_window_stack) {
+    for (OwnPtr<Window>& window : m_window_stack)
+    {
         if (window->get_native_handle() == native_handle)
             return window.get();
     }
@@ -172,7 +179,7 @@ void EditorEngine::on_event(const Event& in_event)
             const WindowResizedEvent& e = static_cast<const WindowResizedEvent&>(in_event);
             const u32 new_width = e.get_client_width();
             const u32 new_height = e.get_client_height();
-            
+
             if (Renderer::is_initialized())
             {
                 // Propagate the event to the renderer.
