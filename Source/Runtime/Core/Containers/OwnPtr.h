@@ -61,6 +61,9 @@ public:
     NODISCARD ALWAYS_INLINE T* operator->() { return get(); }
     NODISCARD ALWAYS_INLINE const T* operator->() const { return get(); }
 
+    NODISCARD ALWAYS_INLINE T& operator*() { return *get(); }
+    NODISCARD ALWAYS_INLINE const T& operator*() const { return *get(); }
+
 public:
     ALWAYS_INLINE void release()
     {
