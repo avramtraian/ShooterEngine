@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "Core/CoreTypes.h"
+#include <Core/CoreTypes.h>
 
 namespace SE
 {
@@ -57,26 +57,9 @@ public:
     ALWAYS_INLINE constexpr Color3& operator=(const Color4& color4);
 
 public:
-    union
-    {
-        float r;
-        float red;
-        float x;
-    };
-
-    union
-    {
-        float g;
-        float green;
-        float y;
-    };
-
-    union
-    {
-        float b;
-        float blue;
-        float z;
-    };
+    float r;
+    float g;
+    float b;
 };
 
 //=============================================================================
@@ -128,33 +111,10 @@ public:
     ALWAYS_INLINE constexpr Color4& operator=(const Color3& color3);
 
 public:
-    union
-    {
-        float r;
-        float red;
-        float x;
-    };
-
-    union
-    {
-        float g;
-        float green;
-        float y;
-    };
-
-    union
-    {
-        float b;
-        float blue;
-        float z;
-    };
-
-    union
-    {
-        float a;
-        float alpha;
-        float w;
-    };
+    float r;
+    float g;
+    float b;
+    float a;
 };
 
 //=============================================================================
@@ -165,8 +125,7 @@ constexpr Color3::Color3(const Color4& color4)
     : r(color4.r)
     , g(color4.g)
     , b(color4.b)
-{
-}
+{}
 
 constexpr Color3& Color3::operator=(const Color4& color4)
 {
@@ -181,16 +140,14 @@ constexpr Color4::Color4(const Color3& color3)
     , g(color3.g)
     , b(color3.b)
     , a(1.0F)
-{
-}
+{}
 
 constexpr Color4::Color4(const Color3& color3, float alpha)
     : r(color3.r)
     , g(color3.g)
     , b(color3.b)
     , a(alpha)
-{
-}
+{}
 
 constexpr Color4& Color4::operator=(const Color3& color3)
 {
