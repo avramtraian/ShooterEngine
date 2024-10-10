@@ -48,7 +48,7 @@ private:
     String m_project_name;
     String m_project_root_directory;
 
-    OwnPtr<SceneRenderer> m_world_renderer;
+    OwnPtr<SceneRenderer> m_scene_renderer;
 };
 
 // It points to the same object as the 'g_engine' global variable.

@@ -52,8 +52,8 @@ bool EditorEngine::initialize()
     Renderer::set_active_context(primary_window_rendering_context);
 
     Window* window = m_window_stack.first().get();
-    m_world_renderer = make_own<SceneRenderer>();
-    if (!m_world_renderer->initialize(window->get_width(), window->get_height()))
+    m_scene_renderer = make_own<SceneRenderer>();
+    if (!m_scene_renderer->initialize(*m_scene, window->get_width(), window->get_height()))
     {
         SE_LOG_ERROR("Failed to initialize the world renderer!"sv);
         return false;
@@ -64,8 +64,8 @@ bool EditorEngine::initialize()
 
 void EditorEngine::shutdown()
 {
-    m_world_renderer->shutdown();
-    m_world_renderer.release();
+    m_scene_renderer->shutdown();
+    m_scene_renderer.release();
 
     m_window_stack.clear_and_shrink();
 
@@ -107,7 +107,7 @@ void EditorEngine::tick()
     }
 
     Engine::tick();
-    m_world_renderer->render();
+    m_scene_renderer->render();
 }
 
 Window* EditorEngine::create_window()
@@ -186,10 +186,10 @@ void EditorEngine::on_event(const Event& in_event)
                 Renderer::on_resize(new_width, new_height);
             }
 
-            if (g_editor_engine->m_world_renderer.is_valid())
+            if (g_editor_engine->m_scene_renderer.is_valid())
             {
                 // Propagate the event to the world renderer, if the instance was created.
-                g_editor_engine->m_world_renderer->on_resize(new_width, new_height);
+                g_editor_engine->m_scene_renderer->on_resize(new_width, new_height);
             }
 
             break;
