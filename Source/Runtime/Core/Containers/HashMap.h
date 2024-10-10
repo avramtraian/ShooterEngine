@@ -7,16 +7,20 @@
 
 #include "Core/Containers/HashTable.h"
 
-namespace SE {
+namespace SE
+{
 
-namespace Detail {
+namespace Detail
+{
 
 template<typename KeyType, typename ValueType, typename InternalHashTable>
-class HashMapIterator {
+class HashMapIterator
+{
 public:
     using TableIterator = typename InternalHashTable::Iterator;
 
-    struct KeyValuePair {
+    struct KeyValuePair
+    {
         ALWAYS_INLINE KeyValuePair(const KeyType& in_key, ValueType& in_value)
             : key(in_key)
             , value(in_value)
@@ -31,14 +35,8 @@ public:
         : m_table_iterator(table_iterator)
     {}
 
-    NODISCARD ALWAYS_INLINE bool operator==(const HashMapIterator& other) const
-    {
-        return m_table_iterator == other.m_table_iterator;
-    }
-    NODISCARD ALWAYS_INLINE bool operator!=(const HashMapIterator& other) const
-    {
-        return m_table_iterator != other.m_table_iterator;
-    }
+    NODISCARD ALWAYS_INLINE bool operator==(const HashMapIterator& other) const { return m_table_iterator == other.m_table_iterator; }
+    NODISCARD ALWAYS_INLINE bool operator!=(const HashMapIterator& other) const { return m_table_iterator != other.m_table_iterator; }
 
     NODISCARD ALWAYS_INLINE KeyValuePair operator*()
     {
@@ -71,22 +69,38 @@ private:
 
 } // namespace Detail
 
-enum class HashMapAddResult {
+enum class HashMapAddResult
+{
     InsertedNewKey,
     KeyAlreadyExists,
 };
 
-enum class HashMapRemoveResult {
+enum class HashMapRemoveResult
+{
     RemovedExistingKey,
     KeyDoesNotExist,
 };
 
 template<typename KeyType, typename ValueType>
-class HashMap {
+class HashMap
+{
 public:
-    class Bucket {
+    class Bucket
+    {
     public:
         Bucket() = default;
+
+        ALWAYS_INLINE Bucket(const Bucket& other)
+        {
+            new (key_ptr()) KeyType(other.key());
+            new (value_ptr()) ValueType(other.value());
+        }
+
+        ALWAYS_INLINE Bucket(Bucket&& other) noexcept
+        {
+            new (key_ptr()) KeyType(move(other.key()));
+            new (value_ptr()) ValueType(move(other.value()));
+        }
 
         ALWAYS_INLINE ~Bucket()
         {
@@ -113,7 +127,8 @@ public:
         alignas(ValueType) u8 m_value_storage[sizeof(ValueType)];
     };
 
-    struct BucketHasher {
+    struct BucketHasher
+    {
         NODISCARD ALWAYS_INLINE static u64 get_hash(const Bucket& value)
         {
             // NOTE: The hash of a bucket only depends on the key.
@@ -148,7 +163,8 @@ public:
     NODISCARD ALWAYS_INLINE Optional<ValueType&> get_if_exists(const KeyType& key)
     {
         auto slot_index = find(key);
-        if (slot_index.has_value()) {
+        if (slot_index.has_value())
+        {
             return m_buckets.m_slots[slot_index].value();
         }
         return {};
@@ -157,7 +173,8 @@ public:
     NODISCARD ALWAYS_INLINE Optional<const ValueType&> get_if_exists(const KeyType& key) const
     {
         auto slot_index = find(key);
-        if (slot_index.has_value()) {
+        if (slot_index.has_value())
+        {
             return m_buckets.m_slots[slot_index].value();
         }
         return {};
@@ -247,19 +264,21 @@ public:
         const u8 low_bucket_hash = InternalHashTable::get_low_hash(bucket_hash);
 
         usize slot_index = invalid_size;
-        
+
         if (m_buckets.m_occupied_slot_count != 0)
         {
             slot_index = m_buckets.unchecked_find_element_or_first_available_slot(key_as_bucket, bucket_hash, low_bucket_hash);
 
-            if (m_buckets.m_slots_metadata[slot_index] == low_bucket_hash && m_buckets.m_slots[slot_index].key() == key) {
+            if (m_buckets.m_slots_metadata[slot_index] == low_bucket_hash && m_buckets.m_slots[slot_index].key() == key)
+            {
                 // NOTE: The key already exists, so no more action is needed.
                 return m_buckets.m_slots[slot_index].value();
             }
         }
 
         bool has_re_allocated = m_buckets.re_allocate_if_overloaded(m_buckets.m_occupied_slot_count + 1);
-        if (has_re_allocated || slot_index == invalid_size) {
+        if (has_re_allocated || slot_index == invalid_size)
+        {
             // NOTE: We already know that the element doesn't exist in the table.
             slot_index = m_buckets.unchecked_find_first_available_slot(bucket_hash);
         }
@@ -277,15 +296,9 @@ public:
     ALWAYS_INLINE ValueType& operator[](const KeyType& key) { return get_or_add(key); }
 
 public:
-    ALWAYS_INLINE void clear()
-    {
-        m_buckets.clear();
-    }
+    ALWAYS_INLINE void clear() { m_buckets.clear(); }
 
-    ALWAYS_INLINE void clear_and_shrink()
-    {
-        m_buckets.clear_and_shrink();
-    }
+    ALWAYS_INLINE void clear_and_shrink() { m_buckets.clear_and_shrink(); }
 
 public:
     NODISCARD ALWAYS_INLINE Iterator begin() { return Iterator(m_buckets.begin()); }
@@ -301,10 +314,7 @@ private:
     //       field in the structure, and it is not padded. This allows us to "cast" the key
     //       variable to a bucket, as long as we don't access the value field.
     // WARNING: Not using this API correctly *will* create annoying bugs.
-    NODISCARD ALWAYS_INLINE static const Bucket& unsafe_bucket_from_key(const KeyType& key)
-    {
-        return *reinterpret_cast<const Bucket*>(&key);
-    }
+    NODISCARD ALWAYS_INLINE static const Bucket& unsafe_bucket_from_key(const KeyType& key) { return *reinterpret_cast<const Bucket*>(&key); }
 
     ALWAYS_INLINE usize add_without_constructing_bucket(const KeyType& key)
     {
@@ -313,8 +323,7 @@ private:
         const Bucket& key_as_bucket = unsafe_bucket_from_key(key);
         const u64 bucket_hash = InternalHashTable::get_element_hash(key_as_bucket);
         const u8 low_bucket_hash = InternalHashTable::get_low_hash(bucket_hash);
-        const usize slot_index =
-            m_buckets.unchecked_find_element_or_first_available_slot(key_as_bucket, bucket_hash, low_bucket_hash);
+        const usize slot_index = m_buckets.unchecked_find_element_or_first_available_slot(key_as_bucket, bucket_hash, low_bucket_hash);
 
         if (m_buckets.m_slots_metadata[slot_index] == low_bucket_hash)
             return invalid_size;
