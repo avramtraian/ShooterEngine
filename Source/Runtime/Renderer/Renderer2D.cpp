@@ -74,7 +74,7 @@ bool Renderer2D::initialize(u32 width, u32 height, RefPtr<Framebuffer> target_fr
     render_pass_info.pipeline = m_pipeline;
     render_pass_info.target.framebuffer = m_target_framebuffer;
     render_pass_info.target.clear = true;
-    render_pass_info.target.clear_color = { 0.087F, 0.087F, 0.087F };
+    render_pass_info.target.clear_color = Color4(0.087F, 0.087F, 0.087F);
     m_render_pass = RenderPass::create(render_pass_info);
 
     // NOTE(Traian): Pretty arbitrary.

@@ -90,6 +90,13 @@ public:
         , a(in_a)
     {}
 
+    ALWAYS_INLINE constexpr Color4(float in_r, float in_g, float in_b)
+        : r(in_r)
+        , g(in_g)
+        , b(in_b)
+        , a(1.0F)
+    {}
+
     ALWAYS_INLINE constexpr explicit Color4(float scalar)
         : r(scalar)
         , g(scalar)
