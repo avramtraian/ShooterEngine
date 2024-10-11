@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Asset/AssetManager.h"
+#include <Asset/AssetManager.h>
 
 namespace SE
 {

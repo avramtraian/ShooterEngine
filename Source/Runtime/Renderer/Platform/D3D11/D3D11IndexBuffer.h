@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "Renderer/IndexBuffer.h"
-#include "Renderer/Platform/D3D11/D3D11Headers.h"
+#include <Renderer/IndexBuffer.h>
+#include <Renderer/Platform/D3D11/D3D11Headers.h>
 
 namespace SE
 {

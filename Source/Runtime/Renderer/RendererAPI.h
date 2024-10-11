@@ -5,7 +5,8 @@
 
 #pragma once
 
-#include "Core/CoreTypes.h"
+#include <Core/API.h>
+#include <Core/CoreTypes.h>
 
 #if SE_PLATFORM_WINDOWS
     #define SE_RENDERER_API_SUPPORTED_D3D11  1

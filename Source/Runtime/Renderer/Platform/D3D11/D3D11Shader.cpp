@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Core/FileSystem/FileSystem.h"
-#include "Renderer/Platform/D3D11/D3D11Renderer.h"
-#include "Renderer/Platform/D3D11/D3D11Shader.h"
+#include <Core/FileSystem/FileSystem.h>
+#include <Core/Log.h>
+#include <Renderer/Platform/D3D11/D3D11Renderer.h>
+#include <Renderer/Platform/D3D11/D3D11Shader.h>
 
 #include <d3dcompiler.h>
 
@@ -16,7 +17,7 @@ static LPCSTR get_shader_stage_entry_point(ShaderStageType stage)
 {
     switch (stage)
     {
-        case ShaderStageType::Vertex:   return "vertex_main";
+        case ShaderStageType::Vertex: return "vertex_main";
         case ShaderStageType::Fragment: return "fragment_main";
     }
 
@@ -29,7 +30,7 @@ static LPCSTR get_shader_stage_target(ShaderStageType stage)
 {
     switch (stage)
     {
-        case ShaderStageType::Vertex:   return "vs_5_0";
+        case ShaderStageType::Vertex: return "vs_5_0";
         case ShaderStageType::Fragment: return "ps_5_0";
     }
 
@@ -53,24 +54,30 @@ D3D11Shader::D3D11Shader(const ShaderInfo& info)
 
         ID3DBlob* error_messages_blob = nullptr;
         const HRESULT compilation_result = D3DCompile(
-            shader_source.bytes(), shader_source.byte_count(),
-            nullptr, nullptr, nullptr,
-            get_shader_stage_entry_point(stage_info.type), get_shader_stage_target(stage_info.type),
-            0, 0, &stage.byte_code, &error_messages_blob);
+            shader_source.bytes(),
+            shader_source.byte_count(),
+            nullptr,
+            nullptr,
+            nullptr,
+            get_shader_stage_entry_point(stage_info.type),
+            get_shader_stage_target(stage_info.type),
+            0,
+            0,
+            &stage.byte_code,
+            &error_messages_blob
+        );
         shader_source.release();
 
         if (FAILED(compilation_result))
         {
-            StringView error_message = "Unknown"sv; 
-            
+            StringView error_message = "Unknown"sv;
+
             if (error_messages_blob)
             {
-                error_message = StringView::create_from_utf8(
-                    (const char*)(error_messages_blob->GetBufferPointer()), error_messages_blob->GetBufferSize()
-                );
+                error_message = StringView::create_from_utf8((const char*)(error_messages_blob->GetBufferPointer()), error_messages_blob->GetBufferSize());
             }
 
-            SE_LOG_TAG_ERROR( "D3D11"sv, "Shader '{}' compilation failed:\n{}"sv, stage_info.filepath, error_message);
+            SE_LOG_TAG_ERROR("D3D11"sv, "Shader '{}' compilation failed:\n{}"sv, stage_info.filepath, error_message);
             SE_ASSERT(false);
         }
 
@@ -82,8 +89,7 @@ D3D11Shader::D3D11Shader(const ShaderInfo& info)
             case ShaderStageType::Vertex:
             {
                 SE_D3D11_CHECK(D3D11Renderer::get_device()->CreateVertexShader(
-                    stage.byte_code->GetBufferPointer(), stage.byte_code->GetBufferSize(),
-                    nullptr, &stage.shader.vertex
+                    stage.byte_code->GetBufferPointer(), stage.byte_code->GetBufferSize(), nullptr, &stage.shader.vertex
                 ));
                 break;
             }
@@ -91,8 +97,7 @@ D3D11Shader::D3D11Shader(const ShaderInfo& info)
             case ShaderStageType::Fragment:
             {
                 SE_D3D11_CHECK(D3D11Renderer::get_device()->CreatePixelShader(
-                    stage.byte_code->GetBufferPointer(), stage.byte_code->GetBufferSize(),
-                    nullptr, &stage.shader.pixel
+                    stage.byte_code->GetBufferPointer(), stage.byte_code->GetBufferSize(), nullptr, &stage.shader.pixel
                 ));
                 break;
             }
@@ -106,13 +111,9 @@ D3D11Shader::~D3D11Shader()
     {
         switch (stage.type)
         {
-            case ShaderStageType::Vertex:
-                stage.shader.vertex->Release();
-                break;
+            case ShaderStageType::Vertex: stage.shader.vertex->Release(); break;
 
-            case ShaderStageType::Fragment:
-                stage.shader.pixel->Release();
-                break;
+            case ShaderStageType::Fragment: stage.shader.pixel->Release(); break;
         }
 
         if (stage.byte_code)

@@ -5,14 +5,15 @@
 
 #pragma once
 
-#include "Core/Containers/Span.h"
-#include "Core/Containers/StringView.h"
-#include "Core/EngineAPI.h"
+#include <Core/API.h>
+#include <Core/Containers/Span.h>
+#include <Core/Containers/StringView.h>
 
 #define SE_FILEPATH_DELIMITATOR           '/'
 #define SE_FILEPATH_EXTENSION_DELIMITATOR '.'
 
-namespace SE {
+namespace SE
+{
 
 //
 // Container that stores a UTF-8 encoded, null-terminated string.

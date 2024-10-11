@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Renderer/Platform/D3D11/D3D11Framebuffer.h"
-#include "Renderer/Platform/D3D11/D3D11IndexBuffer.h"
-#include "Renderer/Platform/D3D11/D3D11Pipeline.h"
-#include "Renderer/Platform/D3D11/D3D11Renderer.h"
-#include "Renderer/Platform/D3D11/D3D11RenderPass.h"
-#include "Renderer/Platform/D3D11/D3D11Shader.h"
-#include "Renderer/Platform/D3D11/D3D11VertexBuffer.h"
-#include "Renderer/Renderer.h"
-
+#include <Core/Log.h>
+#include <Renderer/Platform/D3D11/D3D11Framebuffer.h>
+#include <Renderer/Platform/D3D11/D3D11IndexBuffer.h>
+#include <Renderer/Platform/D3D11/D3D11Pipeline.h>
+#include <Renderer/Platform/D3D11/D3D11RenderPass.h>
+#include <Renderer/Platform/D3D11/D3D11Renderer.h>
+#include <Renderer/Platform/D3D11/D3D11Shader.h>
+#include <Renderer/Platform/D3D11/D3D11VertexBuffer.h>
+#include <Renderer/Renderer.h>
 #include <comdef.h>
 #include <system_error>
 
@@ -20,10 +20,10 @@ namespace SE
 
 struct D3D11RendererData
 {
-    ID3D11Device*        device               = nullptr;
-    ID3D11DeviceContext* device_context       = nullptr;
-    IDXGIFactory2*       dxgi_factory         = nullptr;
-    D3D_FEATURE_LEVEL    device_feature_level;
+    ID3D11Device* device = nullptr;
+    ID3D11DeviceContext* device_context = nullptr;
+    IDXGIFactory2* dxgi_factory = nullptr;
+    D3D_FEATURE_LEVEL device_feature_level;
 
     RefPtr<D3D11RenderPass> active_render_pass;
 };
@@ -41,17 +41,24 @@ bool D3D11Renderer::initialize()
     device_flags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif // SE_CONFIGURATION_DEBUG
 
-    const D3D_FEATURE_LEVEL feature_levels[] =
-    {
+    const D3D_FEATURE_LEVEL feature_levels[] = {
         D3D_FEATURE_LEVEL_11_1,
         D3D_FEATURE_LEVEL_11_0,
     };
 
     const HRESULT device_result = D3D11CreateDevice(
-        nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, device_flags,
-        feature_levels, SE_ARRAY_COUNT(feature_levels), D3D11_SDK_VERSION,
-        &s_d3d11_renderer->device, &s_d3d11_renderer->device_feature_level, &s_d3d11_renderer->device_context);
-    
+        nullptr,
+        D3D_DRIVER_TYPE_HARDWARE,
+        nullptr,
+        device_flags,
+        feature_levels,
+        SE_ARRAY_COUNT(feature_levels),
+        D3D11_SDK_VERSION,
+        &s_d3d11_renderer->device,
+        &s_d3d11_renderer->device_feature_level,
+        &s_d3d11_renderer->device_context
+    );
+
     if (device_result != S_OK)
     {
         SE_LOG_TAG_ERROR("D3D11"sv, "Failed to create the device!"sv);
@@ -194,11 +201,7 @@ void D3D11Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
     for (const auto& attachment : framebuffer->get_attachments())
         render_target_views.add(attachment.view);
 
-    s_d3d11_renderer->device_context->OMSetRenderTargets(
-        (UINT)(render_target_views.count()),
-        render_target_views.elements(),
-        nullptr
-    );
+    s_d3d11_renderer->device_context->OMSetRenderTargets((UINT)(render_target_views.count()), render_target_views.elements(), nullptr);
 
     //
     // Clear the render targets.

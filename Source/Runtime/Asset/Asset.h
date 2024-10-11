@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include "Core/Containers/RefPtr.h"
-#include "Core/Containers/String.h"
-#include "Core/EngineAPI.h"
+#include <Core/API.h>
+#include <Core/Containers/RefPtr.h>
+#include <Core/Containers/String.h>
 
 namespace SE
 {
@@ -17,7 +17,7 @@ struct AssetHandle
 public:
     // Generates a new asset handle, usually randomly.
     NODISCARD SHOOTER_API static AssetHandle create();
-    
+
     // Returns a special value that marks the asset handle as being invalid.
     NODISCARD ALWAYS_INLINE static constexpr AssetHandle invalid() { return AssetHandle(0); }
 
@@ -73,7 +73,7 @@ public:
 //
 // Base class for assets in the engine.
 // Represents a generic asset that is managed by the engine asset manager.
-// 
+//
 // NOTE: Any class derived from this must implement the 'get_static_type' function, otherwise the
 //       asset is not completely registered by the engine.
 //

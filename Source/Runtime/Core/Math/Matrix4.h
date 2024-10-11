@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "Core/Math/Vector4.h"
+#include <Core/Math/Vector4.h>
 
 namespace SE
 {
@@ -18,6 +18,7 @@ struct Matrix4
 public:
     NODISCARD ALWAYS_INLINE static Matrix4 identity()
     {
+        // clang-format off
         return Matrix4
         (
             { T(1), T(0), T(0), T(0) },
@@ -25,6 +26,7 @@ public:
             { T(0), T(0), T(1), T(0) },
             { T(0), T(0), T(0), T(1) }
         );
+        // clang-format on
     }
 
     NODISCARD ALWAYS_INLINE static Matrix4 transpose(const Matrix4& matrix);
@@ -41,15 +43,15 @@ public:
 public:
     // Initializes to the null matrix (all elements are zero).
     ALWAYS_INLINE Matrix4()
-        : rows{}
+        : rows {}
     {}
 
     ALWAYS_INLINE Matrix4(const Matrix4& other)
-        : rows{ other.rows[0], other.rows[1], other.rows[2], other.rows[3] }
+        : rows { other.rows[0], other.rows[1], other.rows[2], other.rows[3] }
     {}
 
     ALWAYS_INLINE Matrix4(const Vector4<T>& row_x, const Vector4<T>& row_y, const Vector4<T>& row_z, const Vector4<T>& row_w)
-        : rows{ row_x, row_y, row_z, row_w }
+        : rows { row_x, row_y, row_z, row_w }
     {}
 
     ALWAYS_INLINE Matrix4& operator=(const Matrix4& other)

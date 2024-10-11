@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "Core/CoreDefines.h"
-#include "Core/Platform/Windows/WindowsHeadersConditional.h"
+#include <Core/CoreDefines.h>
+#include <Core/Platform/Windows/WindowsHeadersConditional.h>
 
 #if !SE_PLATFORM_WINDOWS
     #error Trying to include the Windows headers, but they are not available on the current platform!

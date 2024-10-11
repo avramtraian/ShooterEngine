@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include "Core/Containers/HashMap.h"
-#include "Renderer/Platform/D3D11/D3D11Headers.h"
-#include "Renderer/RenderPass.h"
+#include <Core/Containers/HashMap.h>
+#include <Renderer/Platform/D3D11/D3D11Headers.h>
+#include <Renderer/RenderPass.h>
 
 namespace SE
 {

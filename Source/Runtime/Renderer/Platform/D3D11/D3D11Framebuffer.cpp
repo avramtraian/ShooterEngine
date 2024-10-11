@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Renderer/Platform/D3D11/D3D11Framebuffer.h"
-#include "Renderer/Platform/D3D11/D3D11Image.h"
-#include "Renderer/Platform/D3D11/D3D11Context.h"
-#include "Renderer/Platform/D3D11/D3D11Renderer.h"
+#include <Core/Log.h>
+#include <Renderer/Platform/D3D11/D3D11Context.h>
+#include <Renderer/Platform/D3D11/D3D11Framebuffer.h>
+#include <Renderer/Platform/D3D11/D3D11Image.h>
+#include <Renderer/Platform/D3D11/D3D11Renderer.h>
 
 namespace SE
 {
@@ -23,7 +24,7 @@ D3D11Framebuffer::D3D11Framebuffer(const FramebufferInfo& info)
     if (m_is_swapchain_target)
     {
         SE_ASSERT(m_swapchain_target_context != nullptr);
-        
+
         Attachment attachment = {};
         attachment.info = {};
         switch (m_swapchain_target_context->get_swapchain_format())
@@ -136,7 +137,7 @@ void D3D11Framebuffer::destroy()
         if (attachment.image)
             attachment.image = nullptr;
     }
-    
+
     m_width = 0;
     m_height = 0;
 }

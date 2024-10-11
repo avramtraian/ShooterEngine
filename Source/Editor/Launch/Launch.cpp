@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Core/Containers/Span.h"
-#include "Core/FileSystem/FileSystem.h"
-#include "Core/Platform/Platform.h"
-#include "EditorEngine.h"
+#include <Core/Containers/Span.h>
+#include <Core/FileSystem/FileSystem.h>
+#include <Core/Platform/Platform.h>
+#include <EditorEngine.h>
 
-namespace SE {
+namespace SE
+{
 
 //
 // The non-native entry point of the editor. It is directly invoked by the native entry point
@@ -25,12 +26,14 @@ static i32 guarded_main(Span<char*> command_line_arguments)
     // Set the engine root as the process working directory.
     FileSystem::set_working_directory("../../"sv);
 
-    if (!Engine::instantiate<EditorEngine>()) {
+    if (!Engine::instantiate<EditorEngine>())
+    {
         // TODO: Log error message.
         return 1;
     }
 
-    if (!g_engine->initialize()) {
+    if (!g_engine->initialize())
+    {
         // TODO: Log error message.
         return 1;
     }

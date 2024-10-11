@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Renderer/Platform/D3D11/D3D11Renderer.h"
-#include "Renderer/Platform/D3D11/D3D11VertexBuffer.h"
+#include <Core/Log.h>
+#include <Renderer/Platform/D3D11/D3D11Renderer.h>
+#include <Renderer/Platform/D3D11/D3D11VertexBuffer.h>
 
 namespace SE
 {
@@ -13,9 +14,9 @@ ALWAYS_INLINE static D3D11_USAGE get_vertex_buffer_usage(VertexBufferUpdateFrequ
 {
     switch (update_frequency)
     {
-        case VertexBufferUpdateFrequency::Never:  return D3D11_USAGE_IMMUTABLE;
+        case VertexBufferUpdateFrequency::Never: return D3D11_USAGE_IMMUTABLE;
         case VertexBufferUpdateFrequency::Normal: return D3D11_USAGE_DEFAULT;
-        case VertexBufferUpdateFrequency::High:   return D3D11_USAGE_DYNAMIC;
+        case VertexBufferUpdateFrequency::High: return D3D11_USAGE_DYNAMIC;
     }
 
     SE_LOG_TAG_ERROR("D3D11"sv, "Invalid VertexBufferUpdateFrequency!"sv);
@@ -59,11 +60,7 @@ D3D11VertexBuffer::D3D11VertexBuffer(const VertexBufferInfo& info)
 
 D3D11VertexBuffer::~D3D11VertexBuffer()
 {
-    if (m_buffer != nullptr)
-    {
-        m_buffer->Release();
-        m_buffer = nullptr;
-    }
+    SE_D3D11_RELEASE(m_buffer);
 }
 
 void D3D11VertexBuffer::update_data(ReadonlyByteSpan data)

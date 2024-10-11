@@ -5,12 +5,15 @@
 
 #pragma once
 
-#include "Core/Memory/Buffer.h"
-#include "Renderer/IndexBuffer.h"
-#include "Renderer/Pipeline.h"
-#include "Renderer/RenderPass.h"
-#include "Renderer/Shader.h"
-#include "Renderer/VertexBuffer.h"
+#include <Core/Containers/RefPtr.h>
+#include <Core/Math/Vector2.h>
+#include <Core/Math/Vector3.h>
+#include <Core/Memory/Buffer.h>
+#include <Renderer/IndexBuffer.h>
+#include <Renderer/Pipeline.h>
+#include <Renderer/RenderPass.h>
+#include <Renderer/Shader.h>
+#include <Renderer/VertexBuffer.h>
 
 namespace SE
 {

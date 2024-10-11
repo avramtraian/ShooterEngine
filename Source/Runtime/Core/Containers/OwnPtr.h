@@ -5,13 +5,15 @@
 
 #pragma once
 
-#include "Core/Assertions.h"
-#include "Core/CoreTypes.h"
+#include <Core/Assertions.h>
+#include <Core/CoreTypes.h>
 
-namespace SE {
+namespace SE
+{
 
 template<typename T>
-class OwnPtr {
+class OwnPtr
+{
     SE_MAKE_NONCOPYABLE(OwnPtr);
 
     template<typename Q>
@@ -67,7 +69,8 @@ public:
 public:
     ALWAYS_INLINE void release()
     {
-        if (m_instance) {
+        if (m_instance)
+        {
             delete m_instance;
             m_instance = nullptr;
         }

@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "Core/Containers/HashTable.h"
+#include <Core/Containers/HashTable.h>
 
 namespace SE
 {

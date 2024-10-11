@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Core/Containers/HashMap.h"
-#include "Core/Containers/OwnPtr.h"
-#include "Renderer/Renderer.h"
-#include "Renderer/RendererAPI.h"
-#include "Renderer/RendererInterface.h"
+#include <Core/Containers/HashMap.h>
+#include <Core/Containers/OwnPtr.h>
+#include <Core/Log.h>
+#include <Renderer/Renderer.h>
+#include <Renderer/RendererAPI.h>
+#include <Renderer/RendererInterface.h>
 
 namespace SE
 {
@@ -29,7 +30,7 @@ bool Renderer::initialize()
     if (s_renderer.is_valid())
         return false;
     s_renderer = make_own<RendererData>();
-    
+
     RendererAPI renderer_api = get_recommended_renderer_api_for_current_platform();
     set_current_renderer_api(renderer_api);
 
@@ -88,7 +89,7 @@ bool Renderer::create_context_for_window(Window* window)
 {
     RenderingContextInfo info = {};
     info.window = window;
-    
+
     OwnPtr<RenderingContext>& context = s_renderer->context_table.get_or_add(window->get_native_handle());
     context = RenderingContext::create(info);
     return context.is_valid();

@@ -5,12 +5,13 @@
 
 #pragma once
 
-#include "Core/Containers/Span.h"
-#include "Core/EngineAPI.h"
+#include <Core/API.h>
+#include <Core/Containers/Span.h>
 
 #include <new>
 
-namespace SE {
+namespace SE
+{
 
 SHOOTER_API void copy_memory(void* destination, const void* source, usize byte_count);
 

@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "Core/Platform/Windows/WindowsHeaders.h"
-#include "Engine/Application/Window.h"
+#include <Core/Platform/Windows/WindowsHeaders.h>
+#include <Engine/Application/Window.h>
 
 namespace SE
 {

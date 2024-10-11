@@ -5,17 +5,21 @@
 
 #pragma once
 
-#include "Core/Containers/Format.h"
-#include "Core/Containers/StringView.h"
-#include "Core/CoreTypes.h"
-#include "Core/EngineAPI.h"
+#include <Core/API.h>
+#include <Core/Containers/Format.h>
+#include <Core/Containers/StringView.h>
+#include <Core/CoreTypes.h>
 
-namespace SE {
+namespace SE
+{
 
-class Logger {
+class Logger
+{
 public:
-    struct Severity {
-        enum Type : u8 {
+    struct Severity
+    {
+        enum Type : u8
+        {
             Trace = 0,
             Info = 1,
             Warn = 2,
@@ -40,8 +44,7 @@ public:
     }
 
     template<typename... Args>
-    ALWAYS_INLINE static void
-    log_tagged_message(Severity::Type severity, StringView tag, StringView message, Args&&... args)
+    ALWAYS_INLINE static void log_tagged_message(Severity::Type severity, StringView tag, StringView message, Args&&... args)
     {
         Optional<String> formatted_message = format(message, forward<Args>(args)...);
         if (!formatted_message.has_value())

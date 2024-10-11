@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "Core/CoreDefines.h"
+#include <Core/CoreDefines.h>
 
 #if SE_PLATFORM_WINDOWS
     #if SE_COMPILER_MSVC

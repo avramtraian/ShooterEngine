@@ -5,11 +5,12 @@
 
 #pragma once
 
-#include "Core/CoreTypes.h"
-#include "Core/EngineAPI.h"
-#include "Engine/Application/Window.h"
+#include <Core/API.h>
+#include <Core/CoreTypes.h>
+#include <Engine/Application/Window.h>
 
-namespace SE {
+namespace SE
+{
 
 class Engine
 {
@@ -35,7 +36,7 @@ public:
     // The default Engine class implements this function as empty and doesn't require the classes
     // derived from it to override it. Thus, depending on the platform and build configuration, this
     // function might not do anything.
-    // 
+    //
     // If the window creation is successful, this function returns the window instance. If the window
     // creation fails or the function is not overridden by the Engine implementation, this function returns nullptr.
     //

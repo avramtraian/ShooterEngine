@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Engine/Application/Window.h"
+#include <Engine/Application/Window.h>
 
 #if SE_PLATFORM_WINDOWS
-    #include "Engine/Application/Platform/Windows/WindowsWindow.h"
+    #include <Engine/Application/Platform/Windows/WindowsWindow.h>
 #endif // Platform switch.
 
-namespace SE {
+namespace SE
+{
 
 OwnPtr<Window> Window::instantiate()
 {

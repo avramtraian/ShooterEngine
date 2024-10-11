@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Core/Containers/StringBuilder.h"
-#include "Core/FileSystem/FileSystem.h"
-#include "EditorAsset/EditorAssetManager.h"
-#include "EditorAsset/TextureSerializer.h"
-#include "EditorEngine.h"
-
+#include <Core/Containers/StringBuilder.h>
+#include <Core/FileSystem/FileSystem.h>
+#include <Core/Log.h>
+#include <EditorAsset/EditorAssetManager.h>
+#include <EditorAsset/TextureSerializer.h>
+#include <EditorEngine.h>
 #include <ThirdParty/yaml-cpp/include/yaml-cpp/yaml.h>
 
 namespace SE
@@ -151,16 +151,19 @@ bool EditorAssetManager::deserialize_asset_registry()
         const AssetType asset_type = get_asset_type_from_string(asset_type_string.view());
         if (asset_type == AssetType::Unknown)
         {
-            SE_LOG_TAG_ERROR("Asset"sv, "Invalid asset type ({}) encountered for asset ID '{}'! Skipping..."sv,
-                asset_type_string, (u64)(asset_handle));
+            SE_LOG_TAG_ERROR("Asset"sv, "Invalid asset type ({}) encountered for asset ID '{}'! Skipping..."sv, asset_type_string, (u64)(asset_handle));
             continue;
         }
 
         if (get_asset_type_from_file_extension(asset_filepath.path_extension()) != asset_type)
         {
             SE_LOG_TAG_ERROR(
-                "Asset"sv, "The filepath ({}) of the asset with handle '{}' doesn't match the asset type extension ({})! Skipping..."sv,
-                asset_filepath, (u64)(asset_handle), get_asset_type_file_extension(asset_type));
+                "Asset"sv,
+                "The filepath ({}) of the asset with handle '{}' doesn't match the asset type extension ({})! Skipping..."sv,
+                asset_filepath,
+                (u64)(asset_handle),
+                get_asset_type_file_extension(asset_type)
+            );
             continue;
         }
 

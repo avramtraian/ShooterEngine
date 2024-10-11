@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Asset/AssetManager.h"
-#include "Asset/TextureAsset.h"
-#include "Core/Containers/StringBuilder.h"
-#include "Engine/Engine.h"
-#include "Renderer/Renderer.h"
-#include "Renderer/Renderer2D.h"
+#include <Asset/AssetManager.h>
+#include <Asset/TextureAsset.h>
+#include <Core/Containers/StringBuilder.h>
+#include <Engine/Engine.h>
+#include <Renderer/Renderer.h>
+#include <Renderer/Renderer2D.h>
 
 namespace SE
 {
@@ -35,15 +35,11 @@ bool Renderer2D::initialize(u32 width, u32 height, RefPtr<Framebuffer> target_fr
     // Shaders.
     //
 
-    const String shaders_directory = StringBuilder::path_join({
-        g_engine->get_engine_root_directory().view(),
-        "Content/Runtime/Shaders/"sv
-    });
+    const String shaders_directory = StringBuilder::path_join({ g_engine->get_engine_root_directory().view(), "Content/Runtime/Shaders/"sv });
 
     ShaderInfo shader_info = {};
-    shader_info.stages =
-    {
-        ShaderStage(ShaderStageType::Vertex,   shaders_directory + "Renderer2D_Quad_V.hlsl"sv),
+    shader_info.stages = {
+        ShaderStage(ShaderStageType::Vertex, shaders_directory + "Renderer2D_Quad_V.hlsl"sv),
         ShaderStage(ShaderStageType::Fragment, shaders_directory + "Renderer2D_Quad_F.hlsl"sv),
     };
     m_shader = Shader::create(shader_info);
@@ -53,12 +49,11 @@ bool Renderer2D::initialize(u32 width, u32 height, RefPtr<Framebuffer> target_fr
     //
 
     PipelineInfo pipeline_info = {};
-    pipeline_info.layout =
-    {
-        { VertexAttribute::Float2, "POSITION"sv },
-        { VertexAttribute::Float4, "COLOR"sv },
-        { VertexAttribute::Float2, "TEXTURE_COORDINATES"sv },
-        { VertexAttribute::UInt1,  "TEXTURE_ID"sv },
+    pipeline_info.layout = {
+        {VertexAttribute::Float2,  "POSITION"sv           },
+        { VertexAttribute::Float4, "COLOR"sv              },
+        { VertexAttribute::Float2, "TEXTURE_COORDINATES"sv},
+        { VertexAttribute::UInt1,  "TEXTURE_ID"sv         },
     };
     pipeline_info.primitive_topology = PrimitiveTopology::TriangleList;
     pipeline_info.shader = m_shader;
@@ -101,9 +96,9 @@ bool Renderer2D::initialize(u32 width, u32 height, RefPtr<Framebuffer> target_fr
     m_vertex_buffer = VertexBuffer::create(vertex_buffer_info);
 
     // Construct the geometry of a 1x1 quad, centered in the world origin.
-    m_quad_default_positions[0] = { -0.5F,  0.5F }; // Top-Left.
-    m_quad_default_positions[1] = {  0.5F,  0.5F }; // Top-Right.
-    m_quad_default_positions[2] = {  0.5F, -0.5F }; // Bottom-Right.
+    m_quad_default_positions[0] = { -0.5F, 0.5F }; // Top-Left.
+    m_quad_default_positions[1] = { 0.5F, 0.5F }; // Top-Right.
+    m_quad_default_positions[2] = { 0.5F, -0.5F }; // Bottom-Right.
     m_quad_default_positions[3] = { -0.5F, -0.5F }; // Bottom-Left.
 
     //
@@ -197,7 +192,7 @@ void Renderer2D::submit_quad(Vector2 position, Vector2 scale, Vector3 rotation, 
         m_quad_textures[m_quad_texture_count] = texture;
         texture_id = m_quad_texture_count++;
     }
-    
+
     SE_ASSERT(texture_id < m_quad_texture_count);
 
     QuadVertex* vertices = construct_quad(position, scale, color);
@@ -248,40 +243,28 @@ Renderer2D::QuadVertex* Renderer2D::construct_quad(Vector2 position, Vector2 sca
     QuadVertex* current_buffer_pointer = m_vertices_buffer_pointer;
 
     // Top left.
-    m_vertices_buffer_pointer->position = {
-        m_quad_default_positions[0].x * scale.x + position.x,
-        m_quad_default_positions[0].y * scale.y + position.y
-    };
+    m_vertices_buffer_pointer->position = { m_quad_default_positions[0].x * scale.x + position.x, m_quad_default_positions[0].y * scale.y + position.y };
     m_vertices_buffer_pointer->color = color;
     m_vertices_buffer_pointer->texture_coordinates = { 0.0F, 1.0F };
     m_vertices_buffer_pointer->texture_id = 0;
     ++m_vertices_buffer_pointer;
 
     // Top right.
-    m_vertices_buffer_pointer->position = {
-        m_quad_default_positions[1].x * scale.x + position.x,
-        m_quad_default_positions[1].y * scale.y + position.y
-    };
+    m_vertices_buffer_pointer->position = { m_quad_default_positions[1].x * scale.x + position.x, m_quad_default_positions[1].y * scale.y + position.y };
     m_vertices_buffer_pointer->color = color;
     m_vertices_buffer_pointer->texture_coordinates = { 1.0F, 1.0F };
     m_vertices_buffer_pointer->texture_id = 0;
     ++m_vertices_buffer_pointer;
 
     // Bottom right.
-    m_vertices_buffer_pointer->position = {
-        m_quad_default_positions[2].x * scale.x + position.x,
-        m_quad_default_positions[2].y * scale.y + position.y
-    };
+    m_vertices_buffer_pointer->position = { m_quad_default_positions[2].x * scale.x + position.x, m_quad_default_positions[2].y * scale.y + position.y };
     m_vertices_buffer_pointer->color = color;
     m_vertices_buffer_pointer->texture_coordinates = { 1.0F, 0.0F };
     m_vertices_buffer_pointer->texture_id = 0;
     ++m_vertices_buffer_pointer;
 
     // Bottom left.
-    m_vertices_buffer_pointer->position = {
-        m_quad_default_positions[3].x * scale.x + position.x,
-        m_quad_default_positions[3].y * scale.y + position.y
-    };
+    m_vertices_buffer_pointer->position = { m_quad_default_positions[3].x * scale.x + position.x, m_quad_default_positions[3].y * scale.y + position.y };
     m_vertices_buffer_pointer->color = color;
     m_vertices_buffer_pointer->texture_coordinates = { 0.0F, 0.0F };
     m_vertices_buffer_pointer->texture_id = 0;
@@ -290,7 +273,7 @@ Renderer2D::QuadVertex* Renderer2D::construct_quad(Vector2 position, Vector2 sca
     // Update statistics.
     m_statistics.quads_in_current_batch++;
     m_statistics.quads_in_current_frame++;
-    
+
     return current_buffer_pointer;
 }
 

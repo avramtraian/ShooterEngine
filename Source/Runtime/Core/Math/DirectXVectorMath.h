@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "Core/Math/Matrix4.h"
-#include "Core/Math/Vector4.h"
+#include <Core/Math/Matrix4.h>
+#include <Core/Math/Vector4.h>
 
 #include <DirectXMath.h>
 
@@ -20,12 +20,14 @@ using MatrixRegister = DirectX::XMMATRIX;
 // Wrappers around the DirectXMath loading/storing functions.
 // Utility functions designed to simply the usage of the DirectXMath library.
 //
+// clang-format off
 NODISCARD ALWAYS_INLINE VectorRegister vector_load_float(float in_float) { return DirectX::XMLoadFloat(&in_float); }
 NODISCARD ALWAYS_INLINE VectorRegister vector_load_float_4(const Vector4& float_4) { return DirectX::XMLoadFloat4((DirectX::XMFLOAT4 *)&float_4); }
 NODISCARD ALWAYS_INLINE MatrixRegister vector_load_float_4x4(const Matrix4& float_4x4) { return DirectX::XMLoadFloat4x4((DirectX::XMFLOAT4X4 *)&float_4x4); }
 ALWAYS_INLINE void vector_store_float(float& dst_float, const VectorRegister& vector) { DirectX::XMStoreFloat(&dst_float, vector); }
 ALWAYS_INLINE void vector_store_float_4(Vector4& dst_float_4, const VectorRegister& vector) { DirectX::XMStoreFloat4((DirectX::XMFLOAT4*)&dst_float_4, vector); }
 ALWAYS_INLINE void vector_store_float_4x4(Matrix4& dst_float_4x4, const MatrixRegister& matrix) { DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&dst_float_4x4, matrix); }
+// clang-format on
 
 ALWAYS_INLINE void vector_matrix_multiply(Matrix4& destination, const Matrix4& left, const Matrix4& right)
 {

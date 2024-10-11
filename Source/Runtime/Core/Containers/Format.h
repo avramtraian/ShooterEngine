@@ -5,26 +5,31 @@
 
 #pragma once
 
-#include "Core/Containers/Optional.h"
-#include "Core/Containers/Span.h"
-#include "Core/Containers/String.h"
-#include "Core/Containers/Vector.h"
+#include <Core/Containers/Optional.h>
+#include <Core/Containers/Span.h>
+#include <Core/Containers/String.h>
+#include <Core/Containers/Vector.h>
 
-namespace SE {
+namespace SE
+{
 
-enum class FormatErrorCode : u8 {
+enum class FormatErrorCode : u8
+{
     Success = 0,
     Unknown = 1,
 
     InvalidSpecifier,
 };
 
-class FormatBuilder {
+class FormatBuilder
+{
     SE_MAKE_NONCOPYABLE(FormatBuilder);
     SE_MAKE_NONMOVABLE(FormatBuilder);
 
 public:
-    struct Specifier {};
+    struct Specifier
+    {
+    };
 
 public:
     ALWAYS_INLINE FormatBuilder(StringView string_format)
@@ -48,7 +53,8 @@ private:
 };
 
 template<typename T>
-struct Formatter {
+struct Formatter
+{
     ALWAYS_INLINE static FormatErrorCode format(FormatBuilder&, const FormatBuilder::Specifier&, const T&)
     {
         // TODO: Maybe we should signal that the Formatter<T> isn't specialized by
@@ -60,9 +66,9 @@ struct Formatter {
 
 template<typename T>
 requires (is_integral<T>)
-struct Formatter<T> {
-    ALWAYS_INLINE static FormatErrorCode
-    format(FormatBuilder& builder, const FormatBuilder::Specifier& specifier, const T& value)
+struct Formatter<T>
+{
+    ALWAYS_INLINE static FormatErrorCode format(FormatBuilder& builder, const FormatBuilder::Specifier& specifier, const T& value)
     {
         if constexpr (is_signed_integral<T>)
             return builder.push_signed_integer(specifier, static_cast<i64>(value));
@@ -72,33 +78,34 @@ struct Formatter<T> {
 };
 
 template<>
-struct Formatter<bool> {
-    ALWAYS_INLINE static FormatErrorCode
-    format(FormatBuilder& builder, const FormatBuilder::Specifier&, const bool& value)
+struct Formatter<bool>
+{
+    ALWAYS_INLINE static FormatErrorCode format(FormatBuilder& builder, const FormatBuilder::Specifier&, const bool& value)
     {
         return builder.push_string({}, value ? "true"sv : "false"sv);
     }
 };
 
 template<>
-struct Formatter<StringView> {
-    ALWAYS_INLINE static FormatErrorCode
-    format(FormatBuilder& builder, const FormatBuilder::Specifier& specifier, const StringView& value)
+struct Formatter<StringView>
+{
+    ALWAYS_INLINE static FormatErrorCode format(FormatBuilder& builder, const FormatBuilder::Specifier& specifier, const StringView& value)
     {
         return builder.push_string(specifier, value);
     }
 };
 
 template<>
-struct Formatter<String> {
-    ALWAYS_INLINE static FormatErrorCode
-    format(FormatBuilder& builder, const FormatBuilder::Specifier& specifier, const String& value)
+struct Formatter<String>
+{
+    ALWAYS_INLINE static FormatErrorCode format(FormatBuilder& builder, const FormatBuilder::Specifier& specifier, const String& value)
     {
         return builder.push_string(specifier, value.view());
     }
 };
 
-namespace Detail {
+namespace Detail
+{
 
 NODISCARD ALWAYS_INLINE FormatErrorCode format(FormatBuilder& builder)
 {
@@ -137,9 +144,3 @@ NODISCARD ALWAYS_INLINE Optional<String> format(StringView string_format, Args&&
 }
 
 } // namespace SE
-
-#ifdef SE_INCLUDE_GLOBALLY
-using SE::format;
-using SE::FormatBuilder;
-using SE::Formatter;
-#endif // SE_INCLUDE_GLOBALLY

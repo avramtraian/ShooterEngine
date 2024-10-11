@@ -4,6 +4,7 @@
  */
 
 #include <Core/Containers/StringBuilder.h>
+#include <Core/Log.h>
 #include <EditorAsset/EditorAssetManager.h>
 #include <EditorEngine.h>
 #include <Engine/Application/WindowEvent.h>

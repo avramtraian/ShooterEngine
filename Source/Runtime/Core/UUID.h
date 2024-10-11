@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <Core/API.h>
 #include <Core/CoreTypes.h>
 
 namespace SE

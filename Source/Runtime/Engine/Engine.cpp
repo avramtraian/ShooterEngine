@@ -3,15 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Engine/Engine.h"
+#include <Engine/Engine.h>
 
-namespace SE {
+namespace SE
+{
 
 Engine* g_engine = nullptr;
 
 void Engine::destroy()
 {
-    if (g_engine) {
+    if (g_engine)
+    {
         delete g_engine;
         g_engine = nullptr;
     }

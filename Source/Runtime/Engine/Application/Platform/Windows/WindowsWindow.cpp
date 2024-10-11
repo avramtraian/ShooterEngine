@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Engine/Application/Platform/Windows/WindowsWindow.h"
-#include "Engine/Application/WindowEvent.h"
-#include "Engine/Engine.h"
+#include <Engine/Application/Platform/Windows/WindowsWindow.h>
+#include <Engine/Application/WindowEvent.h>
+#include <Engine/Engine.h>
 
 namespace SE
 {
@@ -148,8 +148,7 @@ LRESULT WindowsWindow::window_procedure(HWND window_handle, UINT message, WPARAM
 
             POINTS new_position = MAKEPOINTS(l_param);
 
-            if (window.m_client_area_position_x != new_position.x ||
-                window.m_client_area_position_y != new_position.y)
+            if (window.m_client_area_position_x != new_position.x || window.m_client_area_position_y != new_position.y)
             {
                 window.m_client_area_position_x = new_position.x;
                 window.m_client_area_position_y = new_position.y;

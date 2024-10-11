@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "Core/Containers/OwnPtr.h"
+#include <Core/Containers/OwnPtr.h>
 
 namespace SE
 {

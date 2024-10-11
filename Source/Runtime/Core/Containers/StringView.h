@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "Core/Containers/Span.h"
-#include "Core/EngineAPI.h"
+#include <Core/Containers/Span.h>
+#include <Core/API.h>
 
 namespace SE {
 

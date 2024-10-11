@@ -5,8 +5,9 @@
 
 #pragma once
 
-#include "Asset/AssetSerializer.h"
-#include "EditorAsset/EditorAssetManager.h"
+#include <Asset/AssetSerializer.h>
+#include <Core/Containers/RefPtr.h>
+#include <EditorAsset/EditorAssetManager.h>
 
 namespace SE
 {
@@ -14,8 +15,8 @@ namespace SE
 class TextureSerializer : public AssetSerializer
 {
 public:
-	virtual bool serialize(AssetHandle handle) override;
-	virtual RefPtr<Asset> deserialize(AssetMetadata& metadata) override;
+    virtual bool serialize(AssetHandle handle) override;
+    virtual RefPtr<Asset> deserialize(AssetMetadata& metadata) override;
 };
 
 } // namespace SE

@@ -5,13 +5,15 @@
 
 #pragma once
 
-#include "Core/Assertions.h"
-#include "Core/CoreTypes.h"
+#include <Core/Assertions.h>
+#include <Core/CoreTypes.h>
 
-namespace SE {
+namespace SE
+{
 
 template<typename T>
-struct Hasher {
+struct Hasher
+{
     NODISCARD ALWAYS_INLINE static u64 get_hash(const T&)
     {
         // TODO: Uncomment the following assert!
@@ -21,7 +23,8 @@ struct Hasher {
 };
 
 template<>
-struct Hasher<void*> {
+struct Hasher<void*>
+{
     NODISCARD ALWAYS_INLINE static u64 get_hash(const void* const& value)
     {
         // TODO: Provide a better hashing function for raw pointers.

@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "Core/CoreDefines.h"
+#include <Core/CoreDefines.h>
 
 #if SE_CONFIGURATION_DEBUG || SE_CONFIGURATION_DEVELOPMENT
     #define SE_ASSERT(...)  \

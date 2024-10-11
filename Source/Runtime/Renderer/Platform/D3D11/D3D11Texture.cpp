@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Renderer/Platform/D3D11/D3D11Image.h"
-#include "Renderer/Platform/D3D11/D3D11Renderer.h"
-#include "Renderer/Platform/D3D11/D3D11Texture.h"
+#include <Renderer/Platform/D3D11/D3D11Image.h>
+#include <Renderer/Platform/D3D11/D3D11Renderer.h>
+#include <Renderer/Platform/D3D11/D3D11Texture.h>
 
 namespace SE
 {
@@ -59,23 +59,9 @@ D3D11Texture2D::D3D11Texture2D(const Texture2DInfo& info)
 
 D3D11Texture2D::~D3D11Texture2D()
 {
-    if (m_sampler_state)
-    {
-        m_sampler_state->Release();
-        m_sampler_state = nullptr;
-    }
-
-    if (m_image_view)
-    {
-        m_image_view->Release();
-        m_image_view = nullptr;
-    }
-
-    if (m_image_handle)
-    {
-        m_image_handle->Release();
-        m_image_handle = nullptr;
-    }
+    SE_D3D11_RELEASE(m_sampler_state);
+    SE_D3D11_RELEASE(m_image_view);
+    SE_D3D11_RELEASE(m_image_handle);
 }
 
 } // namespace SE

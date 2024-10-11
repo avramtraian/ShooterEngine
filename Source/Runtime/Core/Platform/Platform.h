@@ -5,15 +5,18 @@
 
 #pragma once
 
-#include "Core/Containers/StringView.h"
-#include "Core/CoreTypes.h"
-#include "Core/EngineAPI.h"
+#include <Core/API.h>
+#include <Core/Containers/StringView.h>
+#include <Core/CoreTypes.h>
 
-namespace SE {
+namespace SE
+{
 
-class Platform {
+class Platform
+{
 public:
-    enum class ConsoleColor : u8 {
+    enum class ConsoleColor : u8
+    {
         Blue,
         Green,
         Red,

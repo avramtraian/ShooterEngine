@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Core/Containers/StringView.h"
-#include "Core/Containers/Utf8.h"
+#include <Core/Containers/StringView.h>
+#include <Core/Containers/Utf8.h>
 
-namespace SE {
+namespace SE
+{
 
 StringView StringView::create_from_utf8(const char* characters, usize byte_count)
 {
@@ -32,8 +33,10 @@ StringView StringView::create_from_utf8(const char* null_terminated_characters)
 
 usize StringView::find(char ascii_character) const
 {
-    for (usize offset = 0; offset < m_byte_count; ++offset) {
-        if (m_characters[offset] == ascii_character) {
+    for (usize offset = 0; offset < m_byte_count; ++offset)
+    {
+        if (m_characters[offset] == ascii_character)
+        {
             return offset;
         }
     }
@@ -44,12 +47,14 @@ usize StringView::find(char ascii_character) const
 usize StringView::find(UnicodeCodepoint codepoint_to_find) const
 {
     usize offset = 0;
-    while (offset < m_byte_count) {
+    while (offset < m_byte_count)
+    {
         usize codepoint_width;
         UnicodeCodepoint codepoint = UTF8::bytes_to_codepoint(byte_span().slice(offset), codepoint_width);
         SE_ASSERT(codepoint != invalid_unicode_codepoint);
 
-        if (codepoint == codepoint_to_find) {
+        if (codepoint == codepoint_to_find)
+        {
             return offset;
         }
         offset += codepoint_width;
@@ -84,12 +89,15 @@ StringView StringView::slice(usize offset_in_bytes, usize bytes_count) const
 
 bool StringView::operator==(const StringView& other) const
 {
-    if (m_byte_count != other.m_byte_count) {
+    if (m_byte_count != other.m_byte_count)
+    {
         return false;
     }
 
-    for (usize byte_offset = 0; byte_offset < m_byte_count; ++byte_offset) {
-        if (m_characters[byte_offset] != other.m_characters[byte_offset]) {
+    for (usize byte_offset = 0; byte_offset < m_byte_count; ++byte_offset)
+    {
+        if (m_characters[byte_offset] != other.m_characters[byte_offset])
+        {
             return false;
         }
     }

@@ -5,12 +5,13 @@
 
 #pragma once
 
-#include "Engine/Application/Window.h"
-#include "Renderer/IndexBuffer.h"
-#include "Renderer/RenderingContext.h"
-#include "Renderer/RenderPass.h"
-#include "Renderer/Texture.h"
-#include "Renderer/VertexBuffer.h"
+#include <Core/Containers/RefPtr.h>
+#include <Engine/Application/Window.h>
+#include <Renderer/IndexBuffer.h>
+#include <Renderer/RenderPass.h>
+#include <Renderer/RenderingContext.h>
+#include <Renderer/Texture.h>
+#include <Renderer/VertexBuffer.h>
 
 namespace SE
 {
@@ -24,7 +25,7 @@ public:
 
     SHOOTER_API static bool create_context_for_window(Window* window);
     SHOOTER_API static RenderingContext* get_rendering_context_for_window(Window* window);
-    
+
     SHOOTER_API static RenderingContext* get_active_context();
     SHOOTER_API static void set_active_context(RenderingContext* context);
 

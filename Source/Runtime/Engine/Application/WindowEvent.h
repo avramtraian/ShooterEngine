@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "Engine/Application/Event.h"
+#include <Engine/Application/Event.h>
 
 namespace SE
 {

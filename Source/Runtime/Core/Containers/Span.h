@@ -5,13 +5,15 @@
 
 #pragma once
 
-#include "Core/Assertions.h"
-#include "Core/CoreTypes.h"
+#include <Core/Assertions.h>
+#include <Core/CoreTypes.h>
 
-namespace SE {
+namespace SE
+{
 
 template<typename T>
-class Span {
+class Span
+{
 public:
     using Iterator = T*;
     using ConstIterator = const T*;

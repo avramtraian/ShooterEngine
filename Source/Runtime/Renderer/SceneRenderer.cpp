@@ -5,6 +5,7 @@
 
 #include <Asset/AssetManager.h>
 #include <Asset/TextureAsset.h>
+#include <Core/Log.h>
 #include <Engine/Scene/Components/SpriteRendererComponent.h>
 #include <Engine/Scene/Components/TransformComponent.h>
 #include <Renderer/Renderer.h>

@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Asset/TextureAsset.h"
-#include "Core/Containers/StringBuilder.h"
-#include "Core/FileSystem/FileSystem.h"
-#include "EditorAsset/TextureSerializer.h"
-#include "EditorEngine.h"
-
+#include <Asset/TextureAsset.h>
+#include <Core/Containers/StringBuilder.h>
+#include <Core/FileSystem/FileSystem.h>
+#include <Core/Log.h>
+#include <EditorAsset/TextureSerializer.h>
+#include <EditorEngine.h>
 #include <ThirdParty/yaml-cpp/include/yaml-cpp/yaml.h>
 
 #define STBI_ASSERT(x) SE_ASSERT(x)
@@ -30,10 +30,9 @@ bool TextureSerializer::serialize(AssetHandle handle)
     out << YAML::Key << "Filepath" << YAML::Value << asset->get_texture_filepath().c_str();
     out << YAML::EndMap;
     const StringView yaml_view = StringView::create_from_utf8(out.c_str());
-    
-    const String metadata_filepath = StringBuilder::path_join({
-        g_editor_engine->get_project_content_directory().view(), metadata.filepath.view() });
-    
+
+    const String metadata_filepath = StringBuilder::path_join({ g_editor_engine->get_project_content_directory().view(), metadata.filepath.view() });
+
     FileWriter asset_metadata_file_writer;
     SE_CHECK_FILE_ERROR(asset_metadata_file_writer.open(metadata_filepath));
     SE_CHECK_FILE_ERROR(asset_metadata_file_writer.write_and_close(yaml_view.byte_span()));
@@ -45,8 +44,8 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
 {
     EditorAssetMetadata& editor_metadata = static_cast<EditorAssetMetadata&>(metadata);
 
-    const String asset_metadata_filepath = StringBuilder::path_join({
-        g_editor_engine->get_project_content_directory().view(), editor_metadata.filepath.view() });
+    const String asset_metadata_filepath =
+        StringBuilder::path_join({ g_editor_engine->get_project_content_directory().view(), editor_metadata.filepath.view() });
 
     FileReader asset_metadata_file_reader;
     String asset_metadata_file;
@@ -80,19 +79,21 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
 
     if (asset_type != editor_metadata.type)
     {
-        SE_LOG_TAG_ERROR("Asset"sv, "Expected asset type '{}', but found '{}'! ({})"sv,
+        SE_LOG_TAG_ERROR(
+            "Asset"sv,
+            "Expected asset type '{}', but found '{}'! ({})"sv,
             get_asset_type_string(editor_metadata.type),
             get_asset_type_string(asset_type),
-            editor_metadata.filepath);
+            editor_metadata.filepath
+        );
         return {};
     }
 
     if (asset_handle != editor_metadata.handle)
     {
-        SE_LOG_TAG_ERROR("Asset"sv, "Expected asset handle '{}', but found '{}'! ({})"sv,
-            (u64)(editor_metadata.handle),
-            (u64)(asset_handle),
-            editor_metadata.filepath);
+        SE_LOG_TAG_ERROR(
+            "Asset"sv, "Expected asset handle '{}', but found '{}'! ({})"sv, (u64)(editor_metadata.handle), (u64)(asset_handle), editor_metadata.filepath
+        );
         return {};
     }
 
@@ -104,9 +105,7 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
     }
 
     const String texture_filepath = StringView::create_from_utf8(texture_filepath_node.as<std::string>().c_str());
-    const String absolute_texture_filepath = StringBuilder::path_join({
-        g_editor_engine->get_project_content_directory().view(),
-        texture_filepath.view() });
+    const String absolute_texture_filepath = StringBuilder::path_join({ g_editor_engine->get_project_content_directory().view(), texture_filepath.view() });
 
     FileReader texture_file_reader;
     Buffer texture_file;
@@ -117,9 +116,7 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
 
     int width, height;
     const u32 channel_count = 4;
-    stbi_uc* loaded_texture_bytes = stbi_load_from_memory(
-        texture_file.bytes(), (int)(texture_file.byte_count()),
-        &width, &height, nullptr, channel_count);
+    stbi_uc* loaded_texture_bytes = stbi_load_from_memory(texture_file.bytes(), (int)(texture_file.byte_count()), &width, &height, nullptr, channel_count);
     texture_file.release();
 
     const usize loaded_texture_byte_count = (usize)(width) * (usize)(height) * (usize)(channel_count);
@@ -136,7 +133,7 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
 
     RefPtr<Texture2D> renderer_texture = Texture2D::create(renderer_texture_info);
     STBI_FREE(loaded_texture_bytes);
-    
+
     RefPtr<TextureAsset> asset = make_ref<TextureAsset>(move(renderer_texture), texture_filepath);
     return asset.as<Asset>();
 }

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Renderer/IndexBuffer.h"
-#include "Renderer/RendererAPI.h"
+#include <Renderer/IndexBuffer.h>
+#include <Renderer/RendererAPI.h>
 
 #if SE_RENDERER_API_SUPPORTED_D3D11
     #include "Renderer/Platform/D3D11/D3D11IndexBuffer.h"
@@ -18,8 +18,7 @@ RefPtr<IndexBuffer> IndexBuffer::create(const IndexBufferInfo& info)
     switch (get_current_renderer_api())
     {
 #if SE_RENDERER_API_SUPPORTED_D3D11
-        case RendererAPI::D3D11:
-            return make_ref<D3D11IndexBuffer>(info).as<IndexBuffer>();
+        case RendererAPI::D3D11: return make_ref<D3D11IndexBuffer>(info).as<IndexBuffer>();
 #endif // SE_RENDERER_API_SUPPORTED_D3D11
     }
 

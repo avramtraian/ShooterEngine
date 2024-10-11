@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Engine/Application/Window.h"
-#include "Renderer/Platform/D3D11/D3D11Context.h"
-#include "Renderer/Platform/D3D11/D3D11Renderer.h"
+#include <Core/Log.h>
+#include <Engine/Application/Window.h>
+#include <Renderer/Platform/D3D11/D3D11Context.h>
+#include <Renderer/Platform/D3D11/D3D11Renderer.h>
 
 namespace SE
 {
@@ -90,8 +91,7 @@ void D3D11Context::invalidate()
     swapchain_fullscreen_description.Windowed = true;
 
     SE_D3D11_CHECK(D3D11Renderer::get_dxgi_factory()->CreateSwapChainForHwnd(
-        D3D11Renderer::get_device(), (HWND)(m_window->get_native_handle()),
-        &swapchain_description, &swapchain_fullscreen_description, nullptr, &m_swapchain
+        D3D11Renderer::get_device(), (HWND)(m_window->get_native_handle()), &swapchain_description, &swapchain_fullscreen_description, nullptr, &m_swapchain
     ));
 
     SE_D3D11_CHECK(m_swapchain->GetBuffer(0, IID_PPV_ARGS(&m_swapchain_image)));

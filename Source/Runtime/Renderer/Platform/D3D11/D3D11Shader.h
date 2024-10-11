@@ -5,9 +5,10 @@
 
 #pragma once
 
-#include "Core/Memory/Buffer.h"
-#include "Renderer/Platform/D3D11/D3D11Headers.h"
-#include "Renderer/Shader.h"
+#include <Core/Containers/Optional.h>
+#include <Core/Memory/Buffer.h>
+#include <Renderer/Platform/D3D11/D3D11Headers.h>
+#include <Renderer/Shader.h>
 
 namespace SE
 {
@@ -20,10 +21,10 @@ public:
         union
         {
             ID3D11VertexShader* vertex;
-            ID3D11PixelShader*  pixel;
+            ID3D11PixelShader* pixel;
         } shader;
         ShaderStageType type;
-        ID3DBlob*       byte_code;
+        ID3DBlob* byte_code;
     };
 
 public:

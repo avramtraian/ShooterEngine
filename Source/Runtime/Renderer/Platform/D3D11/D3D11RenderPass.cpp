@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Renderer/Platform/D3D11/D3D11Framebuffer.h"
-#include "Renderer/Platform/D3D11/D3D11Pipeline.h"
-#include "Renderer/Platform/D3D11/D3D11Renderer.h"
-#include "Renderer/Platform/D3D11/D3D11RenderPass.h"
-#include "Renderer/Platform/D3D11/D3D11Texture.h"
+#include <Renderer/Platform/D3D11/D3D11Framebuffer.h>
+#include <Renderer/Platform/D3D11/D3D11Pipeline.h>
+#include <Renderer/Platform/D3D11/D3D11RenderPass.h>
+#include <Renderer/Platform/D3D11/D3D11Renderer.h>
+#include <Renderer/Platform/D3D11/D3D11Texture.h>
 
 namespace SE
 {
@@ -17,12 +17,10 @@ D3D11RenderPass::D3D11RenderPass(const RenderPassInfo& info)
     , m_target_framebuffer(info.target.framebuffer.as<D3D11Framebuffer>())
     , m_should_clear_target(info.target.clear)
     , m_target_clear_color(info.target.clear_color)
-{
-}
+{}
 
 D3D11RenderPass::~D3D11RenderPass()
-{
-}
+{}
 
 bool D3D11RenderPass::bind_inputs()
 {
@@ -42,7 +40,7 @@ bool D3D11RenderPass::bind_inputs()
         // TODO: There shouldn't be one sampler per texture anyway.
         if (texture_array.has_elements())
             fragment_shader_sampler_states.add(texture_array.first()->get_sampler_state());
-        
+
         for (const RefPtr<D3D11Texture2D>& texture : texture_array)
         {
             if (texture.is_valid())
@@ -50,13 +48,8 @@ bool D3D11RenderPass::bind_inputs()
         }
     }
 
-    D3D11Renderer::get_device_context()->PSSetShaderResources(0,
-        (UINT)(fragment_shader_resource_views.count()),
-        fragment_shader_resource_views.elements());
-
-    D3D11Renderer::get_device_context()->PSSetSamplers(0,
-        (UINT)(fragment_shader_sampler_states.count()),
-        fragment_shader_sampler_states.elements());
+    D3D11Renderer::get_device_context()->PSSetShaderResources(0, (UINT)(fragment_shader_resource_views.count()), fragment_shader_resource_views.elements());
+    D3D11Renderer::get_device_context()->PSSetSamplers(0, (UINT)(fragment_shader_sampler_states.count()), fragment_shader_sampler_states.elements());
 
     return true;
 }

@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Core/FileSystem/FileSystem.h"
-#include "Core/Math/Math.h"
-#include "Core/Platform/Windows/WindowsHeaders.h"
+#include <Core/FileSystem/FileSystem.h>
+#include <Core/Math/Math.h>
+#include <Core/Platform/Windows/WindowsHeaders.h>
 
-namespace SE {
+namespace SE
+{
 
 //==============================================================================================================
 // UTILITIES.
@@ -104,14 +105,14 @@ FileError FileReader::open(const String& filepath, OpenPolicy open_policy /*= Op
     switch (share_policy)
     {
         case SharePolicy::Exclusive: share_mode = 0; break;
-        case SharePolicy::ReadOnly:  share_mode = FILE_SHARE_READ; break;
+        case SharePolicy::ReadOnly: share_mode = FILE_SHARE_READ; break;
         case SharePolicy::ReadWrite: share_mode = FILE_SHARE_READ | FILE_SHARE_WRITE; break;
     }
 
     m_native_handle = CreateFileA(filepath_to_cstr(filepath), GENERIC_READ, share_mode, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (m_native_handle == INVALID_HANDLE_VALUE && m_open_policy != OpenPolicy::NonExistingFileIsEmpty)
         return FileError::FileNotFound;
-    
+
     m_handle_is_opened = true;
     return FileError::Success;
 }
@@ -216,7 +217,7 @@ FileError FileReader::read_entire_to_string(String& out_string)
 
     out_string = StringView::create_from_utf8(file_buffer.readonly_span());
     file_buffer.release();
-    
+
     return FileError::Success;
 }
 
@@ -309,7 +310,12 @@ FileWriter::~FileWriter()
     close();
 }
 
-FileError FileWriter::open(const String& filepath, bool append /*= false*/, OpenPolicy open_policy /*= OpenPolicy::CreateIfNotExisting*/, SharePolicy share_policy /*= SharePolicy::Exclusive*/)
+FileError FileWriter::open(
+    const String& filepath,
+    bool append /*= false*/,
+    OpenPolicy open_policy /*= OpenPolicy::CreateIfNotExisting*/,
+    SharePolicy share_policy /*= SharePolicy::Exclusive*/
+)
 {
     // Close the previously opened file handle.
     close();
@@ -320,7 +326,7 @@ FileError FileWriter::open(const String& filepath, bool append /*= false*/, Open
     switch (share_policy)
     {
         case SharePolicy::Exclusive: share_mode = 0; break;
-        case SharePolicy::ReadOnly:  share_mode = FILE_SHARE_READ; break;
+        case SharePolicy::ReadOnly: share_mode = FILE_SHARE_READ; break;
         case SharePolicy::ReadWrite: share_mode = FILE_SHARE_READ | FILE_SHARE_WRITE; break;
     }
 
@@ -328,7 +334,7 @@ FileError FileWriter::open(const String& filepath, bool append /*= false*/, Open
     {
         switch (open_policy)
         {
-            case OpenPolicy::OpenExisting:        creation_disposition = OPEN_EXISTING; break;
+            case OpenPolicy::OpenExisting: creation_disposition = OPEN_EXISTING; break;
             case OpenPolicy::CreateIfNotExisting: creation_disposition = OPEN_ALWAYS; break;
         }
     }
@@ -349,7 +355,7 @@ FileError FileWriter::open(const String& filepath, bool append /*= false*/, Open
 
     m_native_handle = CreateFileA(filepath_to_cstr(filepath), GENERIC_WRITE, share_mode, NULL, creation_disposition, FILE_ATTRIBUTE_NORMAL, NULL);
     if (m_native_handle == INVALID_HANDLE_VALUE)
-            return FileError::FileNotFound;
+        return FileError::FileNotFound;
 
     m_handle_is_opened = true;
     return FileError::Success;
@@ -371,11 +377,11 @@ FileError FileWriter::write(ReadonlyByteSpan bytes_to_write)
     if (!m_handle_is_opened)
         return FileError::FileHandleNotOpened;
     SE_ASSERT(m_native_handle != INVALID_HANDLE_VALUE);
-    
+
     FileError file_error = write_to_file(m_native_handle, bytes_to_write);
     if (file_error != FileError::Success)
         return file_error;
-    
+
     return FileError::Success;
 }
 
@@ -411,8 +417,7 @@ Optional<bool> FileSystem::is_directory(const String& filepath)
 
 Optional<usize> FileSystem::get_file_size(const String& filepath)
 {
-    HANDLE file_handle =
-        CreateFileA(filepath_to_cstr(filepath), 0, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE file_handle = CreateFileA(filepath_to_cstr(filepath), 0, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (file_handle == INVALID_HANDLE_VALUE)
         return {};
 

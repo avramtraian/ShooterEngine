@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "Renderer/Framebuffer.h"
-#include "Renderer/Platform/D3D11/D3D11Headers.h"
+#include <Renderer/Framebuffer.h>
+#include <Renderer/Platform/D3D11/D3D11Headers.h>
 
 namespace SE
 {
@@ -28,9 +28,9 @@ public:
 
     virtual void resize(u32 new_width, u32 new_height) override;
 
-    const Vector<Attachment>& get_attachments() const { return m_attachments; }
-    ALWAYS_INLINE u32 get_width() const { return m_width; }
-    ALWAYS_INLINE u32 get_height() const { return m_height; }
+    NODISCARD ALWAYS_INLINE const Vector<Attachment>& get_attachments() const { return m_attachments; }
+    NODISCARD ALWAYS_INLINE u32 get_width() const { return m_width; }
+    NODISCARD ALWAYS_INLINE u32 get_height() const { return m_height; }
 
 public:
     void invalidate(u32 width, u32 height);

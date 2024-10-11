@@ -5,7 +5,9 @@
 
 #pragma once
 
-#include "Core/Memory/Buffer.h"
+#include <Core/Containers/Optional.h>
+#include <Core/Containers/String.h>
+#include <Core/Memory/Buffer.h>
 
 //
 // Macro the checks if the return value is FileError::Success.
@@ -18,13 +20,15 @@
         SE_ASSERT(false);                         \
     }
 
-namespace SE {
+namespace SE
+{
 
 //
 // Error codes for file I/O operations.
 // All abstractions over the platform layer that can fail will return one of these error codes.
 //
-enum class FileError : u32 {
+enum class FileError : u32
+{
     Success = 0,
     Unknown = 1,
 
@@ -39,9 +43,11 @@ enum class FileError : u32 {
 //
 // Abstraction over the platform API that allows reading from disk files.
 //
-class FileReader {
+class FileReader
+{
 public:
-    enum class OpenPolicy : u8 {
+    enum class OpenPolicy : u8
+    {
         // Only opens the file is it exists on disk. Otherwise, the operation is considered failed.
         OpenExisting,
 
@@ -49,7 +55,8 @@ public:
         NonExistingFileIsEmpty,
     };
 
-    enum class SharePolicy : u8 {
+    enum class SharePolicy : u8
+    {
         // This file can't be open by any other process.
         Exclusive,
         // Other processes can only open this file for reading.
@@ -65,14 +72,13 @@ public:
     SHOOTER_API FileError open(const String& filepath, OpenPolicy open_policy = OpenPolicy::OpenExisting, SharePolicy share_policy = SharePolicy::Exclusive);
     SHOOTER_API void close();
     ALWAYS_INLINE bool is_opened() const { return m_handle_is_opened; }
-    
+
     //
     // Reads the entire file and stores its contents in a newly allocated buffer.
     // It is the responsibility of the caller to manage the lifetime of the provided buffer.
     // The provided buffer object must be empty, otherwise an assert will be triggered.
     //
     SHOOTER_API FileError read_entire(Buffer& out_buffer);
-
 
     //
     // Reads the entire file and closes the file handle if the operation is successful.
@@ -127,9 +133,11 @@ private:
     OpenPolicy m_open_policy;
 };
 
-class FileWriter {
+class FileWriter
+{
 public:
-    enum class OpenPolicy : u8 {
+    enum class OpenPolicy : u8
+    {
         // Only opens the file is it exists on disk. Otherwise, the operation is considered failed.
         OpenExisting,
 
@@ -138,7 +146,8 @@ public:
         CreateIfNotExisting
     };
 
-    enum class SharePolicy : u8 {
+    enum class SharePolicy : u8
+    {
         // This file can't be open by any other process.
         Exclusive,
         // Other processes can only open this file for reading.
@@ -151,7 +160,9 @@ public:
     SHOOTER_API FileWriter();
     SHOOTER_API ~FileWriter();
 
-    SHOOTER_API FileError open(const String& filepath, bool append = false, OpenPolicy open_policy = OpenPolicy::CreateIfNotExisting, SharePolicy share_policy = SharePolicy::Exclusive);
+    SHOOTER_API FileError open(
+        const String& filepath, bool append = false, OpenPolicy open_policy = OpenPolicy::CreateIfNotExisting, SharePolicy share_policy = SharePolicy::Exclusive
+    );
     SHOOTER_API void close();
     ALWAYS_INLINE bool is_opened() const { return m_handle_is_opened; }
 
@@ -171,7 +182,8 @@ private:
     bool m_handle_is_opened;
 };
 
-class FileSystem {
+class FileSystem
+{
 public:
     SHOOTER_API NODISCARD static bool exists(const String& filepath);
 

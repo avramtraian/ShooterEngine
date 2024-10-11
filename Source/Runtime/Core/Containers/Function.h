@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "Core/Containers/Span.h"
+#include <Core/Containers/Span.h>
 
 namespace SE
 {
@@ -61,7 +61,8 @@ public:
 
     ALWAYS_INLINE Function(const Function& other)
     {
-        if (!other.has_value()) {
+        if (!other.has_value())
+        {
             m_functor_byte_count = 0;
             return;
         }

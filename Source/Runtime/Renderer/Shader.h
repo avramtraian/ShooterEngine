@@ -5,7 +5,9 @@
 
 #pragma once
 
-#include "Core/Containers/RefPtr.h"
+#include <Core/Containers/RefPtr.h>
+#include <Core/Containers/String.h>
+#include <Core/Containers/Vector.h>
 
 namespace SE
 {
@@ -24,13 +26,13 @@ struct ShaderStage
     {}
 
     ShaderStageType type;
-    String          filepath;
+    String filepath;
 };
 
 struct ShaderInfo
 {
     Vector<ShaderStage> stages;
-    String              debug_name;
+    String debug_name;
 };
 
 class Shader : public RefCounted

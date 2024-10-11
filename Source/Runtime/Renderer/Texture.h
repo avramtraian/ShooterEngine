@@ -5,8 +5,9 @@
 
 #pragma once
 
-#include "Core/Containers/RefPtr.h"
-#include "Renderer/Image.h"
+#include <Core/Containers/RefPtr.h>
+#include <Core/Containers/Span.h>
+#include <Renderer/Image.h>
 
 namespace SE
 {

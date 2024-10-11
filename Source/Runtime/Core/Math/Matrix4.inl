@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "Core/Math/Matrix4.h"
-#include "Core/Math/VectorMath.h"
+#include <Core/Math/Matrix4.h>
+#include <Core/Math/VectorMath.h>
 
 namespace SE
 {

@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Core/Memory/MemoryOperations.h"
+#include <Core/Memory/MemoryOperations.h>
 
-namespace SE {
+namespace SE
+{
 
 SHOOTER_API void copy_memory(void* destination, const void* source, usize byte_count)
 {

@@ -5,8 +5,10 @@
 
 #pragma once
 
-#include "Asset/Asset.h"
-#include "Renderer/Texture.h"
+#include <Asset/Asset.h>
+#include <Core/Containers/RefPtr.h>
+#include <Core/Containers/String.h>
+#include <Renderer/Texture.h>
 
 namespace SE
 {

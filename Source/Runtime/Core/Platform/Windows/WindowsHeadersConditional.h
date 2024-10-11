@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "Core/CoreDefines.h"
+#include <Core/CoreDefines.h>
 
 //
 // The Windows headers are only included if they are available on the current platform.

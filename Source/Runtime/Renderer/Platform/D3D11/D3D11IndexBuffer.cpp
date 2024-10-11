@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Renderer/Platform/D3D11/D3D11IndexBuffer.h"
-#include "Renderer/Platform/D3D11/D3D11Renderer.h"
+#include <Core/Log.h>
+#include <Renderer/Platform/D3D11/D3D11IndexBuffer.h>
+#include <Renderer/Platform/D3D11/D3D11Renderer.h>
 
 namespace SE
 {

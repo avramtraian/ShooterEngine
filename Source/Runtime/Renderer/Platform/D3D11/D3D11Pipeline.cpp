@@ -3,40 +3,41 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Core/Containers/HashTable.h"
-#include "Renderer/Platform/D3D11/D3D11Pipeline.h"
-#include "Renderer/Platform/D3D11/D3D11Renderer.h"
-#include "Renderer/Platform/D3D11/D3D11Shader.h"
+#include <Core/Containers/HashTable.h>
+#include <Core/Log.h>
+#include <Renderer/Platform/D3D11/D3D11Pipeline.h>
+#include <Renderer/Platform/D3D11/D3D11Renderer.h>
+#include <Renderer/Platform/D3D11/D3D11Shader.h>
 
 namespace SE
 {
 
 struct VertexAttributeMetadata
 {
-    u32         size;
+    u32 size;
     DXGI_FORMAT format;
-    u8          semantic_index_count;
+    u8 semantic_index_count;
 };
 
 ALWAYS_INLINE static VertexAttributeMetadata get_vertex_attribute_metadata(VertexAttribute::Type attribute_type)
 {
     switch (attribute_type)
     {
-        case VertexAttribute::Float1: return { 4 * 1,  DXGI_FORMAT_R32_FLOAT,          1 };
-        case VertexAttribute::Float2: return { 4 * 2,  DXGI_FORMAT_R32G32_FLOAT,       1 };
-        case VertexAttribute::Float3: return { 4 * 3,  DXGI_FORMAT_R32G32B32_FLOAT,    1 };
-        case VertexAttribute::Float4: return { 4 * 4,  DXGI_FORMAT_R32G32B32A32_FLOAT, 1 };
-        case VertexAttribute::Int1:   return { 4 * 1,  DXGI_FORMAT_R32_SINT,           1 };
-        case VertexAttribute::Int2:   return { 4 * 2,  DXGI_FORMAT_R32G32_SINT,        1 };
-        case VertexAttribute::Int3:   return { 4 * 3,  DXGI_FORMAT_R32G32B32_SINT,     1 };
-        case VertexAttribute::Int4:   return { 4 * 4,  DXGI_FORMAT_R32G32B32A32_SINT,  1 };
-        case VertexAttribute::UInt1:  return { 4 * 1,  DXGI_FORMAT_R32_UINT,           1 };
-        case VertexAttribute::UInt2:  return { 4 * 2,  DXGI_FORMAT_R32G32_UINT,        1 };
-        case VertexAttribute::UInt3:  return { 4 * 3,  DXGI_FORMAT_R32G32B32_UINT,     1 };
-        case VertexAttribute::UInt4:  return { 4 * 4,  DXGI_FORMAT_R32G32B32A32_UINT,  1 };
-        case VertexAttribute::Mat2:   return { 4 * 2,  DXGI_FORMAT_R32G32_FLOAT,       2 };
-        case VertexAttribute::Mat3:   return { 4 * 3,  DXGI_FORMAT_R32G32B32_FLOAT,    3 };
-        case VertexAttribute::Mat4:   return { 4 * 4, DXGI_FORMAT_R32G32B32A32_FLOAT, 4 };
+        case VertexAttribute::Float1: return { 4 * 1, DXGI_FORMAT_R32_FLOAT, 1 };
+        case VertexAttribute::Float2: return { 4 * 2, DXGI_FORMAT_R32G32_FLOAT, 1 };
+        case VertexAttribute::Float3: return { 4 * 3, DXGI_FORMAT_R32G32B32_FLOAT, 1 };
+        case VertexAttribute::Float4: return { 4 * 4, DXGI_FORMAT_R32G32B32A32_FLOAT, 1 };
+        case VertexAttribute::Int1: return { 4 * 1, DXGI_FORMAT_R32_SINT, 1 };
+        case VertexAttribute::Int2: return { 4 * 2, DXGI_FORMAT_R32G32_SINT, 1 };
+        case VertexAttribute::Int3: return { 4 * 3, DXGI_FORMAT_R32G32B32_SINT, 1 };
+        case VertexAttribute::Int4: return { 4 * 4, DXGI_FORMAT_R32G32B32A32_SINT, 1 };
+        case VertexAttribute::UInt1: return { 4 * 1, DXGI_FORMAT_R32_UINT, 1 };
+        case VertexAttribute::UInt2: return { 4 * 2, DXGI_FORMAT_R32G32_UINT, 1 };
+        case VertexAttribute::UInt3: return { 4 * 3, DXGI_FORMAT_R32G32B32_UINT, 1 };
+        case VertexAttribute::UInt4: return { 4 * 4, DXGI_FORMAT_R32G32B32A32_UINT, 1 };
+        case VertexAttribute::Mat2: return { 4 * 2, DXGI_FORMAT_R32G32_FLOAT, 2 };
+        case VertexAttribute::Mat3: return { 4 * 3, DXGI_FORMAT_R32G32B32_FLOAT, 3 };
+        case VertexAttribute::Mat4: return { 4 * 4, DXGI_FORMAT_R32G32B32A32_FLOAT, 4 };
     }
 
     SE_LOG_TAG_ERROR("D3D11"sv, "Invalid VertexAttribute::Type!"sv);
@@ -94,10 +95,12 @@ D3D11Pipeline::D3D11Pipeline(const PipelineInfo& info)
     SE_ASSERT(vertex_shader_bytecode.has_value());
 
     SE_D3D11_CHECK(D3D11Renderer::get_device()->CreateInputLayout(
-        input_element_descriptions.elements(), (UINT)(input_element_descriptions.count()),
-        vertex_shader_bytecode->elements(), vertex_shader_bytecode->count(),
-        &m_input_layout)
-    );
+        input_element_descriptions.elements(),
+        (UINT)(input_element_descriptions.count()),
+        vertex_shader_bytecode->elements(),
+        vertex_shader_bytecode->count(),
+        &m_input_layout
+    ));
 
     D3D11_RASTERIZER_DESC rasterizer_description = {};
     rasterizer_description.FillMode = D3D11_FILL_SOLID;

@@ -5,7 +5,9 @@
 
 #pragma once
 
-#include "Core/Containers/RefPtr.h"
+#include <Core/API.h>
+#include <Core/Containers/RefPtr.h>
+#include <Core/Containers/Span.h>
 
 namespace SE
 {
@@ -18,8 +20,8 @@ enum class IndexType : u8
 
 struct IndexBufferInfo
 {
-    IndexType        index_type;
-    usize            byte_count;
+    IndexType index_type;
+    usize byte_count;
     ReadonlyByteSpan data;
 };
 

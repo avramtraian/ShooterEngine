@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Renderer/Pipeline.h"
-#include "Renderer/RendererAPI.h"
+#include <Renderer/Pipeline.h>
+#include <Renderer/RendererAPI.h>
 
 #if SE_RENDERER_API_SUPPORTED_D3D11
     #include "Renderer/Platform/D3D11/D3D11Pipeline.h"
@@ -18,8 +18,7 @@ RefPtr<Pipeline> Pipeline::create(const PipelineInfo& info)
     switch (get_current_renderer_api())
     {
 #if SE_RENDERER_API_SUPPORTED_D3D11
-        case RendererAPI::D3D11:
-            return make_ref<D3D11Pipeline>(info).as<Pipeline>();
+        case RendererAPI::D3D11: return make_ref<D3D11Pipeline>(info).as<Pipeline>();
 #endif // SE_RENDERER_API_SUPPORTED_D3D11
     }
 

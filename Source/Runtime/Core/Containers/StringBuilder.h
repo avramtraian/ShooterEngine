@@ -5,8 +5,7 @@
 
 #pragma once
 
-#include "Core/Containers/String.h"
-
+#include <Core/Containers/String.h>
 #include <initializer_list>
 
 namespace SE

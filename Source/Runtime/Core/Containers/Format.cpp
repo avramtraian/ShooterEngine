@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Core/Containers/Format.h"
+#include <Core/Containers/Format.h>
 
 #define SE_FORMSE_SPECIFIER_BEGIN_TOKEN '{'
 #define SE_FORMSE_SPECIFIER_END_TOKEN   '}'
 
-namespace SE {
+namespace SE
+{
 
 Optional<String> FormatBuilder::release_string()
 {
@@ -20,8 +21,7 @@ Optional<String> FormatBuilder::release_string()
     // TODO: Replace the Vector container to something else that minimizes unnecessary memory allocations.
     //       At the moment of writing this implementation, the concept of a StringBuilder doesn't exist.
 
-    auto formatted_view =
-        StringView::unsafe_create_from_utf8(m_formatted_string_buffer.elements(), m_formatted_string_buffer.count());
+    auto formatted_view = StringView::unsafe_create_from_utf8(m_formatted_string_buffer.elements(), m_formatted_string_buffer.count());
     String formatted_string = String(formatted_view);
     m_formatted_string_buffer.clear_and_shrink();
     return formatted_string;
@@ -30,7 +30,8 @@ Optional<String> FormatBuilder::release_string()
 FormatErrorCode FormatBuilder::consume_until_format_specifier()
 {
     usize specifier_offset = m_string_format.find(SE_FORMSE_SPECIFIER_BEGIN_TOKEN);
-    if (specifier_offset == StringView::invalid_position) {
+    if (specifier_offset == StringView::invalid_position)
+    {
         m_formatted_string_buffer.add_span(m_string_format.byte_span().as<const char>());
         return {};
     }
@@ -42,7 +43,8 @@ FormatErrorCode FormatBuilder::consume_until_format_specifier()
 
 Optional<FormatBuilder::Specifier> FormatBuilder::parse_specifier()
 {
-    if (m_string_format.is_empty() || m_string_format.byte_span()[0] != SE_FORMSE_SPECIFIER_BEGIN_TOKEN) {
+    if (m_string_format.is_empty() || m_string_format.byte_span()[0] != SE_FORMSE_SPECIFIER_BEGIN_TOKEN)
+    {
         // NOTE: This function is only called when there is an argument passed to the 'format()' function
         //       that hasn't been inserted in the formatted string yet. If this codepath is reached it
         //       means that more arguments were passed to the function than required.
@@ -53,7 +55,8 @@ Optional<FormatBuilder::Specifier> FormatBuilder::parse_specifier()
     m_string_format = m_string_format.slice(1);
 
     usize specifier_count = m_string_format.find(SE_FORMSE_SPECIFIER_END_TOKEN);
-    if (specifier_count == StringView::invalid_position) {
+    if (specifier_count == StringView::invalid_position)
+    {
         // NOTE: Because the format specifier doesn't have an end token the
         //       string format is considered invalid.
         return {};
@@ -70,7 +73,8 @@ Optional<FormatBuilder::Specifier> FormatBuilder::parse_specifier()
 
 Optional<FormatBuilder::Specifier> FormatBuilder::parse_specifier(StringView specifier_string)
 {
-    if (!specifier_string.is_empty()) {
+    if (!specifier_string.is_empty())
+    {
         // NOTE: Currently, we don't support any string format specifier!
         return {};
     }
@@ -84,16 +88,20 @@ FormatErrorCode FormatBuilder::push_unsigned_integer(const Specifier&, u64 value
     char buffer[64] = {};
     u8 digit_count = 0;
 
-    if (value == 0) {
+    if (value == 0)
+    {
         buffer[0] = '0';
         digit_count = 1;
     }
-    else {
-        for (u64 temp_value = value; temp_value > 0; temp_value /= 10) {
+    else
+    {
+        for (u64 temp_value = value; temp_value > 0; temp_value /= 10)
+        {
             ++digit_count;
         }
 
-        for (u8 digit_index = 0; digit_index < digit_count; ++digit_index) {
+        for (u8 digit_index = 0; digit_index < digit_count; ++digit_index)
+        {
             u8 digit = value % 10;
             buffer[digit_count - digit_index - 1] = '0' + digit;
             value /= 10;
@@ -106,7 +114,8 @@ FormatErrorCode FormatBuilder::push_unsigned_integer(const Specifier&, u64 value
 
 FormatErrorCode FormatBuilder::push_signed_integer(const Specifier& specifier, i64 value)
 {
-    if (value < 0) {
+    if (value < 0)
+    {
         m_formatted_string_buffer.add('-');
         value = -value;
     }

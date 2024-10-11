@@ -5,9 +5,13 @@
 
 #pragma once
 
-#include "Renderer/Framebuffer.h"
-#include "Renderer/Pipeline.h"
-#include "Renderer/Texture.h"
+#include <Core/Containers/RefPtr.h>
+#include <Core/Containers/StringView.h>
+#include <Core/Containers/Vector.h>
+#include <Core/Math/Color.h>
+#include <Renderer/Framebuffer.h>
+#include <Renderer/Pipeline.h>
+#include <Renderer/Texture.h>
 
 namespace SE
 {

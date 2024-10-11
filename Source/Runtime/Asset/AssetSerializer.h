@@ -5,7 +5,8 @@
 
 #pragma once
 
-#include "Asset/Asset.h"
+#include <Asset/Asset.h>
+#include <Core/Containers/RefPtr.h>
 
 namespace SE
 {

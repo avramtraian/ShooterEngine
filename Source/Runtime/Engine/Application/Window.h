@@ -5,14 +5,14 @@
 
 #pragma once
 
-#include "Core/Containers/OwnPtr.h"
-#include "Core/Containers/String.h"
-#include "Engine/Application/Event.h"
+#include <Core/Containers/OwnPtr.h>
+#include <Core/Containers/String.h>
+#include <Engine/Application/Event.h>
 
 namespace SE
 {
 
-using WindowEventCallbackFunction = void(*)(const Event&);
+using WindowEventCallbackFunction = void (*)(const Event&);
 
 struct WindowInfo
 {

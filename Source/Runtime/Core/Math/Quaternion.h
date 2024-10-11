@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <Core/CoreTypes.h>
+
 namespace SE
 {
 namespace Internal

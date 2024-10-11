@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "Core/Assertions.h"
-#include "Core/CoreTypes.h"
+#include <Core/Assertions.h>
+#include <Core/CoreTypes.h>
 
 namespace SE
 {
@@ -148,10 +148,7 @@ public:
         return (m_instance == other.m_instance);
     }
 
-    NODISCARD ALWAYS_INLINE bool operator!=(const RefPtr& other) const
-    {
-        return !(*this == other);
-    }
+    NODISCARD ALWAYS_INLINE bool operator!=(const RefPtr& other) const { return !(*this == other); }
 
 private:
     ALWAYS_INLINE explicit RefPtr(T* pointer_to_adopt)

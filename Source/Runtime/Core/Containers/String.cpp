@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Core/Containers/String.h"
-#include "Core/Memory/MemoryOperations.h"
+#include <Core/Containers/String.h>
+#include <Core/Memory/MemoryOperations.h>
 
-namespace SE {
+namespace SE
+{
 
 String String::create_from_utf8(const char* characters, usize byte_count)
 {

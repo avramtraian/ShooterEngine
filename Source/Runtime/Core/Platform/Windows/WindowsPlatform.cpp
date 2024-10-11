@@ -3,12 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include "Core/Platform/Platform.h"
-#include "Core/Platform/Windows/WindowsHeaders.h"
+#include <Core/Platform/Platform.h>
+#include <Core/Platform/Windows/WindowsHeaders.h>
 
-namespace SE {
+namespace SE
+{
 
-struct WindowsPlatformData {
+struct WindowsPlatformData
+{
     HANDLE console_handle;
     Platform::ConsoleColor console_text_color;
     Platform::ConsoleColor console_background_color;
@@ -45,7 +47,8 @@ void Platform::shutdown()
 
 static WORD get_console_foreground_color(Platform::ConsoleColor color)
 {
-    switch (color) {
+    switch (color)
+    {
         case Platform::ConsoleColor::Blue: return FOREGROUND_BLUE;
         case Platform::ConsoleColor::Green: return FOREGROUND_GREEN;
         case Platform::ConsoleColor::Red: return FOREGROUND_RED;
@@ -61,8 +64,7 @@ static WORD get_console_foreground_color(Platform::ConsoleColor color)
         case Platform::ConsoleColor::Black: return 0;
         case Platform::ConsoleColor::Gray: return FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
         case Platform::ConsoleColor::DarkGray: return FOREGROUND_INTENSITY;
-        case Platform::ConsoleColor::White:
-            return FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+        case Platform::ConsoleColor::White: return FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
     }
 
     SE_ASSERT(false);
@@ -84,20 +86,14 @@ void Platform::write_to_console(StringView message, ConsoleColor text_color, Con
     WORD foreground = get_console_foreground_color(text_color);
     WORD background = get_console_background_color(background_color);
 
-    if (s_windows_platform->console_text_color != text_color ||
-        s_windows_platform->console_background_color != background_color) {
+    if (s_windows_platform->console_text_color != text_color || s_windows_platform->console_background_color != background_color)
+    {
         SetConsoleTextAttribute(s_windows_platform->console_handle, foreground | background);
     }
 
     DWORD written_characters;
     // TODO: Convert the UTF-8 message string to UTF-16 instead of only allowing ASCII messages.
-    WriteConsoleA(
-        s_windows_platform->console_handle,
-        message.byte_span().elements(),
-        (DWORD)(message.byte_span().count()),
-        &written_characters,
-        NULL
-    );
+    WriteConsoleA(s_windows_platform->console_handle, message.byte_span().elements(), (DWORD)(message.byte_span().count()), &written_characters, NULL);
 }
 
 } // namespace SE

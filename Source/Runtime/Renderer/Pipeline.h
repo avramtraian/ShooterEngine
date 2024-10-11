@@ -5,7 +5,8 @@
 
 #pragma once
 
-#include "Renderer/Shader.h"
+#include <Core/Containers/RefPtr.h>
+#include <Renderer/Shader.h>
 
 namespace SE
 {
@@ -15,10 +16,24 @@ struct VertexAttribute
 public:
     enum Type : u8
     {
-        Float1, Float2, Float3, Float4,
-        Int1,   Int2,   Int3,   Int4,
-        UInt1,  UInt2,  UInt3,  UInt4,
-        Mat2,   Mat3,   Mat4,
+        Float1,
+        Float2,
+        Float3,
+        Float4,
+
+        Int1,
+        Int2,
+        Int3,
+        Int4,
+        
+        UInt1,
+        UInt2,
+        UInt3,
+        UInt4,
+        
+        Mat2,
+        Mat3,
+        Mat4,
     };
 
 public:

@@ -5,7 +5,8 @@
 
 #pragma once
 
-#include "Core/Containers/RefPtr.h"
+#include <Core/Containers/RefPtr.h>
+#include <Core/Containers/Span.h>
 
 namespace SE
 {
@@ -29,7 +30,7 @@ class VertexBuffer : public RefCounted
 public:
     VertexBuffer() = default;
     virtual ~VertexBuffer() override = default;
-    
+
     static RefPtr<VertexBuffer> create(const VertexBufferInfo& info);
 
 public:

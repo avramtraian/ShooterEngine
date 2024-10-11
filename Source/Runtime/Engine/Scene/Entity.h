@@ -6,6 +6,7 @@
 #pragma once
 
 #include <Core/Containers/OwnPtr.h>
+#include <Core/Containers/Vector.h>
 #include <Core/UUID.h>
 #include <Engine/Scene/EntityComponent.h>
 
