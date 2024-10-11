@@ -49,6 +49,18 @@
     #error Unknown or unsupported build configuration!
 #endif // Any supported build configuration.
 
+#ifndef SE_CONFIGURATION_TARGET_EDITOR
+    #define SE_CONFIGURATION_TARGET_EDITOR 0
+#endif // SE_CONFIGURATION_TARGET_EDITOR
+
+#ifndef SE_CONFIGURATION_TARGET_GAME
+    #define SE_CONFIGURATION_TARGET_GAME 0
+#endif // SE_CONFIGURATION_TARGET_GAME
+
+#if !SE_CONFIGURATION_TARGET_EDITOR && !SE_CONFIGURATION_TARGET_GAME
+    #error Unknown or unsupported build configuration target!
+#endif // Any supported build configuration target.
+
 //======================================================================================
 // COMPILER CONFIGURATION MACROS.
 //======================================================================================
