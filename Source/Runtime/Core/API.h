@@ -14,8 +14,12 @@
     #endif // Compiler switch.
 #endif // Platform switch.
 
-#ifdef SE_EXPORT_ENGINE_API
-    #define SHOOTER_API SE_API_SPECIFIER_EXPORT
+#if SE_CONFIGURATION_TARGET_EDITOR
+    #ifdef SE_EXPORT_ENGINE_API
+        #define SHOOTER_API SE_API_SPECIFIER_EXPORT
+    #else
+        #define SHOOTER_API SE_API_SPECIFIER_IMPORT
+    #endif // SE_EXPORT_ENGINE_API
 #else
-    #define SHOOTER_API SE_API_SPECIFIER_IMPORT
-#endif // SE_EXPORT_ENGINE_API
+    #define SHOOTER_API
+#endif // SE_CONFIGURATION_TARGET_EDITOR
