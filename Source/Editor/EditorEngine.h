@@ -45,6 +45,8 @@ private:
     // The first element in this vector is always the primary window.
     Vector<OwnPtr<Window>> m_window_stack;
 
+    float m_last_frame_delta_time { 0 };
+
     String m_engine_root_directory;
     String m_project_name;
     String m_project_root_directory;

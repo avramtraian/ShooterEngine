@@ -5,6 +5,7 @@
 
 #include <Core/Containers/StringBuilder.h>
 #include <Core/Log.h>
+#include <Core/Platform/Timer.h>
 #include <EditorAsset/EditorAssetManager.h>
 #include <EditorEngine.h>
 #include <Engine/Application/WindowEvent.h>
@@ -85,6 +86,8 @@ void EditorEngine::shutdown()
 
 void EditorEngine::tick()
 {
+    Timer current_frame_timer;
+
     for (OwnPtr<Window>& window : m_window_stack)
         window->pump_messages();
 
@@ -114,8 +117,11 @@ void EditorEngine::tick()
     }
 
     Engine::tick();
-    m_scene->on_update(0.0F);
+    m_scene->on_update(m_last_frame_delta_time);
     m_scene_renderer->render();
+
+    current_frame_timer.stop();
+    m_last_frame_delta_time = current_frame_timer.elapsed_seconds();
 }
 
 Window* EditorEngine::create_window()
