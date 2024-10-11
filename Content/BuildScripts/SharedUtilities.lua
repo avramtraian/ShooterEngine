@@ -19,14 +19,16 @@ end
 function begin_filter_configuration_editor()
     if config_vars.target == targets.game then
         filter "configurations:EditorDebug or EditorDevelopment"
+    else
+        print("WARN: 'begin_filter_configuration_editor' called when 'config_vars.target' != 'targets.game'")
     end
 end
 
 function begin_filter_configuration_game()
-    if config_vars.target == targets.editor then
+    if config_vars.target == targets.game then
         filter "configurations:GameDebug or GameDevelopment or GameShipping"
     else
-        print("WARN: 'begin_filter_configuration_game' called when 'config_vars.target' != 'targets.editor'")
+        print("WARN: 'begin_filter_configuration_game' called when 'config_vars.target' != 'targets.game'")
     end
 end
 
