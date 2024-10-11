@@ -11,7 +11,9 @@ namespace SE
 
 struct WindowsPlatformData
 {
-    HANDLE console_handle;
+    u64 performance_counter_frequency { 0 };
+
+    HANDLE console_handle { INVALID_HANDLE_VALUE };
     Platform::ConsoleColor console_text_color;
     Platform::ConsoleColor console_background_color;
 };
@@ -24,6 +26,12 @@ bool Platform::initialize()
         return false;
 
     s_windows_platform = new WindowsPlatformData();
+    
+    LARGE_INTEGER performance_counter_frequency;
+    if (!QueryPerformanceFrequency(&performance_counter_frequency))
+        return false;
+    s_windows_platform->performance_counter_frequency = performance_counter_frequency.QuadPart;
+
     s_windows_platform->console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
     if (s_windows_platform->console_handle == INVALID_HANDLE_VALUE)
         return false;
@@ -43,6 +51,18 @@ void Platform::shutdown()
 
     delete s_windows_platform;
     s_windows_platform = nullptr;
+}
+
+u64 Platform::get_current_tick_counter()
+{
+    LARGE_INTEGER performance_counter;
+    QueryPerformanceCounter(&performance_counter);
+    return performance_counter.QuadPart;
+}
+
+u64 Platform::get_tick_counter_frequency()
+{
+    return s_windows_platform->performance_counter_frequency;
 }
 
 static WORD get_console_foreground_color(Platform::ConsoleColor color)
