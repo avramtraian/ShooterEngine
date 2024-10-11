@@ -11,8 +11,10 @@ targets.game = "Game"
 
 function create_default_config_vars_object()
     config_vars_object = {}
-    config_vars_object.target = targets.invalid
+    config_vars_object.target = invalid_value
     config_vars_object.engine_root = invalid_value
+    config_vars_object.game_name = invalid_value
+    config_vars_object.game_root_directory = invalid_value
     return config_vars_object
 end
 
