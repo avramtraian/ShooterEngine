@@ -76,7 +76,7 @@ SHOOTER_API NODISCARD float log10(float value);
 /** Trigonometric functions. */
 SHOOTER_API NODISCARD float sin(float value);
 SHOOTER_API NODISCARD float cos(float value);
-SHOOTER_API NODISCARD void sin_and_cos(float value);
+SHOOTER_API NODISCARD void sin_and_cos(float value, float& out_sin, float& out_cos);
 SHOOTER_API NODISCARD float tan(float value);
 
 /** Inverses of trigonometric functions. */

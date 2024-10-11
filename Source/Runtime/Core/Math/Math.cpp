@@ -11,7 +11,7 @@
 // as we will write custom implementations for more and more functions.
 #include <cmath>
 
-namespace SE
+namespace SE::Math
 {
 
 float sqrt(float value)
@@ -49,14 +49,14 @@ float cos(float value)
     return std::cosf(value);
 }
 
-void sin_and_cos(float value, float& OutSin, float& OutCos)
+void sin_and_cos(float value, float& out_sin, float& out_cos)
 {
     // In debug mode, this function is not any faster than simply calling Sin and Cos functions
     // one after another. However, when optimizations are enabled, the compiler *might* recognize
     // that we are trying to compute both the sine and cosine, and the calls will be optimized.
 
-    OutSin = std::sinf(value);
-    OutCos = std::cosf(value);
+    out_sin = std::sinf(value);
+    out_cos = std::cosf(value);
 }
 
 float tan(float value)
@@ -79,4 +79,4 @@ float arctan(float value)
     return std::atanf(value);
 }
 
-} // namespace SE
+} // namespace SE::Math
