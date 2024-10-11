@@ -9,6 +9,7 @@
 #include <Core/Containers/Vector.h>
 #include <Engine/Application/Event.h>
 #include <Engine/Engine.h>
+#include <Engine/Scene/Scene.h>
 #include <Renderer/SceneRenderer.h>
 
 namespace SE
@@ -48,6 +49,7 @@ private:
     String m_project_name;
     String m_project_root_directory;
 
+    OwnPtr<Scene> m_scene;
     OwnPtr<SceneRenderer> m_scene_renderer;
 };
 

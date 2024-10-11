@@ -5,14 +5,19 @@
 
 #include <Asset/AssetManager.h>
 #include <Asset/TextureAsset.h>
+#include <Engine/Scene/Components/SpriteRendererComponent.h>
+#include <Engine/Scene/Components/TransformComponent.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/SceneRenderer.h>
 
 namespace SE
 {
 
-bool SceneRenderer::initialize(u32 width, u32 height)
+bool SceneRenderer::initialize(Scene& in_scene_context, u32 width, u32 height)
 {
+    SE_ASSERT(m_scene_context == nullptr);
+    m_scene_context = &in_scene_context;
+
     SE_ASSERT(!m_renderer_2d.is_valid());
     m_renderer_2d = make_own<Renderer2D>();
     if (!m_renderer_2d->initialize(width, height))
@@ -27,6 +32,9 @@ bool SceneRenderer::initialize(u32 width, u32 height)
 
 void SceneRenderer::shutdown()
 {
+    // Clear the scene context.
+    m_scene_context = nullptr;
+
     m_renderer_2d->shutdown();
     m_renderer_2d.release();
 }
@@ -36,14 +44,22 @@ bool SceneRenderer::render()
     Renderer::begin_frame();
     m_renderer_2d->begin_frame();
 
-    //
-    // Testing code.
-    //
+    m_scene_context->for_each_entity(
+        [&](const Entity* entity, UUID)
+        {
+            if (!entity->has_component<TransformComponent>() || !entity->has_component<SpriteRendererComponent>())
+                return IterationDecision::Continue;
 
-    m_renderer_2d->submit_quad({ -0.6666F, 0.0F }, { 0.6666F, 1.0F }, {}, Color3(0.1F, 0.1F, 0.8F));
-    m_renderer_2d->submit_quad({ +0.0F, 0.0F }, { 0.6666F, 1.0F }, {}, Color3(0.8F, 0.8F, 0.1F));
-    m_renderer_2d->submit_quad({ +0.6666F, 0.0F }, { 0.6666F, 1.0F }, {}, Color3(0.8F, 0.1F, 0.1F));
-    m_renderer_2d->submit_quad({ 0.0F, 0.25F }, { 1, 1 }, {}, Color3(1.0F, 1.0F, 1.0F), m_debug_texture);
+            const TransformComponent& tc = entity->get_component<TransformComponent>();
+            const SpriteRendererComponent& src = entity->get_component<SpriteRendererComponent>();
+
+            const Vector3 t = tc.translation();
+            const Vector3 s = tc.scale();
+
+            m_renderer_2d->submit_quad({ t.x, t.y }, { s.x, s.y }, tc.rotation(), src.sprite_color());
+            return IterationDecision::Continue;
+        }
+    );
 
     m_renderer_2d->end_frame();
     Renderer::end_frame();

@@ -51,6 +51,9 @@ bool EditorEngine::initialize()
     RenderingContext* primary_window_rendering_context = Renderer::get_rendering_context_for_window(m_window_stack.first().get());
     Renderer::set_active_context(primary_window_rendering_context);
 
+    // Creat the scene object.
+    m_scene = Scene::create();
+
     Window* window = m_window_stack.first().get();
     m_scene_renderer = make_own<SceneRenderer>();
     if (!m_scene_renderer->initialize(*m_scene, window->get_width(), window->get_height()))
@@ -59,11 +62,14 @@ bool EditorEngine::initialize()
         return false;
     }
 
+    m_scene->on_begin_play();
     return true;
 }
 
 void EditorEngine::shutdown()
 {
+    m_scene->on_end_play();
+
     m_scene_renderer->shutdown();
     m_scene_renderer.release();
 
@@ -107,6 +113,7 @@ void EditorEngine::tick()
     }
 
     Engine::tick();
+    m_scene->on_update(0.0F);
     m_scene_renderer->render();
 }
 
