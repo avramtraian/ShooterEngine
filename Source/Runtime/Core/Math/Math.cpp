@@ -14,42 +14,42 @@
 namespace SE
 {
 
-SHOOTER_API float sqrt(float value)
+float sqrt(float value)
 {
     return std::sqrtf(value);
 }
 
-SHOOTER_API float pow(float base, float exponent)
+float pow(float base, float exponent)
 {
     return std::powf(base, exponent);
 }
 
-SHOOTER_API float log(float value)
+float log(float value)
 {
     return std::logf(value);
 }
 
-SHOOTER_API float log2(float value)
+float log2(float value)
 {
     return std::log2f(value);
 }
 
-SHOOTER_API float log10(float value)
+float log10(float value)
 {
     return std::log10f(value);
 }
 
-SHOOTER_API float sin(float value)
+float sin(float value)
 {
     return std::sinf(value);
 }
 
-SHOOTER_API float cos(float value)
+float cos(float value)
 {
     return std::cosf(value);
 }
 
-SHOOTER_API void sin_and_cos(float value, float& OutSin, float& OutCos)
+void sin_and_cos(float value, float& OutSin, float& OutCos)
 {
     // In debug mode, this function is not any faster than simply calling Sin and Cos functions
     // one after another. However, when optimizations are enabled, the compiler *might* recognize
@@ -59,22 +59,22 @@ SHOOTER_API void sin_and_cos(float value, float& OutSin, float& OutCos)
     OutCos = std::cosf(value);
 }
 
-SHOOTER_API float tan(float value)
+float tan(float value)
 {
     return std::tanf(value);
 }
 
-SHOOTER_API float arcsin(float value)
+float arcsin(float value)
 {
     return std::asinf(value);
 }
 
-SHOOTER_API float arccos(float value)
+float arccos(float value)
 {
     return std::acosf(value);
 }
 
-SHOOTER_API float arctan(float value)
+float arctan(float value)
 {
     return std::atanf(value);
 }

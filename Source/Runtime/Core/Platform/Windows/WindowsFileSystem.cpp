@@ -385,7 +385,7 @@ FileError FileWriter::write(ReadonlyByteSpan bytes_to_write)
     return FileError::Success;
 }
 
-SHOOTER_API FileError FileWriter::write_and_close(ReadonlyByteSpan bytes_to_write)
+FileError FileWriter::write_and_close(ReadonlyByteSpan bytes_to_write)
 {
     const FileError file_error = write(bytes_to_write);
     if (file_error == FileError::Success)

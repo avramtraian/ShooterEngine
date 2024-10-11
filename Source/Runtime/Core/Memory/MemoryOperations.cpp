@@ -8,7 +8,7 @@
 namespace SE
 {
 
-SHOOTER_API void copy_memory(void* destination, const void* source, usize byte_count)
+void copy_memory(void* destination, const void* source, usize byte_count)
 {
     WriteonlyBytes dst_bytes = reinterpret_cast<WriteonlyBytes>(destination);
     ReadonlyBytes src_bytes = reinterpret_cast<ReadonlyBytes>(source);
@@ -17,14 +17,14 @@ SHOOTER_API void copy_memory(void* destination, const void* source, usize byte_c
         dst_bytes[byte_offset] = src_bytes[byte_offset];
 }
 
-SHOOTER_API void set_memory(void* destination, ReadonlyByte byte_value, usize byte_count)
+void set_memory(void* destination, ReadonlyByte byte_value, usize byte_count)
 {
     WriteonlyBytes dst_bytes = reinterpret_cast<WriteonlyBytes>(destination);
     for (usize byte_offset = 0; byte_offset < byte_count; ++byte_offset)
         dst_bytes[byte_offset] = byte_value;
 }
 
-SHOOTER_API void zero_memory(void* destination, usize byte_count)
+void zero_memory(void* destination, usize byte_count)
 {
     WriteonlyBytes dst_bytes = reinterpret_cast<WriteonlyBytes>(destination);
     for (usize byte_offset = 0; byte_offset < byte_count; ++byte_offset)
