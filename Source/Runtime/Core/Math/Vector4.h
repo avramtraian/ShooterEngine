@@ -5,8 +5,9 @@
 
 #pragma once
 
-#include <Core/CoreDefines.h>
+#include <Core/Assertions.h>
 #include <Core/CoreTypes.h>
+#include <Core/Math/Math.h>
 
 namespace SE
 {
@@ -16,6 +17,15 @@ namespace Internal
 template<typename T>
 struct Vector4
 {
+public:
+    NODISCARD ALWAYS_INLINE static Vector4 zero() { return Vector4(0, 0, 0, 0); }
+    NODISCARD ALWAYS_INLINE static Vector4 one() { return Vector4(1, 1, 1, 1); }
+
+    NODISCARD ALWAYS_INLINE static Vector4 unit_x() { return Vector4(1, 0, 0, 0); }
+    NODISCARD ALWAYS_INLINE static Vector4 unit_y() { return Vector4(0, 1, 0, 0); }
+    NODISCARD ALWAYS_INLINE static Vector4 unit_z() { return Vector4(0, 0, 1, 0); }
+    NODISCARD ALWAYS_INLINE static Vector4 unit_w() { return Vector4(0, 0, 0, 1); }
+
 public:
     ALWAYS_INLINE Vector4()
         : x(T(0))
@@ -55,11 +65,119 @@ public:
     }
 
 public:
+    NODISCARD ALWAYS_INLINE T* value_ptr() { return &x; }
+    NODISCARD ALWAYS_INLINE const T* value_ptr() const { return &x; }
+
+    NODISCARD ALWAYS_INLINE T& operator[](Math::Axis axis)
+    {
+        const u8 value_index = static_cast<u8>(axis);
+        SE_ASSERT(value_index < 4);
+        return value_ptr()[value_index];
+    }
+
+    NODISCARD ALWAYS_INLINE const T& operator[](Math::Axis axis) const
+    {
+        const u8 value_index = static_cast<u8>(axis);
+        SE_ASSERT(value_index < 4);
+        return value_ptr()[value_index];
+    }
+
+public:
     T x;
     T y;
     T z;
     T w;
 };
+
+// Component-wise addition operator.
+template<typename T>
+NODISCARD ALWAYS_INLINE Vector4<T> operator+(Vector4<T> a, Vector4<T> b)
+{
+    const Vector4<T> result = Vector4<T>(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
+    return result;
+}
+
+template<typename T>
+NODISCARD ALWAYS_INLINE Vector4<T>& operator+=(Vector4<T>& self, Vector4<T> other)
+{
+    self.x += other.x;
+    self.y += other.y;
+    self.z += other.z;
+    self.w += other.w;
+    return self;
+}
+
+// Component-wise subtraction operator.
+template<typename T>
+NODISCARD ALWAYS_INLINE Vector4<T> operator-(Vector4<T> lhs, Vector4<T> rhs)
+{
+    const Vector4<T> result = Vector4<T>(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z, lhs.w - rhs.w);
+    return result;
+}
+
+template<typename T>
+NODISCARD ALWAYS_INLINE Vector4<T>& operator-=(Vector4<T>& self, Vector4<T> other)
+{
+    self.x -= other.x;
+    self.y -= other.y;
+    self.z -= other.z;
+    self.w -= other.w;
+    return self;
+}
+
+// Component-wise negation operator.
+template<typename T>
+NODISCARD ALWAYS_INLINE Vector4<T> operator-(Vector4<T> vector)
+{
+    const Vector4<T> result = Vector4(-vector.x, -vector.y, -vector.z, -vector.w);
+    return result;
+}
+
+// Component-wise scalar multiplication operator.
+template<typename T>
+NODISCARD ALWAYS_INLINE Vector4<T> operator*(Vector4<T> vector, T scalar)
+{
+    const Vector4<T> result = Vector4<T>(vector.x * scalar, vector.y * scalar, vector.z * scalar, vector.w * scalar);
+    return result;
+}
+
+// Component-wise scalar multiplication operator.
+template<typename T>
+NODISCARD ALWAYS_INLINE Vector4<T> operator*(T scalar, Vector4<T> vector)
+{
+    const Vector4<T> result = Vector4<T>(vector.x * scalar, vector.y * scalar, vector.z * scalar, vector.w * scalar);
+    return result;
+}
+
+template<typename T>
+NODISCARD ALWAYS_INLINE Vector4<T>& operator*=(Vector4<T>& self, T scalar)
+{
+    self.x *= scalar;
+    self.y *= scalar;
+    self.z *= scalar;
+    self.w *= scalar;
+    return self;
+}
+
+// Component-wise scalar division operator.
+template<typename T>
+NODISCARD ALWAYS_INLINE Vector4<T> operator/(Vector4<T> vector, T scalar)
+{
+    const T inv_scalar = T(1) / scalar;
+    const Vector4<T> result = Vector4<T>(vector.x * inv_scalar, vector.y * inv_scalar, vector.z * inv_scalar, vector.w * inv_scalar);
+    return result;
+}
+
+template<typename T>
+NODISCARD ALWAYS_INLINE Vector4<T>& operator/=(Vector4<T>& self, T scalar)
+{
+    const T inv_scalar = T(1) / scalar;
+    self.x *= inv_scalar;
+    self.y *= inv_scalar;
+    self.z *= inv_scalar;
+    self.w *= inv_scalar;
+    return self;
+}
 
 } // namespace Internal
 
