@@ -45,7 +45,8 @@ void Entity::on_update(float delta_time)
 {
     for (EntityComponent* component : m_components)
     {
-        component->on_update(delta_time);
+        if (component->is_updatable())
+            component->on_update(delta_time);
     }
 }
 

@@ -10,6 +10,12 @@ namespace SE
 
 EntityComponent::EntityComponent(const EntityComponentInitializer& initializer)
     : m_parent_entity(*initializer.parent_entity)
+    , m_is_updatable(true)
 {}
+
+void EntityComponent::set_is_updatable(bool is_updatable)
+{
+    m_is_updatable = is_updatable;
+}
 
 } // namespace SE

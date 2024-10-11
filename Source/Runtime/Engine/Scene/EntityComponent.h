@@ -34,6 +34,8 @@ class EntityComponent
     SE_MAKE_NONCOPYABLE(EntityComponent);
     SE_MAKE_NONMOVABLE(EntityComponent);
 
+    friend class Entity;
+
 public:
     NODISCARD virtual bool check_component_type_uuid(UUID component_type_uuid) const { return false; }
     NODISCARD virtual UUID get_component_type_uuid() const = 0;
@@ -41,22 +43,26 @@ public:
     virtual ~EntityComponent() = default;
 
 public:
-    SHOOTER_API virtual void on_begin_play() {}
-
-    SHOOTER_API virtual void on_end_play() {}
-
-    SHOOTER_API virtual void on_update(float delta_time) {}
-
-public:
     // Returns a pointer to the entity that contains the given component.
     NODISCARD ALWAYS_INLINE Entity* parent_entity() { return &m_parent_entity; }
     NODISCARD ALWAYS_INLINE const Entity* parent_entity() const { return &m_parent_entity; }
 
+    // Returns whether or not the `on_update` callback is invoked.
+    NODISCARD ALWAYS_INLINE bool is_updatable() const { return m_is_updatable; }
+
+    SHOOTER_API void set_is_updatable(bool is_updatable);
+    ALWAYS_INLINE void toggle_is_updatable() { set_is_updatable(!is_updatable()); }
+
 protected:
     SHOOTER_API explicit EntityComponent(const EntityComponentInitializer& initializer);
 
+    SHOOTER_API virtual void on_begin_play() {}
+    SHOOTER_API virtual void on_end_play() {}
+    SHOOTER_API virtual void on_update(float delta_time) {}
+
 private:
     Entity& m_parent_entity;
+    bool m_is_updatable;
 };
 
 } // namespace SE
