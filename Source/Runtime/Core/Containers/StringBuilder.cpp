@@ -90,4 +90,22 @@ String StringBuilder::path_join(std::initializer_list<StringView> paths_list)
     return result;
 }
 
+String StringBuilder::path_generic(StringView path)
+{
+    String result = path;
+
+    char* result_characters = result.byte_span().as<char>().elements();
+    usize result_byte_offset = 0;
+
+    while (result_byte_offset < result.m_byte_count)
+    {
+        if (result_characters[result_byte_offset] == '\\')
+            result_characters[result_byte_offset] = '/';
+
+        result_byte_offset++;
+    }
+
+    return result;
+}
+
 } // namespace SE

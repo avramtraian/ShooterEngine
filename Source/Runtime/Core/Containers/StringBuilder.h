@@ -19,6 +19,9 @@ public:
 public: // Filepath API.
     // If a given path doesn't start with a path delimitation character, this function will insert one.
     NODISCARD SHOOTER_API static String path_join(std::initializer_list<StringView> paths_list);
+
+    // Returns a platform-independent filepath, equivalent with the given path.
+    SHOOTER_API static String path_generic(StringView path);
 };
 
 } // namespace SE
