@@ -41,6 +41,9 @@ public:
 private:
     static void on_event(const Event& in_event);
 
+    void preload_project();
+    void load_project();
+
 private:
     // The first element in this vector is always the primary window.
     Vector<OwnPtr<Window>> m_window_stack;

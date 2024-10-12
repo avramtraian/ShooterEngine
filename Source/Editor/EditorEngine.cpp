@@ -4,6 +4,7 @@
  */
 
 #include <Core/Containers/StringBuilder.h>
+#include <Core/FileSystem/FileSystem.h>
 #include <Core/Log.h>
 #include <Core/Platform/Timer.h>
 #include <EditorAsset/EditorAssetManager.h>
@@ -22,12 +23,7 @@ bool EditorEngine::initialize()
         return false;
     g_editor_engine = this;
 
-    // The current working is the engine root, so no redirection is necessary.
-    m_engine_root_directory = ""sv;
-    // Currently, there is no way to select/set the project you want to open in the
-    // editor, thus the engine always picks the default example project.
-    m_project_name = "ExampleProject"sv;
-    m_project_root_directory = StringBuilder::path_join({ m_engine_root_directory.view(), "Content/ExampleProject"sv });
+    preload_project();
 
     AssetManager::instantiate<EditorAssetManager>();
     if (!g_asset_manager->initialize())
@@ -64,14 +60,12 @@ bool EditorEngine::initialize()
         return false;
     }
 
-    m_scene->on_begin_play();
+    load_project();
     return true;
 }
 
 void EditorEngine::shutdown()
 {
-    m_scene->on_end_play();
-
     m_scene_renderer->shutdown();
     m_scene_renderer.release();
 
@@ -117,7 +111,6 @@ void EditorEngine::tick()
     }
 
     Engine::tick();
-    m_scene->on_update(m_last_frame_delta_time);
     m_scene_renderer->render();
 
     current_frame_timer.stop();
@@ -210,5 +203,20 @@ void EditorEngine::on_event(const Event& in_event)
         }
     }
 }
+
+void EditorEngine::preload_project()
+{
+    m_engine_root_directory = FileSystem::get_working_directory().view();
+
+    // This variable should be extracted from the command line arguments passed to the editor when launched into
+    // exectution. However, until the command line arguments interface will be implemented we will hardcode the default example project.
+    const String project_filepath = StringBuilder::path_join({ m_engine_root_directory.view(), "Content/ExampleProject/ExampleProject.seproject"sv });
+
+    m_project_name = project_filepath.path_stem();
+    m_project_root_directory = project_filepath.path_parent();
+}
+
+void EditorEngine::load_project()
+{}
 
 } // namespace SE
