@@ -85,9 +85,9 @@ bool EditorAssetManager::serialize_asset_registry()
             continue;
 
         out << YAML::BeginMap;
-        out << YAML::Key << "Type" << YAML::Value << get_asset_type_string(slot.metadata.type).c_str();
+        out << YAML::Key << "Type" << YAML::Value << get_asset_type_string(slot.metadata.type).characters();
         out << YAML::Key << "Handle" << YAML::Value << (u64)(slot.metadata.handle);
-        out << YAML::Key << "Filepath" << YAML::Value << slot.metadata.filepath.c_str();
+        out << YAML::Key << "Filepath" << YAML::Value << slot.metadata.filepath.characters();
         out << YAML::EndMap;
 
         if (slot.metadata.state == AssetState::Ready)
@@ -118,7 +118,7 @@ bool EditorAssetManager::deserialize_asset_registry()
     String asset_registry_file;
     SE_CHECK_FILE_ERROR(asset_registry_reader.read_entire_to_string_and_close(asset_registry_file));
 
-    YAML::Node asset_registry_root = YAML::Load(asset_registry_file.c_str());
+    YAML::Node asset_registry_root = YAML::Load(asset_registry_file.characters());
     if (!asset_registry_root)
     {
         SE_LOG_TAG_ERROR("Asset"sv, "Invalid or currupted AssetRegistry file!"sv);

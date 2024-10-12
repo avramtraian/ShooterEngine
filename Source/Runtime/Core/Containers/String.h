@@ -98,7 +98,7 @@ public:
     }
 
     // This function is not recommended for general use. It is only meant to be used for communication with C APIs.
-    NODISCARD ALWAYS_INLINE const char* c_str() const { return byte_span_with_null_termination().as<const char>().elements(); }
+    NODISCARD ALWAYS_INLINE const char* characters() const { return byte_span_with_null_termination().as<const char>().elements(); }
 
     NODISCARD ALWAYS_INLINE bool is_stored_inline() const { return m_byte_count <= inline_capacity; }
     NODISCARD ALWAYS_INLINE bool is_stored_on_heap() const { return m_byte_count > inline_capacity; }

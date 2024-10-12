@@ -25,9 +25,9 @@ bool TextureSerializer::serialize(AssetHandle handle)
 
     YAML::Emitter out;
     out << YAML::BeginMap;
-    out << YAML::Key << "Type" << YAML::Value << get_asset_type_string(metadata.type).c_str();
+    out << YAML::Key << "Type" << YAML::Value << get_asset_type_string(metadata.type).characters();
     out << YAML::Key << "Handle" << YAML::Value << (u64)(metadata.handle);
-    out << YAML::Key << "Filepath" << YAML::Value << asset->get_texture_filepath().c_str();
+    out << YAML::Key << "Filepath" << YAML::Value << asset->get_texture_filepath().characters();
     out << YAML::EndMap;
     const StringView yaml_view = StringView::create_from_utf8(out.c_str());
 
@@ -52,7 +52,7 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
     SE_CHECK_FILE_ERROR(asset_metadata_file_reader.open(asset_metadata_filepath));
     SE_CHECK_FILE_ERROR(asset_metadata_file_reader.read_entire_to_string_and_close(asset_metadata_file));
 
-    YAML::Node asset_metadata_root = YAML::Load(asset_metadata_file.c_str());
+    YAML::Node asset_metadata_root = YAML::Load(asset_metadata_file.characters());
     if (!asset_metadata_root)
     {
         SE_LOG_TAG_ERROR("Asset"sv, "Invalid or corrupted asset file: '{}'!"sv, editor_metadata.filepath);
