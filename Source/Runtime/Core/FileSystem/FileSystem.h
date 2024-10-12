@@ -196,6 +196,7 @@ public:
 
 public:
     SHOOTER_API static void set_working_directory(const String& filepath);
+    SHOOTER_API static String get_working_directory();
 };
 
 } // namespace SE

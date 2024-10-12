@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
+#include <Core/Containers/StringBuilder.h>
 #include <Core/FileSystem/FileSystem.h>
 #include <Core/Math/Math.h>
 #include <Core/Platform/Windows/WindowsHeaders.h>
@@ -431,6 +432,16 @@ Optional<usize> FileSystem::get_file_size(const String& filepath)
 void FileSystem::set_working_directory(const String& filepath)
 {
     SetCurrentDirectoryA(filepath_to_cstr(filepath));
+}
+
+String FileSystem::get_working_directory()
+{
+    static char s_working_directory_buffer[1024] = {};
+    const DWORD byte_count = GetCurrentDirectoryA(SE_ARRAY_COUNT(s_working_directory_buffer), s_working_directory_buffer);
+    SE_ASSERT(byte_count > 0);
+
+    const StringView working_directory_path = StringView::create_from_utf8(s_working_directory_buffer, byte_count);
+    return StringBuilder::path_generic(working_directory_path);
 }
 
 } // namespace SE
