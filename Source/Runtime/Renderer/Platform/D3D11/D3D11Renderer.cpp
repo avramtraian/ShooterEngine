@@ -34,7 +34,7 @@ bool D3D11Renderer::initialize()
 {
     if (s_d3d11_renderer.is_valid())
         return false;
-    s_d3d11_renderer = make_own<D3D11RendererData>();
+    s_d3d11_renderer = create_own<D3D11RendererData>();
 
     UINT device_flags = 0;
 #if SE_CONFIGURATION_DEBUG

@@ -22,7 +22,7 @@ bool SceneRenderer::initialize(Scene& in_scene_context)
     // Render directly to the swapchain.
     RefPtr<Framebuffer> target_framebuffer = Framebuffer::create(*Renderer::get_active_context());
 
-    m_renderer_2d = make_own<Renderer2D>();
+    m_renderer_2d = create_own<Renderer2D>();
     if (!m_renderer_2d->initialize(target_framebuffer))
     {
         SE_LOG_TAG_ERROR("Renderer"sv, "Failed to initialize the 2D renderer!"sv);

@@ -100,7 +100,7 @@ NODISCARD ALWAYS_INLINE OwnPtr<T> adopt_own(T* pointer_to_adopt)
 }
 
 template<typename T, typename... Args>
-NODISCARD ALWAYS_INLINE OwnPtr<T> make_own(Args&&... args)
+NODISCARD ALWAYS_INLINE OwnPtr<T> create_own(Args&&... args)
 {
     T* raw_pointer = new T(forward<Args>(args)...);
     return adopt_own(raw_pointer);

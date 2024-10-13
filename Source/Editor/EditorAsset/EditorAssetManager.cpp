@@ -60,7 +60,7 @@ void EditorAssetManager::initialize_asset_serializers()
 {
     m_asset_serializers.clear();
 
-    m_asset_serializers.add(AssetType::Texture, make_own<TextureSerializer>().as<AssetSerializer>());
+    m_asset_serializers.add(AssetType::Texture, create_own<TextureSerializer>().as<AssetSerializer>());
 }
 
 String EditorAssetManager::get_asset_registry_filepath()

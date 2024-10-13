@@ -29,7 +29,7 @@ bool Renderer::initialize()
 {
     if (s_renderer.is_valid())
         return false;
-    s_renderer = make_own<RendererData>();
+    s_renderer = create_own<RendererData>();
 
     RendererAPI renderer_api = get_recommended_renderer_api_for_current_platform();
     set_current_renderer_api(renderer_api);

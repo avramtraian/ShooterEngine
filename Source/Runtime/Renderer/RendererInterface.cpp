@@ -18,7 +18,7 @@ OwnPtr<RendererInterface> RendererInterface::create()
     switch (get_current_renderer_api())
     {
 #if SE_RENDERER_API_SUPPORTED_D3D11
-        case RendererAPI::D3D11: return make_own<D3D11Renderer>().as<RendererInterface>();
+        case RendererAPI::D3D11: return create_own<D3D11Renderer>().as<RendererInterface>();
 #endif // SE_RENDERER_API_SUPPORTED_D3D11
     }
 
