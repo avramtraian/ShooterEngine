@@ -63,6 +63,8 @@ void D3D11Framebuffer::invalidate(u32 new_width, u32 new_height)
     }
 
     destroy();
+    m_width = new_width;
+    m_height = new_height;
 
     for (Attachment& attachment : m_attachments)
     {
@@ -71,8 +73,8 @@ void D3D11Framebuffer::invalidate(u32 new_width, u32 new_height)
         // https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_texture2d_desc
         //
         D3D11_TEXTURE2D_DESC texture_description = {};
-        texture_description.Width = (UINT)(m_width);
-        texture_description.Height = (UINT)(m_height);
+        texture_description.Width = static_cast<UINT>(m_width);
+        texture_description.Height = static_cast<UINT>(m_height);
         texture_description.MipLevels = 1;
         texture_description.ArraySize = 1;
         texture_description.Format = get_d3d11_image_format(attachment.description.format);

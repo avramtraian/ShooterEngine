@@ -63,7 +63,7 @@ public:
     //
     // Invalidates the current framebuffer by resizing its attachments.
     // If the framebuffer is a swapchain target, the provided width and height parameters are ignored (and
-    // thus should be set to zero).
+    // thus should be set to zero) and the dimensions of the framebuffer will be determined by the swapchain.
     //
     virtual void invalidate(u32 new_width, u32 new_height) = 0;
 
