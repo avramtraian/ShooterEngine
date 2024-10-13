@@ -31,21 +31,21 @@ u64 Random::UInt64()
 
 u32 Random::UInt32Range(u32 range_min, u32 range_max)
 {
-    SE_ASSERT_DEBUG(range_min <= range_max);
+    SE_DEBUG_ASSERT(range_min <= range_max);
     const u32 random_value = Random::UInt32();
     return range_min + random_value % (range_max - range_min + 1);
 }
 
 u64 Random::UInt64Range(u64 range_min, u64 range_max)
 {
-    SE_ASSERT_DEBUG(range_min <= range_max);
+    SE_DEBUG_ASSERT(range_min <= range_max);
     const u64 random_value = Random::UInt64();
     return range_min + random_value % (range_max - range_min + 1);
 }
 
 float Random::FloatRange(float range_min, float range_max)
 {
-    SE_ASSERT_DEBUG(range_min <= range_max);
+    SE_DEBUG_ASSERT(range_min <= range_max);
     const float scalar = (float)(Random::UInt64()) / (float)(UINT64_MAX);
     return range_min + scalar * (range_max - range_min);
 }

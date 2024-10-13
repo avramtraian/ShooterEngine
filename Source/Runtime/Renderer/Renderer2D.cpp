@@ -247,7 +247,7 @@ void Renderer2D::begin_batch()
 void Renderer2D::end_batch()
 {
     // Sanity check regarding number of quads to render in this batch.
-    SE_ASSERT_DEBUG((m_vertices_buffer_pointer - m_vertices_buffer.as<QuadVertex>()) == (m_statistics.quads_in_current_batch * 4));
+    SE_DEBUG_ASSERT((m_vertices_buffer_pointer - m_vertices_buffer.as<QuadVertex>()) == (m_statistics.quads_in_current_batch * 4));
 
     if (m_statistics.quads_in_current_batch == 0)
         return;

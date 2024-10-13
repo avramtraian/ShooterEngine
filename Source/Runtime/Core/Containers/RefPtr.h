@@ -42,7 +42,7 @@ private:
     // Returns true when the instance is destroyed.
     ALWAYS_INLINE bool decrement_reference_count()
     {
-        SE_ASSERT_DEBUG(m_reference_count > 0);
+        SE_DEBUG_ASSERT(m_reference_count > 0);
 
         if (--m_reference_count == 0)
         {

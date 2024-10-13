@@ -70,7 +70,7 @@ String& String::append(StringView view_to_append)
 
     if (new_byte_count <= inline_capacity)
     {
-        SE_ASSERT_DEBUG(m_byte_count > 0);
+        SE_DEBUG_ASSERT(m_byte_count > 0);
         copy_memory_from_span(m_inline_buffer + m_byte_count - 1, view_to_append.byte_span());
         m_byte_count = new_byte_count;
         m_inline_buffer[m_byte_count - 1] = 0;
@@ -79,7 +79,7 @@ String& String::append(StringView view_to_append)
 
     char* new_heap_buffer = allocate_memory(new_byte_count);
     copy_memory_from_span(new_heap_buffer, byte_span());
-    SE_ASSERT_DEBUG(m_byte_count > 0);
+    SE_DEBUG_ASSERT(m_byte_count > 0);
     copy_memory_from_span(new_heap_buffer + m_byte_count - 1, view_to_append.byte_span());
     new_heap_buffer[new_byte_count - 1] = 0;
 
@@ -104,7 +104,7 @@ String String::operator+(StringView view_to_append) const
     }
 
     copy_memory_from_span(destination_buffer, byte_span());
-    SE_ASSERT_DEBUG(m_byte_count > 0);
+    SE_DEBUG_ASSERT(m_byte_count > 0);
     copy_memory_from_span(destination_buffer + m_byte_count - 1, view_to_append.byte_span());
     destination_buffer[result.m_byte_count - 1] = 0;
 

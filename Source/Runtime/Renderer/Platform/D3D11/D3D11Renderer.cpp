@@ -108,27 +108,27 @@ String D3D11Renderer::get_error_message(HRESULT result)
 
 ID3D11Device* D3D11Renderer::get_device()
 {
-    SE_ASSERT_DEBUG(s_d3d11_renderer->device != nullptr);
+    SE_DEBUG_ASSERT(s_d3d11_renderer->device != nullptr);
     return s_d3d11_renderer->device;
 }
 
 ID3D11DeviceContext* D3D11Renderer::get_device_context()
 {
-    SE_ASSERT_DEBUG(s_d3d11_renderer->device_context != nullptr);
+    SE_DEBUG_ASSERT(s_d3d11_renderer->device_context != nullptr);
     return s_d3d11_renderer->device_context;
 }
 
 IDXGIFactory2* D3D11Renderer::get_dxgi_factory()
 {
-    SE_ASSERT_DEBUG(s_d3d11_renderer->dxgi_factory != nullptr);
+    SE_DEBUG_ASSERT(s_d3d11_renderer->dxgi_factory != nullptr);
     return s_d3d11_renderer->dxgi_factory;
 }
 
-D3D11Context* D3D11Renderer::get_active_context()
+D3D11RenderingContext* D3D11Renderer::get_active_context()
 {
     RenderingContext* active_context = Renderer::get_active_context();
-    SE_ASSERT_DEBUG(active_context);
-    return static_cast<D3D11Context*>(active_context);
+    SE_DEBUG_ASSERT(active_context);
+    return static_cast<D3D11RenderingContext*>(active_context);
 }
 
 void D3D11Renderer::on_resize(u32 new_width, u32 new_height)

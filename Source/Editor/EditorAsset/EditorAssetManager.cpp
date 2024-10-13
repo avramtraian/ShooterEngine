@@ -237,7 +237,7 @@ EditorAssetMetadata& EditorAssetManager::get_editor_metadata(AssetHandle handle)
 void EditorAssetManager::register_memory_only_asset(RefPtr<Asset> asset)
 {
     const AssetHandle handle = AssetHandle::create();
-    SE_ASSERT_DEBUG(!m_asset_registry.contains(handle));
+    SE_DEBUG_ASSERT(!m_asset_registry.contains(handle));
 
     AssetSlot asset_slot;
     asset_slot.metadata.type = asset->get_type();
