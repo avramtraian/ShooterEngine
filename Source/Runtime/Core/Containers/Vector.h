@@ -267,6 +267,24 @@ public:
         shrink_to_fit();
     }
 
+    //
+    // Removes the element located at the given index and fills its hole by moving in place
+    // the last element stored in the container.
+    // The removal operation happens in constant time.
+    //
+    ALWAYS_INLINE void remove_unordered(usize remove_index)
+    {
+        SE_ASSERT(remove_index < m_count);
+        m_elements[remove_index].~T();
+        if (remove_index != m_count - 1)
+        {
+            new (m_elements + remove_index) T(move(last()));
+            last().~T();
+        }
+
+        --m_count;
+    }
+
     ALWAYS_INLINE void remove(usize remove_index, usize remove_count = 1)
     {
         SE_ASSERT(remove_index + remove_count <= m_count);
