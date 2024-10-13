@@ -26,6 +26,7 @@ project "SE-Editor"
     links
     {
         "SE-Engine",
+        "SE-ImGui",
         "SE-YamlCPP"
     }
 
@@ -43,7 +44,8 @@ project "SE-Editor"
         "%{wks.location}/Source",
 
         -- Third party includes.
-        "%{wks.location}/Source/ThirdParty/yaml-cpp/include"
+        "%{wks.location}/Source/ThirdParty/yaml-cpp/include",
+        "%{wks.location}/Source/ThirdParty/ImGui",
     }
 
     defines { "YAML_CPP_STATIC_DEFINE" }
