@@ -18,7 +18,7 @@ RefPtr<IndexBuffer> IndexBuffer::create(const IndexBufferInfo& info)
     switch (get_current_renderer_api())
     {
 #if SE_RENDERER_API_SUPPORTED_D3D11
-        case RendererAPI::D3D11: return make_ref<D3D11IndexBuffer>(info).as<IndexBuffer>();
+        case RendererAPI::D3D11: return create_ref<D3D11IndexBuffer>(info).as<IndexBuffer>();
 #endif // SE_RENDERER_API_SUPPORTED_D3D11
     }
 

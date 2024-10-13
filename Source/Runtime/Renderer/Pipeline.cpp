@@ -18,7 +18,7 @@ RefPtr<Pipeline> Pipeline::create(const PipelineDescription& description)
     switch (get_current_renderer_api())
     {
 #if SE_RENDERER_API_SUPPORTED_D3D11
-        case RendererAPI::D3D11: return make_ref<D3D11Pipeline>(description).as<Pipeline>();
+        case RendererAPI::D3D11: return create_ref<D3D11Pipeline>(description).as<Pipeline>();
 #endif // SE_RENDERER_API_SUPPORTED_D3D11
     }
 

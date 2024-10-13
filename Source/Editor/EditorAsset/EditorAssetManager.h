@@ -36,7 +36,7 @@ public:
     template<typename T, typename... Args>
     ALWAYS_INLINE RefPtr<T> create_memory_only_asset(Args&&... args)
     {
-        RefPtr<T> asset = make_ref<T>(forward<Args>(args)...);
+        RefPtr<T> asset = create_ref<T>(forward<Args>(args)...);
         register_memory_only_asset(asset.as<Asset>());
         return asset;
     }

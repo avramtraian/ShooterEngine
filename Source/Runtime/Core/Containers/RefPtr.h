@@ -178,7 +178,7 @@ NODISCARD ALWAYS_INLINE RefPtr<T> adopt_ref(T& pointer_to_adopt)
 }
 
 template<typename T, typename... Args>
-NODISCARD ALWAYS_INLINE RefPtr<T> make_ref(Args&&... args)
+NODISCARD ALWAYS_INLINE RefPtr<T> create_ref(Args&&... args)
 {
     auto* raw_pointer = new T(forward<Args>(args)...);
     return adopt_ref(raw_pointer);

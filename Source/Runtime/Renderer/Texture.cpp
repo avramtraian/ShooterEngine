@@ -18,7 +18,7 @@ RefPtr<Texture2D> Texture2D::create(const Texture2DDescription& description)
     switch (get_current_renderer_api())
     {
 #if SE_RENDERER_API_SUPPORTED_D3D11
-        case RendererAPI::D3D11: return make_ref<D3D11Texture2D>(description).as<Texture2D>();
+        case RendererAPI::D3D11: return create_ref<D3D11Texture2D>(description).as<Texture2D>();
 #endif // SE_RENDERER_API_SUPPORTED_D3D11
     }
 

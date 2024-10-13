@@ -134,7 +134,7 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
     RefPtr<Texture2D> renderer_texture = Texture2D::create(renderer_texture_description);
     STBI_FREE(loaded_texture_bytes);
 
-    RefPtr<TextureAsset> asset = make_ref<TextureAsset>(move(renderer_texture), texture_filepath);
+    RefPtr<TextureAsset> asset = create_ref<TextureAsset>(move(renderer_texture), texture_filepath);
     return asset.as<Asset>();
 }
 
