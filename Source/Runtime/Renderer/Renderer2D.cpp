@@ -48,18 +48,16 @@ bool Renderer2D::initialize(u32 width, u32 height, RefPtr<Framebuffer> target_fr
     // Pipelines.
     //
 
-    PipelineInfo pipeline_info = {};
-    pipeline_info.layout = {
-        {VertexAttribute::Float2,  "POSITION"sv           },
-        { VertexAttribute::Float4, "COLOR"sv              },
-        { VertexAttribute::Float2, "TEXTURE_COORDINATES"sv},
-        { VertexAttribute::UInt1,  "TEXTURE_ID"sv         },
-    };
-    pipeline_info.primitive_topology = PrimitiveTopology::TriangleList;
-    pipeline_info.shader = m_shader;
-    pipeline_info.front_face = FrontFace::Clockwise;
-    pipeline_info.enable_culling = false;
-    m_pipeline = Pipeline::create(pipeline_info);
+    PipelineDescription pipeline_description = {};
+    pipeline_description.shader = m_shader;
+    pipeline_description.vertex_attributes.add({ PipelineVertexAttributeType::Float2, "POSITION"sv });
+    pipeline_description.vertex_attributes.add({ PipelineVertexAttributeType::Float4, "COLOR"sv });
+    pipeline_description.vertex_attributes.add({ PipelineVertexAttributeType::Float2, "TEXTURE_COORDINATES"sv });
+    pipeline_description.vertex_attributes.add({ PipelineVertexAttributeType::UInt1, "TEXTURE_ID"sv });
+    pipeline_description.primitive_topology = PipelinePrimitiveTopology::TriangleList;
+    pipeline_description.cull_mode= PipelineCullMode::None;
+
+    m_pipeline = Pipeline::create(pipeline_description);
 
     //
     // Render passes.

@@ -151,7 +151,7 @@ void D3D11Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
 
     RefPtr<D3D11RenderPass> d3d11_render_pass = render_pass.as<D3D11RenderPass>();
     RefPtr<D3D11Pipeline> pipeline = d3d11_render_pass->get_pipeline();
-    RefPtr<D3D11Shader> shader = pipeline->get_shader();
+    RefPtr<D3D11Shader> shader = pipeline->get_shader().as<D3D11Shader>();
     RefPtr<D3D11Framebuffer> framebuffer = d3d11_render_pass->get_target_framebuffer();
 
     //
@@ -161,7 +161,7 @@ void D3D11Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
     D3D11_PRIMITIVE_TOPOLOGY primitive_topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
     switch (pipeline->get_primitive_topology())
     {
-        case PrimitiveTopology::TriangleList: primitive_topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST; break;
+        case PipelinePrimitiveTopology::TriangleList: primitive_topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST; break;
     }
 
     s_d3d11_renderer->device_context->IASetInputLayout(pipeline->get_input_layout());

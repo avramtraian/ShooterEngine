@@ -11,82 +11,83 @@
 namespace SE
 {
 
-struct VertexAttribute
+enum class PipelineVertexAttributeType : u8
+{
+    // clang-format off
+    Float1, Float2, Float3, Float4,
+    Int1,   Int2,   Int3,   Int4,
+    UInt1,  UInt2,  UInt3,  UInt4,
+    // clang-format on
+};
+
+struct PipelineVertexAttribute
 {
 public:
-    enum Type : u8
-    {
-        Float1,
-        Float2,
-        Float3,
-        Float4,
-
-        Int1,
-        Int2,
-        Int3,
-        Int4,
-        
-        UInt1,
-        UInt2,
-        UInt3,
-        UInt4,
-        
-        Mat2,
-        Mat3,
-        Mat4,
-    };
-
-public:
-    VertexAttribute() = default;
-    VertexAttribute(Type in_type, StringView in_name)
+    PipelineVertexAttribute() = default;
+    PipelineVertexAttribute(PipelineVertexAttributeType in_type, StringView in_name)
         : type(in_type)
         , name(in_name)
     {}
 
 public:
-    Type type;
+    PipelineVertexAttributeType type;
     String name;
 };
 
-struct PipelineLayout
+enum class PipelinePrimitiveTopology : u8
 {
-    PipelineLayout() = default;
-    PipelineLayout(std::initializer_list<VertexAttribute> in_attributes)
-        : attributes(in_attributes)
-    {}
-
-    Vector<VertexAttribute> attributes;
-};
-
-enum class PrimitiveTopology : u8
-{
+    Unknown = 0,
     TriangleList,
 };
 
-enum class FrontFace : u8
+enum class PipelineFillMode : u8
 {
+    Unknown = 0,
+    Solid,
+    Wireframe,
+};
+
+enum class PipelineCullMode : u8
+{
+    Unknown = 0,
+    None,
+    Front,
+    Back,
+};
+
+enum class PipelineFrontFaceDirection : u8
+{
+    Unknown = 0,
     CounterClockwise,
     Clockwise,
 };
 
-struct PipelineInfo
+struct PipelineDescription
 {
-    PipelineLayout layout;
     RefPtr<Shader> shader;
-    PrimitiveTopology primitive_topology = PrimitiveTopology::TriangleList;
-    FrontFace front_face = FrontFace::Clockwise;
-    bool enable_culling = false;
+    Vector<PipelineVertexAttribute> vertex_attributes;
+
+    PipelinePrimitiveTopology primitive_topology { PipelinePrimitiveTopology::TriangleList };
+    PipelineFillMode fill_mode { PipelineFillMode::Solid };
+    PipelineCullMode cull_mode { PipelineCullMode::None };
+    PipelineFrontFaceDirection front_face_direction { PipelineFrontFaceDirection::CounterClockwise };
 };
 
 class Pipeline : public RefCounted
 {
 public:
+    NODISCARD static RefPtr<Pipeline> create(const PipelineDescription& description);
+
     Pipeline() = default;
     virtual ~Pipeline() override = default;
 
-    static RefPtr<Pipeline> create(const PipelineInfo& info);
-
 public:
+    NODISCARD virtual RefPtr<Shader> get_shader() const = 0;
+
+    NODISCARD virtual PipelinePrimitiveTopology get_primitive_topology() const = 0;
+    NODISCARD virtual PipelineFillMode get_fill_mode() const = 0;
+    NODISCARD virtual PipelineCullMode get_cull_mode() const = 0;
+    NODISCARD virtual PipelineFrontFaceDirection get_front_face_direction() const = 0;
 };
 
 } // namespace SE

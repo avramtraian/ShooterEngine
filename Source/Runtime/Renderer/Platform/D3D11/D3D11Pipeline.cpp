@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include <Core/Containers/HashTable.h>
 #include <Core/Log.h>
 #include <Renderer/Platform/D3D11/D3D11Pipeline.h>
 #include <Renderer/Platform/D3D11/D3D11Renderer.h>
@@ -12,118 +11,147 @@
 namespace SE
 {
 
-struct VertexAttributeMetadata
-{
-    u32 size;
-    DXGI_FORMAT format;
-    u8 semantic_index_count;
-};
-
-ALWAYS_INLINE static VertexAttributeMetadata get_vertex_attribute_metadata(VertexAttribute::Type attribute_type)
+NODISCARD ALWAYS_INLINE static u32 get_pipeline_vertex_attribute_type_size(PipelineVertexAttributeType attribute_type)
 {
     switch (attribute_type)
     {
-        case VertexAttribute::Float1: return { 4 * 1, DXGI_FORMAT_R32_FLOAT, 1 };
-        case VertexAttribute::Float2: return { 4 * 2, DXGI_FORMAT_R32G32_FLOAT, 1 };
-        case VertexAttribute::Float3: return { 4 * 3, DXGI_FORMAT_R32G32B32_FLOAT, 1 };
-        case VertexAttribute::Float4: return { 4 * 4, DXGI_FORMAT_R32G32B32A32_FLOAT, 1 };
-        case VertexAttribute::Int1: return { 4 * 1, DXGI_FORMAT_R32_SINT, 1 };
-        case VertexAttribute::Int2: return { 4 * 2, DXGI_FORMAT_R32G32_SINT, 1 };
-        case VertexAttribute::Int3: return { 4 * 3, DXGI_FORMAT_R32G32B32_SINT, 1 };
-        case VertexAttribute::Int4: return { 4 * 4, DXGI_FORMAT_R32G32B32A32_SINT, 1 };
-        case VertexAttribute::UInt1: return { 4 * 1, DXGI_FORMAT_R32_UINT, 1 };
-        case VertexAttribute::UInt2: return { 4 * 2, DXGI_FORMAT_R32G32_UINT, 1 };
-        case VertexAttribute::UInt3: return { 4 * 3, DXGI_FORMAT_R32G32B32_UINT, 1 };
-        case VertexAttribute::UInt4: return { 4 * 4, DXGI_FORMAT_R32G32B32A32_UINT, 1 };
-        case VertexAttribute::Mat2: return { 4 * 2, DXGI_FORMAT_R32G32_FLOAT, 2 };
-        case VertexAttribute::Mat3: return { 4 * 3, DXGI_FORMAT_R32G32B32_FLOAT, 3 };
-        case VertexAttribute::Mat4: return { 4 * 4, DXGI_FORMAT_R32G32B32A32_FLOAT, 4 };
+        case PipelineVertexAttributeType::Float1: return 4;
+        case PipelineVertexAttributeType::Float2: return 8;
+        case PipelineVertexAttributeType::Float3: return 12;
+        case PipelineVertexAttributeType::Float4: return 16;
+
+        case PipelineVertexAttributeType::Int1: return 4;
+        case PipelineVertexAttributeType::Int2: return 8;
+        case PipelineVertexAttributeType::Int3: return 12;
+        case PipelineVertexAttributeType::Int4: return 16;
+
+        case PipelineVertexAttributeType::UInt1: return 4;
+        case PipelineVertexAttributeType::UInt2: return 8;
+        case PipelineVertexAttributeType::UInt3: return 12;
+        case PipelineVertexAttributeType::UInt4: return 16;
     }
 
-    SE_LOG_TAG_ERROR("D3D11"sv, "Invalid VertexAttribute::Type!"sv);
     SE_ASSERT(false);
-    return {};
+    return 0;
 }
 
-D3D11Pipeline::D3D11Pipeline(const PipelineInfo& info)
-    : m_input_layout(nullptr)
-    , m_rasterizer_state(nullptr)
-    , m_layout(info.layout)
-    , m_vertex_stride(0)
-    , m_shader(info.shader.as<D3D11Shader>())
-    , m_primitive_topology(info.primitive_topology)
-    , m_front_face(info.front_face)
-    , m_is_culling_enabled(info.enable_culling)
+NODISCARD ALWAYS_INLINE static DXGI_FORMAT get_pipeline_vertex_attribute_type_format(PipelineVertexAttributeType attribute_type)
+{
+    switch (attribute_type)
+    {
+        case PipelineVertexAttributeType::Float1: return DXGI_FORMAT_R32_FLOAT;
+        case PipelineVertexAttributeType::Float2: return DXGI_FORMAT_R32G32_FLOAT;
+        case PipelineVertexAttributeType::Float3: return DXGI_FORMAT_R32G32B32_FLOAT;
+        case PipelineVertexAttributeType::Float4: return DXGI_FORMAT_R32G32B32A32_FLOAT;
+
+        case PipelineVertexAttributeType::Int1: return DXGI_FORMAT_R32_SINT;
+        case PipelineVertexAttributeType::Int2: return DXGI_FORMAT_R32G32_SINT;
+        case PipelineVertexAttributeType::Int3: return DXGI_FORMAT_R32G32B32_SINT;
+        case PipelineVertexAttributeType::Int4: return DXGI_FORMAT_R32G32B32A32_SINT;
+
+        case PipelineVertexAttributeType::UInt1: return DXGI_FORMAT_R32_UINT;
+        case PipelineVertexAttributeType::UInt2: return DXGI_FORMAT_R32G32_UINT;
+        case PipelineVertexAttributeType::UInt3: return DXGI_FORMAT_R32G32B32_UINT;
+        case PipelineVertexAttributeType::UInt4: return DXGI_FORMAT_R32G32B32A32_UINT;
+    }
+
+    SE_ASSERT(false);
+    return DXGI_FORMAT_UNKNOWN;
+}
+
+D3D11Pipeline::D3D11Pipeline(const PipelineDescription& description)
+    : m_description(description)
 {
     Vector<D3D11_INPUT_ELEMENT_DESC> input_element_descriptions;
-    input_element_descriptions.ensure_capacity(m_layout.attributes.count());
+    input_element_descriptions.ensure_capacity(m_description.vertex_attributes.count());
 
-    HashTable<StringView> used_semantic_names;
-    u32 attribute_offset = 0;
-
-    for (const VertexAttribute& vertex_attribute : m_layout.attributes)
+    u32 vertex_attribute_offset = 0;
+    for (const PipelineVertexAttribute& vertex_attribute : m_description.vertex_attributes)
     {
-        if (used_semantic_names.contains(vertex_attribute.name.view()))
-        {
-            SE_LOG_TAG_ERROR("D3D11"sv, "Semantic name '{}' already exists!"sv, vertex_attribute.name);
-            SE_ASSERT(false);
-        }
-        used_semantic_names.add(vertex_attribute.name.view());
-
-        const VertexAttributeMetadata attribute_metadata = get_vertex_attribute_metadata(vertex_attribute.type);
-
+        // https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_input_element_desc
         D3D11_INPUT_ELEMENT_DESC element_description = {};
-        element_description.SemanticName = vertex_attribute.name.byte_span().as<const char>().elements();
-        element_description.Format = attribute_metadata.format;
+        element_description.SemanticName = vertex_attribute.name.characters();
+        // TODO: Actually correctly implement semantic indices!
+        element_description.SemanticIndex = 0;
+        element_description.Format = get_pipeline_vertex_attribute_type_format(vertex_attribute.type);
         element_description.InputSlot = 0;
+        element_description.AlignedByteOffset = vertex_attribute_offset;
         element_description.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
         element_description.InstanceDataStepRate = 0;
 
-        for (u32 semantic_index = 0; semantic_index < attribute_metadata.semantic_index_count; ++semantic_index)
-        {
-            element_description.SemanticIndex = semantic_index;
-            element_description.AlignedByteOffset = attribute_offset;
-
-            input_element_descriptions.add(element_description);
-            attribute_offset += attribute_metadata.size;
-        }
+        input_element_descriptions.add(element_description);
+        vertex_attribute_offset += get_pipeline_vertex_attribute_type_size(vertex_attribute.type);
     }
 
-    m_vertex_stride = attribute_offset;
+    // Set the stride of a vertex.
+    m_vertex_stride = vertex_attribute_offset;
 
-    Optional<ReadonlyByteSpan> vertex_shader_bytecode = m_shader->get_bytecode();
+    Optional<ReadonlyByteSpan> vertex_shader_bytecode = m_description.shader.as<D3D11Shader>()->get_bytecode(ShaderStageType::Vertex);
+    // NOTE: The provided shader doesn't have a vertex stage.
     SE_ASSERT(vertex_shader_bytecode.has_value());
 
     SE_D3D11_CHECK(D3D11Renderer::get_device()->CreateInputLayout(
         input_element_descriptions.elements(),
-        (UINT)(input_element_descriptions.count()),
+        static_cast<UINT>(input_element_descriptions.count()),
         vertex_shader_bytecode->elements(),
         vertex_shader_bytecode->count(),
         &m_input_layout
     ));
 
+    //
+    // The specification of the rasterizer state.
+    // https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_rasterizer_desc
+    //
     D3D11_RASTERIZER_DESC rasterizer_description = {};
-    rasterizer_description.FillMode = D3D11_FILL_SOLID;
-    rasterizer_description.CullMode = m_is_culling_enabled ? D3D11_CULL_BACK : D3D11_CULL_NONE;
-    rasterizer_description.FrontCounterClockwise = (m_front_face == FrontFace::CounterClockwise);
+    rasterizer_description.DepthBias = 0;
+    rasterizer_description.DepthBiasClamp = 0;
+    rasterizer_description.SlopeScaledDepthBias = 0;
     rasterizer_description.DepthClipEnable = false;
+    rasterizer_description.ScissorEnable = false;
+    rasterizer_description.MultisampleEnable = false;
+    rasterizer_description.AntialiasedLineEnable = false;
+
+    switch (m_description.fill_mode)
+    {
+        case PipelineFillMode::Solid: rasterizer_description.FillMode = D3D11_FILL_SOLID; break;
+        case PipelineFillMode::Wireframe: rasterizer_description.FillMode = D3D11_FILL_WIREFRAME; break;
+
+        default:
+            rasterizer_description.FillMode = D3D11_FILL_SOLID;
+            SE_ASSERT(false);
+            break;
+    }
+
+    switch (m_description.cull_mode)
+    {
+        case PipelineCullMode::None: rasterizer_description.CullMode = D3D11_CULL_NONE; break;
+        case PipelineCullMode::Front: rasterizer_description.CullMode = D3D11_CULL_FRONT; break;
+        case PipelineCullMode::Back: rasterizer_description.CullMode = D3D11_CULL_BACK; break;
+
+        default:
+            rasterizer_description.CullMode = D3D11_CULL_NONE;
+            SE_ASSERT(false);
+            break;
+    }
+
+    switch (m_description.front_face_direction)
+    {
+        case PipelineFrontFaceDirection::Clockwise: rasterizer_description.FrontCounterClockwise = true; break;
+        case PipelineFrontFaceDirection::CounterClockwise: rasterizer_description.FrontCounterClockwise = false; break;
+
+        default:
+            rasterizer_description.FrontCounterClockwise = false;
+            SE_ASSERT(false);
+            break;
+    }
 
     SE_D3D11_CHECK(D3D11Renderer::get_device()->CreateRasterizerState(&rasterizer_description, &m_rasterizer_state));
 }
 
 D3D11Pipeline::~D3D11Pipeline()
 {
-    if (m_input_layout)
-    {
-        m_input_layout->Release();
-        m_input_layout = nullptr;
-    }
-
-    if (m_rasterizer_state)
-    {
-        m_rasterizer_state->Release();
-        m_rasterizer_state = nullptr;
-    }
+    SE_D3D11_RELEASE(m_rasterizer_state);
+    SE_D3D11_RELEASE(m_input_layout);
 }
 
 } // namespace SE
