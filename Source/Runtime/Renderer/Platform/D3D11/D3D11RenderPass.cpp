@@ -27,24 +27,24 @@ bool D3D11RenderPass::bind_inputs()
     Vector<ID3D11ShaderResourceView*> fragment_shader_resource_views;
     Vector<ID3D11SamplerState*> fragment_shader_sampler_states;
 
-    for (const auto& texture : m_input_textures)
+    for (auto texture : m_input_textures)
     {
-        fragment_shader_resource_views.add(texture.value->get_shader_resource_view());
+        fragment_shader_resource_views.add(texture.value->get_view_handle());
         fragment_shader_sampler_states.add(texture.value->get_sampler_state());
     }
 
-    for (const auto& texture_array_bucket : m_input_texture_arrays)
+    for (auto texture_array_bucket : m_input_texture_arrays)
     {
-        const Vector<RefPtr<D3D11Texture2D>>& texture_array = texture_array_bucket.value;
+        Vector<RefPtr<D3D11Texture2D>>& texture_array = texture_array_bucket.value;
 
         // TODO: There shouldn't be one sampler per texture anyway.
         if (texture_array.has_elements())
             fragment_shader_sampler_states.add(texture_array.first()->get_sampler_state());
 
-        for (const RefPtr<D3D11Texture2D>& texture : texture_array)
+        for (RefPtr<D3D11Texture2D>& texture : texture_array)
         {
             if (texture.is_valid())
-                fragment_shader_resource_views.add(texture->get_shader_resource_view());
+                fragment_shader_resource_views.add(texture->get_view_handle());
         }
     }
 

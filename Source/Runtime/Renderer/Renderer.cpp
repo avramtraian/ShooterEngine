@@ -42,23 +42,25 @@ bool Renderer::initialize()
     }
 
     {
-        Texture2DInfo white_texture_info = {};
-        white_texture_info.width = 1;
-        white_texture_info.height = 1;
-        white_texture_info.format = ImageFormat::RGBA8;
-        const u32 white_texture_data = 0xFFFFFFFF;
-        white_texture_info.data = ReadonlyByteSpan(reinterpret_cast<ReadonlyBytes>(&white_texture_data), sizeof(white_texture_data));
-        s_renderer->white_texture = Texture2D::create(white_texture_info);
+        const u8 white_texture_data[] = { 0xFF, 0xFF, 0xFF, 0xFF };
+
+        Texture2DDescription white_texture_description = {};
+        white_texture_description.width = 1;
+        white_texture_description.height = 1;
+        white_texture_description.format = ImageFormat::RGBA8;
+        white_texture_description.data = ReadonlyByteSpan(white_texture_data, sizeof(white_texture_data));
+        s_renderer->white_texture = Texture2D::create(white_texture_description);
     }
 
     {
-        Texture2DInfo black_texture_info = {};
-        black_texture_info.width = 1;
-        black_texture_info.height = 1;
-        black_texture_info.format = ImageFormat::RGBA8;
-        const u32 black_texture_data = 0xFF000000;
-        black_texture_info.data = ReadonlyByteSpan(reinterpret_cast<ReadonlyBytes>(&black_texture_data), sizeof(black_texture_data));
-        s_renderer->black_texture = Texture2D::create(black_texture_info);
+        const u8 black_texture_data[] = { 0x00, 0x00, 0x00, 0xFF };
+
+        Texture2DDescription black_texture_description = {};
+        black_texture_description.width = 1;
+        black_texture_description.height = 1;
+        black_texture_description.format = ImageFormat::RGBA8;
+        black_texture_description.data = ReadonlyByteSpan(black_texture_data, sizeof(black_texture_data));
+        s_renderer->black_texture = Texture2D::create(black_texture_description);
     }
 
     return true;
