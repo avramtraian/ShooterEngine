@@ -196,10 +196,10 @@ bool Renderer2D::initialize_quads()
     // Quad vertex buffer.
     //
 
-    VertexBufferInfo vertex_buffer_info = {};
-    vertex_buffer_info.byte_count = static_cast<u32>(m_quad_vertices.count() * sizeof(QuadVertex));
-    vertex_buffer_info.update_frequency = VertexBufferUpdateFrequency::High;
-    m_quad_vertex_buffer = VertexBuffer::create(vertex_buffer_info);
+    VertexBufferDescription vertex_buffer_description = {};
+    vertex_buffer_description.byte_count = static_cast<u32>(m_quad_vertices.count() * sizeof(QuadVertex));
+    vertex_buffer_description.update_frequency = VertexBufferUpdateFrequency::High;
+    m_quad_vertex_buffer = VertexBuffer::create(vertex_buffer_description);
 
     //
     // Quad index buffer.

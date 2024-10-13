@@ -11,18 +11,19 @@
 namespace SE
 {
 
-class D3D11VertexBuffer final : public VertexBuffer
+class D3D11VertexBuffer : public VertexBuffer
 {
 public:
-    D3D11VertexBuffer(const VertexBufferInfo& info);
+    explicit D3D11VertexBuffer(const VertexBufferDescription& description);
     virtual ~D3D11VertexBuffer() override;
 
+    ALWAYS_INLINE ID3D11Buffer* get_handle() const { return m_handle; }
+
+public:
     virtual void update_data(ReadonlyByteSpan data) override;
 
-    ALWAYS_INLINE ID3D11Buffer* get_handle() const { return m_buffer; }
-
 private:
-    ID3D11Buffer* m_buffer;
+    ID3D11Buffer* m_handle;
     u32 m_buffer_byte_count;
     VertexBufferUpdateFrequency m_update_frequency;
 };

@@ -24,8 +24,8 @@ ALWAYS_INLINE static D3D11_USAGE get_vertex_buffer_usage(VertexBufferUpdateFrequ
     return D3D11_USAGE_DEFAULT;
 }
 
-D3D11VertexBuffer::D3D11VertexBuffer(const VertexBufferInfo& info)
-    : m_buffer(nullptr)
+D3D11VertexBuffer::D3D11VertexBuffer(const VertexBufferDescription& info)
+    : m_handle(nullptr)
     , m_buffer_byte_count(info.byte_count)
     , m_update_frequency(info.update_frequency)
 {
@@ -55,12 +55,12 @@ D3D11VertexBuffer::D3D11VertexBuffer(const VertexBufferInfo& info)
         initial_data_ptr = &initial_data;
     }
 
-    SE_D3D11_CHECK(D3D11Renderer::get_device()->CreateBuffer(&buffer_description, initial_data_ptr, &m_buffer));
+    SE_D3D11_CHECK(D3D11Renderer::get_device()->CreateBuffer(&buffer_description, initial_data_ptr, &m_handle));
 }
 
 D3D11VertexBuffer::~D3D11VertexBuffer()
 {
-    SE_D3D11_RELEASE(m_buffer);
+    SE_D3D11_RELEASE(m_handle);
 }
 
 void D3D11VertexBuffer::update_data(ReadonlyByteSpan data)
@@ -75,12 +75,12 @@ void D3D11VertexBuffer::update_data(ReadonlyByteSpan data)
     {
         // Map the buffer memory.
         D3D11_MAPPED_SUBRESOURCE buffer_subresource = {};
-        SE_D3D11_CHECK(D3D11Renderer::get_device_context()->Map(m_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &buffer_subresource));
+        SE_D3D11_CHECK(D3D11Renderer::get_device_context()->Map(m_handle, 0, D3D11_MAP_WRITE_DISCARD, 0, &buffer_subresource));
         // Copy data to the mapped memory.
         SE_ASSERT(data.count() <= m_buffer_byte_count);
         copy_memory_from_span(buffer_subresource.pData, data);
         // Unmap the buffer memory.
-        D3D11Renderer::get_device_context()->Unmap(m_buffer, 0);
+        D3D11Renderer::get_device_context()->Unmap(m_handle, 0);
     }
     else
     {
@@ -106,7 +106,7 @@ void D3D11VertexBuffer::update_data(ReadonlyByteSpan data)
         // The Z-axis is pointing away from the camera.
         copy_box.front = 0;
         copy_box.back = 1;
-        D3D11Renderer::get_device_context()->CopySubresourceRegion(m_buffer, 0, 0, 0, 0, staging_buffer, 0, &copy_box);
+        D3D11Renderer::get_device_context()->CopySubresourceRegion(m_handle, 0, 0, 0, 0, staging_buffer, 0, &copy_box);
 
         if (staging_buffer)
         {

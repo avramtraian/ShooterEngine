@@ -18,7 +18,7 @@ enum class VertexBufferUpdateFrequency
     High,
 };
 
-struct VertexBufferInfo
+struct VertexBufferDescription
 {
     u32 byte_count = 0;
     VertexBufferUpdateFrequency update_frequency = VertexBufferUpdateFrequency::Normal;
@@ -28,10 +28,10 @@ struct VertexBufferInfo
 class VertexBuffer : public RefCounted
 {
 public:
+    NODISCARD static RefPtr<VertexBuffer> create(const VertexBufferDescription& description);
+
     VertexBuffer() = default;
     virtual ~VertexBuffer() override = default;
-
-    static RefPtr<VertexBuffer> create(const VertexBufferInfo& info);
 
 public:
     virtual void update_data(ReadonlyByteSpan data) = 0;
