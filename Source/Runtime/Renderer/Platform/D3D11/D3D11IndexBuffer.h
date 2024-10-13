@@ -11,17 +11,17 @@
 namespace SE
 {
 
-class D3D11IndexBuffer final : public IndexBuffer
+class D3D11IndexBuffer : public IndexBuffer
 {
 public:
-    D3D11IndexBuffer(const IndexBufferInfo& info);
+    explicit D3D11IndexBuffer(const IndexBufferDescription& description);
     virtual ~D3D11IndexBuffer() override;
 
-    ALWAYS_INLINE ID3D11Buffer* get_handle() const { return m_buffer; }
+    ALWAYS_INLINE ID3D11Buffer* get_handle() const { return m_handle; }
     ALWAYS_INLINE IndexType get_index_type() const { return m_index_type; }
 
 private:
-    ID3D11Buffer* m_buffer;
+    ID3D11Buffer* m_handle;
     IndexType m_index_type;
 };
 

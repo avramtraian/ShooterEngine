@@ -23,33 +23,29 @@ static u32 get_index_type_size(IndexType index_type)
     return 0;
 }
 
-D3D11IndexBuffer::D3D11IndexBuffer(const IndexBufferInfo& info)
-    : m_buffer(nullptr)
-    , m_index_type(info.index_type)
+D3D11IndexBuffer::D3D11IndexBuffer(const IndexBufferDescription& description)
+    : m_handle(nullptr)
+    , m_index_type(description.index_type)
 {
     D3D11_BUFFER_DESC buffer_description = {};
-    buffer_description.ByteWidth = (UINT)(info.byte_count);
+    buffer_description.ByteWidth = static_cast<UINT>(description.byte_count);
     buffer_description.Usage = D3D11_USAGE_IMMUTABLE;
     buffer_description.BindFlags = D3D11_BIND_INDEX_BUFFER;
     buffer_description.CPUAccessFlags = 0;
 
     D3D11_SUBRESOURCE_DATA initial_data = {};
-    if (!info.data.is_empty())
+    if (!description.data.is_empty())
     {
-        SE_ASSERT(info.data.count() == info.byte_count);
-        initial_data.pSysMem = info.data.elements();
+        SE_ASSERT(description.data.count() == description.byte_count);
+        initial_data.pSysMem = description.data.elements();
     }
 
-    SE_D3D11_CHECK(D3D11Renderer::get_device()->CreateBuffer(&buffer_description, &initial_data, &m_buffer));
+    SE_D3D11_CHECK(D3D11Renderer::get_device()->CreateBuffer(&buffer_description, &initial_data, &m_handle));
 }
 
 D3D11IndexBuffer::~D3D11IndexBuffer()
 {
-    if (m_buffer != nullptr)
-    {
-        m_buffer->Release();
-        m_buffer = nullptr;
-    }
+    SE_D3D11_RELEASE(m_handle);
 }
 
 } // namespace SE

@@ -18,7 +18,7 @@ enum class IndexType : u8
     UInt32,
 };
 
-struct IndexBufferInfo
+struct IndexBufferDescription
 {
     IndexType index_type;
     usize byte_count;
@@ -31,7 +31,7 @@ public:
     IndexBuffer() = default;
     virtual ~IndexBuffer() override = default;
 
-    static RefPtr<IndexBuffer> create(const IndexBufferInfo& info);
+    static RefPtr<IndexBuffer> create(const IndexBufferDescription& description);
 
 public:
 };

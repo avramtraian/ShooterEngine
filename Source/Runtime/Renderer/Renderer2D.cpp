@@ -220,11 +220,11 @@ bool Renderer2D::initialize_quads()
         *buffer_pointer++ = (4 * quad_index) + 0;
     }
 
-    IndexBufferInfo index_buffer_info = {};
-    index_buffer_info.index_type = IndexType::UInt32;
-    index_buffer_info.byte_count = indices_buffer.byte_count();
-    index_buffer_info.data = indices_buffer.readonly_byte_span();
-    m_quad_index_buffer = IndexBuffer::create(index_buffer_info);
+    IndexBufferDescription index_buffer_description = {};
+    index_buffer_description.index_type = IndexType::UInt32;
+    index_buffer_description.byte_count = indices_buffer.byte_count();
+    index_buffer_description.data = indices_buffer.readonly_byte_span();
+    m_quad_index_buffer = IndexBuffer::create(index_buffer_description);
     indices_buffer.release();
 
     return true;
