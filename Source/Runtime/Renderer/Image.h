@@ -17,7 +17,7 @@ enum class ImageFormat : u32
     BGRA8,
 };
 
-enum class ImageFiltering : u32
+enum class ImageFilteringMode : u32
 {
     Linear,
     Nearest,

@@ -12,7 +12,7 @@
 namespace SE
 {
 
-NODISCARD ALWAYS_INLINE constexpr DXGI_FORMAT d3d11_image_format(ImageFormat image_format)
+NODISCARD ALWAYS_INLINE constexpr DXGI_FORMAT get_d3d11_image_format(ImageFormat image_format)
 {
     switch (image_format)
     {
@@ -25,7 +25,7 @@ NODISCARD ALWAYS_INLINE constexpr DXGI_FORMAT d3d11_image_format(ImageFormat ima
     return DXGI_FORMAT_UNKNOWN;
 }
 
-NODISCARD ALWAYS_INLINE u32 d3d11_image_format_size(ImageFormat image_format)
+NODISCARD ALWAYS_INLINE u32 get_d3d11_image_format_size(ImageFormat image_format)
 {
     switch (image_format)
     {
@@ -38,27 +38,27 @@ NODISCARD ALWAYS_INLINE u32 d3d11_image_format_size(ImageFormat image_format)
     return 0;
 }
 
-NODISCARD ALWAYS_INLINE constexpr D3D11_FILTER d3d11_image_filtering(ImageFiltering min_image_filtering, ImageFiltering mag_image_filtering)
+NODISCARD ALWAYS_INLINE constexpr D3D11_FILTER get_d3d11_image_filtering_mode(ImageFilteringMode min_image_filtering, ImageFilteringMode mag_image_filtering)
 {
     switch (min_image_filtering)
     {
-        case ImageFiltering::Linear:
+        case ImageFilteringMode::Linear:
         {
             switch (mag_image_filtering)
             {
-                case ImageFiltering::Linear: return D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-                case ImageFiltering::Nearest: return D3D11_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+                case ImageFilteringMode::Linear: return D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+                case ImageFilteringMode::Nearest: return D3D11_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
             }
 
             break;
         }
 
-        case ImageFiltering::Nearest:
+        case ImageFilteringMode::Nearest:
         {
             switch (mag_image_filtering)
             {
-                case ImageFiltering::Linear: return D3D11_FILTER_MIN_POINT_MAG_MIP_LINEAR;
-                case ImageFiltering::Nearest: return D3D11_FILTER_MIN_MAG_POINT_MIP_LINEAR;
+                case ImageFilteringMode::Linear: return D3D11_FILTER_MIN_POINT_MAG_MIP_LINEAR;
+                case ImageFilteringMode::Nearest: return D3D11_FILTER_MIN_MAG_POINT_MIP_LINEAR;
             }
 
             break;
@@ -69,7 +69,7 @@ NODISCARD ALWAYS_INLINE constexpr D3D11_FILTER d3d11_image_filtering(ImageFilter
     return D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 }
 
-NODISCARD ALWAYS_INLINE constexpr D3D11_TEXTURE_ADDRESS_MODE d3d11_image_address_mode(ImageAddressMode image_address_mode)
+NODISCARD ALWAYS_INLINE constexpr D3D11_TEXTURE_ADDRESS_MODE get_d3d11_image_address_mode(ImageAddressMode image_address_mode)
 {
     switch (image_address_mode)
     {

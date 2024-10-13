@@ -17,8 +17,8 @@ struct Texture2DInfo
     u32 width = 0;
     u32 height = 0;
     ImageFormat format = ImageFormat::Unknown;
-    ImageFiltering min_filter = ImageFiltering::Linear;
-    ImageFiltering mag_filter = ImageFiltering::Linear;
+    ImageFilteringMode min_filter = ImageFilteringMode::Linear;
+    ImageFilteringMode mag_filter = ImageFilteringMode::Linear;
     ImageAddressMode address_mode_u = ImageAddressMode::ClampToEdge;
     ImageAddressMode address_mode_v = ImageAddressMode::ClampToEdge;
     ReadonlyByteSpan data;

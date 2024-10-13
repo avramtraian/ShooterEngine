@@ -22,7 +22,7 @@ D3D11Texture2D::D3D11Texture2D(const Texture2DInfo& info)
     texture_description.Height = (UINT)(m_height);
     texture_description.MipLevels = 1;
     texture_description.ArraySize = 1;
-    texture_description.Format = d3d11_image_format(m_format);
+    texture_description.Format = get_d3d11_image_format(m_format);
     texture_description.SampleDesc.Count = 1;
     texture_description.SampleDesc.Quality = 0;
     texture_description.Usage = D3D11_USAGE_DEFAULT;
@@ -32,7 +32,7 @@ D3D11Texture2D::D3D11Texture2D(const Texture2DInfo& info)
     D3D11_SUBRESOURCE_DATA initial_data = {};
     if (!info.data.is_empty())
     {
-        const u32 slice_pitch = m_width * d3d11_image_format_size(m_format);
+        const u32 slice_pitch = m_width * get_d3d11_image_format_size(m_format);
         // The provided data buffer doesn't match the texture number of bytes.
         SE_ASSERT((usize)(slice_pitch) * (usize)(m_height) == info.data.count());
 
@@ -41,15 +41,15 @@ D3D11Texture2D::D3D11Texture2D(const Texture2DInfo& info)
     }
 
     D3D11_SHADER_RESOURCE_VIEW_DESC texture_view_description = {};
-    texture_view_description.Format = d3d11_image_format(m_format);
+    texture_view_description.Format = get_d3d11_image_format(m_format);
     texture_view_description.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     texture_view_description.Texture2D.MipLevels = 1;
     texture_view_description.Texture2D.MostDetailedMip = 0;
 
     D3D11_SAMPLER_DESC sampler_description = {};
-    sampler_description.Filter = d3d11_image_filtering(info.min_filter, info.mag_filter);
-    sampler_description.AddressU = d3d11_image_address_mode(info.address_mode_u);
-    sampler_description.AddressV = d3d11_image_address_mode(info.address_mode_v);
+    sampler_description.Filter = get_d3d11_image_filtering_mode(info.min_filter, info.mag_filter);
+    sampler_description.AddressU = get_d3d11_image_address_mode(info.address_mode_u);
+    sampler_description.AddressV = get_d3d11_image_address_mode(info.address_mode_v);
     sampler_description.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
 
     SE_D3D11_CHECK(D3D11Renderer::get_device()->CreateTexture2D(&texture_description, &initial_data, &m_image_handle));
