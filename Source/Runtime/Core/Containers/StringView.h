@@ -59,6 +59,9 @@ public:
     }
 
 public:
+    NODISCARD ALWAYS_INLINE const char* characters() const { return m_characters; }
+    NODISCARD ALWAYS_INLINE usize byte_count() const { return m_byte_count; }
+
     NODISCARD ALWAYS_INLINE bool is_empty() const { return (m_byte_count == 0); }
 
     NODISCARD ALWAYS_INLINE ReadonlyByteSpan byte_span() const
