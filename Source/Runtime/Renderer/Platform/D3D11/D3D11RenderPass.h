@@ -17,17 +17,27 @@ class D3D11Pipeline;
 class D3D11Framebuffer;
 class D3D11Texture2D;
 
-class D3D11RenderPass final : public RenderPass
+class D3D11RenderPass : public RenderPass
 {
 public:
-    D3D11RenderPass(const RenderPassInfo& info);
+    explicit D3D11RenderPass(const RenderPassDescription& description);
     virtual ~D3D11RenderPass() override;
 
-    ALWAYS_INLINE RefPtr<D3D11Pipeline>& get_pipeline() { return m_pipeline; }
+    NODISCARD ALWAYS_INLINE RefPtr<D3D11Pipeline> get_pipeline() { return m_description.pipeline.as<D3D11Pipeline>(); }
+    NODISCARD ALWAYS_INLINE const RefPtr<const D3D11Pipeline> get_pipeline() const { return m_description.pipeline.as<const D3D11Pipeline>(); }
 
-    ALWAYS_INLINE RefPtr<D3D11Framebuffer>& get_target_framebuffer() { return m_target_framebuffer; }
-    ALWAYS_INLINE bool should_clear_target() const { return m_should_clear_target; }
-    ALWAYS_INLINE Color4 get_target_clear_color() const { return m_target_clear_color; }
+    NODISCARD ALWAYS_INLINE RefPtr<D3D11Framebuffer> get_target_framebuffer() { return m_description.target_framebuffer.as<D3D11Framebuffer>(); }
+    NODISCARD ALWAYS_INLINE const RefPtr<const D3D11Framebuffer> get_target_framebuffer() const
+    {
+        return m_description.target_framebuffer.as<const D3D11Framebuffer>();
+    }
+
+    // Returns the render pass attachment description corresponding to the given framebuffer attachment index.
+    NODISCARD ALWAYS_INLINE const RenderPassAttachmentDescription& get_attachment_description(u32 attachment_index) const
+    {
+        SE_ASSERT(attachment_index < m_description.target_framebuffer_attachments.count());
+        return m_description.target_framebuffer_attachments[attachment_index];
+    }
 
 public:
     virtual bool bind_inputs() override;
@@ -39,10 +49,7 @@ public:
     virtual void update_input(StringView name, Span<RefPtr<Texture2D>> texture_array) override;
 
 private:
-    RefPtr<D3D11Pipeline> m_pipeline;
-    RefPtr<D3D11Framebuffer> m_target_framebuffer;
-    bool m_should_clear_target;
-    Color4 m_target_clear_color;
+    RenderPassDescription m_description;
 
     HashMap<String, RefPtr<D3D11Texture2D>> m_input_textures;
     HashMap<String, Vector<RefPtr<D3D11Texture2D>>> m_input_texture_arrays;

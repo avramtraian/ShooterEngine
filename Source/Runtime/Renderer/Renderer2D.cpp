@@ -176,12 +176,19 @@ bool Renderer2D::initialize_quads()
     // Quad render pass.
     //
 
-    RenderPassInfo render_pass_info = {};
-    render_pass_info.pipeline = m_quad_pipeline;
-    render_pass_info.target.framebuffer = m_target_framebuffer;
-    render_pass_info.target.clear = true;
-    render_pass_info.target.clear_color = Color4(0.087F, 0.087F, 0.087F);
-    m_quad_render_pass = RenderPass::create(render_pass_info);
+    RenderPassDescription render_pass_description = {};
+    render_pass_description.pipeline = m_quad_pipeline;
+    render_pass_description.target_framebuffer = m_target_framebuffer;
+    render_pass_description.target_framebuffer_attachments.set_fixed_capacity(m_target_framebuffer->get_attachment_count());
+    for (u32 attachment_index = 0; attachment_index < m_target_framebuffer->get_attachment_count(); ++attachment_index)
+    {
+        RenderPassAttachmentDescription attachment_description = {};
+        attachment_description.load_operation = RenderPassAttachmentLoadOperation::Clear;
+        attachment_description.clear_color = Color4(1, 0, 0);
+        render_pass_description.target_framebuffer_attachments.add(attachment_description);
+    }
+
+    m_quad_render_pass = RenderPass::create(render_pass_description);
 
     m_quad_render_pass->set_input("u_Textures"sv, RenderPassTextureArrayBinding(m_quad_textures.span()));
 

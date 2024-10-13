@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
+#include <Core/Log.h>
 #include <Renderer/Platform/D3D11/D3D11Framebuffer.h>
 #include <Renderer/Platform/D3D11/D3D11Pipeline.h>
 #include <Renderer/Platform/D3D11/D3D11RenderPass.h>
@@ -12,15 +13,24 @@
 namespace SE
 {
 
-D3D11RenderPass::D3D11RenderPass(const RenderPassInfo& info)
-    : m_pipeline(info.pipeline.as<D3D11Pipeline>())
-    , m_target_framebuffer(info.target.framebuffer.as<D3D11Framebuffer>())
-    , m_should_clear_target(info.target.clear)
-    , m_target_clear_color(info.target.clear_color)
-{}
+D3D11RenderPass::D3D11RenderPass(const RenderPassDescription& description)
+    : m_description(description)
+{
+    if (m_description.target_framebuffer_attachments.count() != description.target_framebuffer->get_attachment_count())
+    {
+        SE_LOG_ERROR(""sv);
+        SE_ASSERT(false);
+    }
+}
 
 D3D11RenderPass::~D3D11RenderPass()
-{}
+{
+    m_input_textures.clear_and_shrink();
+    m_input_texture_arrays.clear_and_shrink();
+
+    m_description.target_framebuffer.release();
+    m_description.pipeline.release();
+}
 
 bool D3D11RenderPass::bind_inputs()
 {

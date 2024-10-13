@@ -16,18 +16,35 @@
 namespace SE
 {
 
-struct RenderPassTarget
+enum class RenderPassAttachmentLoadOperation : u8
 {
-    RefPtr<Framebuffer> framebuffer;
-    bool clear = true;
-    // Only used when the 'clear' flag is set to true.
-    Color4 clear_color = { 0, 0, 0, 255 };
+    Unknown = 0,
+    Load,
+    Clear,
+    DontCare,
 };
 
-struct RenderPassInfo
+enum class RenderPassAttachmentStoreOperation : u8
+{
+    Unknown = 0,
+    Store,
+    DontCare,
+};
+
+struct RenderPassAttachmentDescription
+{
+    RenderPassAttachmentLoadOperation load_operation { RenderPassAttachmentLoadOperation::DontCare };
+    RenderPassAttachmentStoreOperation store_operation { RenderPassAttachmentStoreOperation::Store };
+    
+    // Only used when `load_operation` is set to `RenderPassAttachmentLoadOperation::Clear`.
+    Color4 clear_color { 0, 0, 0, 0 };
+};
+
+struct RenderPassDescription
 {
     RefPtr<Pipeline> pipeline;
-    RenderPassTarget target;
+    RefPtr<Framebuffer> target_framebuffer;
+    Vector<RenderPassAttachmentDescription> target_framebuffer_attachments;
 };
 
 struct RenderPassTextureBinding
@@ -53,10 +70,10 @@ struct RenderPassTextureArrayBinding
 class RenderPass : public RefCounted
 {
 public:
+    NODISCARD static RefPtr<RenderPass> create(const RenderPassDescription& description);
+
     RenderPass() = default;
     virtual ~RenderPass() override = default;
-
-    static RefPtr<RenderPass> create(const RenderPassInfo& info);
 
 public:
     // Binds all the provided inputs to the pipeline. Must be manually invoked every time the render pass

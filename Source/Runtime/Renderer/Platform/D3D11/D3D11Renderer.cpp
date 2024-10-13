@@ -222,17 +222,18 @@ void D3D11Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
     s_d3d11_renderer->device_context->OMSetRenderTargets((UINT)(render_target_views.count()), render_target_views.elements(), nullptr);
 
     //
-    // Clear the render targets.
+    // Clear the render targets (if required).
     //
 
-    if (d3d11_render_pass->should_clear_target())
+    for (u32 attachment_index = 0; attachment_index < framebuffer->get_attachment_count(); ++attachment_index)
     {
-        for (u32 attachment_index = 0; attachment_index < framebuffer->get_attachment_count(); ++attachment_index)
+        const RenderPassAttachmentDescription& attachment_description = d3d11_render_pass->get_attachment_description(attachment_index);
+        if (attachment_description.load_operation == RenderPassAttachmentLoadOperation::Clear)
         {
             void* attachment_view_handle = framebuffer->get_attachment_image_view(attachment_index);
             ID3D11RenderTargetView* rtv = static_cast<ID3D11RenderTargetView*>(attachment_view_handle);
 
-            const Color4 color = d3d11_render_pass->get_target_clear_color();
+            const Color4 color = attachment_description.clear_color;
             const FLOAT clear_color[4] = { color.r, color.g, color.b, color.a };
             s_d3d11_renderer->device_context->ClearRenderTargetView(rtv, clear_color);
         }
