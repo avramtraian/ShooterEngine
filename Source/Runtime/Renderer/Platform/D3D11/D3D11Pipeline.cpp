@@ -86,7 +86,7 @@ D3D11Pipeline::D3D11Pipeline(const PipelineDescription& description)
     // Set the stride of a vertex.
     m_vertex_stride = vertex_attribute_offset;
 
-    Optional<ReadonlyByteSpan> vertex_shader_bytecode = m_description.shader.as<D3D11Shader>()->get_bytecode(ShaderStageType::Vertex);
+    Optional<ReadonlyByteSpan> vertex_shader_bytecode = m_description.shader.as<D3D11Shader>()->get_shader_module_bytecode(ShaderStage::Vertex);
     // NOTE: The provided shader doesn't have a vertex stage.
     SE_ASSERT(vertex_shader_bytecode.has_value());
 

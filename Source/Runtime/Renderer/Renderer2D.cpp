@@ -6,6 +6,7 @@
 #include <Asset/AssetManager.h>
 #include <Asset/TextureAsset.h>
 #include <Core/Containers/StringBuilder.h>
+#include <Core/FileSystem/FileSystem.h>
 #include <Engine/Engine.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/Renderer2D.h>
@@ -35,14 +36,42 @@ bool Renderer2D::initialize(u32 width, u32 height, RefPtr<Framebuffer> target_fr
     // Shaders.
     //
 
-    const String shaders_directory = StringBuilder::path_join({ g_engine->get_engine_root_directory().view(), "Content/Runtime/Shaders/"sv });
+    ShaderDescription shader_description = {};
+    String vertex_shader_source_code;
+    String fragment_shader_source_code;
 
-    ShaderInfo shader_info = {};
-    shader_info.stages = {
-        ShaderStage(ShaderStageType::Vertex, shaders_directory + "Renderer2D_Quad_V.hlsl"sv),
-        ShaderStage(ShaderStageType::Fragment, shaders_directory + "Renderer2D_Quad_F.hlsl"sv),
-    };
-    m_shader = Shader::create(shader_info);
+    // The root directory where all engine shaders are stored on disk.
+    const String shaders_directory = StringBuilder::path_join({ g_engine->get_engine_root_directory().view(), "Content/Runtime/Shaders"sv });
+
+    {
+        FileReader vertex_shader_file_reader;
+        vertex_shader_file_reader.open(shaders_directory + "/Renderer2D_Quad_V.hlsl"sv);
+        vertex_shader_source_code;
+        vertex_shader_file_reader.read_entire_to_string_and_close(vertex_shader_source_code);
+
+        ShaderStageDescription& vertex_stage_description = shader_description.stages.emplace();
+        vertex_stage_description.stage = ShaderStage::Vertex;
+        vertex_stage_description.source_type = ShaderSourceType::SourceCode;
+        vertex_stage_description.source_code = vertex_shader_source_code.view();
+    }
+
+    {
+        FileReader fragment_shader_file_reader;
+        fragment_shader_file_reader.open(shaders_directory + "/Renderer2D_Quad_F.hlsl"sv);
+        fragment_shader_source_code;
+        fragment_shader_file_reader.read_entire_to_string_and_close(fragment_shader_source_code);
+
+        ShaderStageDescription& fragment_stage_description = shader_description.stages.emplace();
+        fragment_stage_description.stage = ShaderStage::Fragment;
+        fragment_stage_description.source_type = ShaderSourceType::SourceCode;
+        fragment_stage_description.source_code = fragment_shader_source_code.view();
+    }
+
+    shader_description.debug_name = "Renderer2D_Quad"sv;
+    m_shader = Shader::create(shader_description);
+
+    vertex_shader_source_code.clear();
+    fragment_shader_source_code.clear();
 
     //
     // Pipelines.
@@ -55,7 +84,7 @@ bool Renderer2D::initialize(u32 width, u32 height, RefPtr<Framebuffer> target_fr
     pipeline_description.vertex_attributes.add({ PipelineVertexAttributeType::Float2, "TEXTURE_COORDINATES"sv });
     pipeline_description.vertex_attributes.add({ PipelineVertexAttributeType::UInt1, "TEXTURE_ID"sv });
     pipeline_description.primitive_topology = PipelinePrimitiveTopology::TriangleList;
-    pipeline_description.cull_mode= PipelineCullMode::None;
+    pipeline_description.cull_mode = PipelineCullMode::None;
 
     m_pipeline = Pipeline::create(pipeline_description);
 

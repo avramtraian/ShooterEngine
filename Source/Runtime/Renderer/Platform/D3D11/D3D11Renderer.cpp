@@ -171,11 +171,26 @@ void D3D11Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
     // Set shaders.
     //
 
-    ID3D11DeviceChild* vertex_shader = shader->get_handle(ShaderStageType::Vertex);
-    s_d3d11_renderer->device_context->VSSetShader((ID3D11VertexShader*)(vertex_shader), nullptr, 0);
+    const Vector<D3D11Shader::ShaderModule>& shader_modules = shader->get_shader_modules();
+    for (const D3D11Shader::ShaderModule& shader_module : shader_modules)
+    {
+        switch (shader_module.stage)
+        {
+            case ShaderStage::Vertex:
+            {
+                ID3D11VertexShader* vertex_shader = static_cast<ID3D11VertexShader*>(shader_module.handle);
+                get_device_context()->VSSetShader(vertex_shader, nullptr, 0);
+            }
+            break;
 
-    ID3D11DeviceChild* fragment_shader = shader->get_handle(ShaderStageType::Fragment);
-    s_d3d11_renderer->device_context->PSSetShader((ID3D11PixelShader*)(fragment_shader), nullptr, 0);
+            case ShaderStage::Fragment:
+            {
+                ID3D11PixelShader* fragment_shader = static_cast<ID3D11PixelShader*>(shader_module.handle);
+                get_device_context()->PSSetShader(fragment_shader, nullptr, 0);
+            }
+            break;
+        }
+    }
 
     //
     // Set the viewport and the rasterizer state.

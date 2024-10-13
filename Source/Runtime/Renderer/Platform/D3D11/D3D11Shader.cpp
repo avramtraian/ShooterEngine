@@ -3,145 +3,186 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include <Core/FileSystem/FileSystem.h>
 #include <Core/Log.h>
 #include <Renderer/Platform/D3D11/D3D11Renderer.h>
 #include <Renderer/Platform/D3D11/D3D11Shader.h>
-
 #include <d3dcompiler.h>
 
 namespace SE
 {
 
-static LPCSTR get_shader_stage_entry_point(ShaderStageType stage)
+D3D11Shader::D3D11Shader(const ShaderDescription& description)
 {
-    switch (stage)
+    m_shader_modules.set_fixed_capacity(description.stages.count());
+    for (const ShaderStageDescription& stage_description : description.stages)
     {
-        case ShaderStageType::Vertex: return "vertex_main";
-        case ShaderStageType::Fragment: return "fragment_main";
-    }
-
-    SE_LOG_TAG_ERROR("D3D11"sv, "Invalid ShaderStageType!"sv);
-    SE_ASSERT(false);
-    return nullptr;
-}
-
-static LPCSTR get_shader_stage_target(ShaderStageType stage)
-{
-    switch (stage)
-    {
-        case ShaderStageType::Vertex: return "vs_5_0";
-        case ShaderStageType::Fragment: return "ps_5_0";
-    }
-
-    SE_LOG_TAG_ERROR("D3D11"sv, "Invalid ShaderStageType!"sv);
-    SE_ASSERT(false);
-    return nullptr;
-}
-
-D3D11Shader::D3D11Shader(const ShaderInfo& info)
-{
-    for (const ShaderStage& stage_info : info.stages)
-    {
-        Stage& stage = m_stages.emplace();
-        stage.type = stage_info.type;
-
-        FileReader shader_source_reader;
-        Buffer shader_source;
-        SE_CHECK_FILE_ERROR(shader_source_reader.open(stage_info.filepath));
-        SE_CHECK_FILE_ERROR(shader_source_reader.read_entire(shader_source));
-        shader_source_reader.close();
-
-        ID3DBlob* error_messages_blob = nullptr;
-        const HRESULT compilation_result = D3DCompile(
-            shader_source.bytes(),
-            shader_source.byte_count(),
-            nullptr,
-            nullptr,
-            nullptr,
-            get_shader_stage_entry_point(stage_info.type),
-            get_shader_stage_target(stage_info.type),
-            0,
-            0,
-            &stage.byte_code,
-            &error_messages_blob
-        );
-        shader_source.release();
-
-        if (FAILED(compilation_result))
+        if (has_stage(stage_description.stage))
         {
-            StringView error_message = "Unknown"sv;
-
-            if (error_messages_blob)
-            {
-                error_message = StringView::create_from_utf8((const char*)(error_messages_blob->GetBufferPointer()), error_messages_blob->GetBufferSize());
-            }
-
-            SE_LOG_TAG_ERROR("D3D11"sv, "Shader '{}' compilation failed:\n{}"sv, stage_info.filepath, error_message);
-            SE_ASSERT(false);
+            // The description is for a shader stage that already exists, thus it is ignored.
+            // TODO: Inform the user about this situation, as it is most likely a bug.
+            continue;
         }
 
-        if (error_messages_blob)
-            error_messages_blob->Release();
-
-        switch (stage_info.type)
-        {
-            case ShaderStageType::Vertex:
-            {
-                SE_D3D11_CHECK(D3D11Renderer::get_device()->CreateVertexShader(
-                    stage.byte_code->GetBufferPointer(), stage.byte_code->GetBufferSize(), nullptr, &stage.shader.vertex
-                ));
-                break;
-            }
-
-            case ShaderStageType::Fragment:
-            {
-                SE_D3D11_CHECK(D3D11Renderer::get_device()->CreatePixelShader(
-                    stage.byte_code->GetBufferPointer(), stage.byte_code->GetBufferSize(), nullptr, &stage.shader.pixel
-                ));
-                break;
-            }
-        }
+        ShaderModule shader_module = create_shader_module(stage_description);
+        m_shader_modules.add(move(shader_module));
     }
 }
 
 D3D11Shader::~D3D11Shader()
 {
-    for (Stage& stage : m_stages)
-    {
-        switch (stage.type)
-        {
-            case ShaderStageType::Vertex: stage.shader.vertex->Release(); break;
+    for (ShaderModule& shader_module : m_shader_modules)
+        SE_D3D11_RELEASE(shader_module.handle);
 
-            case ShaderStageType::Fragment: stage.shader.pixel->Release(); break;
-        }
-
-        if (stage.byte_code)
-        {
-            stage.byte_code->Release();
-            stage.byte_code = nullptr;
-        }
-    }
+    m_shader_modules.clear_and_shrink();
 }
 
-Optional<ReadonlyByteSpan> D3D11Shader::get_bytecode(ShaderStageType stage_type /*= ShaderStageType::Vertex*/) const
+bool D3D11Shader::has_stage(ShaderStage shader_stage) const
 {
-    for (const Stage& stage : m_stages)
+    for (const ShaderModule& shader_module : m_shader_modules)
     {
-        if (stage.type == stage_type)
-            return ReadonlyByteSpan((ReadonlyBytes)(stage.byte_code->GetBufferPointer()), stage.byte_code->GetBufferSize());
+        if (shader_module.stage == shader_stage)
+            return true;
     }
+    return false;
+}
+
+Optional<const D3D11Shader::ShaderModule&> D3D11Shader::get_shader_module(ShaderStage shader_stage) const
+{
+    for (const ShaderModule& shader_module : m_shader_modules)
+    {
+        if (shader_module.stage == shader_stage)
+            return shader_module;
+    }
+
+    // The given shader stage doesn't exist.
     return {};
 }
 
-ID3D11DeviceChild* D3D11Shader::get_handle(ShaderStageType stage_type) const
+NODISCARD ALWAYS_INLINE static const char* get_shader_entrypoint_name(ShaderStage stage)
 {
-    for (const Stage& stage : m_stages)
+    switch (stage)
     {
-        if (stage.type == stage_type)
-            return static_cast<ID3D11DeviceChild*>(stage.shader.vertex);
+        case ShaderStage::Vertex: return "vertex_main";
+        case ShaderStage::Fragment: return "fragment_main";
     }
+
+    SE_ASSERT(false);
     return nullptr;
+}
+
+NODISCARD ALWAYS_INLINE static const char* get_shader_target(ShaderStage stage)
+{
+    switch (stage)
+    {
+        case ShaderStage::Vertex: return "vs_5_0";
+        case ShaderStage::Fragment: return "ps_5_0";
+    }
+
+    SE_ASSERT(false);
+    return nullptr;
+}
+
+D3D11Shader::ShaderCompilationResult D3D11Shader::compile_shader_module(ShaderStage stage, StringView source_code)
+{
+    ShaderCompilationResult compilation_result = {};
+
+    ID3DBlob* bytecode_blob = nullptr;
+    ID3DBlob* error_message_blob = nullptr;
+
+    const HRESULT result_code = D3DCompile(
+        source_code.characters(),
+        source_code.byte_count(),
+        nullptr,
+        nullptr,
+        D3D_COMPILE_STANDARD_FILE_INCLUDE,
+        get_shader_entrypoint_name(stage),
+        get_shader_target(stage),
+        0,
+        0,
+        &bytecode_blob,
+        &error_message_blob
+    );
+
+    if (bytecode_blob)
+    {
+        compilation_result.bytecode = Buffer::copy(bytecode_blob->GetBufferPointer(), bytecode_blob->GetBufferSize());
+        SE_D3D11_RELEASE(bytecode_blob);
+    }
+
+    if (error_message_blob)
+    {
+        const StringView error_message_view =
+            StringView::create_from_utf8(static_cast<const char*>(error_message_blob->GetBufferPointer()), error_message_blob->GetBufferSize());
+        compilation_result.error_message = error_message_view;
+        SE_D3D11_RELEASE(error_message_blob);
+    }
+
+    compilation_result.result = result_code;
+    return compilation_result;
+}
+
+D3D11Shader::ShaderModule D3D11Shader::create_shader_module(const ShaderStageDescription& description)
+{
+    ShaderModule shader_module = {};
+    shader_module.stage = description.stage;
+
+    if (description.source_type == ShaderSourceType::SourceCode)
+    {
+        // No shadersource code has been provided.
+        SE_ASSERT(!description.source_code.is_empty());
+
+        ShaderCompilationResult compilation_result = compile_shader_module(description.stage, description.source_code);
+        if (!compilation_result.error_message.is_empty())
+        {
+            // TODO: Inform the user about the error messages given by the compilation process.
+            SE_ASSERT(false);
+        }
+
+        // The compilation process failed, even if no error messages were generated.
+        SE_ASSERT(SUCCEEDED(compilation_result.result));
+
+        shader_module.bytecode = move(compilation_result.bytecode);
+    }
+    else if (description.source_type == ShaderSourceType::Bytecode)
+    {
+        // No bytecode data has been provided.
+        SE_ASSERT(description.source_bytecode.has_elements());
+
+        shader_module.bytecode = Buffer::copy(description.source_bytecode.elements(), description.source_bytecode.count());
+    }
+    else
+    {
+        // Invalid code path.
+        SE_ASSERT(false);
+    }
+
+    const void* bytecode_data = shader_module.bytecode.data();
+    const usize bytecode_size = shader_module.bytecode.byte_count();
+
+    switch (description.stage)
+    {
+        case ShaderStage::Vertex:
+        {
+            ID3D11VertexShader* vertex_shader = nullptr;
+            const HRESULT vertex_shader_creation_result =
+                D3D11Renderer::get_device()->CreateVertexShader(bytecode_data, bytecode_size, nullptr, &vertex_shader);
+            SE_ASSERT(SUCCEEDED(vertex_shader_creation_result));
+            shader_module.handle = vertex_shader;
+        }
+        break;
+
+        case ShaderStage::Fragment:
+        {
+            ID3D11PixelShader* fragment_shader = nullptr;
+            const HRESULT fragment_shader_creation_result =
+                D3D11Renderer::get_device()->CreatePixelShader(bytecode_data, bytecode_size, nullptr, &fragment_shader);
+            SE_ASSERT(SUCCEEDED(fragment_shader_creation_result));
+            shader_module.handle = fragment_shader;
+        }
+        break;
+    }
+
+    return shader_module;
 }
 
 } // namespace SE

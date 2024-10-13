@@ -6,44 +6,55 @@
 #pragma once
 
 #include <Core/Containers/RefPtr.h>
+#include <Core/Containers/Span.h>
 #include <Core/Containers/String.h>
 #include <Core/Containers/Vector.h>
 
 namespace SE
 {
 
-enum class ShaderStageType : u8
+enum class ShaderStage : u8
 {
+    Unknown = 0,
     Vertex,
     Fragment,
 };
 
-struct ShaderStage
+enum class ShaderSourceType : u8
 {
-    ShaderStage(ShaderStageType in_type, String in_filepath)
-        : type(in_type)
-        , filepath(move(in_filepath))
-    {}
-
-    ShaderStageType type;
-    String filepath;
+    Unknown = 0,
+    SourceCode,
+    Bytecode,
 };
 
-struct ShaderInfo
+struct ShaderStageDescription
 {
-    Vector<ShaderStage> stages;
+    ShaderStage stage { ShaderStage::Unknown };
+    ShaderSourceType source_type { ShaderSourceType::Unknown };
+
+    // Only used when the shader stage source type is set to `SourceCode`.
+    StringView source_code;
+
+    // Only used when the shader stage source type is set to `Bytecode`.
+    ReadonlyByteSpan source_bytecode;
+};
+
+struct ShaderDescription
+{
+    Vector<ShaderStageDescription> stages;
     String debug_name;
 };
 
 class Shader : public RefCounted
 {
 public:
+    NODISCARD static RefPtr<Shader> create(const ShaderDescription& info);
+
     Shader() = default;
     virtual ~Shader() override = default;
 
-    static RefPtr<Shader> create(const ShaderInfo& info);
-
 public:
+    NODISCARD virtual bool has_stage(ShaderStage shader_stage) const = 0;
 };
 
 } // namespace SE
