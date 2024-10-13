@@ -87,11 +87,8 @@ bool Renderer::is_initialized()
 
 bool Renderer::create_context_for_window(Window* window)
 {
-    RenderingContextInfo info = {};
-    info.window = window;
-
     OwnPtr<RenderingContext>& context = s_renderer->context_table.get_or_add(window->get_native_handle());
-    context = RenderingContext::create(info);
+    context = RenderingContext::create(window);
     return context.is_valid();
 }
 
@@ -129,7 +126,7 @@ void Renderer::on_resize(u32 new_width, u32 new_height)
     s_renderer->renderer_interface->on_resize(new_width, new_height);
 
     for (auto it : s_renderer->context_table)
-        it.value->resize(new_width, new_height);
+        it.value->invalidate(new_width, new_height);
 }
 
 void Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)

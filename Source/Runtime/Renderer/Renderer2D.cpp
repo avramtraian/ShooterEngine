@@ -23,13 +23,8 @@ bool Renderer2D::initialize(u32 width, u32 height, RefPtr<Framebuffer> target_fr
     m_target_framebuffer = target_framebuffer;
     if (!m_target_framebuffer.is_valid())
     {
-        FramebufferInfo framebuffer_info = {};
-        // framebuffer_info.width = width;
-        // framebuffer_info.height = height;
-        // framebuffer_info.attachments.add({ ImageFormat::RGBA8 });
-        framebuffer_info.is_swapchain_target = true;
-        framebuffer_info.rendering_context = Renderer::get_active_context();
-        m_target_framebuffer = Framebuffer::create(framebuffer_info);
+        // If no target framebuffer has been specified render directly to the swapchain.
+        m_target_framebuffer = Framebuffer::create(*Renderer::get_active_context());
     }
 
     //
@@ -191,7 +186,7 @@ void Renderer2D::end_frame()
 
 void Renderer2D::resize_target_framebuffer(u32 new_width, u32 new_height)
 {
-    m_target_framebuffer->resize(new_width, new_height);
+    m_target_framebuffer->invalidate(new_width, new_height);
 }
 
 void Renderer2D::submit_quad(Vector2 position, Vector2 scale, Vector3 rotation, Color4 color, RefPtr<Texture2D> texture)

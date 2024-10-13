@@ -7,18 +7,18 @@
 #include <Renderer/RenderingContext.h>
 
 #if SE_RENDERER_API_SUPPORTED_D3D11
-    #include "Renderer/Platform/D3D11/D3D11Context.h"
+    #include "Renderer/Platform/D3D11/D3D11RenderingContext.h"
 #endif // SE_RENDERER_API_SUPPORTED_D3D11
 
 namespace SE
 {
 
-OwnPtr<RenderingContext> RenderingContext::create(const RenderingContextInfo& info)
+OwnPtr<RenderingContext> RenderingContext::create(Window* window_context)
 {
     switch (get_current_renderer_api())
     {
 #if SE_RENDERER_API_SUPPORTED_D3D11
-        case RendererAPI::D3D11: return make_own<D3D11Context>(info).as<RenderingContext>();
+        case RendererAPI::D3D11: return make_own<D3D11RenderingContext>(window_context).as<RenderingContext>();
 #endif // SE_RENDERER_API_SUPPORTED_D3D11
     }
 

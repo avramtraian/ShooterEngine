@@ -139,7 +139,7 @@ void D3D11Renderer::on_resize(u32 new_width, u32 new_height)
 
 void D3D11Renderer::present(RenderingContext* rendering_context)
 {
-    D3D11Context* context = static_cast<D3D11Context*>(rendering_context);
+    D3D11RenderingContext* context = static_cast<D3D11RenderingContext*>(rendering_context);
     context->get_swapchain()->Present(0, 0);
 }
 
@@ -212,9 +212,12 @@ void D3D11Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
     //
 
     Vector<ID3D11RenderTargetView*> render_target_views;
-    render_target_views.ensure_capacity(framebuffer->get_attachments().count());
-    for (const auto& attachment : framebuffer->get_attachments())
-        render_target_views.add(attachment.view);
+    render_target_views.set_fixed_capacity(framebuffer->get_attachment_count());
+    for (u32 attachment_index = 0; attachment_index < framebuffer->get_attachment_count(); ++attachment_index)
+    {
+        void* attachment_view_handle = framebuffer->get_attachment_image_view(attachment_index);
+        render_target_views.add(static_cast<ID3D11RenderTargetView*>(attachment_view_handle));
+    }
 
     s_d3d11_renderer->device_context->OMSetRenderTargets((UINT)(render_target_views.count()), render_target_views.elements(), nullptr);
 
@@ -224,11 +227,14 @@ void D3D11Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
 
     if (d3d11_render_pass->should_clear_target())
     {
-        for (const auto& attachment : framebuffer->get_attachments())
+        for (u32 attachment_index = 0; attachment_index < framebuffer->get_attachment_count(); ++attachment_index)
         {
+            void* attachment_view_handle = framebuffer->get_attachment_image_view(attachment_index);
+            ID3D11RenderTargetView* rtv = static_cast<ID3D11RenderTargetView*>(attachment_view_handle);
+
             const Color4 color = d3d11_render_pass->get_target_clear_color();
             const FLOAT clear_color[4] = { color.r, color.g, color.b, color.a };
-            s_d3d11_renderer->device_context->ClearRenderTargetView(attachment.view, clear_color);
+            s_d3d11_renderer->device_context->ClearRenderTargetView(rtv, clear_color);
         }
     }
 }

@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include <Renderer/Platform/D3D11/D3D11Context.h>
 #include <Renderer/Platform/D3D11/D3D11Headers.h>
+#include <Renderer/Platform/D3D11/D3D11RenderingContext.h>
 #include <Renderer/RendererInterface.h>
 
 #define SE_D3D11_RELEASE(object_instance) \
@@ -41,7 +41,7 @@ public:
     static ID3D11Device* get_device();
     static ID3D11DeviceContext* get_device_context();
     static IDXGIFactory2* get_dxgi_factory();
-    static D3D11Context* get_active_context();
+    static D3D11RenderingContext* get_active_context();
 
 public:
     virtual void on_resize(u32 new_width, u32 new_height) override;
