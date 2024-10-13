@@ -3,76 +3,101 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
+#include <Core/Assertions.h>
 #include <Core/Memory/Buffer.h>
 #include <Core/Memory/MemoryOperations.h>
 
 namespace SE
 {
 
-Buffer::Buffer(Buffer&& other) noexcept
-    : m_bytes(other.m_bytes)
-    , m_byte_count(other.m_byte_count)
+Buffer Buffer::create(usize initial_byte_count)
 {
-    other.m_bytes = nullptr;
-    other.m_byte_count = 0;
+    Buffer result;
+    result.allocate_new(initial_byte_count);
+    return result;
 }
 
-Buffer& Buffer::operator=(Buffer&& other) noexcept
+Buffer Buffer::copy(const void* initial_data, usize initial_byte_count)
 {
-    if (this == &other)
-        return *this;
-
-    release();
-
-    m_bytes = other.m_bytes;
-    m_byte_count = other.m_byte_count;
-
-    other.m_bytes = nullptr;
-    other.m_byte_count = 0;
-
-    return *this;
+    Buffer result;
+    result.allocate_new(initial_byte_count);
+    copy_memory(result.data(), initial_data, result.byte_count());
+    return result;
 }
+
+Buffer::Buffer()
+    : m_data(nullptr)
+    , m_byte_count(0)
+{}
 
 Buffer::~Buffer()
 {
     release();
 }
 
-Buffer Buffer::copy(const Buffer& source_buffer)
+Buffer::Buffer(Buffer&& other) noexcept
+    : m_data(other.m_data)
+    , m_byte_count(other.m_byte_count)
 {
-    Buffer destination_buffer;
-    destination_buffer.allocate(source_buffer.m_byte_count);
-    copy_memory_from_span(destination_buffer.m_bytes, source_buffer.readonly_span());
-    return destination_buffer;
+    other.m_data = nullptr;
+    other.m_byte_count = 0;
 }
 
-void Buffer::allocate(usize capacity_in_bytes)
+Buffer& Buffer::operator=(Buffer&& other) noexcept
 {
+    // Handle self-assignment case.
+    if (this == &other)
+        return *this;
+
     release();
-    m_byte_count = capacity_in_bytes;
-    m_bytes = static_cast<ReadWriteBytes>(operator new(m_byte_count));
+
+    m_data = other.m_data;
+    m_byte_count = other.m_byte_count;
+
+    other.m_data = nullptr;
+    other.m_byte_count = 0;
+
+    return *this;
 }
 
-void Buffer::expand(usize new_capacity_in_bytes)
+void Buffer::allocate_new(usize new_byte_count)
 {
-    SE_ASSERT(new_capacity_in_bytes >= m_byte_count);
+    release();
 
-    ReadWriteBytes new_block = static_cast<ReadWriteBytes>(operator new(new_capacity_in_bytes));
-    copy_memory(new_block, m_bytes, m_byte_count);
+    m_byte_count = new_byte_count;
+    m_data = ::operator new(m_byte_count);
+
+    // NOTE: Depending on the platform it is not guaranteed that the memory provided by the
+    // default heap allocator is zero-initialized.
+    zero_memory(m_data, m_byte_count);
+}
+
+void Buffer::expand(usize new_byte_count)
+{
+    SE_ASSERT(new_byte_count >= m_byte_count);
+    if (new_byte_count == m_byte_count)
+        return;
+
+    void* new_data = ::operator new(new_byte_count);
+    copy_memory(new_data, m_data, m_byte_count);
+
+    // NOTE: Depending on the platform it is not guaranteed that the memory provided by the
+    // default heap allocator is zero-initialized.
+    zero_memory(static_cast<u8*>(new_data) + m_byte_count, new_byte_count - m_byte_count);
 
     release();
-    m_bytes = new_block;
-    m_byte_count = new_capacity_in_bytes;
+    m_data = new_data;
+    m_byte_count = new_byte_count;
 }
 
 void Buffer::release()
 {
-    if (m_byte_count > 0)
-    {
-        delete m_bytes;
-        m_bytes = nullptr;
-        m_byte_count = 0;
-    }
+    if (is_empty())
+        return;
+
+    ::operator delete(m_data);
+    m_data = nullptr;
+    m_byte_count = 0;
 }
 
 } // namespace SE

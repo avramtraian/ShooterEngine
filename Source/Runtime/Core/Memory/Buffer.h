@@ -7,6 +7,7 @@
 
 #include <Core/API.h>
 #include <Core/Containers/Span.h>
+#include <Core/CoreTypes.h>
 
 namespace SE
 {
@@ -16,44 +17,58 @@ class Buffer
     SE_MAKE_NONCOPYABLE(Buffer);
 
 public:
-    Buffer() = default;
+    SHOOTER_API NODISCARD static Buffer create(usize initial_byte_count);
+
+    SHOOTER_API NODISCARD static Buffer copy(const void* initial_data, usize initial_byte_count);
+
+    NODISCARD ALWAYS_INLINE static Buffer copy(const Buffer& source) { return Buffer::copy(source.data(), source.byte_count()); }
+
+public:
+    SHOOTER_API Buffer();
+    SHOOTER_API ~Buffer();
 
     SHOOTER_API Buffer(Buffer&& other) noexcept;
     SHOOTER_API Buffer& operator=(Buffer&& other) noexcept;
 
-    SHOOTER_API ~Buffer();
-
-    NODISCARD SHOOTER_API static Buffer copy(const Buffer& source_buffer);
-
 public:
-    NODISCARD ALWAYS_INLINE ReadWriteBytes bytes() { return m_bytes; }
-    NODISCARD ALWAYS_INLINE ReadonlyBytes bytes() const { return m_bytes; }
+    NODISCARD ALWAYS_INLINE void* data() { return m_data; }
+    NODISCARD ALWAYS_INLINE const void* data() const { return m_data; }
+
+    NODISCARD ALWAYS_INLINE ReadWriteBytes bytes() { return static_cast<ReadWriteBytes>(m_data); }
+    NODISCARD ALWAYS_INLINE ReadonlyBytes bytes() const { return static_cast<ReadonlyBytes>(m_data); }
 
     NODISCARD ALWAYS_INLINE usize byte_count() const { return m_byte_count; }
     NODISCARD ALWAYS_INLINE bool is_empty() const { return (m_byte_count == 0); }
 
-    NODISCARD ALWAYS_INLINE ReadonlyByteSpan readonly_span() const { return ReadonlyByteSpan(bytes(), byte_count()); }
-    NODISCARD ALWAYS_INLINE WriteonlyByteSpan writeonly_write_span() { return WriteonlyByteSpan(bytes(), byte_count()); }
-    NODISCARD ALWAYS_INLINE ReadWriteByteSpan read_write_span() { return ReadWriteByteSpan(bytes(), byte_count()); }
+    NODISCARD ALWAYS_INLINE ReadWriteByteSpan byte_span() { return ReadWriteByteSpan(static_cast<u8*>(m_data), m_byte_count); }
+    NODISCARD ALWAYS_INLINE ReadonlyByteSpan byte_span() const { return ReadonlyByteSpan(static_cast<const u8*>(m_data), m_byte_count); }
+    NODISCARD ALWAYS_INLINE ReadonlyByteSpan readonly_byte_span() const { return ReadonlyByteSpan(static_cast<const u8*>(m_data), m_byte_count); }
 
-    NODISCARD ALWAYS_INLINE ReadWriteByteSpan span() { return read_write_span(); }
-    NODISCARD ALWAYS_INLINE ReadonlyByteSpan span() const { return readonly_span(); }
+public:
+    template<typename T>
+    NODISCARD ALWAYS_INLINE T* as()
+    {
+        T* casted_data = static_cast<T*>(m_data);
+        return casted_data;
+    }
 
     template<typename T>
-    NODISCARD ALWAYS_INLINE T* as() const
+    NODISCARD ALWAYS_INLINE const T* as() const
     {
-        SE_ASSERT(sizeof(T) <= m_byte_count);
-        return reinterpret_cast<T*>(m_bytes);
+        T* casted_data = static_cast<const T*>(m_data);
+        return casted_data;
     }
 
 public:
-    SHOOTER_API void allocate(usize capacity_in_bytes);
-    SHOOTER_API void expand(usize new_capacity_in_bytes);
+    SHOOTER_API void allocate_new(usize new_byte_count);
+
+    SHOOTER_API void expand(usize new_byte_count);
+
     SHOOTER_API void release();
 
 private:
-    ReadWriteBytes m_bytes { nullptr };
-    usize m_byte_count { 0 };
+    void* m_data;
+    usize m_byte_count;
 };
 
 } // namespace SE

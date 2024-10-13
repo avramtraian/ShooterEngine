@@ -146,10 +146,10 @@ FileError FileReader::read_entire(Buffer& out_buffer)
     const usize file_size = file_size_large_integer.QuadPart;
 
     // Allocate memory for the file contents.
-    out_buffer.allocate(file_size);
+    out_buffer.allocate_new(file_size);
 
     // Read from the file.
-    FileError file_error = read_from_file(m_native_handle, out_buffer.span(), 0, file_size);
+    FileError file_error = read_from_file(m_native_handle, out_buffer.byte_span(), 0, file_size);
     if (file_error != FileError::Success)
     {
         out_buffer.release();
@@ -216,7 +216,7 @@ FileError FileReader::read_entire_to_string(String& out_string)
         return file_error;
     }
 
-    out_string = StringView::create_from_utf8(file_buffer.readonly_span());
+    out_string = StringView::create_from_utf8(file_buffer.readonly_byte_span());
     file_buffer.release();
 
     return FileError::Success;
@@ -284,10 +284,10 @@ FileError FileReader::read_to_new_buffer(Buffer& out_buffer, usize read_offset_i
         return FileError::ReadOutOfBounds;
 
     // Allocate memory for the file contents.
-    out_buffer.allocate(number_of_bytes_to_read);
+    out_buffer.allocate_new(number_of_bytes_to_read);
 
     // Read from the file.
-    FileError file_error = read_from_file(m_native_handle, out_buffer.span(), read_offset_in_bytes, number_of_bytes_to_read);
+    FileError file_error = read_from_file(m_native_handle, out_buffer.byte_span(), read_offset_in_bytes, number_of_bytes_to_read);
     if (file_error != FileError::Success)
     {
         out_buffer.release();

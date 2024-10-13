@@ -85,7 +85,7 @@ bool Renderer2D::initialize(u32 width, u32 height, RefPtr<Framebuffer> target_fr
     const u32 vertices_count = 4 * m_max_quads_per_batch;
 
     SE_ASSERT(m_vertices_buffer.is_empty());
-    m_vertices_buffer.allocate(vertices_count * sizeof(QuadVertex));
+    m_vertices_buffer.allocate_new(vertices_count * sizeof(QuadVertex));
     m_vertices_buffer_pointer = m_vertices_buffer.as<QuadVertex>();
 
     VertexBufferInfo vertex_buffer_info = {};
@@ -107,7 +107,7 @@ bool Renderer2D::initialize(u32 width, u32 height, RefPtr<Framebuffer> target_fr
     const u32 indices_count = 6 * m_max_quads_per_batch;
 
     Buffer indices_buffer;
-    indices_buffer.allocate(indices_count * sizeof(u32));
+    indices_buffer.allocate_new(indices_count * sizeof(u32));
     u32* buffer_pointer = indices_buffer.as<u32>();
 
     for (u32 quad_index = 0; quad_index < m_max_quads_per_batch; ++quad_index)
@@ -123,7 +123,7 @@ bool Renderer2D::initialize(u32 width, u32 height, RefPtr<Framebuffer> target_fr
     IndexBufferInfo index_buffer_info = {};
     index_buffer_info.index_type = IndexType::UInt32;
     index_buffer_info.byte_count = indices_buffer.byte_count();
-    index_buffer_info.data = indices_buffer.readonly_span();
+    index_buffer_info.data = indices_buffer.readonly_byte_span();
     m_index_buffer = IndexBuffer::create(index_buffer_info);
 
     return true;
@@ -225,7 +225,7 @@ void Renderer2D::end_batch()
 
     // Update the vertex buffer.
     const u32 quad_vertices_count = m_statistics.quads_in_current_batch * 4;
-    m_vertex_buffer->update_data(m_vertices_buffer.readonly_span().slice(0, quad_vertices_count * sizeof(QuadVertex)));
+    m_vertex_buffer->update_data(m_vertices_buffer.readonly_byte_span().slice(0, quad_vertices_count * sizeof(QuadVertex)));
 
     // Update the textures.
     m_render_pass->update_input("u_Textures"sv, m_quad_textures.span());
