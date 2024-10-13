@@ -52,9 +52,8 @@ bool EditorEngine::initialize()
     // Creat the scene object.
     m_scene = Scene::create();
 
-    Window* window = m_window_stack.first().get();
     m_scene_renderer = make_own<SceneRenderer>();
-    if (!m_scene_renderer->initialize(*m_scene, window->get_width(), window->get_height()))
+    if (!m_scene_renderer->initialize(*m_scene))
     {
         SE_LOG_ERROR("Failed to initialize the world renderer!"sv);
         return false;

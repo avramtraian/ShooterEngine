@@ -14,20 +14,21 @@
 namespace SE
 {
 
-bool SceneRenderer::initialize(Scene& in_scene_context, u32 width, u32 height)
+bool SceneRenderer::initialize(Scene& in_scene_context)
 {
     SE_ASSERT(m_scene_context == nullptr);
     m_scene_context = &in_scene_context;
 
-    SE_ASSERT(!m_renderer_2d.is_valid());
+    // Render directly to the swapchain.
+    RefPtr<Framebuffer> target_framebuffer = Framebuffer::create(*Renderer::get_active_context());
+
     m_renderer_2d = make_own<Renderer2D>();
-    if (!m_renderer_2d->initialize(width, height))
+    if (!m_renderer_2d->initialize(target_framebuffer))
     {
         SE_LOG_TAG_ERROR("Renderer"sv, "Failed to initialize the 2D renderer!"sv);
         return false;
     }
 
-    m_debug_texture = g_asset_manager->get_asset_sync<TextureAsset>(AssetHandle(61034756314586))->get_renderer_texture();
     return true;
 }
 
@@ -57,7 +58,7 @@ bool SceneRenderer::render()
             const Vector3 t = tc.translation();
             const Vector3 s = tc.scale();
 
-            m_renderer_2d->submit_quad({ t.x, t.y }, { s.x, s.y }, tc.rotation(), src.sprite_color());
+            m_renderer_2d->submit_quad({ t.x, t.y }, { s.x, s.y }, src.sprite_color());
             return IterationDecision::Continue;
         }
     );
@@ -70,7 +71,7 @@ bool SceneRenderer::render()
 void SceneRenderer::on_resize(u32 new_width, u32 new_height)
 {
     // Resize the 2D renderer.
-    m_renderer_2d->resize_target_framebuffer(new_width, new_height);
+    m_renderer_2d->invalidate_target_framebuffer(new_width, new_height);
 }
 
 } // namespace SE

@@ -14,21 +14,110 @@
 namespace SE
 {
 
-bool Renderer2D::initialize(u32 width, u32 height, RefPtr<Framebuffer> target_framebuffer /*= {}*/)
+bool Renderer2D::initialize(RefPtr<Framebuffer> target_framebuffer)
 {
-    //
-    // Target framebuffer.
-    //
+    m_target_framebuffer = move(target_framebuffer);
+    return initialize_quads();
+}
 
-    m_target_framebuffer = target_framebuffer;
-    if (!m_target_framebuffer.is_valid())
+bool Renderer2D::initialize(u32 target_framebuffer_width, u32 target_framebuffer_height)
+{
+    FramebufferDescription target_framebuffer_description = {};
+    target_framebuffer_description.width = target_framebuffer_width;
+    target_framebuffer_description.height = target_framebuffer_height;
+    target_framebuffer_description.attachments.emplace(ImageFormat::BGRA8);
+    m_target_framebuffer = Framebuffer::create(target_framebuffer_description);
+
+    return initialize_quads();
+}
+
+void Renderer2D::shutdown()
+{
+    shutdown_quads();
+    m_target_framebuffer.release();
+}
+
+void Renderer2D::begin_frame()
+{
+    m_statistics.quads_in_current_batch = 0;
+    m_statistics.quads_in_current_frame = 0;
+    m_statistics.quad_textures_in_current_batch = 0;
+
+    begin_quad_batch();
+}
+
+void Renderer2D::end_frame()
+{
+    end_quad_batch();
+}
+
+void Renderer2D::invalidate_target_framebuffer(u32 new_width, u32 new_height)
+{
+    if (m_target_framebuffer->is_swapchain_target())
     {
-        // If no target framebuffer has been specified render directly to the swapchain.
-        m_target_framebuffer = Framebuffer::create(*Renderer::get_active_context());
+        // There is no need to invalidate a swapchain target framebuffer.
+        return;
     }
 
+    m_target_framebuffer->invalidate(new_width, new_height);
+}
+
+void Renderer2D::submit_quad(Vector2 translation, Vector2 scale, Color4 color)
+{
+    if (m_statistics.quads_in_current_batch == m_max_quads_per_batch)
+    {
+        end_quad_batch();
+        begin_quad_batch();
+    }
+
+    RefPtr<Texture2D> white_texture = Renderer::get_white_texture();
+    Optional<u32> texture_index = find_quad_texture_slot_index(white_texture);
+    if (!texture_index.has_value())
+    {
+        end_quad_batch();
+        begin_quad_batch();
+        texture_index = find_quad_texture_slot_index(white_texture);
+    }
+
+    SE_DEBUG_ASSERT(texture_index.has_value());
+    construct_quad(translation, scale, color, texture_index.value());
+}
+
+void Renderer2D::submit_quad(Vector2 translation, Vector2 scale, RefPtr<Texture2D> texture, Color4 tint_color /*= Color4(1)*/)
+{
+    if (m_statistics.quads_in_current_batch == m_max_quads_per_batch)
+    {
+        end_quad_batch();
+        begin_quad_batch();
+    }
+
+    Optional<u32> texture_index = find_quad_texture_slot_index(texture);
+    if (!texture_index.has_value())
+    {
+        end_quad_batch();
+        begin_quad_batch();
+        texture_index = find_quad_texture_slot_index(texture);
+    }
+
+    SE_DEBUG_ASSERT(texture_index.has_value());
+    construct_quad(translation, scale, tint_color, texture_index.value());
+}
+
+bool Renderer2D::initialize_quads()
+{
+    m_max_quads_per_batch = 8192;
+    m_max_quad_textures_per_batch = 8;
+
+    // Each quad requires 4 vertices in order to be rendered.
+    m_quad_vertices.set_count(4 * m_max_quads_per_batch);
+    m_quad_textures.set_count(m_max_quad_textures_per_batch);
+
+    m_statistics.quads_in_current_batch = 0;
+    m_statistics.quads_in_current_frame = 0;
+    m_statistics.quad_textures_in_current_batch = 0;
+
     //
-    // Shaders.
+    // Quad shader.
     //
 
     ShaderDescription shader_description = {};
@@ -63,17 +152,17 @@ bool Renderer2D::initialize(u32 width, u32 height, RefPtr<Framebuffer> target_fr
     }
 
     shader_description.debug_name = "Renderer2D_Quad"sv;
-    m_shader = Shader::create(shader_description);
+    m_quad_shader = Shader::create(shader_description);
 
     vertex_shader_source_code.clear();
     fragment_shader_source_code.clear();
 
     //
-    // Pipelines.
+    // Quad pipeline.
     //
 
     PipelineDescription pipeline_description = {};
-    pipeline_description.shader = m_shader;
+    pipeline_description.shader = m_quad_shader;
     pipeline_description.vertex_attributes.add({ PipelineVertexAttributeType::Float2, "POSITION"sv });
     pipeline_description.vertex_attributes.add({ PipelineVertexAttributeType::Float4, "COLOR"sv });
     pipeline_description.vertex_attributes.add({ PipelineVertexAttributeType::Float2, "TEXTURE_COORDINATES"sv });
@@ -81,57 +170,37 @@ bool Renderer2D::initialize(u32 width, u32 height, RefPtr<Framebuffer> target_fr
     pipeline_description.primitive_topology = PipelinePrimitiveTopology::TriangleList;
     pipeline_description.cull_mode = PipelineCullMode::None;
 
-    m_pipeline = Pipeline::create(pipeline_description);
+    m_quad_pipeline = Pipeline::create(pipeline_description);
 
     //
-    // Render passes.
+    // Quad render pass.
     //
 
     RenderPassInfo render_pass_info = {};
-    render_pass_info.pipeline = m_pipeline;
+    render_pass_info.pipeline = m_quad_pipeline;
     render_pass_info.target.framebuffer = m_target_framebuffer;
     render_pass_info.target.clear = true;
     render_pass_info.target.clear_color = Color4(0.087F, 0.087F, 0.087F);
-    m_render_pass = RenderPass::create(render_pass_info);
+    m_quad_render_pass = RenderPass::create(render_pass_info);
 
-    // NOTE(Traian): Pretty arbitrary.
-    m_max_quad_textures_per_batch = 8;
-    m_quad_textures.set_count(m_max_quad_textures_per_batch);
-
-    m_render_pass->set_input("u_Textures"sv, RenderPassTextureArrayBinding(m_quad_textures.span()));
+    m_quad_render_pass->set_input("u_Textures"sv, RenderPassTextureArrayBinding(m_quad_textures.span()));
 
     //
-    // Vertex buffer.
+    // Quad vertex buffer.
     //
-
-    m_max_quads_per_batch = 8192;
-    // NOTE: Each quad requires 4 vertices in order to be rendered.
-    const u32 vertices_count = 4 * m_max_quads_per_batch;
-
-    SE_ASSERT(m_vertices_buffer.is_empty());
-    m_vertices_buffer.allocate_new(vertices_count * sizeof(QuadVertex));
-    m_vertices_buffer_pointer = m_vertices_buffer.as<QuadVertex>();
 
     VertexBufferInfo vertex_buffer_info = {};
-    vertex_buffer_info.byte_count = vertices_count * sizeof(QuadVertex);
+    vertex_buffer_info.byte_count = static_cast<u32>(m_quad_vertices.count() * sizeof(QuadVertex));
     vertex_buffer_info.update_frequency = VertexBufferUpdateFrequency::High;
-    m_vertex_buffer = VertexBuffer::create(vertex_buffer_info);
-
-    // Construct the geometry of a 1x1 quad, centered in the world origin.
-    m_quad_default_positions[0] = { -0.5F, 0.5F }; // Top-Left.
-    m_quad_default_positions[1] = { 0.5F, 0.5F }; // Top-Right.
-    m_quad_default_positions[2] = { 0.5F, -0.5F }; // Bottom-Right.
-    m_quad_default_positions[3] = { -0.5F, -0.5F }; // Bottom-Left.
+    m_quad_vertex_buffer = VertexBuffer::create(vertex_buffer_info);
 
     //
-    // Index buffer.
+    // Quad index buffer.
     //
-
-    // NOTE: Each quad requires 6 indices in order to be rendered.
-    const u32 indices_count = 6 * m_max_quads_per_batch;
 
     Buffer indices_buffer;
-    indices_buffer.allocate_new(indices_count * sizeof(u32));
+    // Each quad requires 6 indices in order to be rendered.
+    indices_buffer.allocate_new((6 * m_max_quads_per_batch) * sizeof(u32));
     u32* buffer_pointer = indices_buffer.as<u32>();
 
     for (u32 quad_index = 0; quad_index < m_max_quads_per_batch; ++quad_index)
@@ -148,166 +217,105 @@ bool Renderer2D::initialize(u32 width, u32 height, RefPtr<Framebuffer> target_fr
     index_buffer_info.index_type = IndexType::UInt32;
     index_buffer_info.byte_count = indices_buffer.byte_count();
     index_buffer_info.data = indices_buffer.readonly_byte_span();
-    m_index_buffer = IndexBuffer::create(index_buffer_info);
+    m_quad_index_buffer = IndexBuffer::create(index_buffer_info);
+    indices_buffer.release();
 
     return true;
 }
 
-void Renderer2D::shutdown()
+void Renderer2D::shutdown_quads()
 {
-    m_index_buffer.release();
-    m_vertex_buffer.release();
-    m_render_pass.release();
-    m_pipeline.release();
-    m_shader.release();
-    m_target_framebuffer.release();
+    m_max_quads_per_batch = 0;
+    m_max_quad_textures_per_batch = 0;
+
+    m_quad_vertices.clear_and_shrink();
+    m_quad_textures.clear_and_shrink();
+
+    m_quad_index_buffer.release();
+    m_quad_vertex_buffer.release();
+    m_quad_render_pass.release();
+    m_quad_pipeline.release();
+    m_quad_shader.release();
 }
 
-void Renderer2D::begin_frame()
+void Renderer2D::begin_quad_batch()
 {
-    // Reset statistics.
-    m_statistics.quads_in_current_frame = 0;
+    m_statistics.quads_in_current_batch = 0;
+    m_statistics.quad_textures_in_current_batch = 0;
 
-    // Begin the 2D render pass.
-    Renderer::begin_render_pass(m_render_pass);
-
-    // Begin the first batch.
-    begin_batch();
+    // Release all textures.
+    for (RefPtr<Texture2D>& texture : m_quad_textures)
+        texture.release();
 }
 
-void Renderer2D::end_frame()
+void Renderer2D::end_quad_batch()
 {
-    // End the last batch.
-    end_batch();
+    Renderer::begin_render_pass(m_quad_render_pass);
 
-    // End the 2D render pass.
+    if (m_statistics.quads_in_current_batch > 0)
+    {
+        // Upload the vertices to the vertex buffer.
+        const u32 vertices_count = 4 * m_statistics.quads_in_current_batch;
+        m_quad_vertex_buffer->update_data(m_quad_vertices.slice(0, vertices_count).as<ReadonlyByte>());
+
+        // Update the textures.
+        m_quad_render_pass->update_input("u_Textures"sv, m_quad_textures.span());
+        m_quad_render_pass->bind_inputs();
+
+        // Each quad requires 6 indices in order to be rendered.
+        Renderer::draw_indexed(m_quad_vertex_buffer, m_quad_index_buffer, 6 * m_statistics.quads_in_current_batch);
+    }
+
     Renderer::end_render_pass();
 }
 
-void Renderer2D::resize_target_framebuffer(u32 new_width, u32 new_height)
-{
-    m_target_framebuffer->invalidate(new_width, new_height);
-}
-
-void Renderer2D::submit_quad(Vector2 position, Vector2 scale, Vector3 rotation, Color4 color, RefPtr<Texture2D> texture)
-{
-    if (m_statistics.quads_in_current_batch >= m_max_quads_per_batch)
-    {
-        end_batch();
-        begin_batch();
-    }
-
-    if (!texture.is_valid())
-        texture = Renderer::get_white_texture();
-
-    u32 texture_id = find_quad_texture_index(texture);
-    if (texture_id == UINT32_MAX)
-    {
-        if (m_quad_texture_count == m_max_quad_textures_per_batch)
-        {
-            end_batch();
-            begin_batch();
-            submit_quad(position, scale, rotation, color, texture);
-            return;
-        }
-
-        m_quad_textures[m_quad_texture_count] = texture;
-        texture_id = m_quad_texture_count++;
-    }
-
-    SE_ASSERT(texture_id < m_quad_texture_count);
-
-    QuadVertex* vertices = construct_quad(position, scale, color);
-    vertices[0].texture_id = texture_id;
-    vertices[1].texture_id = texture_id;
-    vertices[2].texture_id = texture_id;
-    vertices[3].texture_id = texture_id;
-}
-
-void Renderer2D::begin_batch()
-{
-    // Reset the vertices buffer pointer.
-    m_vertices_buffer_pointer = m_vertices_buffer.as<QuadVertex>();
-
-    // Reset the texture list.
-    for (RefPtr<Texture2D>& texture : m_quad_textures)
-        texture.release();
-    m_quad_texture_count = 0;
-
-    // Reset statistics.
-    m_statistics.quads_in_current_batch = 0;
-    m_statistics.quad_textures_in_current_batch = 0;
-}
-
-void Renderer2D::end_batch()
-{
-    // Sanity check regarding number of quads to render in this batch.
-    SE_DEBUG_ASSERT((m_vertices_buffer_pointer - m_vertices_buffer.as<QuadVertex>()) == (m_statistics.quads_in_current_batch * 4));
-
-    if (m_statistics.quads_in_current_batch == 0)
-        return;
-
-    // Update the vertex buffer.
-    const u32 quad_vertices_count = m_statistics.quads_in_current_batch * 4;
-    m_vertex_buffer->update_data(m_vertices_buffer.readonly_byte_span().slice(0, quad_vertices_count * sizeof(QuadVertex)));
-
-    // Update the textures.
-    m_render_pass->update_input("u_Textures"sv, m_quad_textures.span());
-    m_render_pass->bind_inputs();
-
-    // Issue the actual draw command.
-    Renderer::draw_indexed(m_vertex_buffer, m_index_buffer, m_statistics.quads_in_current_batch * 6);
-}
-
-Renderer2D::QuadVertex* Renderer2D::construct_quad(Vector2 position, Vector2 scale, Color4 color)
+void Renderer2D::construct_quad(Vector2 translation, Vector2 scale, Color4 color, u32 texture_index)
 {
     SE_ASSERT(m_statistics.quads_in_current_batch < m_max_quads_per_batch);
-    QuadVertex* current_buffer_pointer = m_vertices_buffer_pointer;
+    SE_ASSERT(texture_index < m_max_quad_textures_per_batch);
+    QuadVertex* vertices = m_quad_vertices.elements() + (4 * m_statistics.quads_in_current_batch);
 
-    // Top left.
-    m_vertices_buffer_pointer->position = { m_quad_default_positions[0].x * scale.x + position.x, m_quad_default_positions[0].y * scale.y + position.y };
-    m_vertices_buffer_pointer->color = color;
-    m_vertices_buffer_pointer->texture_coordinates = { 0.0F, 1.0F };
-    m_vertices_buffer_pointer->texture_id = 0;
-    ++m_vertices_buffer_pointer;
+    // Bottom-left vertex.
+    vertices[0].position = translation + Vector2(-0.5F * scale.x, -0.5F * scale.y);
+    vertices[0].color = color;
+    vertices[0].texture_coordinates = Vector2(0, 0);
+    vertices[0].texture_id = texture_index;
 
-    // Top right.
-    m_vertices_buffer_pointer->position = { m_quad_default_positions[1].x * scale.x + position.x, m_quad_default_positions[1].y * scale.y + position.y };
-    m_vertices_buffer_pointer->color = color;
-    m_vertices_buffer_pointer->texture_coordinates = { 1.0F, 1.0F };
-    m_vertices_buffer_pointer->texture_id = 0;
-    ++m_vertices_buffer_pointer;
+    // Bottom-right vertex.
+    vertices[1].position = translation + Vector2(0.5F * scale.x, -0.5F * scale.y);
+    vertices[1].color = color;
+    vertices[1].texture_coordinates = Vector2(1, 0);
+    vertices[1].texture_id = texture_index;
 
-    // Bottom right.
-    m_vertices_buffer_pointer->position = { m_quad_default_positions[2].x * scale.x + position.x, m_quad_default_positions[2].y * scale.y + position.y };
-    m_vertices_buffer_pointer->color = color;
-    m_vertices_buffer_pointer->texture_coordinates = { 1.0F, 0.0F };
-    m_vertices_buffer_pointer->texture_id = 0;
-    ++m_vertices_buffer_pointer;
+    // Top-right vertex.
+    vertices[2].position = translation + Vector2(0.5F * scale.x, 0.5F * scale.y);
+    vertices[2].color = color;
+    vertices[2].texture_coordinates = Vector2(1, 1);
+    vertices[2].texture_id = texture_index;
 
-    // Bottom left.
-    m_vertices_buffer_pointer->position = { m_quad_default_positions[3].x * scale.x + position.x, m_quad_default_positions[3].y * scale.y + position.y };
-    m_vertices_buffer_pointer->color = color;
-    m_vertices_buffer_pointer->texture_coordinates = { 0.0F, 0.0F };
-    m_vertices_buffer_pointer->texture_id = 0;
-    ++m_vertices_buffer_pointer;
+    // Top-left vertex.
+    vertices[3].position = translation + Vector2(-0.5F * scale.x, 0.5F * scale.y);
+    vertices[3].color = color;
+    vertices[3].texture_coordinates = Vector2(0, 1);
+    vertices[3].texture_id = texture_index;
 
-    // Update statistics.
     m_statistics.quads_in_current_batch++;
     m_statistics.quads_in_current_frame++;
-
-    return current_buffer_pointer;
 }
 
-u32 Renderer2D::find_quad_texture_index(const RefPtr<Texture2D>& texture)
+Optional<u32> Renderer2D::find_quad_texture_slot_index(const RefPtr<Texture2D>& texture)
 {
-    for (u32 texture_index = 0; texture_index < m_quad_textures.count(); ++texture_index)
+    for (u32 texture_index = 0; texture_index < m_statistics.quad_textures_in_current_batch; ++texture_index)
     {
-        if (m_quad_textures[texture_index] == texture)
+        if (m_quad_textures[texture_index].get() == texture.get())
             return texture_index;
     }
 
-    return UINT32_MAX;
+    if (m_statistics.quad_textures_in_current_batch == m_max_quad_textures_per_batch)
+        return {};
+
+    m_quad_textures[m_statistics.quad_textures_in_current_batch] = texture;
+    return (m_statistics.quad_textures_in_current_batch++);
 }
 
 } // namespace SE
