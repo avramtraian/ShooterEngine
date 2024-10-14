@@ -4,9 +4,11 @@
 #
 
 # Binaries directories.
-Binaries/Debug/
-Binaries/Development/
-Binaries/Shipping/
+Binaries/EditorDebug/
+Binaries/EditorDevelopment/
+Binaries/GameDebug/
+Binaries/GameDevelopment/
+Binaries/GameShipping/
 
 # Intermediate directory.
 Intermediate/
@@ -21,3 +23,6 @@ Intermediate/
 *.vcxproj
 *.vcxproj.user
 *.vcxproj.filters
+
+# The ExampleProject binaries
+Content/ExampleProject/Binaries/
