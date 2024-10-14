@@ -18,7 +18,7 @@ D3D11RenderPass::D3D11RenderPass(const RenderPassDescription& description)
 {
     if (m_description.target_framebuffer_attachments.count() != description.target_framebuffer->get_attachment_count())
     {
-        SE_LOG_ERROR(""sv);
+        SE_LOG_ERROR("The number of attachments specified to the render pass must acutally match the number of framebuffer attachments!");
         SE_ASSERT(false);
     }
 }

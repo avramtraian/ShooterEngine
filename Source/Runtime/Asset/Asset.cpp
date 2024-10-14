@@ -25,7 +25,7 @@ String get_asset_type_string(AssetType asset_type)
         case AssetType::Texture: return "Texture"sv;
     }
 
-    SE_LOG_TAG_ERROR("Asset"sv, "Invalid AssetType!"sv);
+    SE_LOG_TAG_ERROR("Asset", "Invalid AssetType!");
     return {};
 }
 
@@ -36,7 +36,7 @@ AssetType get_asset_type_from_string(StringView asset_type_string)
     if (asset_type_string == "Texture"sv)
         return AssetType::Texture;
 
-    SE_LOG_TAG_ERROR("Asset"sv, "Invalid AssetType!"sv);
+    SE_LOG_TAG_ERROR("Asset", "Invalid AssetType!");
     return AssetType::Unknown;
 }
 
@@ -47,7 +47,7 @@ String get_asset_type_file_extension(AssetType asset_type)
         case AssetType::Texture: return "stexture"sv;
     }
 
-    SE_LOG_TAG_ERROR("Asset"sv, "Invalid AssetType!"sv);
+    SE_LOG_TAG_ERROR("Asset", "Invalid AssetType!");
     return {};
 }
 
@@ -56,7 +56,7 @@ AssetType get_asset_type_from_file_extension(StringView file_extension)
     if (file_extension == "stexture"sv)
         return AssetType::Texture;
 
-    SE_LOG_TAG_ERROR("Asset"sv, "Invalid asset type file extension!"sv);
+    SE_LOG_TAG_ERROR("Asset", "Invalid asset type file extension!");
     return AssetType::Unknown;
 }
 

@@ -25,7 +25,7 @@ bool SceneRenderer::initialize(Scene& in_scene_context)
     m_renderer_2d = create_own<Renderer2D>();
     if (!m_renderer_2d->initialize(target_framebuffer))
     {
-        SE_LOG_TAG_ERROR("Renderer"sv, "Failed to initialize the 2D renderer!"sv);
+        SE_LOG_TAG_ERROR("Renderer", "Failed to initialize the 2D renderer!");
         return false;
     }
 

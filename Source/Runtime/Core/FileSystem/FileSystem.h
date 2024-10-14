@@ -16,7 +16,7 @@
 #define SE_CHECK_FILE_ERROR(expression)           \
     if ((expression) != ::SE::FileError::Success) \
     {                                             \
-        SE_LOG_ERROR("File error occured!"sv);    \
+        SE_LOG_ERROR("File error occured!");      \
         SE_ASSERT(false);                         \
     }
 

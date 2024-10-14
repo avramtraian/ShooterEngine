@@ -55,14 +55,14 @@ public:
 
 } // namespace SE
 
-#define SE_LOG_TRACE(...) ::SE::Logger::log_message(::SE::Logger::Severity::Trace, __VA_ARGS__)
-#define SE_LOG_INFO(...)  ::SE::Logger::log_message(::SE::Logger::Severity::Info, __VA_ARGS__)
-#define SE_LOG_WARN(...)  ::SE::Logger::log_message(::SE::Logger::Severity::Warn, __VA_ARGS__)
-#define SE_LOG_ERROR(...) ::SE::Logger::log_message(::SE::Logger::Severity::Error, __VA_ARGS__)
-#define SE_LOG_FATAL(...) ::SE::Logger::log_message(::SE::Logger::Severity::Fatal, __VA_ARGS__)
+#define SE_LOG_TRACE(message, ...) ::SE::Logger::log_message(::SE::Logger::Severity::Trace, message##sv, __VA_ARGS__)
+#define SE_LOG_INFO(message, ...)  ::SE::Logger::log_message(::SE::Logger::Severity::Info, message##sv, __VA_ARGS__)
+#define SE_LOG_WARN(message, ...)  ::SE::Logger::log_message(::SE::Logger::Severity::Warn, message##sv, __VA_ARGS__)
+#define SE_LOG_ERROR(message, ...) ::SE::Logger::log_message(::SE::Logger::Severity::Error, message##sv, __VA_ARGS__)
+#define SE_LOG_FATAL(message, ...) ::SE::Logger::log_message(::SE::Logger::Severity::Fatal, message##sv, __VA_ARGS__)
 
-#define SE_LOG_TAG_TRACE(tag, ...) ::SE::Logger::log_tagged_message(::SE::Logger::Severity::Trace, tag, __VA_ARGS__)
-#define SE_LOG_TAG_INFO(tag, ...)  ::SE::Logger::log_tagged_message(::SE::Logger::Severity::Info, tag, __VA_ARGS__)
-#define SE_LOG_TAG_WARN(tag, ...)  ::SE::Logger::log_tagged_message(::SE::Logger::Severity::Warn, tag, __VA_ARGS__)
-#define SE_LOG_TAG_ERROR(tag, ...) ::SE::Logger::log_tagged_message(::SE::Logger::Severity::Error, tag, __VA_ARGS__)
-#define SE_LOG_TAG_FATAL(tag, ...) ::SE::Logger::log_tagged_message(::SE::Logger::Severity::Fatal, tag, __VA_ARGS__)
+#define SE_LOG_TAG_TRACE(tag, message, ...) ::SE::Logger::log_tagged_message(::SE::Logger::Severity::Trace, tag##sv, message##sv, __VA_ARGS__)
+#define SE_LOG_TAG_INFO(tag, message, ...)  ::SE::Logger::log_tagged_message(::SE::Logger::Severity::Info, tag##sv, message##sv, __VA_ARGS__)
+#define SE_LOG_TAG_WARN(tag, message, ...)  ::SE::Logger::log_tagged_message(::SE::Logger::Severity::Warn, tag##sv, message##sv, __VA_ARGS__)
+#define SE_LOG_TAG_ERROR(tag, message, ...) ::SE::Logger::log_tagged_message(::SE::Logger::Severity::Error, tag##sv, message##sv, __VA_ARGS__)
+#define SE_LOG_TAG_FATAL(tag, message, ...) ::SE::Logger::log_tagged_message(::SE::Logger::Severity::Fatal, tag##sv, message##sv, __VA_ARGS__)

@@ -37,7 +37,7 @@ bool Renderer::initialize()
     s_renderer->renderer_interface = RendererInterface::create();
     if (!s_renderer->renderer_interface->initialize())
     {
-        SE_LOG_ERROR("Failed to create the renderer interface!"sv);
+        SE_LOG_ERROR("Failed to create the renderer interface!");
         return false;
     }
 

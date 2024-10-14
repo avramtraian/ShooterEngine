@@ -19,7 +19,7 @@ ALWAYS_INLINE static D3D11_USAGE get_vertex_buffer_usage(VertexBufferUpdateFrequ
         case VertexBufferUpdateFrequency::High: return D3D11_USAGE_DYNAMIC;
     }
 
-    SE_LOG_TAG_ERROR("D3D11"sv, "Invalid VertexBufferUpdateFrequency!"sv);
+    SE_LOG_TAG_ERROR("D3D11", "Invalid VertexBufferUpdateFrequency!");
     SE_ASSERT(false);
     return D3D11_USAGE_DEFAULT;
 }
@@ -31,7 +31,7 @@ D3D11VertexBuffer::D3D11VertexBuffer(const VertexBufferDescription& info)
 {
     if (m_update_frequency == VertexBufferUpdateFrequency::Never && info.data.is_empty())
     {
-        SE_LOG_TAG_ERROR("D3D11"sv, "No data provided to vertex buffer flagged with VertexBufferUpdateFrequency::Never!"sv);
+        SE_LOG_TAG_ERROR("D3D11", "No data provided to vertex buffer flagged with VertexBufferUpdateFrequency::Never!");
         return;
     }
 
@@ -67,7 +67,7 @@ void D3D11VertexBuffer::update_data(ReadonlyByteSpan data)
 {
     if (m_update_frequency == VertexBufferUpdateFrequency::Never)
     {
-        SE_LOG_TAG_ERROR("D3D11"sv, "Trying to update the memory of a vertex buffer created with VertexBufferUpdateFrequency::Never!"sv);
+        SE_LOG_TAG_ERROR("D3D11", "Trying to update the memory of a vertex buffer created with VertexBufferUpdateFrequency::Never!");
         return;
     }
 

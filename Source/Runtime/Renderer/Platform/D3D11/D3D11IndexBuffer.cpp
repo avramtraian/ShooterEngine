@@ -18,7 +18,7 @@ static u32 get_index_type_size(IndexType index_type)
         case IndexType::UInt32: return 4;
     }
 
-    SE_LOG_TAG_ERROR("D3D11"sv, "Invalid IndexType!"sv);
+    SE_LOG_TAG_ERROR("D3D11", "Invalid IndexType!");
     SE_ASSERT(false);
     return 0;
 }

@@ -16,15 +16,15 @@
         object_instance = nullptr;        \
     }
 
-#define SE_D3D11_CHECK(expression)                                                                                         \
-    {                                                                                                                      \
-        const HRESULT _result = expression;                                                                                \
-        if (FAILED(_result))                                                                                               \
-        {                                                                                                                  \
-            const String error_code_string = D3D11Renderer::get_error_message(_result);                                    \
-            SE_LOG_TAG_ERROR("D3D11"sv, "\n    {}\n    Failed with error code: {}"sv, #expression##sv, error_code_string); \
-            SE_ASSERT(false);                                                                                              \
-        }                                                                                                                  \
+#define SE_D3D11_CHECK(expression)                                                                                     \
+    {                                                                                                                  \
+        const HRESULT _result = expression;                                                                            \
+        if (FAILED(_result))                                                                                           \
+        {                                                                                                              \
+            const String error_code_string = D3D11Renderer::get_error_message(_result);                                \
+            SE_LOG_TAG_ERROR("D3D11", "\n    {}\n    Failed with error code: {}", #expression##sv, error_code_string); \
+            SE_ASSERT(false);                                                                                          \
+        }                                                                                                              \
     }
 
 namespace SE

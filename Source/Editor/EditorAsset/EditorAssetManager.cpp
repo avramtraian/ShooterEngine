@@ -52,7 +52,7 @@ bool EditorAssetManager::initialize_asset_registry()
     if (!deserialize_asset_registry())
         return false;
 
-    SE_LOG_TAG_INFO("Asset"sv, "The asset registry contains '{}' assets."sv, m_asset_registry.count());
+    SE_LOG_TAG_INFO("Asset", "The asset registry contains '{}' assets.", m_asset_registry.count());
     return true;
 }
 
@@ -105,7 +105,7 @@ bool EditorAssetManager::serialize_asset_registry()
     SE_CHECK_FILE_ERROR(asset_registry_file_writer.open(get_asset_registry_filepath()));
     SE_CHECK_FILE_ERROR(asset_registry_file_writer.write_and_close(yaml_view.byte_span()));
 
-    SE_LOG_TAG_INFO("Asset"sv, "Serialized '{}' assets."sv, serialized_asset_count);
+    SE_LOG_TAG_INFO("Asset", "Serialized '{}' assets.", serialized_asset_count);
     return true;
 }
 
@@ -121,14 +121,14 @@ bool EditorAssetManager::deserialize_asset_registry()
     YAML::Node asset_registry_root = YAML::Load(asset_registry_file.characters());
     if (!asset_registry_root)
     {
-        SE_LOG_TAG_ERROR("Asset"sv, "Invalid or currupted AssetRegistry file!"sv);
+        SE_LOG_TAG_ERROR("Asset", "Invalid or currupted AssetRegistry file!");
         return false;
     }
 
     YAML::Node asset_list = asset_registry_root["Assets"];
     if (!asset_list || !asset_list.IsSequence())
     {
-        SE_LOG_TAG_ERROR("Asset"sv, "Invalid or corrupted AssetRegistry file!"sv);
+        SE_LOG_TAG_ERROR("Asset", "Invalid or corrupted AssetRegistry file!");
         return false;
     }
 
@@ -140,7 +140,7 @@ bool EditorAssetManager::deserialize_asset_registry()
 
         if (!asset_type_node || !asset_handle_node || !asset_filepath_node)
         {
-            SE_LOG_TAG_ERROR("Asset"sv, "Invalid asset description encountered. Skipping..."sv);
+            SE_LOG_TAG_ERROR("Asset", "Invalid asset description encountered. Skipping...");
             continue;
         }
 
@@ -151,15 +151,15 @@ bool EditorAssetManager::deserialize_asset_registry()
         const AssetType asset_type = get_asset_type_from_string(asset_type_string.view());
         if (asset_type == AssetType::Unknown)
         {
-            SE_LOG_TAG_ERROR("Asset"sv, "Invalid asset type ({}) encountered for asset ID '{}'! Skipping..."sv, asset_type_string, (u64)(asset_handle));
+            SE_LOG_TAG_ERROR("Asset", "Invalid asset type ({}) encountered for asset ID '{}'! Skipping...", asset_type_string, (u64)(asset_handle));
             continue;
         }
 
         if (get_asset_type_from_file_extension(asset_filepath.path_extension()) != asset_type)
         {
             SE_LOG_TAG_ERROR(
-                "Asset"sv,
-                "The filepath ({}) of the asset with handle '{}' doesn't match the asset type extension ({})! Skipping..."sv,
+                "Asset",
+                "The filepath ({}) of the asset with handle '{}' doesn't match the asset type extension ({})! Skipping...",
                 asset_filepath,
                 (u64)(asset_handle),
                 get_asset_type_file_extension(asset_type)
@@ -169,7 +169,7 @@ bool EditorAssetManager::deserialize_asset_registry()
 
         if (m_asset_registry.contains(asset_handle))
         {
-            SE_LOG_TAG_ERROR("Asset"sv, "The asset handle ({}) already exists in the registry! Skipping..."sv, (u64)(asset_handle));
+            SE_LOG_TAG_ERROR("Asset", "The asset handle ({}) already exists in the registry! Skipping...", (u64)(asset_handle));
             continue;
         }
 
@@ -191,7 +191,7 @@ RefPtr<Asset> EditorAssetManager::get_asset_sync(AssetHandle handle)
     Optional<AssetSlot&> optional_asset_slot = m_asset_registry.get_if_exists(handle);
     if (!optional_asset_slot.has_value())
     {
-        SE_LOG_TAG_ERROR("Asset"sv, "Querying an invalid asset ID ({})!"sv, (u64)(handle));
+        SE_LOG_TAG_ERROR("Asset", "Querying an invalid asset ID ({})!", (u64)(handle));
         return {};
     }
     AssetSlot& asset_slot = *optional_asset_slot;
@@ -207,7 +207,7 @@ RefPtr<Asset> EditorAssetManager::get_asset_sync(AssetHandle handle)
     loaded_asset = m_asset_serializers[asset_slot.metadata.type]->deserialize(asset_slot.metadata);
     if (!loaded_asset.is_valid())
     {
-        SE_LOG_TAG_ERROR("Asset"sv, "Failed to load asset with ID '{}'!"sv, (u64)(handle));
+        SE_LOG_TAG_ERROR("Asset", "Failed to load asset with ID '{}'!", (u64)(handle));
         return {};
     }
 
@@ -221,7 +221,7 @@ AssetMetadata& EditorAssetManager::get_asset_metadata(AssetHandle handle)
     Optional<AssetSlot&> optional_asset_slot = m_asset_registry.get_if_exists(handle);
     if (!optional_asset_slot.has_value())
     {
-        SE_LOG_TAG_ERROR("Asset"sv, "Querying an invalid asset ID ({})!"sv, (u64)(handle));
+        SE_LOG_TAG_ERROR("Asset", "Querying an invalid asset ID ({})!", (u64)(handle));
         return m_empty_asset_slot.metadata;
     }
 

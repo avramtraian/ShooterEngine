@@ -61,14 +61,14 @@ bool D3D11Renderer::initialize()
 
     if (device_result != S_OK)
     {
-        SE_LOG_TAG_ERROR("D3D11"sv, "Failed to create the device!"sv);
+        SE_LOG_TAG_ERROR("D3D11", "Failed to create the device!");
         return false;
     }
 
     const HRESULT dxgi_factory_result = CreateDXGIFactory1(IID_PPV_ARGS(&s_d3d11_renderer->dxgi_factory));
     if (dxgi_factory_result != S_OK)
     {
-        SE_LOG_TAG_ERROR("D3D11"sv, "Failed to create the DXGI factory!"sv);
+        SE_LOG_TAG_ERROR("D3D11", "Failed to create the DXGI factory!");
         return false;
     }
 

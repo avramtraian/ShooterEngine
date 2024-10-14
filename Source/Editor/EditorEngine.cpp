@@ -28,20 +28,20 @@ bool EditorEngine::initialize()
     AssetManager::instantiate<EditorAssetManager>();
     if (!g_asset_manager->initialize())
     {
-        SE_LOG_ERROR("Failed to initialize the asset manager!"sv);
+        SE_LOG_ERROR("Failed to initialize the asset manager!");
         return false;
     }
 
     if (!Renderer::initialize())
     {
-        SE_LOG_ERROR("Failed to initialize the renderer!"sv);
+        SE_LOG_ERROR("Failed to initialize the renderer!");
         return false;
     }
 
-    SE_LOG_INFO("Creating the primary window..."sv);
+    SE_LOG_INFO("Creating the primary window...");
     if (!g_editor_engine->create_window())
     {
-        SE_LOG_ERROR("Failed to create the primary window!"sv);
+        SE_LOG_ERROR("Failed to create the primary window!");
         return false;
     }
 
@@ -55,7 +55,7 @@ bool EditorEngine::initialize()
     m_scene_renderer = create_own<SceneRenderer>();
     if (!m_scene_renderer->initialize(*m_scene))
     {
-        SE_LOG_ERROR("Failed to initialize the world renderer!"sv);
+        SE_LOG_ERROR("Failed to initialize the editor context!");
         return false;
     }
 
@@ -97,7 +97,7 @@ void EditorEngine::tick()
     if (m_window_stack.is_empty())
     {
         m_is_running = false;
-        SE_LOG_INFO("All windows have been closed. Exiting the main loop..."sv);
+        SE_LOG_INFO("All windows have been closed. Exiting the main loop...");
         return;
     }
 
@@ -105,7 +105,7 @@ void EditorEngine::tick()
     {
         m_window_stack.clear_and_shrink();
         m_is_running = false;
-        SE_LOG_INFO("The primary window has been closed. Exiting the main loop..."sv);
+        SE_LOG_INFO("The primary window has been closed. Exiting the main loop...");
         return;
     }
 
@@ -132,7 +132,7 @@ Window* EditorEngine::create_window()
         return nullptr;
     }
 
-    SE_LOG_INFO("Sucessfully created a window with the title '{}'."sv, window_info.title);
+    SE_LOG_INFO("Sucessfully created a window with the title '{}'.", window_info.title);
     return window.get();
 }
 

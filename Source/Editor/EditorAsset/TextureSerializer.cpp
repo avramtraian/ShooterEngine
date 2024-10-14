@@ -55,7 +55,7 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
     YAML::Node asset_metadata_root = YAML::Load(asset_metadata_file.characters());
     if (!asset_metadata_root)
     {
-        SE_LOG_TAG_ERROR("Asset"sv, "Invalid or corrupted asset file: '{}'!"sv, editor_metadata.filepath);
+        SE_LOG_TAG_ERROR("Asset", "Invalid or corrupted asset file: '{}'!", editor_metadata.filepath);
         return {};
     }
 
@@ -64,7 +64,7 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
 
     if (!asset_type_node || !asset_handle_node)
     {
-        SE_LOG_TAG_ERROR("Asset"sv, "Invalid or corrupted asset file: '{}'!"sv, editor_metadata.filepath);
+        SE_LOG_TAG_ERROR("Asset", "Invalid or corrupted asset file: '{}'!", editor_metadata.filepath);
         return {};
     }
 
@@ -73,15 +73,15 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
     const AssetHandle asset_handle = AssetHandle(asset_handle_node.as<u64>());
     if (asset_type == AssetType::Unknown)
     {
-        SE_LOG_TAG_ERROR("Asset"sv, "Invalid asset type ({}) for ID '{}'!"sv, asset_type_string, (u64)(asset_handle));
+        SE_LOG_TAG_ERROR("Asset", "Invalid asset type ({}) for ID '{}'!", asset_type_string, (u64)(asset_handle));
         return {};
     }
 
     if (asset_type != editor_metadata.type)
     {
         SE_LOG_TAG_ERROR(
-            "Asset"sv,
-            "Expected asset type '{}', but found '{}'! ({})"sv,
+            "Asset",
+            "Expected asset type '{}', but found '{}'! ({})",
             get_asset_type_string(editor_metadata.type),
             get_asset_type_string(asset_type),
             editor_metadata.filepath
@@ -92,7 +92,7 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
     if (asset_handle != editor_metadata.handle)
     {
         SE_LOG_TAG_ERROR(
-            "Asset"sv, "Expected asset handle '{}', but found '{}'! ({})"sv, (u64)(editor_metadata.handle), (u64)(asset_handle), editor_metadata.filepath
+            "Asset", "Expected asset handle '{}', but found '{}'! ({})", (u64)(editor_metadata.handle), (u64)(asset_handle), editor_metadata.filepath
         );
         return {};
     }
@@ -100,7 +100,7 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
     YAML::Node texture_filepath_node = asset_metadata_root["Filepath"];
     if (!texture_filepath_node)
     {
-        SE_LOG_TAG_ERROR("Asset"sv, "Invalid or corrupted asset file: '{}'!"sv, editor_metadata.filepath);
+        SE_LOG_TAG_ERROR("Asset", "Invalid or corrupted asset file: '{}'!", editor_metadata.filepath);
         return {};
     }
 
