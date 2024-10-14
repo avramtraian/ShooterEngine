@@ -4,8 +4,15 @@
 --
 
 local function configure_as_target_editor()
-    kind "SharedLib"
     location "%{wks.location}/Source/Runtime"
+    
+    begin_filter_configuration_editor()
+        kind "SharedLib"
+    end_filter()
+
+    begin_filter_configuration_game()
+        kind "StaticLib"
+    end_filter()
 
     defines
     {
@@ -15,14 +22,7 @@ end
 
 local function configure_as_target_game()
     location "%{wks.location}/Intermediate/ProjectFiles"
-
-    begin_filter_configuration_editor()
-        kind "None"
-    filter {}
-
-    begin_filter_configuration_game()
-        kind "StaticLib"
-    filter {}
+    kind "None"
 end
 
 project "SE-Engine"

@@ -15,9 +15,12 @@ workspace "ShooterEngine"
 
     configurations
     {
-        "Debug",
-        "Development",
-        "Shipping"
+        "EditorDebug",
+        "EditorDevelopment",
+
+        "GameDebug",
+        "GameDevelopment",
+        "GameShipping"
     }
 
     platforms

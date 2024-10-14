@@ -3,16 +3,15 @@
 -- SPDX-License-Identifier: Apache-2-0.
 --
 
+-- Sanity check. Should never fail.
+if not config_vars.target == targets.game then
+    print("ERROR: Trying to configure the game project when the target is set to editor!")
+    return
+end
+
 local function configure_as_editor()
     kind "SharedLib"
-
-    filter "configurations:EditorDebug"
-        links { (config_vars.engine_root.."/Binaries/Debug/SE-Engine") }
-    filter {}
-
-    filter "configurations:EditorDevelopment"
-        links { (config_vars.engine_root.."/Binaries/Development/SE-Engine") }
-    filter {}
+    
 end
 
 local function configure_as_game()
@@ -23,18 +22,16 @@ project (config_vars.game_name)
     location (config_vars.game_root_directory.."/Source")
     configure_default_settings()
 
+    -- Link against the engine binaries.
+    links { (config_vars.engine_root.."/Binaries/%{cfg.buildcfg}/SE-Engine") }
+
     begin_filter_configuration_editor()
-        configure_as_editor()
+        kind "SharedLib"
     filter {}
 
     begin_filter_configuration_game()
-        configure_as_game()
+        kind "ConsoleApp"
     filter {}
-
-    links
-    {
-        "SE-Engine"
-    }
 
     files
     {

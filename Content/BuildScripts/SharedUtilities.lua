@@ -19,19 +19,27 @@ function create_default_config_vars_object()
 end
 
 function begin_filter_configuration_editor()
-    if config_vars.target == targets.game then
-        filter "configurations:EditorDebug or EditorDevelopment"
-    else
-        print("WARN: 'begin_filter_configuration_editor' called when 'config_vars.target' != 'targets.game'")
-    end
+    filter "configurations:EditorDebug or EditorDevelopment"
 end
 
 function begin_filter_configuration_game()
-    if config_vars.target == targets.game then
-        filter "configurations:GameDebug or GameDevelopment or GameShipping"
-    else
-        print("WARN: 'begin_filter_configuration_game' called when 'config_vars.target' != 'targets.game'")
-    end
+    filter "configurations:GameDebug or GameDevelopment or GameShipping"
+end
+
+function begin_filter_configuration_debug()
+    filter "configurations:EditorDebug or GameDebug"
+end
+
+function begin_filter_configuration_development()
+    filter "configurations:EditorDevelopment or GameDevelopment"
+end
+
+function end_filter()
+    filter {}
+end
+
+function begin_filter_configuration_shipping()
+    filter "configurations:GameShipping"
 end
 
 function configure_default_settings()
@@ -51,47 +59,29 @@ function configure_default_settings()
     targetdir "%{wks.location}/Binaries/%{cfg.buildcfg}"
     objdir "%{wks.location}/Intermediate/Build"
 
-    if config_vars.target == targets.editor then
+    begin_filter_configuration_editor()
         defines { "SE_CONFIGURATION_TARGET_EDITOR=1" }
+    end_filter()
 
-        filter "configurations:Debug"
-            optimize "off"
-            symbols "on"
-            defines { "SE_CONFIGURATION_DEBUG=1" }
-        filter {}
-        filter "configurations:Development"
-            optimize "on"
-            symbols "on"
-            defines { "SE_CONFIGURATION_DEVELOPMENT=1" }
-        filter {}
-        filter "configurations:Shipping"
-            optimize "speed"
-            symbols "off"
-            defines { "SE_CONFIGURATION_SHIPPING=1" }
-        filter {}
-    elseif config_vars.target == targets.game then
-        begin_filter_configuration_editor()
-            defines { "SE_CONFIGURATION_TARGET_EDITOR=1" }
-        filter {}
+    begin_filter_configuration_game()
+        defines { "SE_CONFIGURATION_TARGET_GAME=1" }
+    end_filter()
 
-        begin_filter_configuration_game()
-            defines { "SE_CONFIGURATION_TARGET_GAME=1" }
-        filter {}
+    begin_filter_configuration_debug()
+        optimize "off"
+        symbols "on"
+        defines { "SE_CONFIGURATION_DEBUG=1" }
+    end_filter()
 
-        filter "configurations:GameDebug or EditorDebug"
-            optimize "off"
-            symbols "on"
-            defines { "SE_CONFIGURATION_DEBUG=1" }
-        filter {}
-        filter "configurations:GameDevelopment or GameDevelopment"
-            optimize "on"
-            symbols "on"
-            defines { "SE_CONFIGURATION_DEVELOPMENT=1" }
-        filter {}
-        filter "configurations:GameShipping"
-            optimize "speed"
-            symbols "off"
-            defines { "SE_CONFIGURATION_SHIPPING=1" }
-        filter {}
-    end
+    begin_filter_configuration_development()
+        optimize "on"
+        symbols "on"
+        defines { "SE_CONFIGURATION_DEVELOPMENT=1" }
+    end_filter()
+
+    begin_filter_configuration_shipping()
+        optimize "speed"
+        symbols "off"
+        defines { "SE_CONFIGURATION_SHIPPING=1" }
+    end_filter()
 end

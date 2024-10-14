@@ -14,11 +14,13 @@ project "SE-Editor"
     kind "ConsoleApp"
     configure_default_settings()
 
-    filter "configurations:Debug or Development"
+    begin_filter_configuration_editor()
         kind "ConsoleApp"
-    filter "configurations:Shipping"
+    end_filter()
+
+    begin_filter_configuration_game()
         kind "None"
-    filter {}
+    end_filter()
 
     -- Always set the working directory where the executable is located on disk.
     debugdir "%{wks.location}/Binaries/%{cfg.buildcfg}"
