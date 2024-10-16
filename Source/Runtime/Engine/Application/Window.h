@@ -14,6 +14,8 @@ namespace SE
 
 using WindowEventCallbackFunction = void (*)(const Event&);
 
+using WindowNativeEventCallbackFunction = void(*)(void* native_event_data);
+
 struct WindowInfo
 {
     u32 width = 800;
@@ -27,6 +29,8 @@ struct WindowInfo
 
     // Not setting this parameter will cause the events to be discarded.
     WindowEventCallbackFunction event_callback = nullptr;
+
+    WindowNativeEventCallbackFunction native_event_callback = nullptr;
 };
 
 class Window

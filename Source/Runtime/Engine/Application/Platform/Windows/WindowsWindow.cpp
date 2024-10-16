@@ -3,12 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
+#include <Core/Containers/Optional.h>
 #include <Engine/Application/Platform/Windows/WindowsWindow.h>
 #include <Engine/Application/WindowEvent.h>
 #include <Engine/Engine.h>
 
 namespace SE
 {
+
+Vector<WindowsWindow*> WindowsWindow::s_windows;
 
 static const char* s_window_class_name = "ShooterWindowClass";
 static bool s_window_class_was_registered = false;
@@ -53,6 +56,7 @@ bool WindowsWindow::initialize(const WindowInfo& window_info)
     register_window_class();
 
     m_event_callback = window_info.event_callback;
+    m_native_event_callback = window_info.native_event_callback;
 
     const char* window_title = window_info.title.byte_span_with_null_termination().as<const char>().elements();
     const DWORD window_style_flags = get_window_style_flags(window_info);
@@ -80,9 +84,27 @@ bool WindowsWindow::initialize(const WindowInfo& window_info)
     return true;
 }
 
+WindowsWindow::WindowsWindow()
+{
+    s_windows.add(this);
+}
+
 WindowsWindow::~WindowsWindow()
 {
     DestroyWindow(m_native_handle);
+
+    Optional<usize> window_index;
+    for (usize index = 0; index < s_windows.count(); ++index)
+    {
+        if (s_windows[index] == this)
+        {
+            window_index = index;
+            break;
+        }
+    }
+
+    SE_ASSERT(window_index.has_value());
+    s_windows.remove_unordered(*window_index);
 }
 
 void WindowsWindow::pump_messages()
@@ -95,73 +117,89 @@ void WindowsWindow::pump_messages()
     }
 }
 
-#define FIND_WINDOW_BY_NATIVE_HANDLE(variable_name)                                  \
-    Window* uncasted_window = g_engine->find_window_by_native_handle(window_handle); \
-    if (!uncasted_window)                                                            \
-        break;                                                                       \
-    WindowsWindow& variable_name = static_cast<WindowsWindow&>(*uncasted_window);
-
 LRESULT WindowsWindow::window_procedure(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param)
 {
-    switch (message)
+    WindowsWindow* window = get_window_from_native_handle(window_handle);
+    if (window)
     {
-        case WM_QUIT:
-        case WM_CLOSE:
+        if (window->m_native_event_callback)
         {
-            FIND_WINDOW_BY_NATIVE_HANDLE(window);
-            window.m_should_close = true;
-            return 0;
+            struct NativeEventData
+            {
+                HWND window_handle;
+                UINT message;
+                WPARAM w_param;
+                LPARAM l_param;
+            };
+
+            NativeEventData native_event_data { window_handle, message, w_param, l_param };
+            window->m_native_event_callback(&native_event_data);
         }
 
-        case WM_SIZE:
+        switch (message)
         {
-            FIND_WINDOW_BY_NATIVE_HANDLE(window);
-
-            u32 new_width = LOWORD(l_param);
-            u32 new_height = HIWORD(l_param);
-
-            if (window.m_client_area_width != new_width || window.m_client_area_height != new_height)
+            case WM_QUIT:
+            case WM_CLOSE:
             {
-                if (new_width == 0 || new_height == 0)
-                {
-                    // The window has been minimized. We don't want to propagate window resized events,
-                    // nor update the window dimensions.
-                    return 0;
-                }
-
-                window.m_client_area_width = new_width;
-                window.m_client_area_height = new_height;
-
-                if (window.m_event_callback)
-                {
-                    WindowResizedEvent window_event = WindowResizedEvent(new_width, new_height);
-                    window.m_event_callback(window_event);
-                }
+                window->m_should_close = true;
+                return 0;
             }
 
-            return 0;
-        }
-
-        case WM_MOVE:
-        {
-            FIND_WINDOW_BY_NATIVE_HANDLE(window);
-
-            POINTS new_position = MAKEPOINTS(l_param);
-
-            if (window.m_client_area_position_x != new_position.x || window.m_client_area_position_y != new_position.y)
+            case WM_SIZE:
             {
-                window.m_client_area_position_x = new_position.x;
-                window.m_client_area_position_y = new_position.y;
-                // TODO: Propagate window position changed event.
+                u32 new_width = LOWORD(l_param);
+                u32 new_height = HIWORD(l_param);
+
+                if (window->m_client_area_width != new_width || window->m_client_area_height != new_height)
+                {
+                    if (new_width == 0 || new_height == 0)
+                    {
+                        // The window has been minimized. We don't want to propagate window resized events,
+                        // nor update the window dimensions.
+                        return 0;
+                    }
+
+                    window->m_client_area_width = new_width;
+                    window->m_client_area_height = new_height;
+
+                    if (window->m_event_callback)
+                    {
+                        WindowResizedEvent window_event = WindowResizedEvent(new_width, new_height);
+                        window->m_event_callback(window_event);
+                    }
+                }
+
+                return 0;
             }
 
-            return 0;
+            case WM_MOVE:
+            {
+                POINTS new_position = MAKEPOINTS(l_param);
+
+                if (window->m_client_area_position_x != new_position.x || window->m_client_area_position_y != new_position.y)
+                {
+                    window->m_client_area_position_x = new_position.x;
+                    window->m_client_area_position_y = new_position.y;
+                    // TODO: Propagate window position changed event.
+                }
+
+                return 0;
+            }
         }
     }
 
     return DefWindowProcA(window_handle, message, w_param, l_param);
 }
 
-#undef FIND_WINDOW_BY_NATIVE_HANDLE
+WindowsWindow* WindowsWindow::get_window_from_native_handle(HWND window_handle)
+{
+    for (WindowsWindow* window : s_windows)
+    {
+        if (window->get_native_handle() == static_cast<void*>(window_handle))
+            return window;
+    }
+
+    return nullptr;
+}
 
 } // namespace SE
