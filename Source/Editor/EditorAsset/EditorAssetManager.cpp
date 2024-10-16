@@ -65,7 +65,7 @@ void EditorAssetManager::initialize_asset_serializers()
 
 String EditorAssetManager::get_asset_registry_filepath()
 {
-    return StringBuilder::path_join({ g_editor_engine->get_project_root_directory().view(), SE_ASSET_REGISTRY_FILENAME });
+    return StringBuilder::path_join({ g_editor_engine->context().get_project_root_directory().view(), SE_ASSET_REGISTRY_FILENAME });
 }
 
 bool EditorAssetManager::serialize_asset_registry()

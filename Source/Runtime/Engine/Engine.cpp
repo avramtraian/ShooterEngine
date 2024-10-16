@@ -30,7 +30,13 @@ void Engine::shutdown()
     m_is_running = false;
 }
 
-void Engine::tick()
+void Engine::update()
 {}
+
+void Engine::exit()
+{
+    // Stop the engine execution.
+    m_is_running = false;
+}
 
 } // namespace SE

@@ -5,17 +5,14 @@
 
 #pragma once
 
-#include <Core/Containers/OwnPtr.h>
-#include <Core/Containers/Vector.h>
+#include <EditorContext/EditorContext.h>
 #include <Engine/Application/Event.h>
 #include <Engine/Engine.h>
-#include <Engine/Scene/Scene.h>
-#include <Renderer/SceneRenderer.h>
 
 namespace SE
 {
 
-class EditorEngine final : public Engine
+class EditorEngine : public Engine
 {
 public:
     EditorEngine() = default;
@@ -24,19 +21,13 @@ public:
     virtual bool initialize() override;
     virtual void shutdown() override;
 
-    virtual void tick() override;
-
-    virtual Window* create_window() override;
-    virtual Window* find_window_by_native_handle(void* native_handle) override;
+    virtual void update() override;
 
 public:
-    virtual const String& get_engine_root_directory() const override { return m_engine_root_directory; }
-    NODISCARD ALWAYS_INLINE const String& get_project_name() const { return m_project_name; }
-    NODISCARD ALWAYS_INLINE const String& get_project_root_directory() const { return m_project_root_directory; }
+    NODISCARD ALWAYS_INLINE EditorContext& context() { return m_editor_context; }
+    NODISCARD ALWAYS_INLINE const EditorContext& context() const { return m_editor_context; }
 
-    String get_project_file_filepath() const;
-    String get_project_content_directory() const;
-    String get_project_source_directory() const;
+    virtual String get_engine_root_directory() const override;
 
 private:
     static void on_event(const Event& in_event);
@@ -45,17 +36,9 @@ private:
     void load_project();
 
 private:
-    // The first element in this vector is always the primary window.
-    Vector<OwnPtr<Window>> m_window_stack;
-
     float m_last_frame_delta_time { 0 };
 
-    String m_engine_root_directory;
-    String m_project_name;
-    String m_project_root_directory;
-
-    OwnPtr<Scene> m_scene;
-    OwnPtr<SceneRenderer> m_scene_renderer;
+    EditorContext m_editor_context;
 };
 
 // It points to the same object as the 'g_engine' global variable.

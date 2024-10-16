@@ -26,21 +26,19 @@ static i32 guarded_main(Span<char*> command_line_arguments)
     // Set the engine root as the process working directory.
     FileSystem::set_working_directory("../../"sv);
 
-    if (!Engine::instantiate<EditorEngine>())
-    {
-        // TODO: Log error message.
-        return 1;
-    }
-
+    // Initialize the engine.
+    Engine::instantiate<EditorEngine>();
     if (!g_engine->initialize())
     {
         // TODO: Log error message.
         return 1;
     }
 
+    // Entry the game loop.
     while (g_engine->is_running())
-        g_engine->tick();
+        g_engine->update();
 
+    // Shutdown the engine.
     g_engine->shutdown();
     Engine::destroy();
 

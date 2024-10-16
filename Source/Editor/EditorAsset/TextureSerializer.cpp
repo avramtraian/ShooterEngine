@@ -31,7 +31,7 @@ bool TextureSerializer::serialize(AssetHandle handle)
     out << YAML::EndMap;
     const StringView yaml_view = StringView::create_from_utf8(out.c_str());
 
-    const String metadata_filepath = StringBuilder::path_join({ g_editor_engine->get_project_content_directory().view(), metadata.filepath.view() });
+    const String metadata_filepath = StringBuilder::path_join({ g_editor_engine->context().get_project_content_directory().view(), metadata.filepath.view() });
 
     FileWriter asset_metadata_file_writer;
     SE_CHECK_FILE_ERROR(asset_metadata_file_writer.open(metadata_filepath));
@@ -45,7 +45,7 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
     EditorAssetMetadata& editor_metadata = static_cast<EditorAssetMetadata&>(metadata);
 
     const String asset_metadata_filepath =
-        StringBuilder::path_join({ g_editor_engine->get_project_content_directory().view(), editor_metadata.filepath.view() });
+        StringBuilder::path_join({ g_editor_engine->context().get_project_content_directory().view(), editor_metadata.filepath.view() });
 
     FileReader asset_metadata_file_reader;
     String asset_metadata_file;
@@ -105,7 +105,8 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
     }
 
     const String texture_filepath = StringView::create_from_utf8(texture_filepath_node.as<std::string>().c_str());
-    const String absolute_texture_filepath = StringBuilder::path_join({ g_editor_engine->get_project_content_directory().view(), texture_filepath.view() });
+    const String absolute_texture_filepath =
+        StringBuilder::path_join({ g_editor_engine->context().get_project_content_directory().view(), texture_filepath.view() });
 
     FileReader texture_file_reader;
     Buffer texture_file;
