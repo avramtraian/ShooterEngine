@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <Core/Containers/Badge.h>
 #include <Core/Containers/RefPtr.h>
 #include <Core/Containers/Vector.h>
 #include <Renderer/Image.h>
@@ -48,13 +49,13 @@ public:
     //
     // Creates a new framebuffer by allocating a new image for each attachment.
     //
-    NODISCARD static RefPtr<Framebuffer> create(const FramebufferDescription& description);
+    NODISCARD SHOOTER_API static RefPtr<Framebuffer> create(const FramebufferDescription& description);
 
     //
     // Creates a new framebuffer that represents a swapchain target, meaning that the attachment images are not allocated
     // from scratch and instead they reference an image of the swapchain.
     //
-    NODISCARD static RefPtr<Framebuffer> create(RenderingContext& rendering_context);
+    NODISCARD SHOOTER_API static RefPtr<Framebuffer> create(Badge<class Renderer>, RenderingContext& context);
 
     Framebuffer() = default;
     virtual ~Framebuffer() override = default;

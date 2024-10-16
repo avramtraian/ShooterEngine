@@ -46,7 +46,15 @@ public:
 public:
     virtual void on_resize(u32 new_width, u32 new_height) override;
 
-    virtual void present(RenderingContext* rendering_context) override;
+    NODISCARD ALWAYS_INLINE virtual RendererDevice get_renderer_device() const
+    {
+        RendererDevice device;
+        device.d3d11.device_handle = get_device();
+        device.d3d11.device_context_handle = get_device_context();
+        return device;
+    }
+
+    virtual void present(RenderingContext* context) override;
 
     virtual void begin_render_pass(RefPtr<RenderPass> render_pass) override;
     virtual void end_render_pass() override;

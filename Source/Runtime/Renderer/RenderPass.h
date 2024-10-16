@@ -70,7 +70,7 @@ struct RenderPassTextureArrayBinding
 class RenderPass : public RefCounted
 {
 public:
-    NODISCARD static RefPtr<RenderPass> create(const RenderPassDescription& description);
+    NODISCARD SHOOTER_API static RefPtr<RenderPass> create(const RenderPassDescription& description);
 
     RenderPass() = default;
     virtual ~RenderPass() override = default;

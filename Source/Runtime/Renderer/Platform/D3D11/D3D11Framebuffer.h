@@ -21,7 +21,7 @@ class D3D11Framebuffer : public Framebuffer
 
 public:
     explicit D3D11Framebuffer(const FramebufferDescription& description);
-    explicit D3D11Framebuffer(RenderingContext& rendering_context);
+    explicit D3D11Framebuffer(RenderingContext& context);
 
     virtual ~D3D11Framebuffer() override;
 
@@ -53,7 +53,7 @@ private:
 
     bool m_is_swapchain_target;
     // Has value only when the framebuffer is a swapchain target.
-    Optional<D3D11RenderingContext&> m_rendering_context;
+    Optional<D3D11RenderingContext&> m_context;
 
     u32 m_width;
     u32 m_height;

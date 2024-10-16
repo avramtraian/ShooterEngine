@@ -76,7 +76,7 @@ struct PipelineDescription
 class Pipeline : public RefCounted
 {
 public:
-    NODISCARD static RefPtr<Pipeline> create(const PipelineDescription& description);
+    NODISCARD SHOOTER_API static RefPtr<Pipeline> create(const PipelineDescription& description);
 
     Pipeline() = default;
     virtual ~Pipeline() override = default;

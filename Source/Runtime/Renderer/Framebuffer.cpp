@@ -26,12 +26,12 @@ RefPtr<Framebuffer> Framebuffer::create(const FramebufferDescription& descriptio
     return {};
 }
 
-RefPtr<Framebuffer> Framebuffer::create(RenderingContext& rendering_context)
+RefPtr<Framebuffer> Framebuffer::create(Badge<class Renderer>, RenderingContext& context)
 {
     switch (get_current_renderer_api())
     {
 #if SE_RENDERER_API_SUPPORTED_D3D11
-        case RendererAPI::D3D11: return create_ref<D3D11Framebuffer>(rendering_context).as<Framebuffer>();
+        case RendererAPI::D3D11: return create_ref<D3D11Framebuffer>(context).as<Framebuffer>();
 #endif // SE_RENDERER_API_SUPPORTED_D3D11
     }
 

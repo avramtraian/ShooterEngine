@@ -48,7 +48,7 @@ struct ShaderDescription
 class Shader : public RefCounted
 {
 public:
-    NODISCARD static RefPtr<Shader> create(const ShaderDescription& info);
+    NODISCARD SHOOTER_API static RefPtr<Shader> create(const ShaderDescription& info);
 
     Shader() = default;
     virtual ~Shader() override = default;

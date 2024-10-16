@@ -21,7 +21,7 @@ public:
     SceneRenderer() = default;
 
 public:
-    SHOOTER_API bool initialize(Scene& in_scene_context);
+    SHOOTER_API bool initialize(Scene& in_scene_context, RefPtr<Framebuffer> target_framebuffer);
     SHOOTER_API void shutdown();
 
     SHOOTER_API bool render();
@@ -30,6 +30,8 @@ public:
 
 private:
     Scene* m_scene_context;
+    RefPtr<Framebuffer> m_target_framebuffer;
+
     OwnPtr<Renderer2D> m_renderer_2d;
 };
 

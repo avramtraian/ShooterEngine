@@ -27,16 +27,16 @@ D3D11Framebuffer::D3D11Framebuffer(const FramebufferDescription& description)
     invalidate(description.width, description.height);
 }
 
-D3D11Framebuffer::D3D11Framebuffer(RenderingContext& rendering_context)
+D3D11Framebuffer::D3D11Framebuffer(RenderingContext& context)
     : m_is_swapchain_target(true)
-    , m_rendering_context(static_cast<D3D11RenderingContext&>(rendering_context))
+    , m_context(static_cast<D3D11RenderingContext&>(context))
     , m_width(0)
     , m_height(0)
 {
-    m_rendering_context->reference_swapchain_target_framebuffer(this);
+    m_context->reference_swapchain_target_framebuffer(this);
 
     Attachment attachment = {};
-    attachment.description.format = rendering_context.get_swapchain_image_format();
+    attachment.description.format = context.get_swapchain_image_format();
     m_attachments.add(move(attachment));
 
     invalidate(0, 0);
@@ -46,8 +46,8 @@ D3D11Framebuffer::~D3D11Framebuffer()
 {
     if (m_is_swapchain_target)
     {
-        SE_ASSERT(m_rendering_context.has_value());
-        m_rendering_context->dereference_swapchain_target_framebuffer(this);
+        SE_ASSERT(m_context.has_value());
+        m_context->dereference_swapchain_target_framebuffer(this);
     }
 
     destroy();
@@ -81,7 +81,7 @@ void D3D11Framebuffer::invalidate(u32 new_width, u32 new_height)
         texture_description.SampleDesc.Count = 1;
         texture_description.SampleDesc.Quality = 0;
         texture_description.Usage = D3D11_USAGE_DEFAULT;
-        texture_description.BindFlags = D3D11_BIND_RENDER_TARGET;
+        texture_description.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
         texture_description.CPUAccessFlags = 0;
 
         //
@@ -106,15 +106,15 @@ void D3D11Framebuffer::invalidate_swapchain_target()
 {
     destroy();
 
-    SE_ASSERT(m_is_swapchain_target && m_rendering_context.has_value());
+    SE_ASSERT(m_is_swapchain_target && m_context.has_value());
     SE_ASSERT(m_attachments.count() == 1);
 
     Attachment& attachment = m_attachments.first();
-    attachment.image_handle = static_cast<ID3D11Texture2D*>(m_rendering_context->get_swapchain_image());
-    attachment.image_rtv_handle = static_cast<ID3D11RenderTargetView*>(m_rendering_context->get_swapchain_image_view());
+    attachment.image_handle = static_cast<ID3D11Texture2D*>(m_context->get_swapchain_image());
+    attachment.image_rtv_handle = static_cast<ID3D11RenderTargetView*>(m_context->get_swapchain_image_view());
 
-    m_width = m_rendering_context->get_swapchain_width();
-    m_height = m_rendering_context->get_swapchain_height();
+    m_width = m_context->get_swapchain_width();
+    m_height = m_context->get_swapchain_height();
 }
 
 void D3D11Framebuffer::destroy()

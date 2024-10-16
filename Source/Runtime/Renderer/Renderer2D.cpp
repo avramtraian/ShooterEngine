@@ -20,17 +20,6 @@ bool Renderer2D::initialize(RefPtr<Framebuffer> target_framebuffer)
     return initialize_quads();
 }
 
-bool Renderer2D::initialize(u32 target_framebuffer_width, u32 target_framebuffer_height)
-{
-    FramebufferDescription target_framebuffer_description = {};
-    target_framebuffer_description.width = target_framebuffer_width;
-    target_framebuffer_description.height = target_framebuffer_height;
-    target_framebuffer_description.attachments.emplace(ImageFormat::BGRA8);
-    m_target_framebuffer = Framebuffer::create(target_framebuffer_description);
-
-    return initialize_quads();
-}
-
 void Renderer2D::shutdown()
 {
     shutdown_quads();

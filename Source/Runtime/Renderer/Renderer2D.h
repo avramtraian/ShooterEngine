@@ -44,7 +44,6 @@ public:
 
 public:
     SHOOTER_API bool initialize(RefPtr<Framebuffer> target_framebuffer);
-    SHOOTER_API bool initialize(u32 target_framebuffer_width, u32 target_framebuffer_height);
 
     SHOOTER_API void shutdown();
 

@@ -14,16 +14,14 @@
 namespace SE
 {
 
-bool SceneRenderer::initialize(Scene& in_scene_context)
+bool SceneRenderer::initialize(Scene& in_scene_context, RefPtr<Framebuffer> target_framebuffer)
 {
     SE_ASSERT(m_scene_context == nullptr);
     m_scene_context = &in_scene_context;
-
-    // Render directly to the swapchain.
-    RefPtr<Framebuffer> target_framebuffer = Framebuffer::create(*Renderer::get_active_context());
+    m_target_framebuffer = move(target_framebuffer);
 
     m_renderer_2d = create_own<Renderer2D>();
-    if (!m_renderer_2d->initialize(target_framebuffer))
+    if (!m_renderer_2d->initialize(m_target_framebuffer))
     {
         SE_LOG_TAG_ERROR("Renderer", "Failed to initialize the 2D renderer!");
         return false;
@@ -39,6 +37,8 @@ void SceneRenderer::shutdown()
 
     m_renderer_2d->shutdown();
     m_renderer_2d.release();
+
+    m_target_framebuffer.release();
 }
 
 bool SceneRenderer::render()

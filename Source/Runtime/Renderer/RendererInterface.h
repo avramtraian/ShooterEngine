@@ -9,6 +9,7 @@
 #include <Core/Containers/RefPtr.h>
 #include <Renderer/IndexBuffer.h>
 #include <Renderer/RenderPass.h>
+#include <Renderer/RendererDevice.h>
 #include <Renderer/VertexBuffer.h>
 
 namespace SE
@@ -26,7 +27,9 @@ public:
 public:
     virtual void on_resize(u32 new_width, u32 new_height) = 0;
 
-    virtual void present(class RenderingContext* rendering_context) = 0;
+    NODISCARD virtual RendererDevice get_renderer_device() const = 0;
+
+    virtual void present(class RenderingContext* context) = 0;
 
     virtual void begin_render_pass(RefPtr<RenderPass> render_pass) = 0;
     virtual void end_render_pass() = 0;

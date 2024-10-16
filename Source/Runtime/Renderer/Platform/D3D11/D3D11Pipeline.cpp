@@ -60,43 +60,49 @@ NODISCARD ALWAYS_INLINE static DXGI_FORMAT get_pipeline_vertex_attribute_type_fo
 }
 
 D3D11Pipeline::D3D11Pipeline(const PipelineDescription& description)
-    : m_description(description)
+    : m_input_layout(nullptr)
+    , m_rasterizer_state(nullptr)
+    , m_description(description)
+    , m_vertex_stride(0)
 {
-    Vector<D3D11_INPUT_ELEMENT_DESC> input_element_descriptions;
-    input_element_descriptions.ensure_capacity(m_description.vertex_attributes.count());
-
-    u32 vertex_attribute_offset = 0;
-    for (const PipelineVertexAttribute& vertex_attribute : m_description.vertex_attributes)
+    if (m_description.vertex_attributes.has_elements())
     {
-        // https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_input_element_desc
-        D3D11_INPUT_ELEMENT_DESC element_description = {};
-        element_description.SemanticName = vertex_attribute.name.characters();
-        // TODO: Actually correctly implement semantic indices!
-        element_description.SemanticIndex = 0;
-        element_description.Format = get_pipeline_vertex_attribute_type_format(vertex_attribute.type);
-        element_description.InputSlot = 0;
-        element_description.AlignedByteOffset = vertex_attribute_offset;
-        element_description.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-        element_description.InstanceDataStepRate = 0;
+        Vector<D3D11_INPUT_ELEMENT_DESC> input_element_descriptions;
+        input_element_descriptions.ensure_capacity(m_description.vertex_attributes.count());
 
-        input_element_descriptions.add(element_description);
-        vertex_attribute_offset += get_pipeline_vertex_attribute_type_size(vertex_attribute.type);
+        u32 vertex_attribute_offset = 0;
+        for (const PipelineVertexAttribute& vertex_attribute : m_description.vertex_attributes)
+        {
+            // https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_input_element_desc
+            D3D11_INPUT_ELEMENT_DESC element_description = {};
+            element_description.SemanticName = vertex_attribute.name.characters();
+            // TODO: Actually correctly implement semantic indices!
+            element_description.SemanticIndex = 0;
+            element_description.Format = get_pipeline_vertex_attribute_type_format(vertex_attribute.type);
+            element_description.InputSlot = 0;
+            element_description.AlignedByteOffset = vertex_attribute_offset;
+            element_description.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+            element_description.InstanceDataStepRate = 0;
+
+            input_element_descriptions.add(element_description);
+            vertex_attribute_offset += get_pipeline_vertex_attribute_type_size(vertex_attribute.type);
+        }
+
+        // Set the stride of a vertex.
+        m_vertex_stride = vertex_attribute_offset;
+
+        Optional<ReadonlyByteSpan> vertex_shader_bytecode = m_description.shader.as<D3D11Shader>()->get_shader_module_bytecode(ShaderStage::Vertex);
+        // NOTE: The provided shader doesn't have a vertex stage.
+        SE_ASSERT(vertex_shader_bytecode.has_value());
+
+        SE_D3D11_CHECK(D3D11Renderer::get_device()->CreateInputLayout(
+            input_element_descriptions.elements(),
+            static_cast<UINT>(input_element_descriptions.count()),
+            vertex_shader_bytecode->elements(),
+            vertex_shader_bytecode->count(),
+            &m_input_layout
+        ));
     }
-
-    // Set the stride of a vertex.
-    m_vertex_stride = vertex_attribute_offset;
-
-    Optional<ReadonlyByteSpan> vertex_shader_bytecode = m_description.shader.as<D3D11Shader>()->get_shader_module_bytecode(ShaderStage::Vertex);
-    // NOTE: The provided shader doesn't have a vertex stage.
-    SE_ASSERT(vertex_shader_bytecode.has_value());
-
-    SE_D3D11_CHECK(D3D11Renderer::get_device()->CreateInputLayout(
-        input_element_descriptions.elements(),
-        static_cast<UINT>(input_element_descriptions.count()),
-        vertex_shader_bytecode->elements(),
-        vertex_shader_bytecode->count(),
-        &m_input_layout
-    ));
 
     //
     // The specification of the rasterizer state.
