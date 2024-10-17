@@ -50,7 +50,7 @@ void D3D11RenderingContext::invalidate(u32 new_width, u32 new_height)
     swapchain_description.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapchain_description.BufferCount = m_swapchain.image_count;
     swapchain_description.Scaling = DXGI_SCALING_STRETCH;
-    swapchain_description.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+    swapchain_description.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
     // https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_2/ns-dxgi1_2-dxgi_swap_chain_fullscreen_desc
     DXGI_SWAP_CHAIN_FULLSCREEN_DESC swapchain_fullscreen_description = {};

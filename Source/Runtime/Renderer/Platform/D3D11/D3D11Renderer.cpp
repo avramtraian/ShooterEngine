@@ -140,7 +140,7 @@ void D3D11Renderer::on_resize(u32 new_width, u32 new_height)
 void D3D11Renderer::present(RenderingContext* rendering_context)
 {
     D3D11RenderingContext* context = static_cast<D3D11RenderingContext*>(rendering_context);
-    context->get_swapchain()->Present(1, 0);
+    context->get_swapchain()->Present(0, 0);
 }
 
 void D3D11Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
