@@ -38,6 +38,9 @@ public:
     NODISCARD virtual void* get_attachment_image_view(u32 attachment_index) const override;
     NODISCARD virtual const FramebufferAttachmentDescription& get_attachment_description(u32 attachment_index) const override;
 
+    NODISCARD ID3D11RenderTargetView* get_attachment_render_target_view(u32 attachment_index) const;
+    NODISCARD ID3D11ShaderResourceView* get_attachment_shader_resource_view(u32 attachment_index) const;
+
 private:
     void invalidate_swapchain_target();
 
@@ -46,8 +49,9 @@ private:
 private:
     struct Attachment
     {
-        ID3D11Texture2D* image_handle;
-        ID3D11RenderTargetView* image_rtv_handle;
+        ID3D11Texture2D* image_handle { nullptr };
+        ID3D11RenderTargetView* image_rtv_handle { nullptr };
+        ID3D11ShaderResourceView* image_srv_handle { nullptr };
         FramebufferAttachmentDescription description;
     };
 

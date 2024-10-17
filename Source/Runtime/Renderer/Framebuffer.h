@@ -26,7 +26,8 @@ struct FramebufferAttachmentDescription
         : format(in_format)
     {}
 
-    ImageFormat format;
+    ImageFormat format { ImageFormat::Unknown };
+    bool use_as_input_texture { false };
 
     ImageFilteringMode min_filtering_mode { ImageFilteringMode::Linear };
     ImageFilteringMode mag_filtering_mode { ImageFilteringMode::Linear };
@@ -75,6 +76,7 @@ public:
     NODISCARD virtual u32 get_attachment_count() const = 0;
 
     NODISCARD virtual void* get_attachment_image(u32 attachment_index) const = 0;
+    // NOTE: Returns a null pointer if the specified framebuffer attachment hasn't been created with the `use_as_input_texture` flag.
     NODISCARD virtual void* get_attachment_image_view(u32 attachment_index) const = 0;
     NODISCARD virtual const FramebufferAttachmentDescription& get_attachment_description(u32 attachment_index) const = 0;
 };

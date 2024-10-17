@@ -68,6 +68,10 @@ void D3D11Framebuffer::invalidate(u32 new_width, u32 new_height)
 
     for (Attachment& attachment : m_attachments)
     {
+        UINT bind_flags = D3D11_BIND_RENDER_TARGET;
+        if (attachment.description.use_as_input_texture)
+            bind_flags |= D3D11_BIND_SHADER_RESOURCE;
+
         //
         // The specification of the framebuffer attachment image (texture).
         // https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_texture2d_desc
@@ -81,11 +85,11 @@ void D3D11Framebuffer::invalidate(u32 new_width, u32 new_height)
         texture_description.SampleDesc.Count = 1;
         texture_description.SampleDesc.Quality = 0;
         texture_description.Usage = D3D11_USAGE_DEFAULT;
-        texture_description.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+        texture_description.BindFlags = bind_flags;
         texture_description.CPUAccessFlags = 0;
 
         //
-        // The specification of the framebuffer attachment image view (RTV).
+        // The specification of the framebuffer attachment render target view (RTV).
         // https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_render_target_view_desc
         //
         D3D11_RENDER_TARGET_VIEW_DESC render_target_view_description = {};
@@ -93,12 +97,29 @@ void D3D11Framebuffer::invalidate(u32 new_width, u32 new_height)
         render_target_view_description.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
         render_target_view_description.Texture2D.MipSlice = 0;
 
+        //
+        // The specification of the framebuffer attachment shader resouce view (SRV).
+        // https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_shader_resource_view_desc
+        //
+        D3D11_SHADER_RESOURCE_VIEW_DESC shader_resource_view_description = {};
+        shader_resource_view_description.Format = get_d3d11_image_format(attachment.description.format);
+        shader_resource_view_description.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        shader_resource_view_description.Texture2D.MipLevels = 1;
+        shader_resource_view_description.Texture2D.MostDetailedMip = 0;
+
         const HRESULT image_creation_result = D3D11Renderer::get_device()->CreateTexture2D(&texture_description, nullptr, &attachment.image_handle);
         SE_ASSERT(SUCCEEDED(image_creation_result));
 
         const HRESULT image_rtv_creation_result =
             D3D11Renderer::get_device()->CreateRenderTargetView(attachment.image_handle, &render_target_view_description, &attachment.image_rtv_handle);
         SE_ASSERT(SUCCEEDED(image_rtv_creation_result));
+
+        if (attachment.description.use_as_input_texture)
+        {
+            const HRESULT image_srv_creation_result =
+                D3D11Renderer::get_device()->CreateShaderResourceView(attachment.image_handle, &shader_resource_view_description, &attachment.image_srv_handle);
+            SE_ASSERT(SUCCEEDED(image_srv_creation_result));
+        }
     }
 }
 
@@ -146,13 +167,25 @@ void* D3D11Framebuffer::get_attachment_image(u32 attachment_index) const
 void* D3D11Framebuffer::get_attachment_image_view(u32 attachment_index) const
 {
     SE_ASSERT(attachment_index < m_attachments.count());
-    return m_attachments[attachment_index].image_rtv_handle;
+    return m_attachments[attachment_index].image_srv_handle;
 }
 
 const FramebufferAttachmentDescription& D3D11Framebuffer::get_attachment_description(u32 attachment_index) const
 {
     SE_ASSERT(attachment_index < m_attachments.count());
     return m_attachments[attachment_index].description;
+}
+
+ID3D11RenderTargetView* D3D11Framebuffer::get_attachment_render_target_view(u32 attachment_index) const
+{
+    SE_ASSERT(attachment_index < m_attachments.count());
+    return m_attachments[attachment_index].image_rtv_handle;
+}
+
+ID3D11ShaderResourceView* D3D11Framebuffer::get_attachment_shader_resource_view(u32 attachment_index) const
+{
+    SE_ASSERT(attachment_index < m_attachments.count());
+    return m_attachments[attachment_index].image_srv_handle;
 }
 
 } // namespace SE

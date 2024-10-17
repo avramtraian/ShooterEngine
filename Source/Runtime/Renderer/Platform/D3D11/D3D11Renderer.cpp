@@ -215,7 +215,7 @@ void D3D11Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
     render_target_views.set_fixed_capacity(framebuffer->get_attachment_count());
     for (u32 attachment_index = 0; attachment_index < framebuffer->get_attachment_count(); ++attachment_index)
     {
-        void* attachment_view_handle = framebuffer->get_attachment_image_view(attachment_index);
+        void* attachment_view_handle = framebuffer->get_attachment_render_target_view(attachment_index);
         render_target_views.add(static_cast<ID3D11RenderTargetView*>(attachment_view_handle));
     }
 
@@ -230,7 +230,7 @@ void D3D11Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
         const RenderPassAttachmentDescription& attachment_description = d3d11_render_pass->get_attachment_description(attachment_index);
         if (attachment_description.load_operation == RenderPassAttachmentLoadOperation::Clear)
         {
-            void* attachment_view_handle = framebuffer->get_attachment_image_view(attachment_index);
+            void* attachment_view_handle = framebuffer->get_attachment_render_target_view(attachment_index);
             ID3D11RenderTargetView* rtv = static_cast<ID3D11RenderTargetView*>(attachment_view_handle);
 
             const Color4 color = attachment_description.clear_color;
