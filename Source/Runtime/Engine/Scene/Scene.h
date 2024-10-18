@@ -83,6 +83,9 @@ public:
     }
 
 public:
+    NODISCARD ALWAYS_INLINE u32 get_entity_count() const { return static_cast<u32>(m_entities.count()); }
+
+public:
     //
     // Invokes the `on_begin_play` callback for each entity in the scene.
     // Also runs the initialization logic required for the scene to start playing a new session.
