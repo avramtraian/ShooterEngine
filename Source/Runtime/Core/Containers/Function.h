@@ -207,7 +207,7 @@ public:
     NODISCARD ALWAYS_INLINE bool has_value() const { return (m_functor_byte_count > 0); }
     NODISCARD ALWAYS_INLINE operator bool() const { return has_value(); }
 
-    ALWAYS_INLINE ReturnType operator()(ParameterTypes&&... parameters) { return functor().invoke(forward<ParameterTypes>(parameters)...); }
+    ALWAYS_INLINE ReturnType operator()(ParameterTypes... parameters) { return functor().invoke(forward<ParameterTypes>(parameters)...); }
 
     ALWAYS_INLINE void clear()
     {
