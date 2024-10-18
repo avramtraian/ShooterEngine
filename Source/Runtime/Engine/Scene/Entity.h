@@ -6,6 +6,7 @@
 #pragma once
 
 #include <Core/Containers/OwnPtr.h>
+#include <Core/Containers/String.h>
 #include <Core/Containers/Vector.h>
 #include <Core/UUID.h>
 #include <Engine/Scene/EntityComponent.h>
@@ -40,6 +41,9 @@ public:
 
     // Returns the globally unique identifier of the entity.
     NODISCARD ALWAYS_INLINE UUID uuid() const { return m_uuid; }
+
+    // Returns the name of the entity in the scene.
+    NODISCARD ALWAYS_INLINE const String& name() const { return m_name; }
 
 public:
     //
@@ -99,6 +103,9 @@ public:
         return *component;
     }
 
+public:
+    SHOOTER_API void set_name(String entity_name);
+
 private:
     //
     // Function that is called when the scene begins a new play session or the entity has just been created
@@ -138,6 +145,7 @@ private:
 private:
     Scene& m_scene_context;
     UUID m_uuid;
+    String m_name;
 
     Vector<EntityComponent*> m_components;
 };

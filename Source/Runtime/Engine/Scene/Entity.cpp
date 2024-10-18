@@ -12,6 +12,7 @@ namespace SE
 Entity::Entity(Scene& in_scene_context, UUID entity_uuid)
     : m_scene_context(in_scene_context)
     , m_uuid(entity_uuid)
+    , m_name("Unnamed Entity"sv)
 {}
 
 Entity::~Entity()
@@ -23,6 +24,11 @@ Entity::~Entity()
     }
 
     m_components.clear_and_shrink();
+}
+
+void Entity::set_name(String entity_name)
+{
+    m_name = entity_name;
 }
 
 void Entity::on_begin_play()
