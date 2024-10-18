@@ -7,6 +7,7 @@
 #include <Asset/TextureAsset.h>
 #include <Core/Containers/StringBuilder.h>
 #include <Core/FileSystem/FileSystem.h>
+#include <Core/Log.h>
 #include <Engine/Engine.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/Renderer2D.h>
@@ -26,6 +27,15 @@ void Renderer2D::shutdown()
     m_target_framebuffer.release();
 }
 
+void Renderer2D::on_resize(u32 new_width, u32 new_height)
+{
+    if (new_width != m_target_framebuffer->get_width() || new_height != m_target_framebuffer->get_height())
+    {
+        // TODO: The 2D renderer is not ready yet for resizing.
+        return;
+    }
+}
+
 void Renderer2D::begin_frame()
 {
     m_statistics.quads_in_current_batch = 0;
@@ -38,17 +48,6 @@ void Renderer2D::begin_frame()
 void Renderer2D::end_frame()
 {
     end_quad_batch();
-}
-
-void Renderer2D::invalidate_target_framebuffer(u32 new_width, u32 new_height)
-{
-    if (m_target_framebuffer->is_swapchain_target())
-    {
-        // There is no need to invalidate a swapchain target framebuffer.
-        return;
-    }
-
-    m_target_framebuffer->invalidate(new_width, new_height);
 }
 
 void Renderer2D::submit_quad(Vector2 translation, Vector2 scale, Color4 color)

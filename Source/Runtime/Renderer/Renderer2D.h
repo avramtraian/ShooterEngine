@@ -47,10 +47,10 @@ public:
 
     SHOOTER_API void shutdown();
 
+    SHOOTER_API void on_resize(u32 new_width, u32 new_height);
+
     SHOOTER_API void begin_frame();
     SHOOTER_API void end_frame();
-
-    SHOOTER_API void invalidate_target_framebuffer(u32 new_width, u32 new_height);
 
 public:
     SHOOTER_API void submit_quad(Vector2 translation, Vector2 scale, Color4 color);

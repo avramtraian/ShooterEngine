@@ -24,9 +24,9 @@ public:
     SHOOTER_API bool initialize(Scene& in_scene_context, RefPtr<Framebuffer> target_framebuffer);
     SHOOTER_API void shutdown();
 
-    SHOOTER_API bool render();
-
     SHOOTER_API void on_resize(u32 new_width, u32 new_height);
+
+    SHOOTER_API bool render();
 
 private:
     Scene* m_scene_context;

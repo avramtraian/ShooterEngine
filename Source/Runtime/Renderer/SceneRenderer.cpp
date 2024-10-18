@@ -41,6 +41,12 @@ void SceneRenderer::shutdown()
     m_target_framebuffer.release();
 }
 
+void SceneRenderer::on_resize(u32 new_width, u32 new_height)
+{
+    // Resize the 2D renderer.
+    m_renderer_2d->on_resize(new_width, new_height);
+}
+
 bool SceneRenderer::render()
 {
     Renderer::begin_frame();
@@ -66,12 +72,6 @@ bool SceneRenderer::render()
     m_renderer_2d->end_frame();
     Renderer::end_frame();
     return true;
-}
-
-void SceneRenderer::on_resize(u32 new_width, u32 new_height)
-{
-    // Resize the 2D renderer.
-    m_renderer_2d->invalidate_target_framebuffer(new_width, new_height);
 }
 
 } // namespace SE
