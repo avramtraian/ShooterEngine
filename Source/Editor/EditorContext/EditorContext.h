@@ -7,6 +7,10 @@
 
 #include <Core/Containers/OwnPtr.h>
 #include <Core/Containers/String.h>
+#include <EditorContext/Panels/ContentBrowserPanel.h>
+#include <EditorContext/Panels/EntityInspectorPanel.h>
+#include <EditorContext/Panels/SceneHierarchyPanel.h>
+#include <EditorContext/Panels/ViewportPanel.h>
 #include <Engine/Application/Event.h>
 #include <Engine/Application/Window.h>
 #include <Engine/Scene/Scene.h>
@@ -39,6 +43,10 @@ public:
     void on_event(const Event& in_event);
 
 public:
+    NODISCARD ALWAYS_INLINE OwnPtr<Scene>& get_active_scene() { return m_active_scene; }
+    NODISCARD ALWAYS_INLINE const OwnPtr<Scene>& get_active_scene() const { return m_active_scene; }
+
+public:
     NODISCARD BuildConfiguration get_current_build_configuration() const;
 
     NODISCARD ALWAYS_INLINE String get_engine_root_directory() const { return m_engine_root_directory; }
@@ -48,6 +56,12 @@ public:
     NODISCARD String get_project_source_directory() const;
     NODISCARD String get_project_content_directory() const;
     NODISCARD String get_project_binaries_directory(BuildConfiguration) const;
+
+public:
+    NODISCARD ALWAYS_INLINE ContentBrowserPanel& get_content_browser_panel() { return m_content_browser_panel; }
+    NODISCARD ALWAYS_INLINE EntityInspectorPanel& get_entity_inspector_panel() { return m_entity_inspector_panel; }
+    NODISCARD ALWAYS_INLINE SceneHierarchyPanel& get_scene_hierarchy_panel() { return m_scene_hierarchy_panel; }
+    NODISCARD ALWAYS_INLINE ViewportPanel& get_viewport_panel() { return m_viewport_panel; }
 
 private:
     static void window_event_handler(const Event& in_event);
@@ -65,6 +79,11 @@ private:
     RefPtr<Shader> m_imgui_shader;
     RefPtr<Pipeline> m_imgui_pipeline;
     RefPtr<RenderPass> m_imgui_render_pass;
+
+    ContentBrowserPanel m_content_browser_panel;
+    EntityInspectorPanel m_entity_inspector_panel;
+    SceneHierarchyPanel m_scene_hierarchy_panel;
+    ViewportPanel m_viewport_panel;
 
     String m_engine_root_directory;
     String m_project_root_directory;

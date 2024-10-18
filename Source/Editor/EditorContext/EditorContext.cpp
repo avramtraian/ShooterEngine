@@ -8,6 +8,8 @@
 #include <EditorContext/EditorContext.h>
 #include <EditorEngine.h>
 #include <Engine/Application/WindowEvent.h>
+#include <Engine/Scene/Components/SpriteRendererComponent.h>
+#include <Engine/Scene/Components/TransformComponent.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/RendererAPI.h>
 #include <Renderer/RenderingContext.h>
@@ -81,7 +83,9 @@ bool EditorContext::initialize()
     FramebufferDescription scene_framebuffer_description = {};
     scene_framebuffer_description.width = 1200;
     scene_framebuffer_description.height = 800;
-    scene_framebuffer_description.attachments.add({ ImageFormat::BGRA8 });
+    auto& color_scene_framebuffer_attachment = scene_framebuffer_description.attachments.emplace();
+    color_scene_framebuffer_attachment.format = ImageFormat::RGBA8;
+    color_scene_framebuffer_attachment.use_as_input_texture = true;
     m_scene_framebuffer = Framebuffer::create(scene_framebuffer_description);
 
     m_scene_renderer = create_own<SceneRenderer>();
@@ -135,11 +139,32 @@ bool EditorContext::initialize()
 
 bool EditorContext::post_initialize()
 {
+    m_content_browser_panel.initialize();
+    m_entity_inspector_panel.initialize();
+
+    m_scene_hierarchy_panel.initialize();
+    m_scene_hierarchy_panel.set_scene_context(m_active_scene.get());
+
+    m_viewport_panel.initialize();
+    m_viewport_panel.set_scene_framebuffer_context(m_scene_framebuffer);
+    m_viewport_panel.add_on_viewport_resized_callback(
+        [this](u32 viewport_width, u32 viewport_height)
+        {
+            m_scene_framebuffer->invalidate(viewport_width, viewport_height);
+            m_scene_renderer->on_resize(viewport_width, viewport_height);
+        }
+    );
+
     return true;
 }
 
 void EditorContext::shutdown()
 {
+    m_content_browser_panel.shutdown();
+    m_entity_inspector_panel.shutdown();
+    m_scene_hierarchy_panel.shutdown();
+    m_viewport_panel.shutdown();
+
     m_imgui_render_pass.release();
     m_imgui_pipeline.release();
     m_imgui_shader.release();
@@ -267,9 +292,22 @@ void EditorContext::window_event_handler(const Event& in_event)
 }
 
 void EditorContext::on_update_logic(float delta_time)
-{}
+{
+    // Render the scene.
+    m_scene_renderer->render();
+
+    m_content_browser_panel.on_update(delta_time);
+    m_entity_inspector_panel.on_update(delta_time);
+    m_scene_hierarchy_panel.on_update(delta_time);
+    m_viewport_panel.on_update(delta_time);
+}
 
 void EditorContext::on_render_imgui()
-{}
+{
+    m_content_browser_panel.on_render_imgui();
+    m_entity_inspector_panel.on_render_imgui();
+    m_scene_hierarchy_panel.on_render_imgui();
+    m_viewport_panel.on_render_imgui();
+}
 
 } // namespace SE
