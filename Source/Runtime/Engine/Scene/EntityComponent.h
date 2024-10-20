@@ -14,6 +14,7 @@ namespace SE
 // Forward declarations.
 class Entity;
 class Scene;
+class ComponentRegisterBuilder;
 
 //
 // Structure that is always passes as the first argument to any constructor of any entity component.
@@ -37,8 +38,13 @@ class EntityComponent
     friend class Entity;
 
 public:
+    NODISCARD ALWAYS_INLINE static UUID get_static_component_type_uuid() { return UUID::invalid(); }
     NODISCARD virtual bool check_component_type_uuid(UUID component_type_uuid) const { return false; }
     NODISCARD virtual UUID get_component_type_uuid() const = 0;
+
+    // Called when the component is registered by the engine.
+    // Initializes the corresponding node in the component graph.
+    virtual void on_register(ComponentRegisterBuilder& node_builder) const = 0;
 
     virtual ~EntityComponent() = default;
 
@@ -72,6 +78,7 @@ private:
 public:                                                                                                     \
     using Super = parent_type_name;                                                                         \
     NODISCARD static UUID get_static_component_type_uuid();                                                 \
+    SHOOTER_API virtual void on_register(ComponentRegisterBuilder& register_builder) const override;                    \
     NODISCARD ALWAYS_INLINE virtual UUID get_component_type_uuid() const override                           \
     {                                                                                                       \
         return get_static_component_type_uuid();                                                            \
@@ -92,6 +99,7 @@ public:                                                                         
 public:                                                                                                     \
     using Super = parent_type_name;                                                                         \
     NODISCARD SHOOTER_API static UUID get_static_component_type_uuid();                                     \
+    SHOOTER_API virtual void on_register(ComponentRegisterBuilder& register_builder) const override;                    \
     NODISCARD ALWAYS_INLINE virtual UUID get_component_type_uuid() const override                           \
     {                                                                                                       \
         return get_static_component_type_uuid();                                                            \
