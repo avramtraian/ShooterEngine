@@ -4,6 +4,7 @@
  */
 
 #include <Engine/Scene/ComponentRegistry.h>
+#include <Engine/Scene/ComponentRegistryFields.h>
 #include <Engine/Scene/Components/SpriteRendererComponent.h>
 
 namespace SE
@@ -27,6 +28,8 @@ void SpriteRendererComponent::on_register(ComponentRegisterBuilder& register_bui
     register_builder.set_parent_type_uuid(Super::get_static_component_type_uuid());
     register_builder.set_name("SpriteRendererComponent"sv);
     register_builder.set_construct_function(construct_function);
+
+    SE_TRY_ADD_COMPONENT_FIELD(m_sprite_color);
 }
 
 SpriteRendererComponent::SpriteRendererComponent(const EntityComponentInitializer& initializer, Color4 in_sprite_color)

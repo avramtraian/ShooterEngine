@@ -17,6 +17,28 @@ namespace SE
 using PFN_ComponentConstruct = void (*)(void*, const EntityComponentInitializer&);
 using PFN_RegisterModuleComponents = void (*)(class ComponentRegistry&);
 
+enum class ComponentFieldType : u16
+{
+    Unknown = 0,
+    // clang-format off
+    UInt8, UInt16, UInt32, UInt64,
+    Int8, Int16, Int32, Int64,
+    Float32, Float64,
+    Vector2, Vector3, Vector4,
+    Color3, Color4,
+    // clang-format on
+};
+
+struct ComponentField
+{
+    ComponentFieldType type { ComponentFieldType::Unknown };
+    String name;
+    u32 byte_offset { 0 };
+    u32 byte_count { 0 };
+
+    u8 default_value_buffer[32];
+};
+
 class ComponentRegisterBuilder
 {
 public:
@@ -25,16 +47,25 @@ public:
     ALWAYS_INLINE void set_name(String name) { m_name = move(name); }
     ALWAYS_INLINE void set_construct_function(PFN_ComponentConstruct construct_function) { m_construct_function = construct_function; }
 
+    ALWAYS_INLINE void add_field(const ComponentField& field)
+    {
+        SE_ASSERT(field.type != ComponentFieldType::Unknown);
+        m_fields.add(field);
+    }
+
+public:
     NODISCARD ALWAYS_INLINE UUID get_type_uuid() const { return m_type_uuid; }
     NODISCARD ALWAYS_INLINE UUID get_parent_type_uuid() const { return m_parent_type_uuid; }
     NODISCARD ALWAYS_INLINE const String& get_name() const { return m_name; }
     NODISCARD ALWAYS_INLINE PFN_ComponentConstruct get_construct_function() const { return m_construct_function; }
+    NODISCARD ALWAYS_INLINE const Vector<ComponentField>& get_fields() const { return m_fields; }
 
 private:
     UUID m_type_uuid;
     UUID m_parent_type_uuid;
     String m_name;
     PFN_ComponentConstruct m_construct_function;
+    Vector<ComponentField> m_fields;
 };
 
 class ComponentRegistry
@@ -47,6 +78,7 @@ public:
         Vector<UUID> children_uuids;
         String name;
         PFN_ComponentConstruct construct_function;
+        Vector<ComponentField> fields;
     };
 
 public:
@@ -73,6 +105,12 @@ public:
     {
         const ComponentRegisterData& register_data = get_component_register(component_type_uuid);
         return register_data.construct_function;
+    }
+
+    NODISCARD ALWAYS_INLINE const Vector<ComponentField>& get_component_fields(UUID component_type_uuid) const
+    {
+        const ComponentRegisterData& register_data = get_component_register(component_type_uuid);
+        return register_data.fields;
     }
 
 private:

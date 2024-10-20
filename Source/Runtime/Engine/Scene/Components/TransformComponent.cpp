@@ -4,6 +4,7 @@
  */
 
 #include <Engine/Scene/ComponentRegistry.h>
+#include <Engine/Scene/ComponentRegistryFields.h>
 #include <Engine/Scene/Components/TransformComponent.h>
 
 namespace SE
@@ -27,6 +28,10 @@ void TransformComponent::on_register(ComponentRegisterBuilder& register_builder)
     register_builder.set_parent_type_uuid(Super::get_static_component_type_uuid());
     register_builder.set_name("TransformComponent"sv);
     register_builder.set_construct_function(construct_function);
+
+    SE_TRY_ADD_COMPONENT_FIELD(m_translation);
+    SE_TRY_ADD_COMPONENT_FIELD(m_rotation);
+    SE_TRY_ADD_COMPONENT_FIELD(m_scale);
 }
 
 TransformComponent::TransformComponent(const EntityComponentInitializer& initializer, Vector3 in_translation, Vector3 in_rotation, Vector3 in_scale)
