@@ -106,6 +106,8 @@ public:
 public:
     SHOOTER_API void set_name(String entity_name);
 
+    NODISCARD ALWAYS_INLINE const Vector<EntityComponent*>& get_components() const { return m_components; }
+
 private:
     //
     // Function that is called when the scene begins a new play session or the entity has just been created
