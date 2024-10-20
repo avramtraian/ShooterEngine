@@ -50,6 +50,18 @@ Entity* Scene::create_entity_with_uuid(UUID entity_uuid)
     return entity;
 }
 
+Entity* Scene::get_entity_from_uuid(UUID entity_uuid)
+{
+    Optional<OwnPtr<Entity>&> entity = m_entities.get_if_exists(entity_uuid);
+    return entity.has_value() ? entity.value().get() : nullptr;
+}
+
+const Entity* Scene::get_entity_from_uuid(UUID entity_uuid) const
+{
+    Optional<const OwnPtr<Entity>&> entity = m_entities.get_if_exists(entity_uuid);
+    return entity.has_value() ? entity.value().get() : nullptr;
+}
+
 void Scene::on_begin_play()
 {
     SE_ASSERT(m_play_state == PlayState::NotPlaying);

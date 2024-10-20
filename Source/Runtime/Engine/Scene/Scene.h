@@ -44,6 +44,10 @@ public:
     SHOOTER_API Entity* create_entity();
     SHOOTER_API Entity* create_entity_with_uuid(UUID entity_uuid);
 
+    // These functions return null pointers if no entity has the given UUID.
+    SHOOTER_API Entity* get_entity_from_uuid(UUID entity_uuid);
+    SHOOTER_API const Entity* get_entity_from_uuid(UUID entity_uuid) const;
+
     //
     // The signature of the provided entity predicate function must:
     //   - Return `IterationDecision`, which determines whether or not to finish the entity iteration process;
