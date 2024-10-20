@@ -130,6 +130,8 @@
 // Expands to the number of elements stored in the given static array.
 #define SE_ARRAY_COUNT(x) (sizeof(x) / sizeof((x)[0]))
 
+#define SE_OFFSET_OF(type, field) ((usize) & (((type*)0)->field))
+
 // Constants regarding memory size units.
 #define KiB (static_cast<usize>(1024))
 #define MiB (1024 * KiB)
