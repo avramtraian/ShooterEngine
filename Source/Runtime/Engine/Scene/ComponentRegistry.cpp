@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
+#include <Core/Log.h>
 #include <Engine/Scene/ComponentRegistry.h>
 #include <Engine/Scene/Components/SpriteRendererComponent.h>
 #include <Engine/Scene/Components/TransformComponent.h>
@@ -26,6 +27,7 @@ void ComponentRegistry::construct_register(const ComponentRegisterBuilder& build
 {
     ComponentRegisterData& register_data = m_component_registry.get_or_add(builder.get_type_uuid());
     register_data.type_uuid = builder.get_type_uuid();
+    register_data.structure_byte_count = builder.get_structure_byte_count();
     register_data.parent_uuid = builder.get_parent_type_uuid();
     register_data.name = builder.get_name();
     register_data.construct_function = builder.get_construct_function();

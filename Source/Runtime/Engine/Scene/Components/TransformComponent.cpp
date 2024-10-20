@@ -25,6 +25,7 @@ void TransformComponent::on_register(ComponentRegisterBuilder& register_builder)
     };
 
     register_builder.set_type_uuid(get_static_component_type_uuid());
+    register_builder.set_structure_byte_count(sizeof(TransformComponent));
     register_builder.set_parent_type_uuid(Super::get_static_component_type_uuid());
     register_builder.set_name("TransformComponent"sv);
     register_builder.set_construct_function(construct_function);

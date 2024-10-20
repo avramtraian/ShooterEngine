@@ -8,6 +8,7 @@
 #include <Core/Containers/HashMap.h>
 #include <Core/Containers/String.h>
 #include <Core/Containers/Vector.h>
+#include <Core/Misc/IterationDecision.h>
 #include <Core/UUID.h>
 #include <Engine/Scene/EntityComponent.h>
 
@@ -43,10 +44,13 @@ class ComponentRegisterBuilder
 {
 public:
     ALWAYS_INLINE void set_type_uuid(UUID type_uuid) { m_type_uuid = type_uuid; }
+    ALWAYS_INLINE void set_structure_byte_count(usize structure_byte_count) { m_structure_byte_count = structure_byte_count; }
     ALWAYS_INLINE void set_parent_type_uuid(UUID parent_type_uuid) { m_parent_type_uuid = parent_type_uuid; }
     ALWAYS_INLINE void set_name(String name) { m_name = move(name); }
     ALWAYS_INLINE void set_construct_function(PFN_ComponentConstruct construct_function) { m_construct_function = construct_function; }
 
+    // NOTE: The order in which the fields are added using this function is also the order in which they will
+    // apear in the editor inspector panel.
     ALWAYS_INLINE void add_field(const ComponentField& field)
     {
         SE_ASSERT(field.type != ComponentFieldType::Unknown);
@@ -55,6 +59,7 @@ public:
 
 public:
     NODISCARD ALWAYS_INLINE UUID get_type_uuid() const { return m_type_uuid; }
+    NODISCARD ALWAYS_INLINE usize get_structure_byte_count() const { return m_structure_byte_count; }
     NODISCARD ALWAYS_INLINE UUID get_parent_type_uuid() const { return m_parent_type_uuid; }
     NODISCARD ALWAYS_INLINE const String& get_name() const { return m_name; }
     NODISCARD ALWAYS_INLINE PFN_ComponentConstruct get_construct_function() const { return m_construct_function; }
@@ -62,9 +67,10 @@ public:
 
 private:
     UUID m_type_uuid;
+    usize m_structure_byte_count { 0 };
     UUID m_parent_type_uuid;
     String m_name;
-    PFN_ComponentConstruct m_construct_function;
+    PFN_ComponentConstruct m_construct_function { nullptr };
     Vector<ComponentField> m_fields;
 };
 
@@ -74,6 +80,7 @@ public:
     struct ComponentRegisterData
     {
         UUID type_uuid;
+        usize structure_byte_count;
         UUID parent_uuid;
         Vector<UUID> children_uuids;
         String name;
@@ -111,6 +118,18 @@ public:
     {
         const ComponentRegisterData& register_data = get_component_register(component_type_uuid);
         return register_data.fields;
+    }
+
+public:
+    template<typename PredicateFunction>
+    ALWAYS_INLINE void for_each_component_register(PredicateFunction predicate) const
+    {
+        for (auto it : m_component_registry)
+        {
+            const IterationDecision iteration_decision = predicate(it.value);
+            if (iteration_decision == IterationDecision::Break)
+                break;
+        }
     }
 
 private:
