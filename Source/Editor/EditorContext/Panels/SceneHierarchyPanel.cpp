@@ -100,6 +100,18 @@ bool SceneHierarchyPanel::draw_entity_entry(const EntityEntry& entry)
         entry_is_clicked = true;
     }
 
+    if (ImGui::BeginPopupContextItem())
+    {
+        ImGui::SeparatorText("Entity Options");
+        if (ImGui::MenuItem("Remove Entity"))
+        {
+            // TODO: Actually remove the entity from the scene.
+            // This function is not yet implemented as there is no API for removing entities from a scene.
+            clear_selected_entity();
+        }
+        ImGui::EndPopup();
+    }
+
     if (is_tree_node_opened)
         ImGui::TreePop();
 
