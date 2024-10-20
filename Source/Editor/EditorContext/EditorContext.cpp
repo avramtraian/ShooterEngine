@@ -79,6 +79,9 @@ bool EditorContext::initialize()
     // Initialize the scene.
     m_active_scene = Scene::create();
 
+    // Initialize the component registry.
+    m_component_registry.initialize();
+
     // Create the scene framebuffer and scene renderer.
     FramebufferDescription scene_framebuffer_description = {};
     scene_framebuffer_description.width = 1200;
@@ -140,10 +143,22 @@ bool EditorContext::initialize()
 bool EditorContext::post_initialize()
 {
     m_content_browser_panel.initialize();
+
     m_entity_inspector_panel.initialize();
+    m_entity_inspector_panel.set_scene_context(m_active_scene.get());
+    m_entity_inspector_panel.set_component_registry_context(&m_component_registry);
 
     m_scene_hierarchy_panel.initialize();
     m_scene_hierarchy_panel.set_scene_context(m_active_scene.get());
+    m_scene_hierarchy_panel.add_on_selection_changed_callback(
+        [this](Optional<UUID> selected_entity_uuid)
+        {
+            if (selected_entity_uuid.has_value())
+                m_entity_inspector_panel.set_entity_uuid_context(selected_entity_uuid.value());
+            else
+                m_entity_inspector_panel.clear_entity_uuid_context();
+        }
+    );
 
     m_viewport_panel.initialize();
     m_viewport_panel.set_scene_framebuffer_context(m_scene_framebuffer);
@@ -154,6 +169,15 @@ bool EditorContext::post_initialize()
             m_scene_renderer->on_resize(viewport_width, viewport_height);
         }
     );
+
+    Entity* entity = m_active_scene->create_entity();
+    entity->add_component<TransformComponent>();
+    entity->add_component<SpriteRendererComponent>();
+
+    m_active_scene->create_entity();
+    m_active_scene->create_entity();
+    m_active_scene->create_entity();
+    m_active_scene->create_entity();
 
     return true;
 }
@@ -181,6 +205,7 @@ void EditorContext::shutdown()
 
     m_scene_renderer.release();
     m_active_scene.release();
+    m_component_registry.shutdown();
 
     // Destroy the window.
     Renderer::destroy_context_for_window(m_window.get());

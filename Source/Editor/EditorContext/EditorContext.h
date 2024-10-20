@@ -13,6 +13,7 @@
 #include <EditorContext/Panels/ViewportPanel.h>
 #include <Engine/Application/Event.h>
 #include <Engine/Application/Window.h>
+#include <Engine/Scene/ComponentRegistry.h>
 #include <Engine/Scene/Scene.h>
 #include <Renderer/Pipeline.h>
 #include <Renderer/RenderPass.h>
@@ -70,8 +71,10 @@ private:
     void on_render_imgui();
 
 private:
-    OwnPtr<Scene> m_active_scene;
     OwnPtr<Window> m_window;
+
+    OwnPtr<Scene> m_active_scene;
+    ComponentRegistry m_component_registry;
 
     RefPtr<Framebuffer> m_scene_framebuffer;
     OwnPtr<SceneRenderer> m_scene_renderer;
