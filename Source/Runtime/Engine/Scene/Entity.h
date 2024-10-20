@@ -34,6 +34,11 @@ class Entity
     friend class OwnPtr<Entity>;
     friend class Scene;
 
+#if SE_CONFIGURATION_TARGET_EDITOR
+    friend class EntityInspectorPanel;
+    friend class SceneHierarchyPanel;
+#endif // SE_CONFIGURATION_TARGET_EDITOR
+
 public:
     // Returns the scene context where the entity exists.
     NODISCARD ALWAYS_INLINE Scene& scene_context() { return m_scene_context; }
