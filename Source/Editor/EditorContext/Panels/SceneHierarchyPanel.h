@@ -39,6 +39,7 @@ public:
 public:
     NODISCARD ALWAYS_INLINE Scene* get_scene_context() { return m_scene_context; }
     NODISCARD ALWAYS_INLINE const Scene* get_scene_context() const { return m_scene_context; }
+    NODISCARD ALWAYS_INLINE bool has_scene_context() const { return (m_scene_context != nullptr); }
 
     void set_scene_context(Scene* scene_context);
     void clear_scene_context();

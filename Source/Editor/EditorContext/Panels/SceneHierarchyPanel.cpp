@@ -22,13 +22,22 @@ void SceneHierarchyPanel::shutdown()
 {}
 
 void SceneHierarchyPanel::on_update(float delta_time)
-{}
+{
+    if (has_scene_context() && m_selected_entity_uuid.has_value())
+    {
+        if (m_scene_context->get_entity_from_uuid(m_selected_entity_uuid.value()) == nullptr)
+        {
+            // The entity has been removed from the scene by an external actor.
+            clear_selected_entity();
+        }
+    }
+}
 
 void SceneHierarchyPanel::on_render_imgui()
 {
     ImGui::Begin("SceneHierarchy");
 
-    if (m_scene_context)
+    if (has_scene_context())
     {
         Vector<EntityEntry> ordered_entity_entries;
         ordered_entity_entries.set_fixed_capacity(m_scene_context->get_entity_count());
