@@ -9,16 +9,10 @@
 #include <Core/Containers/Span.h>
 #include <Core/Containers/String.h>
 #include <Core/Containers/Vector.h>
+#include <Renderer/ShaderStage.h>
 
 namespace SE
 {
-
-enum class ShaderStage : u8
-{
-    Unknown = 0,
-    Vertex,
-    Fragment,
-};
 
 enum class ShaderSourceType : u8
 {
