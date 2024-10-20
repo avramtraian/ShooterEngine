@@ -31,8 +31,11 @@ void ComponentRegistry::construct_register(const ComponentRegisterBuilder& build
     register_data.construct_function = builder.get_construct_function();
     register_data.fields = builder.get_fields();
 
-    ComponentRegisterData& parent_register_data = m_component_registry.get_or_add(builder.get_parent_type_uuid());
-    parent_register_data.children_uuids.add(builder.get_type_uuid());
+    if (builder.get_parent_type_uuid() != UUID::invalid())
+    {
+        ComponentRegisterData& parent_register_data = m_component_registry.get_or_add(builder.get_parent_type_uuid());
+        parent_register_data.children_uuids.add(builder.get_type_uuid());
+    }
 }
 
 void ComponentRegistry::construct_engine_components_registers()
