@@ -46,6 +46,7 @@ public:
 private:
     void draw_entity_name(Entity& entity_context);
     void draw_entity_uuid(UUID uuid);
+    void draw_add_component(Entity& entity_context);
     void draw_component(EntityComponent* component);
 
 private:

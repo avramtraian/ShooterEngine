@@ -10,6 +10,7 @@
 #include <Engine/Scene/Entity.h>
 #include <Engine/Scene/Scene.h>
 #include <imgui.h>
+#include <imgui_internal.h>
 
 namespace SE
 {
@@ -36,6 +37,9 @@ void EntityInspectorPanel::on_render_imgui()
 
         draw_entity_name(*entity_context);
         draw_entity_uuid(entity_context->uuid());
+        ImGui::Separator();
+
+        draw_add_component(*entity_context);
         ImGui::Separator();
 
         for (EntityComponent* component : entity_context->get_components())
@@ -131,13 +135,82 @@ void EntityInspectorPanel::draw_entity_uuid(UUID uuid)
     ImGui::InputText("Entity UUID", entity_uuid_buffer, sizeof(entity_uuid_buffer), ImGuiInputTextFlags_ReadOnly);
 }
 
+void EntityInspectorPanel::draw_add_component(Entity& entity_context)
+{
+    if (ImGui::Button("Add Component"))
+    {
+        ImGui::OpenPopup("AddComponentPopup");
+    }
+
+    Optional<UUID> component_uuid;
+    if (ImGui::BeginPopup("AddComponentPopup"))
+    {
+        ImGui::SeparatorText("Select a component");
+
+        m_component_registry_context->for_each_component_register(
+            [&](const ComponentRegistry::ComponentRegisterData& register_data)
+            {
+                if (!entity_context.has_component(register_data.type_uuid))
+                {
+                    if (ImGui::MenuItem(register_data.name.characters()))
+                        component_uuid = register_data.type_uuid;
+                }
+                return IterationDecision::Continue;
+            }
+        );
+
+        ImGui::EndPopup();
+    }
+
+    if (component_uuid.has_value())
+    {
+        const auto& register_data = m_component_registry_context->get_component_register(component_uuid.value());
+        void* component_memory = ::operator new(register_data.structure_byte_count);
+
+        EntityComponentInitializer initializer = {};
+        initializer.parent_entity = &entity_context;
+        initializer.scene_context = m_scene_context;
+        register_data.construct_function(component_memory, initializer);
+
+        EntityComponent* component = static_cast<EntityComponent*>(component_memory);
+        entity_context.add_component(component);
+    }
+}
+
 void EntityInspectorPanel::draw_component(EntityComponent* component)
 {
     SE_ASSERT(component != nullptr);
     const auto& component_register_data = m_component_registry_context->get_component_register(component->get_component_type_uuid());
+    ImGui::PushID(reinterpret_cast<const void*>(component_register_data.type_uuid.value()));
+    const ImVec2 content_region_available = ImGui::GetContentRegionAvail();
 
-    const ImGuiTreeNodeFlags tree_node_flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen;
-    if (ImGui::TreeNodeEx(component_register_data.name.characters(), tree_node_flags))
+    const ImGuiTreeNodeFlags tree_node_flags =
+        ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowOverlap;
+    const bool is_tree_node_opened = ImGui::TreeNodeEx(component_register_data.name.characters(), tree_node_flags);
+
+    ImVec2 button_size = ImGui::CalcTextSize("...");
+    button_size.x += 2.0F * GImGui->Style.FramePadding.x;
+    button_size.y += 2.0F * GImGui->Style.FramePadding.y;
+
+    ImGui::SameLine(content_region_available.x - 0.5F * (button_size.x + GImGui->Style.FramePadding.x));
+    if (ImGui::Button("...", button_size))
+    {
+        ImGui::OpenPopup("ComponentOptionsPopup");
+    }
+
+    if (ImGui::BeginPopup("ComponentOptionsPopup"))
+    {
+        ImGui::SeparatorText("Component Options");
+        if (ImGui::MenuItem("Remove Component"))
+        {
+            // TODO: Actuall remove the component from the entity.
+            // Currently, there is no API for removing components from an entity and that's
+            // why this function is not implemented.
+        }
+        ImGui::EndPopup();
+    }
+
+    if (is_tree_node_opened)
     {
         for (const ComponentField& field : component_register_data.fields)
         {
@@ -159,6 +232,7 @@ void EntityInspectorPanel::draw_component(EntityComponent* component)
     }
 
     ImGui::Separator();
+    ImGui::PopID();
 }
 
 } // namespace SE
