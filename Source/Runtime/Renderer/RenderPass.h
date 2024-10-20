@@ -11,7 +11,9 @@
 #include <Core/Math/Color.h>
 #include <Renderer/Framebuffer.h>
 #include <Renderer/Pipeline.h>
+#include <Renderer/ShaderStage.h>
 #include <Renderer/Texture.h>
+#include <Renderer/UniformBuffer.h>
 
 namespace SE
 {
@@ -35,7 +37,7 @@ struct RenderPassAttachmentDescription
 {
     RenderPassAttachmentLoadOperation load_operation { RenderPassAttachmentLoadOperation::DontCare };
     RenderPassAttachmentStoreOperation store_operation { RenderPassAttachmentStoreOperation::Store };
-    
+
     // Only used when `load_operation` is set to `RenderPassAttachmentLoadOperation::Clear`.
     Color4 clear_color { 0, 0, 0, 0 };
 };
@@ -45,6 +47,18 @@ struct RenderPassDescription
     RefPtr<Pipeline> pipeline;
     RefPtr<Framebuffer> target_framebuffer;
     Vector<RenderPassAttachmentDescription> target_framebuffer_attachments;
+};
+
+struct RenderPassUniformBufferBinding
+{
+    RenderPassUniformBufferBinding() = default;
+    ALWAYS_INLINE RenderPassUniformBufferBinding(RefPtr<UniformBuffer> in_uniform_buffer, ShaderStage in_shader_stage)
+        : uniform_buffer(move(in_uniform_buffer))
+        , shader_stage(in_shader_stage)
+    {}
+
+    RefPtr<UniformBuffer> uniform_buffer;
+    ShaderStage shader_stage;
 };
 
 struct RenderPassTextureBinding
@@ -80,9 +94,11 @@ public:
     // begins or before one of the input resources will be used.
     virtual bool bind_inputs() = 0;
 
+    virtual void set_input(StringView name, const RenderPassUniformBufferBinding& uniform_buffer_binding) = 0;
     virtual void set_input(StringView name, const RenderPassTextureBinding& texture_binding) = 0;
     virtual void set_input(StringView name, const RenderPassTextureArrayBinding& texture_array_binding) = 0;
 
+    virtual void update_input(StringView name, RefPtr<UniformBuffer> uniform_buffer) = 0;
     virtual void update_input(StringView name, RefPtr<Texture2D> texture) = 0;
     virtual void update_input(StringView name, Span<RefPtr<Texture2D>> texture_array) = 0;
 };

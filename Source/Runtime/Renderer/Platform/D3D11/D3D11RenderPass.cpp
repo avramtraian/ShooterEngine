@@ -9,6 +9,7 @@
 #include <Renderer/Platform/D3D11/D3D11RenderPass.h>
 #include <Renderer/Platform/D3D11/D3D11Renderer.h>
 #include <Renderer/Platform/D3D11/D3D11Texture.h>
+#include <Renderer/Platform/D3D11/D3D11UniformBuffer.h>
 
 namespace SE
 {
@@ -34,14 +35,35 @@ D3D11RenderPass::~D3D11RenderPass()
 
 bool D3D11RenderPass::bind_inputs()
 {
+    Vector<ID3D11Buffer*> vertex_shader_constant_buffers;
+    Vector<ID3D11Buffer*> pixel_shader_constant_buffers;
+
     Vector<ID3D11ShaderResourceView*> fragment_shader_resource_views;
     Vector<ID3D11SamplerState*> fragment_shader_sampler_states;
+
+    for (auto uniform_buffer_it : m_input_uniform_buffers)
+    {
+        RefPtr<D3D11UniformBuffer> uniform_buffer = uniform_buffer_it.value.uniform_buffer.as<D3D11UniformBuffer>();
+        const ShaderStage shader_stage = uniform_buffer_it.value.shader_stage;
+
+        if (shader_stage == ShaderStage::Vertex)
+            vertex_shader_constant_buffers.add(uniform_buffer->get_handle());
+        else if (shader_stage == ShaderStage::Fragment)
+            pixel_shader_constant_buffers.add(uniform_buffer->get_handle());
+    }
 
     for (auto texture : m_input_textures)
     {
         fragment_shader_resource_views.add(texture.value->get_view_handle());
         fragment_shader_sampler_states.add(texture.value->get_sampler_state());
     }
+
+    D3D11Renderer::get_device_context()->VSSetConstantBuffers(
+        0, static_cast<UINT>(vertex_shader_constant_buffers.count()), vertex_shader_constant_buffers.elements()
+    );
+    D3D11Renderer::get_device_context()->PSSetConstantBuffers(
+        0, static_cast<UINT>(pixel_shader_constant_buffers.count()), pixel_shader_constant_buffers.elements()
+    );
 
     for (auto texture_array_bucket : m_input_texture_arrays)
     {
@@ -64,6 +86,12 @@ bool D3D11RenderPass::bind_inputs()
     return true;
 }
 
+void D3D11RenderPass::set_input(StringView name, const RenderPassUniformBufferBinding& uniform_buffer_binding)
+{
+    SE_ASSERT(!m_input_uniform_buffers.contains(name));
+    m_input_uniform_buffers.add(name, uniform_buffer_binding);
+}
+
 void D3D11RenderPass::set_input(StringView name, const RenderPassTextureBinding& texture_binding)
 {
     SE_ASSERT(!m_input_textures.contains(name));
@@ -81,6 +109,12 @@ void D3D11RenderPass::set_input(StringView name, const RenderPassTextureArrayBin
         texture_array.add(texture.as<D3D11Texture2D>());
 
     m_input_texture_arrays.add(name, move(texture_array));
+}
+
+void D3D11RenderPass::update_input(StringView name, RefPtr<UniformBuffer> uniform_buffer)
+{
+    SE_ASSERT(m_input_uniform_buffers.contains(name));
+    m_input_uniform_buffers.at(name).uniform_buffer = uniform_buffer;
 }
 
 void D3D11RenderPass::update_input(StringView name, RefPtr<Texture2D> texture)

@@ -16,6 +16,7 @@ namespace SE
 class D3D11Pipeline;
 class D3D11Framebuffer;
 class D3D11Texture2D;
+class D3D11UniformBuffer;
 
 class D3D11RenderPass : public RenderPass
 {
@@ -42,15 +43,18 @@ public:
 public:
     virtual bool bind_inputs() override;
 
+    virtual void set_input(StringView name, const RenderPassUniformBufferBinding& uniform_buffer_binding) override;
     virtual void set_input(StringView name, const RenderPassTextureBinding& texture_binding) override;
     virtual void set_input(StringView name, const RenderPassTextureArrayBinding& texture_array_binding) override;
 
+    virtual void update_input(StringView name, RefPtr<UniformBuffer> uniform_buffer) override;
     virtual void update_input(StringView name, RefPtr<Texture2D> texture) override;
     virtual void update_input(StringView name, Span<RefPtr<Texture2D>> texture_array) override;
 
 private:
     RenderPassDescription m_description;
 
+    HashMap<String, RenderPassUniformBufferBinding> m_input_uniform_buffers;
     HashMap<String, RefPtr<D3D11Texture2D>> m_input_textures;
     HashMap<String, Vector<RefPtr<D3D11Texture2D>>> m_input_texture_arrays;
 };
