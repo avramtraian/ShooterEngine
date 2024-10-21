@@ -71,7 +71,7 @@ void Renderer2D::submit_quad(Vector2 translation, Vector2 scale, Color4 color)
     construct_quad(translation, scale, color, texture_index.value());
 }
 
-void Renderer2D::submit_quad(Vector2 translation, Vector2 scale, RefPtr<Texture2D> texture, Color4 tint_color /*= Color4(1)*/)
+void Renderer2D::submit_quad(Vector2 translation, Vector2 scale, RefPtr<Texture2D> texture, Color4 tint_color /*= Color4(1, 1, 1, 1)*/)
 {
     if (m_statistics.quads_in_current_batch == m_max_quads_per_batch)
     {

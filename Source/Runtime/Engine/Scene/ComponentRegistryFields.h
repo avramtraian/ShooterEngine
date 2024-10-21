@@ -8,9 +8,7 @@
 #include <Core/Containers/Optional.h>
 #include <Core/Containers/StringView.h>
 #include <Core/Math/Color.h>
-#include <Core/Math/Vector2.h>
-#include <Core/Math/Vector3.h>
-#include <Core/Math/Vector4.h>
+#include <Core/Math/Vector.h>
 #include <Engine/Scene/ComponentRegistry.h>
 
 namespace SE

@@ -4,7 +4,7 @@
  */
 
 #include <Core/Math/Color.h>
-#include <Core/Math/Vector3.h>
+#include <Core/Math/Vector.h>
 #include <EditorContext/Panels/EntityInspectorPanel.h>
 #include <Engine/Scene/ComponentRegistry.h>
 #include <Engine/Scene/Entity.h>

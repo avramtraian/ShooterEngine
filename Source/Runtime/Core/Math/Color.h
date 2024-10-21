@@ -5,44 +5,25 @@
 
 #pragma once
 
+#include <Core/API.h>
 #include <Core/CoreTypes.h>
 
 namespace SE
 {
 
-// Forward declarations.
-struct Color3;
-struct Color4;
-
-//=============================================================================
-// THREE-COMPONENT COLOR.
-//=============================================================================
-
 struct Color3
 {
 public:
     ALWAYS_INLINE constexpr Color3()
-        : r(0)
-        , g(0)
-        , b(0)
+        : r(0.0F)
+        , g(0.0F)
+        , b(0.0F)
     {}
 
     ALWAYS_INLINE constexpr Color3(const Color3& other)
         : r(other.r)
         , g(other.g)
         , b(other.b)
-    {}
-
-    ALWAYS_INLINE constexpr Color3(float in_r, float in_g, float in_b)
-        : r(in_r)
-        , g(in_g)
-        , b(in_b)
-    {}
-
-    ALWAYS_INLINE constexpr explicit Color3(float scalar)
-        : r(scalar)
-        , g(scalar)
-        , b(scalar)
     {}
 
     ALWAYS_INLINE constexpr Color3& operator=(const Color3& other)
@@ -53,18 +34,17 @@ public:
         return *this;
     }
 
-    ALWAYS_INLINE constexpr Color3(const Color4& color4);
-    ALWAYS_INLINE constexpr Color3& operator=(const Color4& color4);
+    ALWAYS_INLINE constexpr Color3(float in_r, float in_g, float in_b)
+        : r(in_r)
+        , g(in_g)
+        , b(in_b)
+    {}
 
 public:
     float r;
     float g;
     float b;
 };
-
-//=============================================================================
-// FOUR-COMPONENT COLOR.
-//=============================================================================
 
 struct Color4
 {
@@ -83,6 +63,15 @@ public:
         , a(other.a)
     {}
 
+    ALWAYS_INLINE constexpr Color4& operator=(const Color4& other)
+    {
+        r = other.r;
+        g = other.g;
+        b = other.b;
+        a = other.a;
+        return *this;
+    }
+
     ALWAYS_INLINE constexpr Color4(float in_r, float in_g, float in_b, float in_a)
         : r(in_r)
         , g(in_g)
@@ -97,25 +86,21 @@ public:
         , a(1.0F)
     {}
 
-    ALWAYS_INLINE constexpr explicit Color4(float scalar)
-        : r(scalar)
-        , g(scalar)
-        , b(scalar)
+    ALWAYS_INLINE constexpr Color4(Color3 color_3)
+        : r(color_3.r)
+        , g(color_3.g)
+        , b(color_3.b)
         , a(1.0F)
     {}
 
-    ALWAYS_INLINE constexpr Color4& operator=(const Color4& other)
+    ALWAYS_INLINE constexpr Color4& operator=(Color3 color_3)
     {
-        r = other.r;
-        g = other.g;
-        b = other.b;
-        a = other.a;
+        r = color_3.r;
+        g = color_3.g;
+        b = color_3.b;
+        a = 1.0F;
         return *this;
     }
-
-    ALWAYS_INLINE constexpr Color4(const Color3& color3);
-    ALWAYS_INLINE constexpr Color4(const Color3& color3, float alpha);
-    ALWAYS_INLINE constexpr Color4& operator=(const Color3& color3);
 
 public:
     float r;
@@ -123,46 +108,5 @@ public:
     float b;
     float a;
 };
-
-//=============================================================================
-// INLINE FUNCTIONS IMPLEMENTATIONS.
-//=============================================================================
-
-constexpr Color3::Color3(const Color4& color4)
-    : r(color4.r)
-    , g(color4.g)
-    , b(color4.b)
-{}
-
-constexpr Color3& Color3::operator=(const Color4& color4)
-{
-    r = color4.r;
-    g = color4.g;
-    b = color4.b;
-    return *this;
-}
-
-constexpr Color4::Color4(const Color3& color3)
-    : r(color3.r)
-    , g(color3.g)
-    , b(color3.b)
-    , a(1.0F)
-{}
-
-constexpr Color4::Color4(const Color3& color3, float alpha)
-    : r(color3.r)
-    , g(color3.g)
-    , b(color3.b)
-    , a(alpha)
-{}
-
-constexpr Color4& Color4::operator=(const Color3& color3)
-{
-    r = color3.r;
-    g = color3.g;
-    b = color3.b;
-    a = 1.0F;
-    return *this;
-}
 
 } // namespace SE

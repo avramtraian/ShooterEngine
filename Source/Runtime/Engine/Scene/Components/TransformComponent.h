@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <Core/Math/Vector3.h>
+#include <Core/Math/Vector.h>
 #include <Engine/Scene/EntityComponent.h>
 
 namespace SE

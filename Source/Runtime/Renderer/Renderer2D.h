@@ -6,8 +6,7 @@
 #pragma once
 
 #include <Core/Containers/RefPtr.h>
-#include <Core/Math/Vector2.h>
-#include <Core/Math/Vector3.h>
+#include <Core/Math/Vector.h>
 #include <Core/Memory/Buffer.h>
 #include <Renderer/Framebuffer.h>
 #include <Renderer/IndexBuffer.h>
@@ -55,7 +54,7 @@ public:
 public:
     SHOOTER_API void submit_quad(Vector2 translation, Vector2 scale, Color4 color);
 
-    SHOOTER_API void submit_quad(Vector2 translation, Vector2 scale, RefPtr<Texture2D> texture, Color4 tint_color = Color4(1));
+    SHOOTER_API void submit_quad(Vector2 translation, Vector2 scale, RefPtr<Texture2D> texture, Color4 tint_color = Color4(1, 1, 1, 1));
 
 private:
     bool initialize_quads();
