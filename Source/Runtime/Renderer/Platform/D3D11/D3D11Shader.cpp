@@ -134,7 +134,8 @@ D3D11Shader::ShaderModule D3D11Shader::create_shader_module(const ShaderStageDes
         ShaderCompilationResult compilation_result = compile_shader_module(description.stage, description.source_code);
         if (!compilation_result.error_message.is_empty())
         {
-            // TODO: Inform the user about the error messages given by the compilation process.
+            SE_LOG_TAG_ERROR("D3D11", "Shader compilation failed:");
+            SE_LOG_TAG_ERROR("D3D11", "{}", compilation_result.error_message);
             SE_ASSERT(false);
         }
 
