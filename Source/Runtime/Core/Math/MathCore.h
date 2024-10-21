@@ -37,6 +37,20 @@ NODISCARD ALWAYS_INLINE constexpr T clamp(T value, T min_value, T max_value)
     return Math::max(Math::min(value, max_value), min_value);
 }
 
+template<typename T>
+NODISCARD ALWAYS_INLINE constexpr T radians(T angle_in_degrees)
+{
+    constexpr T degrees_to_radians = T(0.01745329252);
+    return angle_in_degrees * degrees_to_radians;
+}
+
+template<typename T>
+NODISCARD ALWAYS_INLINE constexpr T degrees(T angle_in_radians)
+{
+    constexpr T radians_to_degrees = T(57.295779513);
+    return angle_in_radians * radians_to_degrees;
+}
+
 // clang-format off
 
 NODISCARD SHOOTER_API float sqrtf(float x);
