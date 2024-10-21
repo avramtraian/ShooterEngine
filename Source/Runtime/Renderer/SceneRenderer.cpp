@@ -47,10 +47,10 @@ void SceneRenderer::on_resize(u32 new_width, u32 new_height)
     m_renderer_2d->on_resize(new_width, new_height);
 }
 
-bool SceneRenderer::render()
+bool SceneRenderer::render(const Matrix4& view_projection_matrix)
 {
     Renderer::begin_frame();
-    m_renderer_2d->begin_frame();
+    m_renderer_2d->begin_frame(view_projection_matrix);
 
     m_scene_context->for_each_entity(
         [&](const Entity* entity, UUID)

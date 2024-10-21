@@ -26,7 +26,7 @@ public:
 
     SHOOTER_API void on_resize(u32 new_width, u32 new_height);
 
-    SHOOTER_API bool render();
+    SHOOTER_API bool render(const Matrix4& view_projection_matrix);
 
 private:
     Scene* m_scene_context;

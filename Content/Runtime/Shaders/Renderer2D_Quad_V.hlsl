@@ -19,12 +19,17 @@ struct VSOutput
     float4 position : SV_Position;
 };
 
+cbuffer FrameData : register(b0)
+{
+    float4x4 view_projection_matrix;
+};
+
 VSOutput vertex_main(VSInput input)
 {
     VSOutput output;
     output.color = input.color;
     output.texture_coordinates = input.texture_coordinates;
     output.texture_id = input.texture_id;
-    output.position = float4(input.position, 0.5F, 1);
+    output.position = mul(view_projection_matrix, float4(input.position.xy, 0, 1));
     return output;
 }

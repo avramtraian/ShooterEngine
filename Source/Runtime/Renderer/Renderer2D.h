@@ -6,6 +6,7 @@
 #pragma once
 
 #include <Core/Containers/RefPtr.h>
+#include <Core/Math/Matrix.h>
 #include <Core/Math/Vector.h>
 #include <Core/Memory/Buffer.h>
 #include <Renderer/Framebuffer.h>
@@ -26,12 +27,9 @@ public:
     Renderer2D() = default;
 
 public:
-    struct QuadVertex
+    struct UniformFrameData
     {
-        Vector2 position;
-        Color4 color;
-        Vector2 texture_coordinates;
-        u32 texture_id;
+        Matrix4 view_projection_matrix;
     };
 
     struct Statistics
@@ -41,6 +39,14 @@ public:
         u32 quad_textures_in_current_batch = 0;
     };
 
+    struct QuadVertex
+    {
+        Vector2 position;
+        Color4 color;
+        Vector2 texture_coordinates;
+        u32 texture_id;
+    };
+
 public:
     SHOOTER_API bool initialize(RefPtr<Framebuffer> target_framebuffer);
 
@@ -48,7 +54,7 @@ public:
 
     SHOOTER_API void on_resize(u32 new_width, u32 new_height);
 
-    SHOOTER_API void begin_frame();
+    SHOOTER_API void begin_frame(const Matrix4& view_projection_matrix);
     SHOOTER_API void end_frame();
 
 public:
@@ -70,6 +76,7 @@ private:
 
 private:
     RefPtr<Framebuffer> m_target_framebuffer;
+    RefPtr<UniformBuffer> m_frame_data_uniform_buffer;
     Statistics m_statistics;
 
     RefPtr<Shader> m_quad_shader;

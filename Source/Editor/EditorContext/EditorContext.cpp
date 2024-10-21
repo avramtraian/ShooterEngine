@@ -326,7 +326,7 @@ void EditorContext::window_event_handler(const Event& in_event)
 void EditorContext::on_update_logic(float delta_time)
 {
     // Render the scene.
-    m_scene_renderer->render();
+    m_scene_renderer->render(m_editor_camera.get_view_projection_matrix());
 
     m_content_browser_panel.on_update(delta_time);
     m_entity_inspector_panel.on_update(delta_time);

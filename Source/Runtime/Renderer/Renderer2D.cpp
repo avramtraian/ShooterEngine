@@ -18,12 +18,26 @@ namespace SE
 bool Renderer2D::initialize(RefPtr<Framebuffer> target_framebuffer)
 {
     m_target_framebuffer = move(target_framebuffer);
-    return initialize_quads();
+
+    UniformBufferDescription frame_data_uniform_buffer_description = {};
+    frame_data_uniform_buffer_description.byte_count = sizeof(UniformFrameData);
+    frame_data_uniform_buffer_description.usage = UniformBufferUsage::Dynamic;
+    m_frame_data_uniform_buffer = UniformBuffer::create(frame_data_uniform_buffer_description);
+
+    if (!initialize_quads())
+    {
+        SE_LOG_TAG_ERROR("Renderer", "Failed to initialize the quad rendering for a Renderer2D!");
+        return false;
+    }
+
+    return true;
 }
 
 void Renderer2D::shutdown()
 {
     shutdown_quads();
+
+    m_frame_data_uniform_buffer.release();
     m_target_framebuffer.release();
 }
 
@@ -36,11 +50,16 @@ void Renderer2D::on_resize(u32 new_width, u32 new_height)
     }
 }
 
-void Renderer2D::begin_frame()
+void Renderer2D::begin_frame(const Matrix4& view_projection_matrix)
 {
     m_statistics.quads_in_current_batch = 0;
     m_statistics.quads_in_current_frame = 0;
     m_statistics.quad_textures_in_current_batch = 0;
+
+    UniformFrameData frame_data = {};
+    frame_data.view_projection_matrix = view_projection_matrix;
+    const ReadonlyByteSpan frame_data_byte_span = ReadonlyByteSpan(reinterpret_cast<ReadonlyBytes>(&frame_data), sizeof(UniformFrameData));
+    m_frame_data_uniform_buffer->upload_data(frame_data_byte_span);
 
     begin_quad_batch();
 }
@@ -178,6 +197,7 @@ bool Renderer2D::initialize_quads()
 
     m_quad_render_pass = RenderPass::create(render_pass_description);
 
+    m_quad_render_pass->set_input("u_FrameData"sv, RenderPassUniformBufferBinding(m_frame_data_uniform_buffer, ShaderStage::Vertex));
     m_quad_render_pass->set_input("u_Textures"sv, RenderPassTextureArrayBinding(m_quad_textures.span()));
 
     //
