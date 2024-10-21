@@ -18,15 +18,15 @@ template<typename T>
 struct Matrix3
 {
 public:
-    ALWAYS_INLINE Matrix3()
+    ALWAYS_INLINE constexpr Matrix3()
         : rows { Vector3<T>(T(0)), Vector3<T>(T(0)), Vector3<T>(T(0)) }
     {}
 
-    ALWAYS_INLINE Matrix3(const Matrix3& other)
+    ALWAYS_INLINE constexpr Matrix3(const Matrix3& other)
         : rows { other.rows[0], other.rows[1], other.rows[2] }
     {}
 
-    ALWAYS_INLINE Matrix3& operator=(const Matrix3& other)
+    ALWAYS_INLINE constexpr Matrix3& operator=(const Matrix3& other)
     {
         rows[0] = other.rows[0];
         rows[1] = other.rows[1];
@@ -34,7 +34,7 @@ public:
         return *this;
     }
 
-    ALWAYS_INLINE Matrix3(Vector3<T> row_0, Vector3<T> row_1, Vector3<T> row_2)
+    ALWAYS_INLINE constexpr Matrix3(Vector3<T> row_0, Vector3<T> row_1, Vector3<T> row_2)
         : rows { row_0, row_1, row_2 }
     {}
 
@@ -55,15 +55,15 @@ template<typename T>
 struct Matrix4
 {
 public:
-    ALWAYS_INLINE Matrix4()
+    ALWAYS_INLINE constexpr Matrix4()
         : rows { Vector4<T>(T(0)), Vector4<T>(T(0)), Vector4<T>(T(0)), Vector4<T>(T(0)) }
     {}
 
-    ALWAYS_INLINE Matrix4(const Matrix4& other)
+    ALWAYS_INLINE constexpr Matrix4(const Matrix4& other)
         : rows { other.rows[0], other.rows[1], other.rows[2], other.rows[3] }
     {}
 
-    ALWAYS_INLINE Matrix4& operator=(const Matrix4& other)
+    ALWAYS_INLINE constexpr Matrix4& operator=(const Matrix4& other)
     {
         rows[0] = other.rows[0];
         rows[1] = other.rows[1];
@@ -72,7 +72,7 @@ public:
         return *this;
     }
 
-    ALWAYS_INLINE Matrix4(Vector4<T> row_0, Vector4<T> row_1, Vector4<T> row_2, Vector4<T> row_3)
+    ALWAYS_INLINE constexpr Matrix4(Vector4<T> row_0, Vector4<T> row_1, Vector4<T> row_2, Vector4<T> row_3)
         : rows { row_0, row_1, row_2, row_3 }
     {}
 

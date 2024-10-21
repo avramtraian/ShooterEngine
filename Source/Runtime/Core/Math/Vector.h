@@ -19,29 +19,29 @@ template<typename T>
 struct Vector2
 {
 public:
-    ALWAYS_INLINE Vector2()
+    ALWAYS_INLINE constexpr Vector2()
         : x(T(0))
         , y(T(0))
     {}
 
-    ALWAYS_INLINE Vector2(const Vector2& other)
+    ALWAYS_INLINE constexpr Vector2(const Vector2& other)
         : x(other.x)
         , y(other.y)
     {}
 
-    ALWAYS_INLINE Vector2& operator=(const Vector2& other)
+    ALWAYS_INLINE constexpr Vector2& operator=(const Vector2& other)
     {
         x = other.x;
         y = other.y;
         return *this;
     }
 
-    ALWAYS_INLINE Vector2(T in_x, T in_y)
+    ALWAYS_INLINE constexpr Vector2(T in_x, T in_y)
         : x(in_x)
         , y(in_y)
     {}
 
-    ALWAYS_INLINE explicit Vector2(T scalar)
+    ALWAYS_INLINE constexpr explicit Vector2(T scalar)
         : x(scalar)
         , y(scalar)
     {}
@@ -85,19 +85,19 @@ template<typename T>
 struct Vector3
 {
 public:
-    ALWAYS_INLINE Vector3()
+    ALWAYS_INLINE constexpr Vector3()
         : x(T(0))
         , y(T(0))
         , z(T(0))
     {}
 
-    ALWAYS_INLINE Vector3(const Vector3& other)
+    ALWAYS_INLINE constexpr Vector3(const Vector3& other)
         : x(other.x)
         , y(other.y)
         , z(other.z)
     {}
 
-    ALWAYS_INLINE Vector3& operator=(const Vector3& other)
+    ALWAYS_INLINE constexpr Vector3& operator=(const Vector3& other)
     {
         x = other.x;
         y = other.y;
@@ -105,13 +105,13 @@ public:
         return *this;
     }
 
-    ALWAYS_INLINE Vector3(T in_x, T in_y, T in_z)
+    ALWAYS_INLINE constexpr Vector3(T in_x, T in_y, T in_z)
         : x(in_x)
         , y(in_y)
         , z(in_z)
     {}
 
-    ALWAYS_INLINE explicit Vector3(T scalar)
+    ALWAYS_INLINE constexpr explicit Vector3(T scalar)
         : x(scalar)
         , y(scalar)
         , z(scalar)
@@ -157,21 +157,21 @@ template<typename T>
 struct Vector4
 {
 public:
-    ALWAYS_INLINE Vector4()
+    ALWAYS_INLINE constexpr Vector4()
         : x(T(0))
         , y(T(0))
         , z(T(0))
         , w(T(0))
     {}
 
-    ALWAYS_INLINE Vector4(const Vector4& other)
+    ALWAYS_INLINE constexpr Vector4(const Vector4& other)
         : x(other.x)
         , y(other.y)
         , z(other.z)
         , w(other.w)
     {}
 
-    ALWAYS_INLINE Vector4& operator=(const Vector4& other)
+    ALWAYS_INLINE constexpr Vector4& operator=(const Vector4& other)
     {
         x = other.x;
         y = other.y;
@@ -180,14 +180,14 @@ public:
         return *this;
     }
 
-    ALWAYS_INLINE Vector4(T in_x, T in_y, T in_z, T in_w)
+    ALWAYS_INLINE constexpr Vector4(T in_x, T in_y, T in_z, T in_w)
         : x(in_x)
         , y(in_y)
         , z(in_z)
         , w(in_w)
     {}
 
-    ALWAYS_INLINE explicit Vector4(T scalar)
+    ALWAYS_INLINE constexpr explicit Vector4(T scalar)
         : x(scalar)
         , y(scalar)
         , z(scalar)
