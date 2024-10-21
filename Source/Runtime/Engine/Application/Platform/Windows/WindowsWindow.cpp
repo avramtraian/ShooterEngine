@@ -3,203 +3,229 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include <Core/Containers/Optional.h>
-#include <Engine/Application/Platform/Windows/WindowsWindow.h>
+#include <Core/Log.h>
+#include <Core/Platform/Windows/WindowsHeaders.h>
+#include <Engine/Application/Window.h>
 #include <Engine/Application/WindowEvent.h>
-#include <Engine/Engine.h>
 
 namespace SE
 {
 
-Vector<WindowsWindow*> WindowsWindow::s_windows;
+Vector<Window*> Window::s_created_windows;
 
-static const char* s_window_class_name = "ShooterWindowClass";
-static bool s_window_class_was_registered = false;
-
-static void register_window_class()
+struct WindowNativeData
 {
-    if (s_window_class_was_registered)
-        return;
-    s_window_class_was_registered = true;
+    HWND handle { nullptr };
+};
 
-    WNDCLASSA window_class = {};
-    window_class.hInstance = GetModuleHandle(nullptr);
-    window_class.lpszClassName = s_window_class_name;
-    window_class.lpfnWndProc = WindowsWindow::window_procedure;
-    RegisterClassA(&window_class);
+struct WindowNativeEventData
+{
+    HWND window_handle;
+    UINT message;
+    WPARAM w_param;
+    LPARAM l_param;
+};
+
+OwnPtr<Window> Window::create(const WindowDescription& description)
+{
+    Window* window = new Window();
+    if (!window->initialize(description))
+        return {};
+
+    return adopt_own(window);
 }
 
-static DWORD get_window_style_flags(const WindowInfo& window_info)
+static void win32_register_window_class(WNDPROC window_procedure)
 {
-    if (window_info.start_maximized && window_info.start_minimized)
-        return 0;
+    static bool s_is_class_registered = false;
+    if (!s_is_class_registered)
+    {
+        WNDCLASSA window_class = {};
+        window_class.hInstance = GetModuleHandle(nullptr);
+        window_class.lpfnWndProc = window_procedure;
+        window_class.lpszClassName = "ShooterWindowClass";
+        RegisterClassA(&window_class);
 
-    DWORD style_flags = WS_VISIBLE;
-
-    if (window_info.start_maximized)
-        style_flags |= WS_MAXIMIZE;
-    if (window_info.start_minimized)
-        style_flags |= WS_MINIMIZE;
-
-    if (window_info.start_fullscreen)
-        style_flags |= 0;
-    else
-        style_flags |= WS_OVERLAPPEDWINDOW;
-
-    return style_flags;
+        s_is_class_registered = true;
+    }
 }
 
-bool WindowsWindow::initialize(const WindowInfo& window_info)
+bool Window::initialize(const WindowDescription& description)
 {
-    if (m_native_handle != nullptr)
+    if (m_native_data)
+    {
+        SE_LOG_ERROR("The window has already been initialized!");
         return false;
-    register_window_class();
+    }
 
-    m_event_callback = window_info.event_callback;
-    m_native_event_callback = window_info.native_event_callback;
+    s_created_windows.add(this);
+    m_native_data = new WindowNativeData();
 
-    const char* window_title = window_info.title.byte_span_with_null_termination().as<const char>().elements();
-    const DWORD window_style_flags = get_window_style_flags(window_info);
-    if (window_style_flags == 0)
-        return false;
+    const WNDPROC window_procedure_function = [](HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param) -> LRESULT
+    {
+        WindowNativeEventData event_data = {};
+        event_data.window_handle = window_handle;
+        event_data.message = message;
+        event_data.w_param = w_param;
+        event_data.l_param = l_param;
+        return static_cast<LRESULT>(Window::window_procedure(&event_data));
+    };
 
-    m_should_close = false;
-    m_native_handle = CreateWindowA(
-        s_window_class_name,
-        window_title,
+    const String window_title = description.title.value_or("Untitled Window"sv);
+    const int window_position_x = description.client_area_position_x.value_or(CW_USEDEFAULT);
+    const int window_position_y = description.client_area_position_y.value_or(CW_USEDEFAULT);
+    const int window_width = description.client_area_width.value_or(CW_USEDEFAULT);
+    const int window_height = description.client_area_height.value_or(CW_USEDEFAULT);
+
+    DWORD window_style_flags = 0;
+    window_style_flags |= WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_MAXIMIZE;
+
+    win32_register_window_class(window_procedure_function);
+    m_native_data->handle = CreateWindowA(
+        "ShooterWindowClass",
+        window_title.characters(),
         window_style_flags,
-        window_info.position_x,
-        window_info.position_y,
-        window_info.width,
-        window_info.height,
+        window_position_x,
+        window_position_y,
+        window_width,
+        window_height,
         nullptr,
         nullptr,
         GetModuleHandle(nullptr),
         nullptr
     );
 
-    if (m_native_handle == nullptr)
+    if (m_native_data->handle == nullptr)
         return false;
+
+    // Set the window client area.
+    RECT window_client_area = {};
+    GetClientRect(m_native_data->handle, &window_client_area);
+
+    m_client_area_width = window_client_area.right - window_client_area.left;
+    m_client_area_height = window_client_area.bottom - window_client_area.top;
+
+    // TODO: The Win32 API considers the coordinate origin the top-left corner of the client rect.
+    // However, the engine generally considers the origin to be in the bottom-left corner. Make
+    // behaviour consistent.
+    m_client_area_position_x = window_client_area.left;
+    m_client_area_position_y = window_client_area.top;
+
+    // Set the event callback functions.
+    m_event_callback = description.event_callback;
+    m_native_event_callback = description.native_event_callback;
 
     return true;
 }
 
-WindowsWindow::WindowsWindow()
+void Window::destroy()
 {
-    s_windows.add(this);
-}
-
-WindowsWindow::~WindowsWindow()
-{
-    DestroyWindow(m_native_handle);
-
-    Optional<usize> window_index;
-    for (usize index = 0; index < s_windows.count(); ++index)
+    if (!m_native_data)
     {
-        if (s_windows[index] == this)
-        {
-            window_index = index;
-            break;
-        }
+        // The window has already been destroyed.
+        return;
     }
 
-    SE_ASSERT(window_index.has_value());
-    s_windows.remove_unordered(*window_index);
+    DestroyWindow(m_native_data->handle);
+    m_native_data->handle = nullptr;
+
+    delete m_native_data;
+    m_native_data = nullptr;
+
+    u32 window_index = 0;
+    for (window_index = 0; window_index < s_created_windows.count(); ++window_index)
+    {
+        if (s_created_windows[window_index] == this)
+            break;
+    }
+
+    SE_ASSERT(window_index < s_created_windows.count());
+    s_created_windows.remove_unordered(window_index);
 }
 
-void WindowsWindow::pump_messages()
+void* Window::get_native_handle() const
+{
+    SE_ASSERT(m_native_data);
+    return static_cast<void*>(m_native_data->handle);
+}
+
+void Window::pump_messages()
 {
     MSG message = {};
-    while (PeekMessageA(&message, m_native_handle, 0, 0, PM_REMOVE))
+    while (PeekMessageA(&message, m_native_data->handle, 0, 0, PM_REMOVE))
     {
         TranslateMessage(&message);
         DispatchMessageA(&message);
     }
 }
 
-LRESULT WindowsWindow::window_procedure(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param)
+uintptr Window::window_procedure(const WindowNativeEventData* event_data)
 {
-    WindowsWindow* window = get_window_from_native_handle(window_handle);
-    if (window)
+    Window* window = nullptr;
+    for (Window* created_window : s_created_windows)
     {
-        if (window->m_native_event_callback)
+        if (created_window->get_native_handle() == event_data->window_handle)
         {
-            struct NativeEventData
-            {
-                HWND window_handle;
-                UINT message;
-                WPARAM w_param;
-                LPARAM l_param;
-            };
-
-            NativeEventData native_event_data { window_handle, message, w_param, l_param };
-            window->m_native_event_callback(&native_event_data);
+            window = created_window;
+            break;
         }
+    }
 
-        switch (message)
+    if (window != nullptr)
+    {
+        Optional<uintptr> return_code;
+
+        switch (event_data->message)
         {
+            // https://learn.microsoft.com/en-us/windows/win32/winmsg/wm-quit
+            // https://learn.microsoft.com/en-us/windows/win32/winmsg/wm-destroy
             case WM_QUIT:
-            case WM_CLOSE:
+            case WM_DESTROY:
             {
                 window->m_should_close = true;
-                return 0;
+                return_code = 0;
             }
+            break;
 
+            // https://learn.microsoft.com/en-us/windows/win32/winmsg/wm-size
             case WM_SIZE:
             {
-                u32 new_width = LOWORD(l_param);
-                u32 new_height = HIWORD(l_param);
-
-                if (window->m_client_area_width != new_width || window->m_client_area_height != new_height)
+                if (event_data->w_param == SIZE_MINIMIZED)
                 {
-                    if (new_width == 0 || new_height == 0)
-                    {
-                        // The window has been minimized. We don't want to propagate window resized events,
-                        // nor update the window dimensions.
-                        return 0;
-                    }
+                    // NOTE: Minimizing a window should not cause a resize event to be dispatched.
+                    break;
+                }
 
-                    window->m_client_area_width = new_width;
-                    window->m_client_area_height = new_height;
+                // These are the only allowed values.
+                SE_ASSERT(event_data->w_param == SIZE_MAXIMIZED || event_data->w_param == SIZE_RESTORED);
 
+                const UINT window_width = LOWORD(event_data->l_param);
+                const UINT window_height = HIWORD(event_data->l_param);
+                if (window_width != window->get_client_area_width() || window_height != window->get_client_area_height())
+                {
+                    window->m_client_area_width = window_width;
+                    window->m_client_area_height = window_height;
                     if (window->m_event_callback)
                     {
-                        WindowResizedEvent window_event = WindowResizedEvent(new_width, new_height);
+                        WindowResizedEvent window_event = WindowResizedEvent(window_width, window_height);
                         window->m_event_callback(window_event);
                     }
                 }
 
-                return 0;
+                return_code = 0;
             }
-
-            case WM_MOVE:
-            {
-                POINTS new_position = MAKEPOINTS(l_param);
-
-                if (window->m_client_area_position_x != new_position.x || window->m_client_area_position_y != new_position.y)
-                {
-                    window->m_client_area_position_x = new_position.x;
-                    window->m_client_area_position_y = new_position.y;
-                    // TODO: Propagate window position changed event.
-                }
-
-                return 0;
-            }
+            break;
         }
+
+        if (window->m_native_event_callback)
+            window->m_native_event_callback(event_data);
+        
+        if (return_code.has_value())
+            return return_code.value();
     }
 
-    return DefWindowProcA(window_handle, message, w_param, l_param);
-}
-
-WindowsWindow* WindowsWindow::get_window_from_native_handle(HWND window_handle)
-{
-    for (WindowsWindow* window : s_windows)
-    {
-        if (window->get_native_handle() == static_cast<void*>(window_handle))
-            return window;
-    }
-
-    return nullptr;
+    // Forward the event handling to the default window procedure provided by the Win32 API.
+    return DefWindowProcA(event_data->window_handle, event_data->message, event_data->w_param, event_data->l_param);
 }
 
 } // namespace SE

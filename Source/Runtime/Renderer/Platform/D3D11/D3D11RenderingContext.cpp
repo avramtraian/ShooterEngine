@@ -19,7 +19,7 @@ D3D11RenderingContext::D3D11RenderingContext(Window* window_context)
     m_swapchain.image_count = 2;
 
     // Create the swapchain.
-    invalidate(window_context->get_width(), window_context->get_height());
+    invalidate(window_context->get_client_area_width(), window_context->get_client_area_height());
 }
 
 D3D11RenderingContext::~D3D11RenderingContext()

@@ -24,6 +24,20 @@
 // Forward declare message handler from imgui_impl_win32.cpp
 // Extracted from https://github.com/ocornut/imgui/blob/master/examples/example_win32_directx11/main.cpp.
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+namespace SE
+{
+
+struct WindowNativeEventData
+{
+    HWND window_handle;
+    UINT message;
+    WPARAM w_param;
+    LPARAM l_param;
+};
+
+} // namespace SE
+
 #endif // SE_PLATFORM_WINDOWS
 #if SE_RENDERER_API_SUPPORTED_D3D11
     #include <backends/imgui_impl_dx11.h>
@@ -47,27 +61,18 @@ bool EditorContext::pre_initialize()
 bool EditorContext::initialize()
 {
     // Create the editor window.
-    m_window = Window::instantiate();
-    WindowInfo window_info = {};
-    window_info.start_maximized = true;
-    window_info.event_callback = EditorContext::window_event_handler;
-    window_info.native_event_callback = [](void* native_event_data)
+    WindowDescription window_description = {};
+    window_description.start_mode = WindowMode::Maximized;
+    window_description.event_callback = EditorContext::window_event_handler;
+    window_description.native_event_callback = [](const WindowNativeEventData* data) -> uintptr
     {
 #if SE_PLATFORM_WINDOWS
-        struct NativeEventData
-        {
-            HWND window_handle;
-            UINT message;
-            WPARAM w_param;
-            LPARAM l_param;
-        };
-
-        NativeEventData* event_data = static_cast<NativeEventData*>(native_event_data);
-        ImGui_ImplWin32_WndProcHandler(event_data->window_handle, event_data->message, event_data->w_param, event_data->l_param);
+        return ImGui_ImplWin32_WndProcHandler(data->window_handle, data->message, data->w_param, data->l_param);
 #endif // SE_PLATFORM_WINDOWS
     };
 
-    if (!m_window->initialize(window_info))
+    m_window = Window::create(window_description);
+    if (!m_window.is_valid())
         return false;
 
     // Create the rendering context for the window.
