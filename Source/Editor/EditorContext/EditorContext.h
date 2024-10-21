@@ -7,6 +7,7 @@
 
 #include <Core/Containers/OwnPtr.h>
 #include <Core/Containers/String.h>
+#include <EditorContext/EditorCamera.h>
 #include <EditorContext/Panels/ContentBrowserPanel.h>
 #include <EditorContext/Panels/EntityInspectorPanel.h>
 #include <EditorContext/Panels/SceneHierarchyPanel.h>
@@ -74,6 +75,7 @@ private:
     OwnPtr<Window> m_window;
 
     OwnPtr<Scene> m_active_scene;
+    EditorCamera m_editor_camera;
     ComponentRegistry m_component_registry;
 
     RefPtr<Framebuffer> m_scene_framebuffer;

@@ -94,6 +94,10 @@ bool EditorContext::initialize()
     m_scene_renderer = create_own<SceneRenderer>();
     m_scene_renderer->initialize(*m_active_scene, m_scene_framebuffer);
 
+    // Initialize the editor camera.
+    const float editor_camera_aspect_ratio = static_cast<float>(m_scene_framebuffer->get_width()) / static_cast<float>(m_scene_framebuffer->get_height());
+    m_editor_camera.invalidate(Vector3(0, 0, -3), Vector3(0, 0, 0), Math::radians(70.0F), editor_camera_aspect_ratio, 0.001F, 10000.0F);
+
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
 
@@ -167,6 +171,9 @@ bool EditorContext::post_initialize()
         {
             m_scene_framebuffer->invalidate(viewport_width, viewport_height);
             m_scene_renderer->on_resize(viewport_width, viewport_height);
+
+            if (viewport_width != 0 && viewport_height != 0)
+                m_editor_camera.set_aspect_ratio(static_cast<float>(viewport_width) / static_cast<float>(viewport_height));
         }
     );
 
