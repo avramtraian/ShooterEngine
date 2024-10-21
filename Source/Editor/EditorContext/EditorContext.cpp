@@ -7,7 +7,7 @@
 #include <Core/FileSystem/FileSystem.h>
 #include <EditorContext/EditorContext.h>
 #include <EditorEngine.h>
-#include <Engine/Application/WindowEvent.h>
+#include <Engine/Application/Events/WindowEvents.h>
 #include <Engine/Scene/Components/SpriteRendererComponent.h>
 #include <Engine/Scene/Components/TransformComponent.h>
 #include <Renderer/Renderer.h>

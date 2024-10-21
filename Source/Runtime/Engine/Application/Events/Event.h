@@ -12,7 +12,17 @@ namespace SE
 
 enum class EventType : u16
 {
+    KeyDown,
+    KeyUp,
+
+    MouseButtonDown,
+    MouseButtonUp,
+    MouseMoved,
+    MouseWheelScrolled,
+
+    WindowMoved,
     WindowResized,
+    WindowModeChanged,
 };
 
 class Event

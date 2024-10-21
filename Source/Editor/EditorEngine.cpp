@@ -9,7 +9,7 @@
 #include <Core/Platform/Timer.h>
 #include <EditorAsset/EditorAssetManager.h>
 #include <EditorEngine.h>
-#include <Engine/Application/WindowEvent.h>
+#include <Engine/Application/Events/WindowEvents.h>
 #include <Renderer/Renderer.h>
 
 namespace SE

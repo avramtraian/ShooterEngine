@@ -12,7 +12,7 @@
 #include <EditorContext/Panels/EntityInspectorPanel.h>
 #include <EditorContext/Panels/SceneHierarchyPanel.h>
 #include <EditorContext/Panels/ViewportPanel.h>
-#include <Engine/Application/Event.h>
+#include <Engine/Application/Events/Event.h>
 #include <Engine/Application/Window.h>
 #include <Engine/Scene/ComponentRegistry.h>
 #include <Engine/Scene/Scene.h>

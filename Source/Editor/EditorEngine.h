@@ -6,7 +6,7 @@
 #pragma once
 
 #include <EditorContext/EditorContext.h>
-#include <Engine/Application/Event.h>
+#include <Engine/Application/Events/Event.h>
 #include <Engine/Engine.h>
 
 namespace SE

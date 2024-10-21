@@ -10,7 +10,7 @@
 #include <Core/Containers/OwnPtr.h>
 #include <Core/Containers/String.h>
 #include <Core/Containers/Vector.h>
-#include <Engine/Application/Event.h>
+#include <Engine/Application/Events/Event.h>
 
 namespace SE
 {
@@ -86,6 +86,7 @@ private:
     u32 m_client_area_height { 0 };
     i32 m_client_area_position_x { 0 };
     i32 m_client_area_position_y { 0 };
+    WindowMode m_window_mode { WindowMode::Unknown };
 
     PFN_WindowEventCallback m_event_callback { nullptr };
     PFN_WindowNativeEventCallback m_native_event_callback { nullptr };
