@@ -169,11 +169,12 @@ bool EditorContext::post_initialize()
     m_viewport_panel.add_on_viewport_resized_callback(
         [this](u32 viewport_width, u32 viewport_height)
         {
+            if (viewport_width == 0 || viewport_height == 0)
+                return;
+
             m_scene_framebuffer->invalidate(viewport_width, viewport_height);
             m_scene_renderer->on_resize(viewport_width, viewport_height);
-
-            if (viewport_width != 0 && viewport_height != 0)
-                m_editor_camera.set_aspect_ratio(static_cast<float>(viewport_width) / static_cast<float>(viewport_height));
+            m_editor_camera.set_aspect_ratio(static_cast<float>(viewport_width) / static_cast<float>(viewport_height));
         }
     );
 
