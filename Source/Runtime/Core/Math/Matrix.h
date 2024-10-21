@@ -18,6 +18,18 @@ template<typename T>
 struct Matrix3
 {
 public:
+    NODISCARD ALWAYS_INLINE static constexpr Matrix3 identity()
+    {
+        // clang-format off
+        return Matrix3(
+            Vector3<T>(T(1), T(0), T(0)),
+            Vector3<T>(T(0), T(1), T(0)),
+            Vector3<T>(T(0), T(0), T(1))
+        );
+        // clang-format on
+    }
+
+public:
     ALWAYS_INLINE constexpr Matrix3()
         : rows { Vector3<T>(T(0)), Vector3<T>(T(0)), Vector3<T>(T(0)) }
     {}
@@ -54,6 +66,19 @@ public:
 template<typename T>
 struct Matrix4
 {
+public:
+    NODISCARD ALWAYS_INLINE static constexpr Matrix4 identity()
+    {
+        // clang-format off
+        return Matrix4(
+            Vector4<T>(T(1), T(0), T(0), T(0)),
+            Vector4<T>(T(0), T(1), T(0), T(0)),
+            Vector4<T>(T(0), T(0), T(1), T(0)),
+            Vector4<T>(T(0), T(0), T(0), T(1))
+        );
+        // clang-format on
+    }
+
 public:
     ALWAYS_INLINE constexpr Matrix4()
         : rows { Vector4<T>(T(0)), Vector4<T>(T(0)), Vector4<T>(T(0)), Vector4<T>(T(0)) }
