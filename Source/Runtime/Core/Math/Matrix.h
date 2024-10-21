@@ -102,6 +102,23 @@ public:
     {}
 
 public:
+    NODISCARD ALWAYS_INLINE static Matrix4 transpose(const Matrix4& matrix);
+    
+    NODISCARD ALWAYS_INLINE static Matrix4 inverse(const Matrix4& matrix);
+
+    NODISCARD ALWAYS_INLINE static Matrix4 translate(Vector3<T> translation);
+
+    NODISCARD ALWAYS_INLINE static Matrix4 rotate(Vector3<T> rotation);
+
+    NODISCARD ALWAYS_INLINE static Matrix4 scale(Vector3<T> scale);
+
+    //
+    // Creates a perspective projection matrix from the given parameters.
+    // The vertical FOV angle must be specified in radians.
+    //
+    NODISCARD ALWAYS_INLINE static Matrix4 perspective(T vertical_fov, T aspect_ratio, T clip_near, T clip_far);
+
+public:
     union
     {
         T m[16];
