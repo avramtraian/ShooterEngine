@@ -369,7 +369,10 @@ uintptr Window::window_procedure(const WindowNativeEventData* event_data)
             {
                 if (window->m_event_callback)
                 {
-                    const POINTS mouse_position = MAKEPOINTS(event_data->l_param);
+                    POINTS mouse_position = MAKEPOINTS(event_data->l_param);
+                    // NOTE: The coordinates provieded by the Win32 API have the origin in the top-left corner of the
+                    // window client area. However, the engine requires the coordinate system origin to be in the bottom-left corner.
+                    mouse_position.y = window->m_client_area_height - mouse_position.y;
                     const MouseMovedEvent mouse_event = MouseMovedEvent(mouse_position.x, mouse_position.y);
                     window->m_event_callback(mouse_event);
                 }
