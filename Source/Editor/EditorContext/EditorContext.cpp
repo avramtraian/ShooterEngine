@@ -192,6 +192,9 @@ bool EditorContext::post_initialize()
         }
     );
 
+    m_toolbar_panel.initialize();
+    m_toolbar_panel.set_editor_camera_controller_context(&m_editor_camera.get_controller());
+
     Entity* entity = m_active_scene->create_entity();
     entity->add_component<TransformComponent>();
     entity->add_component<SpriteRendererComponent>();
@@ -210,6 +213,7 @@ void EditorContext::shutdown()
     m_entity_inspector_panel.shutdown();
     m_scene_hierarchy_panel.shutdown();
     m_viewport_panel.shutdown();
+    m_toolbar_panel.shutdown();
 
     m_imgui_render_pass.release();
     m_imgui_pipeline.release();
@@ -346,6 +350,7 @@ void EditorContext::on_update_logic(float delta_time)
     m_entity_inspector_panel.on_update(delta_time);
     m_scene_hierarchy_panel.on_update(delta_time);
     m_viewport_panel.on_update(delta_time);
+    m_toolbar_panel.on_update(delta_time);
 }
 
 void EditorContext::on_render_imgui()
@@ -354,6 +359,7 @@ void EditorContext::on_render_imgui()
     m_entity_inspector_panel.on_render_imgui();
     m_scene_hierarchy_panel.on_render_imgui();
     m_viewport_panel.on_render_imgui();
+    m_toolbar_panel.on_render_imgui();
 }
 
 } // namespace SE

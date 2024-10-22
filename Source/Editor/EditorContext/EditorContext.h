@@ -11,6 +11,7 @@
 #include <EditorContext/Panels/ContentBrowserPanel.h>
 #include <EditorContext/Panels/EntityInspectorPanel.h>
 #include <EditorContext/Panels/SceneHierarchyPanel.h>
+#include <EditorContext/Panels/ToolbarPanel.h>
 #include <EditorContext/Panels/ViewportPanel.h>
 #include <Engine/Application/Events/Event.h>
 #include <Engine/Application/Window.h>
@@ -88,6 +89,7 @@ private:
     EntityInspectorPanel m_entity_inspector_panel;
     SceneHierarchyPanel m_scene_hierarchy_panel;
     ViewportPanel m_viewport_panel;
+    ToolbarPanel m_toolbar_panel;
 
     String m_engine_root_directory;
     String m_project_root_directory;

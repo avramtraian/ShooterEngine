@@ -45,7 +45,7 @@ struct EditorCameraController
     float movement_forward_jump { 0.5F };
 
     KeyCode speed_boost_key_code { KeyCode::Shift };
-    const float speed_boost_factor { 2.0F };
+    float speed_boost_factor { 2.0F };
 
     //================================================================
     // ORIENTATION MANIPULATION PARAMETERS.
@@ -105,6 +105,9 @@ public:
     );
 
     NODISCARD Orientation get_orientation() const;
+
+    NODISCARD ALWAYS_INLINE EditorCameraController& get_controller() { return m_controller; }
+    NODISCARD ALWAYS_INLINE const EditorCameraController& get_controller() const { return m_controller; }
 
 private:
     NODISCARD Matrix4 calculate_view_matrix() const;
