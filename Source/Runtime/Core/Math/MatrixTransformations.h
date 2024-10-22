@@ -36,7 +36,7 @@ NODISCARD ALWAYS_INLINE Vector4<T> operator*(Vector4<T> vector, const Matrix4<T>
 
 #if SE_VECTORIZED_MATH_USE_DIRECTX
     // https://learn.microsoft.com/en-us/windows/win32/api/directxmath/nf-directxmath-xmloadfloat4
-    const DirectX::XMVECTOR vector_register = DirectX::XMLoadFloat4(reinterpret_cast<const DirectX::XMVECTOR*>(&vector));
+    const DirectX::XMVECTOR vector_register = DirectX::XMLoadFloat4(reinterpret_cast<const DirectX::XMFLOAT4*>(&vector));
     // https://learn.microsoft.com/en-us/windows/win32/api/directxmath/nf-directxmath-xmloadfloat4x4
     const DirectX::XMMATRIX matrix_register = DirectX::XMLoadFloat4x4(reinterpret_cast<const DirectX::XMFLOAT4X4*>(&matrix));
     // https://learn.microsoft.com/en-us/windows/win32/api/directxmath/nf-directxmath-xmvector4transform
