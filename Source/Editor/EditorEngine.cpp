@@ -10,6 +10,7 @@
 #include <EditorAsset/EditorAssetManager.h>
 #include <EditorEngine.h>
 #include <Engine/Application/Events/WindowEvents.h>
+#include <Engine/Input/Input.h>
 #include <Renderer/Renderer.h>
 
 namespace SE
@@ -48,6 +49,12 @@ bool EditorEngine::initialize()
         return false;
     }
 
+    if (!Input::initialize())
+    {
+        SE_LOG_ERROR("Failed to initialize the input system!");
+        return false;
+    }
+
     if (!m_editor_context.post_initialize())
     {
         SE_LOG_ERROR("Failed to post initialize the editor context!");
@@ -61,6 +68,7 @@ void EditorEngine::shutdown()
 {
     m_editor_context.shutdown();
 
+    Input::shutdown();
     Renderer::shutdown();
     g_asset_manager->shutdown();
 
@@ -68,10 +76,17 @@ void EditorEngine::shutdown()
     Engine::shutdown();
 }
 
+void EditorEngine::pre_update()
+{
+    m_editor_context.on_pre_update(m_last_frame_delta_time);
+    Input::on_update();
+}
+
 void EditorEngine::update()
 {
     Timer current_frame_timer;
 
+    pre_update();
     Engine::update();
     m_editor_context.on_update(m_last_frame_delta_time);
 
@@ -79,14 +94,17 @@ void EditorEngine::update()
     m_last_frame_delta_time = current_frame_timer.elapsed_seconds();
 }
 
-String EditorEngine::get_engine_root_directory() const
+void EditorEngine::static_on_event(const Event& in_event)
 {
-    const String engine_root_directory = m_editor_context.get_engine_root_directory();
-    return engine_root_directory;
+    // Forward the implementation to the non-static function.
+    g_editor_engine->on_event(in_event);
 }
 
 void EditorEngine::on_event(const Event& in_event)
 {
+    // Before processing the event ensure that the input system registers it.
+    Input::on_event(in_event);
+
     switch (in_event.get_type())
     {
         case EventType::WindowResized:
@@ -104,6 +122,15 @@ void EditorEngine::on_event(const Event& in_event)
             break;
         }
     }
+
+    // Propagate the event to the editor context.
+    m_editor_context.on_event(in_event);
+}
+
+String EditorEngine::get_engine_root_directory() const
+{
+    const String engine_root_directory = m_editor_context.get_engine_root_directory();
+    return engine_root_directory;
 }
 
 } // namespace SE

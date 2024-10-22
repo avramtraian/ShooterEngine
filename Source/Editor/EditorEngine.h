@@ -21,7 +21,11 @@ public:
     virtual bool initialize() override;
     virtual void shutdown() override;
 
+    virtual void pre_update();
     virtual void update() override;
+
+    static void static_on_event(const Event& in_event);
+    void on_event(const Event& in_event);
 
 public:
     NODISCARD ALWAYS_INLINE EditorContext& context() { return m_editor_context; }
@@ -30,8 +34,6 @@ public:
     virtual String get_engine_root_directory() const override;
 
 private:
-    static void on_event(const Event& in_event);
-
     void preload_project();
     void load_project();
 

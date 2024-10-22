@@ -41,6 +41,7 @@ public:
 
     void shutdown();
 
+    void on_pre_update(float delta_time);
     void on_update(float delta_time);
     void on_event(const Event& in_event);
 
@@ -66,8 +67,6 @@ public:
     NODISCARD ALWAYS_INLINE ViewportPanel& get_viewport_panel() { return m_viewport_panel; }
 
 private:
-    static void window_event_handler(const Event& in_event);
-
     void on_update_logic(float delta_time);
     void on_render_imgui();
 

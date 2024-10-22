@@ -5,9 +5,11 @@
 
 #include <Core/Containers/StringBuilder.h>
 #include <Core/FileSystem/FileSystem.h>
+#include <Core/Log.h>
 #include <EditorContext/EditorContext.h>
 #include <EditorEngine.h>
 #include <Engine/Application/Events/WindowEvents.h>
+#include <Engine/Input/Input.h>
 #include <Engine/Scene/Components/SpriteRendererComponent.h>
 #include <Engine/Scene/Components/TransformComponent.h>
 #include <Renderer/Renderer.h>
@@ -63,7 +65,7 @@ bool EditorContext::initialize()
     // Create the editor window.
     WindowDescription window_description = {};
     window_description.start_mode = WindowMode::Maximized;
-    window_description.event_callback = EditorContext::window_event_handler;
+    window_description.event_callback = EditorEngine::static_on_event;
     window_description.native_event_callback = [](const WindowNativeEventData* data) -> uintptr
     {
 #if SE_PLATFORM_WINDOWS
@@ -225,13 +227,16 @@ void EditorContext::shutdown()
     m_window.release();
 }
 
-void EditorContext::on_update(float delta_time)
+void EditorContext::on_pre_update(float delta_time)
 {
     // Process the window message queue.
     m_window->pump_messages();
     if (m_window->should_close())
         g_editor_engine->exit();
+}
 
+void EditorContext::on_update(float delta_time)
+{
     Renderer::begin_frame();
 
     // Update the editor.
@@ -264,7 +269,6 @@ void EditorContext::on_event(const Event& in_event)
         case EventType::WindowResized:
         {
             const WindowResizedEvent& e = static_cast<const WindowResizedEvent&>(in_event);
-            Renderer::on_resize(e.get_client_width(), e.get_client_height());
             m_scene_renderer->on_resize(e.get_client_width(), e.get_client_height());
         }
         break;
@@ -321,12 +325,6 @@ String EditorContext::get_project_binaries_directory(BuildConfiguration build_co
 
     const String project_binaries_directory = StringBuilder::join({ m_project_root_directory.view(), relative_binary_filepath });
     return project_binaries_directory;
-}
-
-void EditorContext::window_event_handler(const Event& in_event)
-{
-    // Forward the event to the non-static `on_event` callback.
-    g_editor_engine->context().on_event(in_event);
 }
 
 void EditorContext::on_update_logic(float delta_time)
