@@ -85,6 +85,9 @@ void Input::on_update()
         it.value.was_released_this_frame = false;
     }
 
+    // Reset the mouse wheel scroll offset.
+    s_input->mouse_wheel_scroll_offset = 0.0F;
+
     for (const OwnPtr<Event>& event_to_process : s_input->events_to_process)
     {
         const Event& generic_event = *event_to_process;
@@ -137,11 +140,17 @@ void Input::on_update()
                 }
             }
             break;
+
+            case EventType::MouseWheelScrolled:
+            {
+                const auto& mouse_wheel_scrolled_event = static_cast<const MouseWheelScrolledEvent&>(generic_event);
+                s_input->mouse_wheel_scroll_offset += mouse_wheel_scrolled_event.get_scroll_offset();
+            }
+            break;
         }
     }
 
     s_input->mouse_position_offset = IntVector2(0, 0);
-    s_input->mouse_wheel_scroll_offset = 0.0F;
     const IntVector2 current_mouse_position = platform_get_mouse_position();
 
     if (s_input->last_frame_mouse_position.has_value())
@@ -186,6 +195,14 @@ void Input::on_event(const Event& in_event)
         {
             const MouseButtonUpEvent& casted_event = static_cast<const MouseButtonUpEvent&>(in_event);
             OwnPtr<MouseButtonUpEvent> event_to_process = create_own<MouseButtonUpEvent>(casted_event);
+            s_input->events_to_process.add(event_to_process.as<Event>());
+        }
+        break;
+
+        case EventType::MouseWheelScrolled:
+        {
+            const MouseWheelScrolledEvent& casted_event = static_cast<const MouseWheelScrolledEvent&>(in_event);
+            OwnPtr<MouseWheelScrolledEvent> event_to_process = create_own<MouseWheelScrolledEvent>(casted_event);
             s_input->events_to_process.add(event_to_process.as<Event>());
         }
         break;
