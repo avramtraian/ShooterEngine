@@ -428,6 +428,18 @@ static KeyCode win32_translate_key_code(WPARAM key_code)
         return static_cast<KeyCode>(static_cast<u32>(KeyCode::Numpad0) + (key_code - VK_NUMPAD0));
     }
 
+    // Space, Shift, Control, Alt,
+
+    switch (key_code)
+    {
+        // clang-format off
+        case VK_SPACE:      return KeyCode::Space;
+        case VK_SHIFT:      return KeyCode::Shift;
+        case VK_CONTROL:    return KeyCode::Control;
+        case VK_MENU:       return KeyCode::Alt;
+        // clang-format on
+    }
+
     return KeyCode::Unknown;
 }
 
