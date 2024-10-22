@@ -49,6 +49,25 @@ NODISCARD ALWAYS_INLINE Vector4<T> operator*(Vector4<T> vector, const Matrix4<T>
 }
 
 template<typename T>
+NODISCARD ALWAYS_INLINE Vector4<T> operator*(const Matrix4<T>& matrix, Vector4<T> vector)
+{
+    Vector4<T> result;
+
+#if SE_VECTORIZED_MATH_USE_DIRECTX
+    // https://learn.microsoft.com/en-us/windows/win32/api/directxmath/nf-directxmath-xmloadfloat4x4
+    const DirectX::XMMATRIX matrix_register = DirectX::XMLoadFloat4x4(reinterpret_cast<const DirectX::XMFLOAT4X4*>(&matrix));
+    // https://learn.microsoft.com/en-us/windows/win32/api/directxmath/nf-directxmath-xmloadfloat4
+    const DirectX::XMVECTOR vector_register = DirectX::XMLoadFloat4(reinterpret_cast<const DirectX::XMFLOAT4*>(&vector));
+    // https://learn.microsoft.com/en-us/windows/win32/api/directxmath/nf-directxmath-xmvector4transform
+    const DirectX::XMVECTOR result_register = DirectX::XMVector4Transform(matrix_register, vector_register);
+    // https://learn.microsoft.com/en-us/windows/win32/api/directxmath/nf-directxmath-xmstorefloat4
+    DirectX::XMStoreFloat4(reinterpret_cast<DirectX::XMFLOAT4*>(&result), result_register);
+#endif // SE_VECTORIZED_MATH_USE_DIRECTX
+
+    return result;
+}
+
+template<typename T>
 Matrix4<T> Matrix4<T>::transpose(const Matrix4& matrix)
 {
     Matrix4<T> result;
