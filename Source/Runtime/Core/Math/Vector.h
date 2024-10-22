@@ -85,6 +85,26 @@ template<typename T>
 struct Vector3
 {
 public:
+    NODISCARD ALWAYS_INLINE static T length_squared(Vector3 vector)
+    {
+        const T result = (vector.x * vector.x) + (vector.y * vector.y) + (vector.z * vector.z);
+        return result;
+    }
+
+    NODISCARD ALWAYS_INLINE static T length(Vector3 vector)
+    {
+        const T result = Math::sqrt(Vector3::length_squared(vector));
+        return result;
+    }
+
+    NODISCARD ALWAYS_INLINE static Vector3 normalize(Vector3 vector)
+    {
+        const T inv_length = T(1) / Vector3::length(vector);
+        const Vector3 result = Vector3(vector.x * inv_length, vector.y * inv_length, vector.z * inv_length);
+        return result;
+    }
+
+public:
     ALWAYS_INLINE constexpr Vector3()
         : x(T(0))
         , y(T(0))
