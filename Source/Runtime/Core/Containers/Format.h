@@ -47,6 +47,21 @@ public:
     SHOOTER_API FormatErrorCode push_signed_integer(const Specifier& specifier, i64 value);
     SHOOTER_API FormatErrorCode push_string(const Specifier& specifier, StringView value);
 
+    template<typename T>
+    requires (is_integral<T>)
+    ALWAYS_INLINE FormatErrorCode push_integer(const Specifier& specifier, T value)
+    {
+        if constexpr (is_signed_integral<T>)
+        {
+            return push_signed_integer(specifier, static_cast<i64>(value));
+        }
+        else
+        {
+            static_assert(is_unsigned_integral<T>);
+            return push_unsigned_integer(specifier, static_cast<u64>(value));
+        }
+    }
+
 private:
     StringView m_string_format;
     Vector<char> m_formatted_string_buffer;
@@ -103,6 +118,28 @@ struct Formatter<String>
         return builder.push_string(specifier, value.view());
     }
 };
+
+#define SE_INTEGER_FORMATTER_DECLARATION(type_name)                                                                                            \
+    template<>                                                                                                                                 \
+    struct Formatter<type_name>                                                                                                                \
+    {                                                                                                                                          \
+        ALWAYS_INLINE static FormatErrorCode format(FormatBuilder& builder, const FormatBuilder::Specifier& specifier, const type_name& value) \
+        {                                                                                                                                      \
+            return builder.push_integer<type_name>(specifier, value);                                                                          \
+        }                                                                                                                                      \
+    };
+
+SE_INTEGER_FORMATTER_DECLARATION(u8)
+SE_INTEGER_FORMATTER_DECLARATION(u16)
+SE_INTEGER_FORMATTER_DECLARATION(u32)
+SE_INTEGER_FORMATTER_DECLARATION(u64)
+
+SE_INTEGER_FORMATTER_DECLARATION(i8)
+SE_INTEGER_FORMATTER_DECLARATION(i16)
+SE_INTEGER_FORMATTER_DECLARATION(i32)
+SE_INTEGER_FORMATTER_DECLARATION(i64)
+
+#undef SE_INTEGER_FORMATTER_DECLARATION
 
 namespace Detail
 {
