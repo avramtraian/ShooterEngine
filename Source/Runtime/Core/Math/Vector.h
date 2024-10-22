@@ -169,6 +169,54 @@ NODISCARD ALWAYS_INLINE Vector3<T> operator+(Vector3<T> lhs, Vector3<T> rhs)
     return result;
 }
 
+template<typename T>
+ALWAYS_INLINE Vector3<T>& operator+=(Vector3<T>& self, Vector3<T> rhs)
+{
+    self.x += rhs.x;
+    self.y += rhs.y;
+    self.z += rhs.z;
+    return self;
+}
+
+template<typename T>
+NODISCARD ALWAYS_INLINE Vector3<T> operator-(Vector3<T> lhs, Vector3<T> rhs)
+{
+    const Vector3<T> result = Vector3<T>(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z);
+    return result;
+}
+
+template<typename T>
+ALWAYS_INLINE Vector3<T>& operator-=(Vector3<T>& self, Vector3<T> rhs)
+{
+    self.x -= rhs.x;
+    self.y -= rhs.y;
+    self.z -= rhs.z;
+    return self;
+}
+
+template<typename T>
+NODISCARD ALWAYS_INLINE Vector3<T> operator*(Vector3<T> vector, T scalar)
+{
+    const Vector3<T> result = Vector3<T>(vector.x * scalar, vector.y * scalar, vector.z * scalar);
+    return result;
+}
+
+template<typename T>
+NODISCARD ALWAYS_INLINE Vector3<T> operator*(T scalar, Vector3<T> vector)
+{
+    const Vector3<T> result = Vector3<T>(scalar * vector.x, scalar * vector.y, scalar * vector.z);
+    return result;
+}
+
+template<typename T>
+ALWAYS_INLINE Vector3<T>& operator*=(Vector3<T>& self, T scalar)
+{
+    self.x *= scalar;
+    self.y *= scalar;
+    self.z *= scalar;
+    return self;
+}
+
 #pragma endregion Vector3
 
 #pragma region Vector4
