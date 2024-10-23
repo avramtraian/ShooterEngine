@@ -78,7 +78,7 @@ private:
 public:                                                                                                     \
     using Super = parent_type_name;                                                                         \
     NODISCARD static UUID get_static_component_type_uuid();                                                 \
-    SHOOTER_API virtual void on_register(ComponentRegisterBuilder& register_builder) const override;                    \
+    virtual void on_register(ComponentRegisterBuilder& register_builder) const override;                    \
     NODISCARD ALWAYS_INLINE virtual UUID get_component_type_uuid() const override                           \
     {                                                                                                       \
         return get_static_component_type_uuid();                                                            \
@@ -99,7 +99,7 @@ public:                                                                         
 public:                                                                                                     \
     using Super = parent_type_name;                                                                         \
     NODISCARD SHOOTER_API static UUID get_static_component_type_uuid();                                     \
-    SHOOTER_API virtual void on_register(ComponentRegisterBuilder& register_builder) const override;                    \
+    SHOOTER_API virtual void on_register(ComponentRegisterBuilder& register_builder) const override;        \
     NODISCARD ALWAYS_INLINE virtual UUID get_component_type_uuid() const override                           \
     {                                                                                                       \
         return get_static_component_type_uuid();                                                            \
