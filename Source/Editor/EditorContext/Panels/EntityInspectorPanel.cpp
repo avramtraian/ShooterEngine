@@ -236,6 +236,14 @@ void EntityInspectorPanel::draw_component(EntityComponent* component)
                 }
                 break;
 
+                case ComponentFieldType::Boolean:
+                {
+                    SE_ASSERT(field.byte_count == sizeof(bool));
+                    bool& field_value = *reinterpret_cast<bool*>(reinterpret_cast<u8*>(component) + field.byte_offset);
+                    ImGui::Checkbox(field.name.characters(), &field_value);
+                }
+                break;
+
                 case ComponentFieldType::Vector3:
                 {
                     SE_ASSERT(field.byte_count == sizeof(Vector3));

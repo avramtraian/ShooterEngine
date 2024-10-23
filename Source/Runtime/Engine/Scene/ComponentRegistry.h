@@ -25,6 +25,7 @@ enum class ComponentFieldType : u16
     UInt8, UInt16, UInt32, UInt64,
     Int8, Int16, Int32, Int64,
     Float32, Float64,
+    Boolean,
     Vector2, Vector3, Vector4,
     Color3, Color4,
     // clang-format on
