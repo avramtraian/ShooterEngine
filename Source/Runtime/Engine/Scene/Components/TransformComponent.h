@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <Core/Math/Matrix.h>
 #include <Core/Math/Vector.h>
 #include <Engine/Scene/EntityComponent.h>
 
@@ -26,6 +27,8 @@ public:
     ALWAYS_INLINE void set_translation(Vector3 new_translation) { m_translation = new_translation; }
     ALWAYS_INLINE void set_rotation(Vector3 in_rotation) { m_rotation = in_rotation; }
     ALWAYS_INLINE void set_scale(Vector3 in_scale) { m_scale = in_scale; }
+
+    NODISCARD SHOOTER_API Matrix4 get_transform_matrix() const;
 
 private:
     Vector3 m_translation { 0, 0, 0 };

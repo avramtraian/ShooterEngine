@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
+#include <Core/Math/MatrixTransformations.h>
 #include <Engine/Scene/ComponentRegistry.h>
 #include <Engine/Scene/ComponentRegistryFields.h>
 #include <Engine/Scene/Components/TransformComponent.h>
@@ -42,5 +43,13 @@ TransformComponent::TransformComponent(const EntityComponentInitializer& initial
     , m_scale(in_scale)
     , m_rotation(in_rotation)
 {}
+
+Matrix4 TransformComponent::get_transform_matrix() const
+{
+    const Matrix4 translation_matrix = Matrix4::translate(m_translation);
+    const Matrix4 rotation_matrix = Matrix4::rotate(m_rotation);
+    const Matrix4 scale_matrix = Matrix4::scale(m_scale);
+    return translation_matrix * rotation_matrix * scale_matrix;
+}
 
 } // namespace SE
