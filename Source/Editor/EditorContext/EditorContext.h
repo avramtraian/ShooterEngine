@@ -66,10 +66,29 @@ public:
     NODISCARD ALWAYS_INLINE EntityInspectorPanel& get_entity_inspector_panel() { return m_entity_inspector_panel; }
     NODISCARD ALWAYS_INLINE SceneHierarchyPanel& get_scene_hierarchy_panel() { return m_scene_hierarchy_panel; }
     NODISCARD ALWAYS_INLINE ViewportPanel& get_viewport_panel() { return m_viewport_panel; }
+    NODISCARD ALWAYS_INLINE ToolbarPanel& get_toolbar_panel() { return m_toolbar_panel; }
+
+    NODISCARD ALWAYS_INLINE ScenePlayState get_scene_play_state() const { return m_toolbar_panel.get_scene_play_state(); }
+
+    NODISCARD ALWAYS_INLINE bool is_scene_in_edit_state() const { return get_scene_play_state() == ScenePlayState::Edit; }
+    NODISCARD ALWAYS_INLINE bool is_scene_in_play_state() const
+    {
+        return get_scene_play_state() == ScenePlayState::Play || get_scene_play_state() == ScenePlayState::PlayPaused;
+    }
+
+    NODISCARD ALWAYS_INLINE SceneCameraMode get_scene_camera_mode() const { return m_toolbar_panel.get_scene_camera_mode(); }
 
 private:
     void on_update_logic(float delta_time);
     void on_render_imgui();
+
+    void on_scene_play();
+    void on_scene_stop();
+    void on_scene_pause();
+    void on_scene_unpause();
+
+    void on_scene_camera_mode_set_to_editor();
+    void on_scene_camera_mode_set_to_game();
 
 private:
     OwnPtr<Window> m_window;

@@ -4,6 +4,7 @@
  */
 
 #include <Core/Assertions.h>
+#include <Core/Containers/String.h>
 #include <EditorContext/EditorCamera.h>
 #include <EditorContext/Panels/ToolbarPanel.h>
 #include <imgui.h>
@@ -14,11 +15,16 @@ namespace SE
 
 bool ToolbarPanel::initialize()
 {
+    m_scene_play_state = ScenePlayState::Edit;
+    m_scene_camera_mode = SceneCameraMode::Editor;
     return true;
 }
 
 void ToolbarPanel::shutdown()
-{}
+{
+    m_scene_play_state = ScenePlayState::Unknown;
+    m_scene_camera_mode = SceneCameraMode::Unknown;
+}
 
 void ToolbarPanel::on_update(float delta_time)
 {}
@@ -27,11 +33,169 @@ void ToolbarPanel::on_render_imgui()
 {
     ImGui::Begin("Toolbar");
 
+    draw_scene_play_state_toggles();
+
+    ImGui::SameLine();
+    ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+    ImGui::SameLine();
+
+    draw_scene_camera_mode_toggle();
+
+    ImGui::SameLine();
+    ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+    ImGui::SameLine();
+
+    draw_editor_camera_options();
+
+    ImGui::End();
+}
+
+void ToolbarPanel::set_editor_camera_controller_context(EditorCameraController* editor_camera_controller_context)
+{
+    SE_ASSERT(editor_camera_controller_context != nullptr);
+    m_editor_camera_controller_context = editor_camera_controller_context;
+}
+
+void ToolbarPanel::clear_editor_camera_controller_context()
+{
+    m_editor_camera_controller_context = nullptr;
+}
+
+void ToolbarPanel::set_scene_play_state(ScenePlayState scene_play_state)
+{
+    const ScenePlayState old_scene_play_state = m_scene_play_state;
+    m_scene_play_state = scene_play_state;
+    if (m_scene_play_state != old_scene_play_state)
+        dispatch_on_scene_play_state_changed_callbacks(old_scene_play_state);
+}
+
+void ToolbarPanel::dispatch_on_scene_play_state_changed_callbacks(ScenePlayState old_scene_play_state)
+{
+    for (auto& callback : m_on_scene_play_state_changed_callbacks)
+        callback(old_scene_play_state, m_scene_play_state);
+}
+
+void ToolbarPanel::set_scene_camera_mode(SceneCameraMode scene_camera_mode)
+{
+    const SceneCameraMode old_scene_camera_mode = m_scene_camera_mode;
+    m_scene_camera_mode = scene_camera_mode;
+    if (m_scene_camera_mode != old_scene_camera_mode)
+        dispatch_on_scene_camera_mode_changed_callbacks(old_scene_camera_mode);
+}
+
+void ToolbarPanel::dispatch_on_scene_camera_mode_changed_callbacks(SceneCameraMode old_scene_camera_mode)
+{
+    for (auto& callback : m_on_scene_camera_mode_changed_callbacks)
+        callback(old_scene_camera_mode, m_scene_camera_mode);
+}
+
+static float get_toolbar_button_height()
+{
+    const float toolbar_button_max_height = 50.0F;
+    const float available_content_region_height = ImGui::GetContentRegionAvail().y;
+    const float toolbar_button_height = Math::min(toolbar_button_max_height, available_content_region_height);
+    return toolbar_button_height;
+}
+
+void ToolbarPanel::draw_scene_play_state_toggles()
+{
+    const float toolbar_button_height = get_toolbar_button_height();
+
+    String play_edit_toggle_button_label;
+    switch (m_scene_play_state)
+    {
+        case ScenePlayState::Unknown: play_edit_toggle_button_label = "Unknown"sv; break;
+        case ScenePlayState::Edit: play_edit_toggle_button_label = "Play"sv; break;
+        case ScenePlayState::Play: play_edit_toggle_button_label = "Stop"sv; break;
+        case ScenePlayState::PlayPaused: play_edit_toggle_button_label = "Stop"sv; break;
+    }
+
+    if (ImGui::Button(play_edit_toggle_button_label.characters(), { toolbar_button_height, toolbar_button_height }))
+    {
+        switch (m_scene_play_state)
+        {
+            case ScenePlayState::Edit: set_scene_play_state(ScenePlayState::Play); break;
+            case ScenePlayState::Play: set_scene_play_state(ScenePlayState::Edit); break;
+            case ScenePlayState::PlayPaused: set_scene_play_state(ScenePlayState::Edit); break;
+        }
+    }
+
+    String pause_toggle_button_label;
+    bool is_pause_toggle_button_activated = false;
+
+    switch (m_scene_play_state)
+    {
+        case ScenePlayState::Unknown:
+            pause_toggle_button_label = "Unknown"sv;
+            is_pause_toggle_button_activated = false;
+            break;
+        
+        case ScenePlayState::Edit:
+            pause_toggle_button_label = "Pause"sv;
+            is_pause_toggle_button_activated = false;
+            break;
+        
+        case ScenePlayState::Play:
+            pause_toggle_button_label = "Pause"sv;
+            is_pause_toggle_button_activated = true;
+            break;
+        
+        case ScenePlayState::PlayPaused:
+            pause_toggle_button_label = "Resume"sv;
+            is_pause_toggle_button_activated = true;
+            break;
+    }
+
+    if (!is_pause_toggle_button_activated)
+    {
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5F);
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button(pause_toggle_button_label.characters(), { toolbar_button_height, toolbar_button_height }))
+    {
+        switch (m_scene_play_state)
+        {
+            case ScenePlayState::Play: set_scene_play_state(ScenePlayState::PlayPaused); break;
+            case ScenePlayState::PlayPaused: set_scene_play_state(ScenePlayState::Play); break;
+        }
+    }
+
+    if (!is_pause_toggle_button_activated)
+    {
+        ImGui::PopStyleVar();
+        ImGui::PopItemFlag();
+    }
+}
+
+void ToolbarPanel::draw_scene_camera_mode_toggle()
+{
+    const float toolbar_button_height = get_toolbar_button_height();
+
+    String camera_mode_toggle_button_label;
+    switch (m_scene_camera_mode)
+    {
+        case SceneCameraMode::Unknown: camera_mode_toggle_button_label = "Unknown"sv; break;
+        case SceneCameraMode::Game: camera_mode_toggle_button_label = "Editor"sv; break;
+        case SceneCameraMode::Editor: camera_mode_toggle_button_label = "Game"sv; break;
+    }
+
+    if (ImGui::Button(camera_mode_toggle_button_label.characters(), { toolbar_button_height, toolbar_button_height }))
+    {
+        switch (m_scene_camera_mode)
+        {
+            case SceneCameraMode::Game: set_scene_camera_mode(SceneCameraMode::Editor); break;
+            case SceneCameraMode::Editor: set_scene_camera_mode(SceneCameraMode::Game); break;
+        }
+    }
+}
+
+void ToolbarPanel::draw_editor_camera_options()
+{
     if (has_editor_camera_controller_context())
     {
-        const float toolbar_button_max_height = 50.0F;
-        const float available_content_region_height = ImGui::GetContentRegionAvail().y;
-        const float toolbar_button_height = Math::min(toolbar_button_max_height, available_content_region_height);
+        const float toolbar_button_height = get_toolbar_button_height();
 
         if (ImGui::Button("##EditorCameraOptions", { toolbar_button_height, toolbar_button_height }))
             ImGui::OpenPopup("EditorCameraOptionsPopup");
@@ -115,19 +279,6 @@ void ToolbarPanel::on_render_imgui()
             ImGui::EndPopup();
         }
     }
-
-    ImGui::End();
-}
-
-void ToolbarPanel::set_editor_camera_controller_context(EditorCameraController* editor_camera_controller_context)
-{
-    SE_ASSERT(editor_camera_controller_context != nullptr);
-    m_editor_camera_controller_context = editor_camera_controller_context;
-}
-
-void ToolbarPanel::clear_editor_camera_controller_context()
-{
-    m_editor_camera_controller_context = nullptr;
 }
 
 } // namespace SE

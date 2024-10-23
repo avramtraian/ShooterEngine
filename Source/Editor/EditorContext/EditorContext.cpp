@@ -194,6 +194,53 @@ bool EditorContext::post_initialize()
 
     m_toolbar_panel.initialize();
     m_toolbar_panel.set_editor_camera_controller_context(&m_editor_camera.get_controller());
+    m_toolbar_panel.add_on_scene_play_changed_callback(
+        [this](ScenePlayState old_scene_play_state, ScenePlayState new_scene_play_state)
+        {
+            if (new_scene_play_state == ScenePlayState::Unknown)
+                return;
+            SE_ASSERT(new_scene_play_state != old_scene_play_state);
+
+            switch (new_scene_play_state)
+            {
+                case ScenePlayState::Play:
+                {
+                    if (old_scene_play_state == ScenePlayState::PlayPaused)
+                        on_scene_unpause();
+                    else
+                        on_scene_play();
+                }
+                break;
+
+                case ScenePlayState::PlayPaused:
+                {
+                    if (old_scene_play_state == ScenePlayState::Play)
+                        on_scene_pause();
+                }
+                break;
+
+                case ScenePlayState::Edit:
+                {
+                    on_scene_stop();
+                }
+                break;
+            }
+        }
+    );
+    m_toolbar_panel.add_on_scene_camera_mode_changed_callback(
+        [this](SceneCameraMode old_camera_mode, SceneCameraMode new_camera_mode)
+        {
+            if (new_camera_mode == SceneCameraMode::Unknown)
+                return;
+            SE_ASSERT(new_camera_mode != old_camera_mode);
+
+            switch (new_camera_mode)
+            {
+                case SceneCameraMode::Editor: on_scene_camera_mode_set_to_editor(); break;
+                case SceneCameraMode::Game: on_scene_camera_mode_set_to_game(); break;
+            }
+        }
+    );
 
     Entity* entity = m_active_scene->create_entity();
     entity->add_component<TransformComponent>();
@@ -209,6 +256,12 @@ bool EditorContext::post_initialize()
 
 void EditorContext::shutdown()
 {
+    if (is_scene_in_play_state())
+    {
+        // End the scene play session before shutting down the editor context.
+        m_active_scene->on_end_play();
+    }
+
     m_content_browser_panel.shutdown();
     m_entity_inspector_panel.shutdown();
     m_scene_hierarchy_panel.shutdown();
@@ -340,11 +393,32 @@ String EditorContext::get_project_binaries_directory(BuildConfiguration build_co
 
 void EditorContext::on_update_logic(float delta_time)
 {
-    // Update the editor camera.
-    m_editor_camera.on_update(delta_time);
+    if (is_scene_in_play_state())
+    {
+        if (get_scene_play_state() == ScenePlayState::Play)
+        {
+            // If the scene play state is set to `Play` invoke the scene `on_update` function.
+            // This will effectively update all game-related code (including engine systems).
+            m_active_scene->on_update(delta_time);
+        }
+    }
+
+    Matrix4 view_projection_matrix = Matrix4::identity();
+    if (get_scene_camera_mode() == SceneCameraMode::Editor)
+    {
+        m_editor_camera.on_update(delta_time);
+        view_projection_matrix = m_editor_camera.get_view_projection_matrix();
+    }
+    else if (get_scene_camera_mode() == SceneCameraMode::Game)
+    {
+        // TODO: Get the view projection matrix of the primary camera entity in the scene.
+        view_projection_matrix = m_editor_camera.get_view_projection_matrix();
+    }
 
     // Render the scene.
-    m_scene_renderer->render(m_editor_camera.get_view_projection_matrix());
+    // TODO: Use the view projection matrix of the primary camera entity when the scene
+    // play state is set to `Play`.
+    m_scene_renderer->render(view_projection_matrix);
 
     m_content_browser_panel.on_update(delta_time);
     m_entity_inspector_panel.on_update(delta_time);
@@ -361,5 +435,28 @@ void EditorContext::on_render_imgui()
     m_viewport_panel.on_render_imgui();
     m_toolbar_panel.on_render_imgui();
 }
+
+void EditorContext::on_scene_play()
+{
+    m_active_scene->on_begin_play();
+}
+
+void EditorContext::on_scene_stop()
+{
+    m_active_scene->on_end_play();
+}
+
+void EditorContext::on_scene_pause()
+{
+}
+
+void EditorContext::on_scene_unpause()
+{}
+
+void EditorContext::on_scene_camera_mode_set_to_editor()
+{}
+
+void EditorContext::on_scene_camera_mode_set_to_game()
+{}
 
 } // namespace SE
