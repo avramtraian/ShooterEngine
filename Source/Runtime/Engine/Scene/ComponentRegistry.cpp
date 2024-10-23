@@ -5,6 +5,7 @@
 
 #include <Core/Log.h>
 #include <Engine/Scene/ComponentRegistry.h>
+#include <Engine/Scene/Components/CameraComponent.h>
 #include <Engine/Scene/Components/SpriteRendererComponent.h>
 #include <Engine/Scene/Components/TransformComponent.h>
 #include <Engine/Scene/EntityComponent.h>
@@ -93,6 +94,14 @@ void ComponentRegistry::construct_engine_components_registers()
         SpriteRendererComponent sprite_renderer_component_default_object = SpriteRendererComponent(default_component_initializer);
         ComponentRegisterBuilder register_builder;
         sprite_renderer_component_default_object.on_register(register_builder);
+        construct_register(register_builder);
+    }
+
+    // CameraComponent
+    {
+        CameraComponent camera_component_default_object = CameraComponent(default_component_initializer);
+        ComponentRegisterBuilder register_builder;
+        camera_component_default_object.on_register(register_builder);
         construct_register(register_builder);
     }
 }

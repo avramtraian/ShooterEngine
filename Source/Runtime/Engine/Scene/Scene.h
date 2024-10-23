@@ -40,6 +40,9 @@ public:
     // Returns the current play state of the scene.
     NODISCARD ALWAYS_INLINE PlayState get_play_state() const { return m_play_state; }
 
+    // Returns the number of active entities in the scene.
+    NODISCARD ALWAYS_INLINE u32 get_entity_count() const { return static_cast<u32>(m_entities.count()); }
+
 public:
     SHOOTER_API Entity* create_entity();
     SHOOTER_API Entity* create_entity_with_uuid(UUID entity_uuid);
@@ -48,6 +51,17 @@ public:
     SHOOTER_API Entity* get_entity_from_uuid(UUID entity_uuid);
     SHOOTER_API const Entity* get_entity_from_uuid(UUID entity_uuid) const;
 
+    SHOOTER_API void set_primary_camera_entity(UUID entity_uuid);
+    NODISCARD ALWAYS_INLINE UUID get_primary_camera_entity_uuid() const { return m_primary_camera_entity_uuid; }
+
+    NODISCARD ALWAYS_INLINE Entity* get_primary_camera_entity() { return get_entity_from_uuid(m_primary_camera_entity_uuid); }
+    NODISCARD ALWAYS_INLINE const Entity* get_primary_camera_entity() const { return get_entity_from_uuid(m_primary_camera_entity_uuid); }
+
+    // Iterates over all entities and returns the UUID of the first entity that has a camera component marked as primary.
+    // Returns UUID::invalid() if no primary camera entity exists.
+    NODISCARD SHOOTER_API UUID find_primary_camera_entity() const;
+
+public:
     //
     // The signature of the provided entity predicate function must:
     //   - Return `IterationDecision`, which determines whether or not to finish the entity iteration process;
@@ -87,9 +101,6 @@ public:
     }
 
 public:
-    NODISCARD ALWAYS_INLINE u32 get_entity_count() const { return static_cast<u32>(m_entities.count()); }
-
-public:
     //
     // Invokes the `on_begin_play` callback for each entity in the scene.
     // Also runs the initialization logic required for the scene to start playing a new session.
@@ -116,6 +127,10 @@ private:
     PlayState m_play_state;
 
     HashMap<UUID, OwnPtr<Entity>> m_entities;
+
+    // The UUID of the enyity that has a camera component attached to it and it is also
+    // marked as the primary one.
+    UUID m_primary_camera_entity_uuid;
 };
 
 } // namespace SE
