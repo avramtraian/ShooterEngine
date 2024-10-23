@@ -6,10 +6,12 @@
 #include <Core/Containers/StringBuilder.h>
 #include <Core/FileSystem/FileSystem.h>
 #include <Core/Log.h>
+#include <Core/Math/Matrix.h>
+#include <Core/Math/MatrixTransformations.h>
 #include <EditorContext/EditorContext.h>
 #include <EditorEngine.h>
 #include <Engine/Application/Events/WindowEvents.h>
-#include <Engine/Scene/Components/SpriteRendererComponent.h>
+#include <Engine/Scene/Components/CameraComponent.h>
 #include <Engine/Scene/Components/TransformComponent.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/RendererAPI.h>
@@ -242,15 +244,6 @@ bool EditorContext::post_initialize()
         }
     );
 
-    Entity* entity = m_active_scene->create_entity();
-    entity->add_component<TransformComponent>();
-    entity->add_component<SpriteRendererComponent>();
-
-    m_active_scene->create_entity();
-    m_active_scene->create_entity();
-    m_active_scene->create_entity();
-    m_active_scene->create_entity();
-
     return true;
 }
 
@@ -411,8 +404,31 @@ void EditorContext::on_update_logic(float delta_time)
     }
     else if (get_scene_camera_mode() == SceneCameraMode::Game)
     {
-        // TODO: Get the view projection matrix of the primary camera entity in the scene.
-        view_projection_matrix = m_editor_camera.get_view_projection_matrix();
+        Entity* entity = m_active_scene->get_primary_camera_entity();
+        if (entity == nullptr && is_scene_in_edit_state())
+        {
+            const UUID entity_uuid = m_active_scene->find_primary_camera_entity();
+            if (entity_uuid != UUID::invalid())
+                entity = m_active_scene->get_entity_from_uuid(entity_uuid);
+        }
+
+        if (entity == nullptr || !entity->has_component<TransformComponent>())
+        {
+            // The primary camera entity can't be used to calculate a valid view projection matrix,
+            // so we use the default editor camera instead. This behaviour should be displayed to the user.
+            view_projection_matrix = m_editor_camera.get_view_projection_matrix();
+        }
+        else
+        {
+            const TransformComponent& tc = entity->get_component<TransformComponent>();
+            const CameraComponent& cc = entity->get_component<CameraComponent>();
+
+            const Matrix4 inverse_view_matrix = Matrix4::rotate(tc.rotation()) * Matrix4::translate(tc.translation());
+            const float aspect_ratio = static_cast<float>(m_scene_framebuffer->get_width()) / static_cast<float>(m_scene_framebuffer->get_height());
+            const Matrix4 projection_matrix = cc.get_projection_matrix(aspect_ratio);
+
+            view_projection_matrix = Matrix4::inverse(inverse_view_matrix) * projection_matrix;
+        }
     }
 
     // Render the scene.
@@ -438,17 +454,18 @@ void EditorContext::on_render_imgui()
 
 void EditorContext::on_scene_play()
 {
+    m_toolbar_panel.set_scene_camera_mode(SceneCameraMode::Game);
     m_active_scene->on_begin_play();
 }
 
 void EditorContext::on_scene_stop()
 {
     m_active_scene->on_end_play();
+    m_toolbar_panel.set_scene_camera_mode(SceneCameraMode::Editor);
 }
 
 void EditorContext::on_scene_pause()
-{
-}
+{}
 
 void EditorContext::on_scene_unpause()
 {}
@@ -457,6 +474,14 @@ void EditorContext::on_scene_camera_mode_set_to_editor()
 {}
 
 void EditorContext::on_scene_camera_mode_set_to_game()
-{}
+{
+    if (m_active_scene->find_primary_camera_entity() == UUID::invalid())
+    {
+        // There is no primary camera entity in the scene, thus we can't switch to the
+        // game camera (as it doesn't exist).
+        SE_LOG_INFO("No primary camera entity was found in the scene. Falling back to the editor camera.");
+        m_toolbar_panel.set_scene_camera_mode(SceneCameraMode::Editor);
+    }
+}
 
 } // namespace SE
