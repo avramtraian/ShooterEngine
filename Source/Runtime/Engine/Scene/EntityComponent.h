@@ -53,6 +53,10 @@ public:
     NODISCARD ALWAYS_INLINE Entity* parent_entity() { return &m_parent_entity; }
     NODISCARD ALWAYS_INLINE const Entity* parent_entity() const { return &m_parent_entity; }
 
+    // Returns a reference to the scene in which the parent entity exists.
+    NODISCARD SHOOTER_API Scene& scene_context();
+    NODISCARD SHOOTER_API const Scene& scene_context() const;
+
     // Returns whether or not the `on_update` callback is invoked.
     NODISCARD ALWAYS_INLINE bool is_updatable() const { return m_is_updatable; }
 
