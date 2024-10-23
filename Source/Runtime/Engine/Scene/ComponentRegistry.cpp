@@ -12,6 +12,40 @@
 namespace SE
 {
 
+void ComponentRegisterBuilder::add_field(ComponentField field)
+{
+    SE_ASSERT(field.type != ComponentFieldType::Unknown);
+    field.flags |= m_field_pushed_flags;
+    clear_field_flags();
+    m_fields.add(move(field));
+}
+
+void ComponentRegisterBuilder::push_field_flag(ComponentFieldFlag flag)
+{
+    const u8 flag_bit_index = static_cast<u8>(flag);
+    m_field_pushed_flags |= (static_cast<u64>(1) << flag_bit_index);
+}
+
+void ComponentRegisterBuilder::pop_field_flag(ComponentFieldFlag flag)
+{
+    const u8 flag_bit_index = static_cast<u8>(flag);
+    m_field_pushed_flags &= ~(static_cast<u64>(1) << flag_bit_index);
+}
+
+bool ComponentRegisterBuilder::has_field_flag(ComponentFieldFlag flag) const
+{
+    const u8 flag_bit_index = static_cast<u8>(flag);
+    if (m_field_pushed_flags & (static_cast<u64>(1) << flag_bit_index))
+        return true;
+    return false;
+}
+
+void ComponentRegisterBuilder::clear_field_flags()
+{
+    // Reset the pushed flags state variable.
+    m_field_pushed_flags = 0;
+}
+
 bool ComponentRegistry::initialize()
 {
     construct_engine_components_registers();

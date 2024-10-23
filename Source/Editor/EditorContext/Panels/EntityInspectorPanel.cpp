@@ -44,7 +44,9 @@ void EntityInspectorPanel::on_render_imgui()
 
         for (EntityComponent* component : entity_context->get_components())
         {
+            ImGui::PushID(component->parent_entity()->uuid());
             draw_component(component);
+            ImGui::PopID();
         }
     }
 
@@ -214,17 +216,51 @@ void EntityInspectorPanel::draw_component(EntityComponent* component)
     {
         for (const ComponentField& field : component_register_data.fields)
         {
-            if (field.type == ComponentFieldType::Vector3)
+            switch (field.type)
             {
-                SE_ASSERT(field.byte_count == sizeof(Vector3));
-                Vector3& field_value = *reinterpret_cast<Vector3*>(reinterpret_cast<u8*>(component) + field.byte_offset);
-                ImGui::DragFloat3(field.name.characters(), field_value.value_ptr(), 0.1F);
-            }
-            if (field.type == ComponentFieldType::Color4)
-            {
-                SE_ASSERT(field.byte_count == sizeof(Color4));
-                Color4& field_value = *reinterpret_cast<Color4*>(reinterpret_cast<u8*>(component) + field.byte_offset);
-                ImGui::ColorEdit4(field.name.characters(), &field_value.r);
+                case ComponentFieldType::Float32:
+                {
+                    SE_ASSERT(field.byte_count == sizeof(float));
+                    float& field_value = *reinterpret_cast<float*>(reinterpret_cast<u8*>(component) + field.byte_offset);
+
+                    float display_value = field_value;
+                    if (field.has_flag(ComponentFieldFlag::Angle))
+                        display_value *= Math::degrees(1.0F);
+
+                    if (ImGui::DragFloat(field.name.characters(), &display_value))
+                    {
+                        field_value = display_value;
+                        if (field.has_flag(ComponentFieldFlag::Angle))
+                            field_value *= Math::radians(1.0F);
+                    }
+                }
+                break;
+
+                case ComponentFieldType::Vector3:
+                {
+                    SE_ASSERT(field.byte_count == sizeof(Vector3));
+                    Vector3& field_value = *reinterpret_cast<Vector3*>(reinterpret_cast<u8*>(component) + field.byte_offset);
+
+                    Vector3 display_value = field_value;
+                    if (field.has_flag(ComponentFieldFlag::Angle))
+                        display_value *= Math::degrees(1.0F);
+
+                    if (ImGui::DragFloat3(field.name.characters(), display_value.value_ptr(), 0.1F))
+                    {
+                        field_value = display_value;
+                        if (field.has_flag(ComponentFieldFlag::Angle))
+                            field_value *= Math::radians(1.0F);
+                    }
+                }
+                break;
+
+                case ComponentFieldType::Color4:
+                {
+                    SE_ASSERT(field.byte_count == sizeof(Color4));
+                    Color4& field_value = *reinterpret_cast<Color4*>(reinterpret_cast<u8*>(component) + field.byte_offset);
+                    ImGui::ColorEdit4(field.name.characters(), &field_value.r);
+                }
+                break;
             }
         }
 

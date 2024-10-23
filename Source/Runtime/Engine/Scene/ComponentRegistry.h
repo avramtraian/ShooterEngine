@@ -30,14 +30,32 @@ enum class ComponentFieldType : u16
     // clang-format on
 };
 
+using ComponentFieldFlags = u64;
+
+enum class ComponentFieldFlag : u8
+{
+    Angle,
+};
+
 struct ComponentField
 {
+public:
     ComponentFieldType type { ComponentFieldType::Unknown };
     String name;
     u32 byte_offset { 0 };
     u32 byte_count { 0 };
-
+    // NOTE: Should always be manipulated using the register builder.
+    ComponentFieldFlags flags { 0 };
     u8 default_value_buffer[32];
+
+public:
+    NODISCARD ALWAYS_INLINE bool has_flag(ComponentFieldFlag flag) const
+    {
+        const u8 flag_bit_index = static_cast<u8>(flag);
+        if (flags & (static_cast<u64>(1) << flag_bit_index))
+            return true;
+        return false;
+    }
 };
 
 class ComponentRegisterBuilder
@@ -51,11 +69,13 @@ public:
 
     // NOTE: The order in which the fields are added using this function is also the order in which they will
     // apear in the editor inspector panel.
-    ALWAYS_INLINE void add_field(const ComponentField& field)
-    {
-        SE_ASSERT(field.type != ComponentFieldType::Unknown);
-        m_fields.add(field);
-    }
+    SHOOTER_API void add_field(ComponentField field);
+
+    SHOOTER_API void push_field_flag(ComponentFieldFlag flag);
+    SHOOTER_API void pop_field_flag(ComponentFieldFlag flag);
+
+    NODISCARD SHOOTER_API bool has_field_flag(ComponentFieldFlag flag) const;
+    SHOOTER_API void clear_field_flags();
 
 public:
     NODISCARD ALWAYS_INLINE UUID get_type_uuid() const { return m_type_uuid; }
@@ -72,6 +92,7 @@ private:
     String m_name;
     PFN_ComponentConstruct m_construct_function { nullptr };
     Vector<ComponentField> m_fields;
+    ComponentFieldFlags m_field_pushed_flags;
 };
 
 class ComponentRegistry

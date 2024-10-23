@@ -31,6 +31,7 @@ void TransformComponent::on_register(ComponentRegisterBuilder& register_builder)
     register_builder.set_construct_function(construct_function);
 
     SE_TRY_ADD_COMPONENT_FIELD(m_translation);
+    register_builder.push_field_flag(ComponentFieldFlag::Angle);
     SE_TRY_ADD_COMPONENT_FIELD(m_rotation);
     SE_TRY_ADD_COMPONENT_FIELD(m_scale);
 }
