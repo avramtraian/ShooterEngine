@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include <Core/Containers/Format.h>
 #include <Core/Math/Color.h>
 #include <Core/Math/Vector.h>
+#include <Core/String/Format.h>
 #include <EditorContext/Panels/EntityInspectorPanel.h>
 #include <Engine/Scene/ComponentRegistry.h>
 #include <Engine/Scene/Entity.h>

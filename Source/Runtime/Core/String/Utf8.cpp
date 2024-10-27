@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include <Core/Containers/Utf8.h>
+#include <Core/String/Utf8.h>
 
 namespace SE
 {
