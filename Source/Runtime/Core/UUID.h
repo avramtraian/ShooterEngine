@@ -56,10 +56,7 @@ public:
 
 public:
     NODISCARD ALWAYS_INLINE constexpr u64 value() const { return m_uuid_value; }
-    NODISCARD ALWAYS_INLINE constexpr operator u64() const { return value(); }
-
     NODISCARD ALWAYS_INLINE constexpr bool is_valid() const { return (m_uuid_value != 0); }
-    NODISCARD ALWAYS_INLINE constexpr operator bool() const { return is_valid(); }
 
 public:
     NODISCARD ALWAYS_INLINE constexpr bool operator==(const UUID& other) const { return (m_uuid_value == other.m_uuid_value); }
