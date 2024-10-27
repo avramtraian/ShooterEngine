@@ -8,7 +8,7 @@
 #include <Core/API.h>
 #include <Core/Containers/Optional.h>
 #include <Core/Containers/OwnPtr.h>
-#include <Core/Containers/String.h>
+#include <Core/String/String.h>
 #include <Core/Containers/Vector.h>
 #include <Engine/Application/Events/Event.h>
 

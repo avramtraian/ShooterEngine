@@ -6,9 +6,9 @@
 #pragma once
 
 #include <Core/Containers/HashMap.h>
-#include <Core/Containers/String.h>
 #include <Core/Containers/Vector.h>
 #include <Core/Misc/IterationDecision.h>
+#include <Core/String/String.h>
 #include <Core/UUID.h>
 #include <Engine/Scene/EntityComponent.h>
 

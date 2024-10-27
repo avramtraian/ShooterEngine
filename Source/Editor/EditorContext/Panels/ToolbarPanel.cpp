@@ -4,7 +4,7 @@
  */
 
 #include <Core/Assertions.h>
-#include <Core/Containers/String.h>
+#include <Core/String/String.h>
 #include <EditorContext/EditorCamera.h>
 #include <EditorContext/Panels/ToolbarPanel.h>
 #include <imgui.h>

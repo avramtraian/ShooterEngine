@@ -7,8 +7,8 @@
 
 #include <Core/Containers/RefPtr.h>
 #include <Core/Containers/Span.h>
-#include <Core/Containers/String.h>
 #include <Core/Containers/Vector.h>
+#include <Core/String/String.h>
 #include <Renderer/ShaderStage.h>
 
 namespace SE

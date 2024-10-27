@@ -7,7 +7,7 @@
 
 #include <Core/API.h>
 #include <Core/Containers/Span.h>
-#include <Core/Containers/StringView.h>
+#include <Core/String/StringView.h>
 
 #define SE_FILEPATH_DELIMITATOR           '/'
 #define SE_FILEPATH_EXTENSION_DELIMITATOR '.'
@@ -99,6 +99,18 @@ public:
 
     // This function is not recommended for general use. It is only meant to be used for communication with C APIs.
     NODISCARD ALWAYS_INLINE const char* characters() const { return byte_span_with_null_termination().as<const char>().elements(); }
+
+    NODISCARD ALWAYS_INLINE usize byte_count() const
+    {
+        SE_ASSERT(m_byte_count > 0);
+        return (m_byte_count - 1);
+    }
+
+    NODISCARD ALWAYS_INLINE usize byte_count_with_null_termination() const
+    {
+        SE_ASSERT(m_byte_count > 0);
+        return m_byte_count;
+    }
 
     NODISCARD ALWAYS_INLINE bool is_empty() const { return (m_byte_count <= 1); }
 

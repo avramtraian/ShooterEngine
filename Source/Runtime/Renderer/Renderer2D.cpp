@@ -5,7 +5,7 @@
 
 #include <Asset/AssetManager.h>
 #include <Asset/TextureAsset.h>
-#include <Core/Containers/StringBuilder.h>
+#include <Core/String/StringBuilder.h>
 #include <Core/FileSystem/FileSystem.h>
 #include <Core/Log.h>
 #include <Engine/Engine.h>

@@ -6,7 +6,7 @@
 #pragma once
 
 #include <Core/Containers/Optional.h>
-#include <Core/Containers/StringView.h>
+#include <Core/String/StringView.h>
 #include <Core/Math/Color.h>
 #include <Core/Math/Vector.h>
 #include <Engine/Scene/ComponentRegistry.h>

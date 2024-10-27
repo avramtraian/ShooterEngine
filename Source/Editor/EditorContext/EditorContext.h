@@ -6,7 +6,7 @@
 #pragma once
 
 #include <Core/Containers/OwnPtr.h>
-#include <Core/Containers/String.h>
+#include <Core/String/String.h>
 #include <EditorContext/EditorCamera.h>
 #include <EditorContext/Panels/ContentBrowserPanel.h>
 #include <EditorContext/Panels/EntityInspectorPanel.h>

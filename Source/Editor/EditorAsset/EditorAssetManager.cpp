@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include <Core/Containers/StringBuilder.h>
 #include <Core/FileSystem/FileSystem.h>
 #include <Core/Log.h>
+#include <Core/String/StringBuilder.h>
 #include <EditorAsset/EditorAssetManager.h>
 #include <EditorAsset/TextureSerializer.h>
 #include <EditorEngine.h>

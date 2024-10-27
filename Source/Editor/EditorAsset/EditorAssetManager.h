@@ -10,7 +10,7 @@
 #include <Core/Containers/HashMap.h>
 #include <Core/Containers/OwnPtr.h>
 #include <Core/Containers/RefPtr.h>
-#include <Core/Containers/String.h>
+#include <Core/String/String.h>
 
 namespace SE
 {

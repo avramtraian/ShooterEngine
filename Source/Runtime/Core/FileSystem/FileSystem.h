@@ -6,8 +6,8 @@
 #pragma once
 
 #include <Core/Containers/Optional.h>
-#include <Core/Containers/String.h>
 #include <Core/Memory/Buffer.h>
+#include <Core/String/String.h>
 
 //
 // Macro the checks if the return value is FileError::Success.

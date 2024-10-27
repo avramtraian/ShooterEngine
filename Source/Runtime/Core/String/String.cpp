@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include <Core/Containers/String.h>
+#include <Core/String/String.h>
 #include <Core/Memory/MemoryOperations.h>
 
 namespace SE

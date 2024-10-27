@@ -6,7 +6,7 @@
 #pragma once
 
 #include <Core/Containers/RefPtr.h>
-#include <Core/Containers/StringView.h>
+#include <Core/String/StringView.h>
 #include <Core/Containers/Vector.h>
 #include <Core/Math/Color.h>
 #include <Renderer/Framebuffer.h>

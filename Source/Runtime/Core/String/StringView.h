@@ -5,16 +5,18 @@
 
 #pragma once
 
-#include <Core/Containers/Span.h>
 #include <Core/API.h>
+#include <Core/Containers/Span.h>
 
-namespace SE {
+namespace SE
+{
 
 //
 // A view towards a UTF-8 encoded string.
 // The held string is not null-terminated and can't be mutated by the string view.
 //
-class StringView {
+class StringView
+{
 public:
     static constexpr usize invalid_position = invalid_size;
 
@@ -23,8 +25,7 @@ public:
     SHOOTER_API static StringView create_from_utf8(ReadonlyByteSpan characters_byte_span);
     SHOOTER_API static StringView create_from_utf8(const char* null_terminated_characters);
 
-    NODISCARD ALWAYS_INLINE static constexpr StringView
-    unsafe_create_from_utf8(const char* characters, usize byte_count)
+    NODISCARD ALWAYS_INLINE static constexpr StringView unsafe_create_from_utf8(const char* characters, usize byte_count)
     {
         StringView view;
         view.m_characters = characters;
@@ -64,10 +65,7 @@ public:
 
     NODISCARD ALWAYS_INLINE bool is_empty() const { return (m_byte_count == 0); }
 
-    NODISCARD ALWAYS_INLINE ReadonlyByteSpan byte_span() const
-    {
-        return ReadonlyByteSpan(reinterpret_cast<ReadonlyBytes>(m_characters), m_byte_count);
-    }
+    NODISCARD ALWAYS_INLINE ReadonlyByteSpan byte_span() const { return ReadonlyByteSpan(reinterpret_cast<ReadonlyBytes>(m_characters), m_byte_count); }
 
 public:
     // NOTE: The value these function return represents the offset in bytes and not the number

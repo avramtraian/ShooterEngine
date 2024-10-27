@@ -7,8 +7,10 @@
 
 #include <Core/Containers/Optional.h>
 #include <Core/Containers/Span.h>
-#include <Core/Containers/String.h>
 #include <Core/Containers/Vector.h>
+#include <Core/Misc/Version.h>
+#include <Core/String/String.h>
+#include <Core/UUID.h>
 
 namespace SE
 {
@@ -140,6 +142,58 @@ SE_INTEGER_FORMATTER_DECLARATION(i32)
 SE_INTEGER_FORMATTER_DECLARATION(i64)
 
 #undef SE_INTEGER_FORMATTER_DECLARATION
+
+template<>
+struct Formatter<UUID>
+{
+    ALWAYS_INLINE static FormatErrorCode format(FormatBuilder& builder, const FormatBuilder::Specifier& specifier, const UUID& value)
+    {
+        // Because a UUID is only a 64-bit unsigned integer, we can be sure that it will
+        // fit in a 16-long character array (written in hexadecimal).
+        char uuid_buffer[16] = {};
+        set_memory(uuid_buffer, '0', 16);
+
+        u64 uuid_value = value.value();
+        usize buffer_offset = 0;
+        while (uuid_value > 0)
+        {
+            const u8 digit = uuid_value % 16;
+            uuid_value /= 16;
+
+            if (digit <= 9)
+                uuid_buffer[buffer_offset++] = '0' + digit;
+            else
+                uuid_buffer[buffer_offset++] = 'A' + (digit - 10);
+        }
+
+        // Flip the modified characters.
+        for (usize offset = 0; offset < buffer_offset / 2; ++offset)
+        {
+            const char temporary = uuid_buffer[offset];
+            uuid_buffer[offset] = uuid_buffer[buffer_offset - offset - 1];
+            uuid_buffer[buffer_offset - offset - 1] = temporary;
+        }
+
+        const StringView uuid_buffer_string_view = StringView::create_from_utf8(uuid_buffer, sizeof(uuid_buffer));
+        return builder.push_string(specifier, uuid_buffer_string_view);
+    }
+};
+
+template<>
+struct Formatter<Version>
+{
+    ALWAYS_INLINE static FormatErrorCode format(FormatBuilder& builder, const FormatBuilder::Specifier& specifier, const Version& value)
+    {
+        builder.push_unsigned_integer(specifier, value.variant);
+        builder.push_string(specifier, "."sv);
+        builder.push_unsigned_integer(specifier, value.major);
+        builder.push_string(specifier, "."sv);
+        builder.push_unsigned_integer(specifier, value.minor);
+        builder.push_string(specifier, "."sv);
+        builder.push_unsigned_integer(specifier, value.patch);
+        return FormatErrorCode::Success;
+    }
+};
 
 namespace Detail
 {

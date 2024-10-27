@@ -6,9 +6,9 @@
 #pragma once
 
 #include <Core/API.h>
-#include <Core/Containers/Format.h>
-#include <Core/Containers/StringView.h>
 #include <Core/CoreTypes.h>
+#include <Core/String/Format.h>
+#include <Core/String/StringView.h>
 
 namespace SE
 {

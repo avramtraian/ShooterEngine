@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
+#include <Core/Containers/Format.h>
 #include <Core/Math/Color.h>
 #include <Core/Math/Vector.h>
 #include <EditorContext/Panels/EntityInspectorPanel.h>
@@ -44,7 +45,7 @@ void EntityInspectorPanel::on_render_imgui()
 
         for (EntityComponent* component : entity_context->get_components())
         {
-            ImGui::PushID(component->parent_entity()->uuid());
+            ImGui::PushID(reinterpret_cast<const void*>(component->parent_entity()->uuid().value()));
             draw_component(component);
             ImGui::PopID();
         }
@@ -107,34 +108,14 @@ void EntityInspectorPanel::draw_entity_name(Entity& entity_context)
 
 void EntityInspectorPanel::draw_entity_uuid(UUID uuid)
 {
-    // Because a UUID is only a 64-bit unsigned integer, we can be sure that it will
-    // fit in a 16-long character array (written in hexadecimal).
-    char entity_uuid_buffer[16 + 1] = {};
-    set_memory(entity_uuid_buffer, '0', 16);
-
-    u64 entity_uuid_value = uuid.value();
-    usize buffer_offset = 0;
-    while (entity_uuid_value > 0)
-    {
-        const u8 digit = entity_uuid_value % 16;
-        entity_uuid_value /= 16;
-
-        if (digit <= 9)
-            entity_uuid_buffer[buffer_offset++] = '0' + digit;
-        else
-            entity_uuid_buffer[buffer_offset++] = 'A' + (digit - 10);
-    }
-
-    // Flip the modified characters.
-    for (usize offset = 0; offset < buffer_offset / 2; ++offset)
-    {
-        const char temporary = entity_uuid_buffer[offset];
-        entity_uuid_buffer[offset] = entity_uuid_buffer[buffer_offset - offset - 1];
-        entity_uuid_buffer[buffer_offset - offset - 1] = temporary;
-    }
+    Optional<String> uuid_string = format("{}"sv, uuid);
+    SE_ASSERT(uuid_string.has_value() && uuid_string->byte_count() == 2 * sizeof(u64));
+    
+    char uuid_string_buffer[2 * sizeof(u64) + 1] = {};
+    copy_memory_from_span(uuid_string_buffer, uuid_string->byte_span());
 
     // We display the UUID in an input text field so it can be easily copied to the clipbord.
-    ImGui::InputText("Entity UUID", entity_uuid_buffer, sizeof(entity_uuid_buffer), ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputText("Entity UUID", uuid_string_buffer, sizeof(uuid_string_buffer), ImGuiInputTextFlags_ReadOnly);
 }
 
 void EntityInspectorPanel::draw_add_component(Entity& entity_context)

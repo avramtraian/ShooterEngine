@@ -7,7 +7,7 @@
 
 #include <Core/API.h>
 #include <Core/Containers/RefPtr.h>
-#include <Core/Containers/String.h>
+#include <Core/String/String.h>
 
 namespace SE
 {

@@ -7,7 +7,7 @@
 
 #include <Asset/Asset.h>
 #include <Core/Containers/RefPtr.h>
-#include <Core/Containers/String.h>
+#include <Core/String/String.h>
 #include <Renderer/Texture.h>
 
 namespace SE
