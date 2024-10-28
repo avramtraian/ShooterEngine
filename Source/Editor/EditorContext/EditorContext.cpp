@@ -88,7 +88,7 @@ bool EditorContext::initialize()
     m_active_scene = Scene::create();
 
     // Initialize the component registry.
-    m_component_registry.initialize();
+    m_component_reflector_registry.initialize();
 
     // Create the scene framebuffer and scene renderer.
     FramebufferDescription scene_framebuffer_description = {};
@@ -166,7 +166,7 @@ bool EditorContext::post_initialize()
 
     m_entity_inspector_panel.initialize();
     m_entity_inspector_panel.set_scene_context(m_active_scene.get());
-    m_entity_inspector_panel.set_component_registry_context(&m_component_registry);
+    m_entity_inspector_panel.set_component_reflector_registry_context(&m_component_reflector_registry);
 
     m_scene_hierarchy_panel.initialize();
     m_scene_hierarchy_panel.set_scene_context(m_active_scene.get());
@@ -277,7 +277,7 @@ void EditorContext::shutdown()
 
     m_scene_renderer.release();
     m_active_scene.release();
-    m_component_registry.shutdown();
+    m_component_reflector_registry.shutdown();
 
     // Destroy the window.
     Renderer::destroy_context_for_window(m_window.get());

@@ -13,7 +13,7 @@ namespace SE
 {
 
 // Forward declarations.
-class ComponentRegistry;
+class ComponentReflectorRegistry;
 class Entity;
 class EntityComponent;
 class Scene;
@@ -38,10 +38,10 @@ public:
     void set_scene_context(Scene* scene_context);
     void clear_scene_context();
 
-    NODISCARD ALWAYS_INLINE ComponentRegistry* get_component_registry_context() const { return m_component_registry_context; }
-    NODISCARD ALWAYS_INLINE bool has_component_registry_context() const { return (m_component_registry_context != nullptr); }
-    void set_component_registry_context(ComponentRegistry* component_registry_context);
-    void clear_component_registry_context();
+    NODISCARD ALWAYS_INLINE ComponentReflectorRegistry* get_component_reflector_registry_context() const { return m_component_reflector_registry_context; }
+    NODISCARD ALWAYS_INLINE bool has_component_reflector_registry_context() const { return (m_component_reflector_registry_context != nullptr); }
+    void set_component_reflector_registry_context(ComponentReflectorRegistry* component_reflector_registry_context);
+    void clear_component_reflector_registry_context();
 
 private:
     void draw_entity_name(Entity& entity_context);
@@ -52,7 +52,7 @@ private:
 private:
     Optional<UUID> m_entity_uuid_context;
     Scene* m_scene_context { nullptr };
-    ComponentRegistry* m_component_registry_context { nullptr };
+    ComponentReflectorRegistry* m_component_reflector_registry_context { nullptr };
 };
 
 } // namespace SE

@@ -35,6 +35,7 @@ class Entity
     friend class Scene;
 
 #if SE_CONFIGURATION_TARGET_EDITOR
+    friend class EditorSceneSerializer;
     friend class EntityInspectorPanel;
     friend class SceneHierarchyPanel;
 #endif // SE_CONFIGURATION_TARGET_EDITOR

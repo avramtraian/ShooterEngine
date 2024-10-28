@@ -4,9 +4,8 @@
  */
 
 #include <Core/Math/MatrixTransformations.h>
-#include <Engine/Scene/ComponentRegistry.h>
-#include <Engine/Scene/ComponentRegistryFields.h>
 #include <Engine/Scene/Components/TransformComponent.h>
+#include <Engine/Scene/Reflection/ComponentReflector.h>
 
 namespace SE
 {
@@ -18,23 +17,37 @@ UUID TransformComponent::get_static_component_type_uuid()
     return transform_component_type_uuid;
 }
 
-void TransformComponent::on_register(ComponentRegisterBuilder& register_builder) const
+void TransformComponent::on_register(ComponentReflector& reflector)
 {
-    PFN_ComponentConstruct construct_function = [](void* address, const EntityComponentInitializer& initializer)
+    PFN_InstantiateComponent instantiate_function = [](void* address, const EntityComponentInitializer& initializer)
     {
         new (address) TransformComponent(initializer);
     };
 
-    register_builder.set_type_uuid(get_static_component_type_uuid());
-    register_builder.set_structure_byte_count(sizeof(TransformComponent));
-    register_builder.set_parent_type_uuid(Super::get_static_component_type_uuid());
-    register_builder.set_name("TransformComponent"sv);
-    register_builder.set_construct_function(construct_function);
+    reflector.parent_type_uuid = Super::get_static_component_type_uuid();
+    reflector.structure_byte_count = sizeof(TransformComponent);
+    reflector.name = "TransformComponent"sv;
+    reflector.instantiate_function = instantiate_function;
 
-    SE_TRY_ADD_COMPONENT_FIELD(m_translation);
-    register_builder.push_field_flag(ComponentFieldFlag::Angle);
-    SE_TRY_ADD_COMPONENT_FIELD(m_rotation);
-    SE_TRY_ADD_COMPONENT_FIELD(m_scale);
+    {
+        ComponentField& field = reflector.fields.emplace();
+        field.type_stack.add(ComponentFieldType::Vector3);
+        field.byte_offset = SE_OFFSET_OF(TransformComponent, m_translation);
+        field.name = "m_translation"sv;
+    }
+    {
+        ComponentField& field = reflector.fields.emplace();
+        field.type_stack.add(ComponentFieldType::Vector3);
+        field.byte_offset = SE_OFFSET_OF(TransformComponent, m_rotation);
+        field.name = "m_rotation"sv;
+        field.metadata.add_flag(ComponentFieldFlag::DisplayInDegrees);
+    }
+    {
+        ComponentField& field = reflector.fields.emplace();
+        field.type_stack.add(ComponentFieldType::Vector3);
+        field.byte_offset = SE_OFFSET_OF(TransformComponent, m_scale);
+        field.name = "m_scale"sv;
+    }
 }
 
 TransformComponent::TransformComponent(const EntityComponentInitializer& initializer, Vector3 in_translation, Vector3 in_rotation, Vector3 in_scale)

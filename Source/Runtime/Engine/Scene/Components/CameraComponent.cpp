@@ -4,10 +4,9 @@
  */
 
 #include <Core/Math/MatrixTransformations.h>
-#include <Engine/Scene/ComponentRegistry.h>
-#include <Engine/Scene/ComponentRegistryFields.h>
 #include <Engine/Scene/Components/CameraComponent.h>
 #include <Engine/Scene/Entity.h>
+#include <Engine/Scene/Reflection/ComponentReflector.h>
 #include <Engine/Scene/Scene.h>
 
 namespace SE
@@ -20,24 +19,43 @@ UUID CameraComponent::get_static_component_type_uuid()
     return transform_component_type_uuid;
 }
 
-void CameraComponent::on_register(ComponentRegisterBuilder& register_builder) const
+void CameraComponent::on_register(ComponentReflector& reflector)
 {
-    PFN_ComponentConstruct construct_function = [](void* address, const EntityComponentInitializer& initializer)
+    PFN_InstantiateComponent instantiate_function = [](void* address, const EntityComponentInitializer& initializer)
     {
         new (address) CameraComponent(initializer);
     };
 
-    register_builder.set_type_uuid(get_static_component_type_uuid());
-    register_builder.set_structure_byte_count(sizeof(CameraComponent));
-    register_builder.set_parent_type_uuid(Super::get_static_component_type_uuid());
-    register_builder.set_name("CameraComponent"sv);
-    register_builder.set_construct_function(construct_function);
+    reflector.parent_type_uuid = Super::get_static_component_type_uuid();
+    reflector.structure_byte_count = sizeof(CameraComponent);
+    reflector.name = "CameraComponent"sv;
+    reflector.instantiate_function = instantiate_function;
 
-    SE_TRY_ADD_COMPONENT_FIELD(m_is_primary);
-    register_builder.push_field_flag(ComponentFieldFlag::Angle);
-    SE_TRY_ADD_COMPONENT_FIELD(m_vertical_field_of_view);
-    SE_TRY_ADD_COMPONENT_FIELD(m_clip_plane_near);
-    SE_TRY_ADD_COMPONENT_FIELD(m_clip_plane_far);
+    {
+        ComponentField& field = reflector.fields.emplace();
+        field.type_stack.add(ComponentFieldType::Boolean);
+        field.byte_offset = SE_OFFSET_OF(CameraComponent, m_is_primary);
+        field.name = "m_is_primary"sv;
+    }
+    {
+        ComponentField& field = reflector.fields.emplace();
+        field.type_stack.add(ComponentFieldType::Float32);
+        field.byte_offset = SE_OFFSET_OF(CameraComponent, m_vertical_field_of_view);
+        field.name = "m_vertical_field_of_view"sv;
+        field.metadata.add_flag(ComponentFieldFlag::DisplayInDegrees);
+    }
+    {
+        ComponentField& field = reflector.fields.emplace();
+        field.type_stack.add(ComponentFieldType::Float32);
+        field.byte_offset = SE_OFFSET_OF(CameraComponent, m_clip_plane_near);
+        field.name = "m_clip_plane_near"sv;
+    }
+    {
+        ComponentField& field = reflector.fields.emplace();
+        field.type_stack.add(ComponentFieldType::Float32);
+        field.byte_offset = SE_OFFSET_OF(CameraComponent, m_clip_plane_far);
+        field.name = "m_clip_plane_far"sv;
+    }
 }
 
 Matrix4 CameraComponent::get_projection_matrix(float aspect_ratio) const

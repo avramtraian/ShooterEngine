@@ -7,8 +7,8 @@
 #include <Core/Math/Vector.h>
 #include <Core/String/Format.h>
 #include <EditorContext/Panels/EntityInspectorPanel.h>
-#include <Engine/Scene/ComponentRegistry.h>
 #include <Engine/Scene/Entity.h>
+#include <Engine/Scene/Reflection/ComponentReflectorRegistry.h>
 #include <Engine/Scene/Scene.h>
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -31,7 +31,7 @@ void EntityInspectorPanel::on_render_imgui()
 {
     ImGui::Begin("EntityInspector");
 
-    if (has_entity_uuid_context() && has_scene_context() && has_component_registry_context())
+    if (has_entity_uuid_context() && has_scene_context() && has_component_reflector_registry_context())
     {
         Entity* entity_context = m_scene_context->get_entity_from_uuid(m_entity_uuid_context.value());
         SE_ASSERT(entity_context);
@@ -78,16 +78,16 @@ void EntityInspectorPanel::clear_scene_context()
     clear_entity_uuid_context();
 }
 
-void EntityInspectorPanel::set_component_registry_context(ComponentRegistry* component_registry_context)
+void EntityInspectorPanel::set_component_reflector_registry_context(ComponentReflectorRegistry* component_reflector_registry_context)
 {
-    SE_ASSERT(component_registry_context != nullptr);
-    m_component_registry_context = component_registry_context;
+    SE_ASSERT(component_reflector_registry_context != nullptr);
+    m_component_reflector_registry_context = component_reflector_registry_context;
     clear_entity_uuid_context();
 }
 
-void EntityInspectorPanel::clear_component_registry_context()
+void EntityInspectorPanel::clear_component_reflector_registry_context()
 {
-    m_component_registry_context = nullptr;
+    m_component_reflector_registry_context = nullptr;
     clear_entity_uuid_context();
 }
 
@@ -110,7 +110,7 @@ void EntityInspectorPanel::draw_entity_uuid(UUID uuid)
 {
     Optional<String> uuid_string = format("{}"sv, uuid);
     SE_ASSERT(uuid_string.has_value() && uuid_string->byte_count() == 2 * sizeof(u64));
-    
+
     char uuid_string_buffer[2 * sizeof(u64) + 1] = {};
     copy_memory_from_span(uuid_string_buffer, uuid_string->byte_span());
 
@@ -130,13 +130,13 @@ void EntityInspectorPanel::draw_add_component(Entity& entity_context)
     {
         ImGui::SeparatorText("Select a component");
 
-        m_component_registry_context->for_each_component_register(
-            [&](const ComponentRegistry::ComponentRegisterData& register_data)
+        m_component_reflector_registry_context->for_each_reflector(
+            [&](UUID type_uuid, const ComponentReflector& reflector)
             {
-                if (!entity_context.has_component(register_data.type_uuid))
+                if (!entity_context.has_component(type_uuid))
                 {
-                    if (ImGui::MenuItem(register_data.name.characters()))
-                        component_uuid = register_data.type_uuid;
+                    if (ImGui::MenuItem(reflector.name.characters()))
+                        component_uuid = type_uuid;
                 }
                 return IterationDecision::Continue;
             }
@@ -147,13 +147,13 @@ void EntityInspectorPanel::draw_add_component(Entity& entity_context)
 
     if (component_uuid.has_value())
     {
-        const auto& register_data = m_component_registry_context->get_component_register(component_uuid.value());
-        void* component_memory = ::operator new(register_data.structure_byte_count);
+        const auto& reflector = m_component_reflector_registry_context->get_reflector(component_uuid.value());
+        void* component_memory = ::operator new(reflector.structure_byte_count);
 
         EntityComponentInitializer initializer = {};
         initializer.parent_entity = &entity_context;
         initializer.scene_context = m_scene_context;
-        register_data.construct_function(component_memory, initializer);
+        reflector.instantiate_function(component_memory, initializer);
 
         EntityComponent* component = static_cast<EntityComponent*>(component_memory);
         entity_context.add_component(component);
@@ -163,13 +163,14 @@ void EntityInspectorPanel::draw_add_component(Entity& entity_context)
 void EntityInspectorPanel::draw_component(EntityComponent* component)
 {
     SE_ASSERT(component != nullptr);
-    const auto& component_register_data = m_component_registry_context->get_component_register(component->get_component_type_uuid());
-    ImGui::PushID(reinterpret_cast<const void*>(component_register_data.type_uuid.value()));
+    const ComponentReflector& reflector = m_component_reflector_registry_context->get_reflector(component->get_component_type_uuid());
+
+    ImGui::PushID(reinterpret_cast<const void*>(component->get_component_type_uuid().value()));
     const ImVec2 content_region_available = ImGui::GetContentRegionAvail();
 
     const ImGuiTreeNodeFlags tree_node_flags =
         ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowOverlap;
-    const bool is_tree_node_opened = ImGui::TreeNodeEx(component_register_data.name.characters(), tree_node_flags);
+    const bool is_tree_node_opened = ImGui::TreeNodeEx(reflector.name.characters(), tree_node_flags);
 
     ImVec2 button_size = ImGui::CalcTextSize("...");
     button_size.x += 2.0F * GImGui->Style.FramePadding.x;
@@ -195,59 +196,46 @@ void EntityInspectorPanel::draw_component(EntityComponent* component)
 
     if (is_tree_node_opened)
     {
-        for (const ComponentField& field : component_register_data.fields)
+        for (const ComponentField& field : reflector.fields)
         {
-            switch (field.type)
+            switch (field.type_stack.first())
             {
                 case ComponentFieldType::Float32:
                 {
-                    SE_ASSERT(field.byte_count == sizeof(float));
-                    float& field_value = *reinterpret_cast<float*>(reinterpret_cast<u8*>(component) + field.byte_offset);
-
+                    float& field_value = field.get_value<float>(component);
                     float display_value = field_value;
-                    if (field.has_flag(ComponentFieldFlag::Angle))
+                    if (field.metadata.has_flag(ComponentFieldFlag::DisplayInDegrees))
                         display_value *= Math::degrees(1.0F);
 
                     if (ImGui::DragFloat(field.name.characters(), &display_value))
-                    {
-                        field_value = display_value;
-                        if (field.has_flag(ComponentFieldFlag::Angle))
-                            field_value *= Math::radians(1.0F);
-                    }
-                }
-                break;
+                        display_value;
 
-                case ComponentFieldType::Boolean:
-                {
-                    SE_ASSERT(field.byte_count == sizeof(bool));
-                    bool& field_value = *reinterpret_cast<bool*>(reinterpret_cast<u8*>(component) + field.byte_offset);
-                    ImGui::Checkbox(field.name.characters(), &field_value);
+                    if (field.metadata.has_flag(ComponentFieldFlag::DisplayInDegrees))
+                        display_value *= Math::radians(1.0F);
+                    field_value = display_value;
                 }
                 break;
 
                 case ComponentFieldType::Vector3:
                 {
-                    SE_ASSERT(field.byte_count == sizeof(Vector3));
-                    Vector3& field_value = *reinterpret_cast<Vector3*>(reinterpret_cast<u8*>(component) + field.byte_offset);
-
+                    Vector3& field_value = field.get_value<Vector3>(component);
                     Vector3 display_value = field_value;
-                    if (field.has_flag(ComponentFieldFlag::Angle))
+                    if (field.metadata.has_flag(ComponentFieldFlag::DisplayInDegrees))
                         display_value *= Math::degrees(1.0F);
 
-                    if (ImGui::DragFloat3(field.name.characters(), display_value.value_ptr(), 0.1F))
-                    {
-                        field_value = display_value;
-                        if (field.has_flag(ComponentFieldFlag::Angle))
-                            field_value *= Math::radians(1.0F);
-                    }
+                    if (ImGui::DragFloat3(field.name.characters(), display_value.value_ptr()))
+                        display_value;
+
+                    if (field.metadata.has_flag(ComponentFieldFlag::DisplayInDegrees))
+                        display_value *= Math::radians(1.0F);
+                    field_value = display_value;
                 }
                 break;
 
                 case ComponentFieldType::Color4:
                 {
-                    SE_ASSERT(field.byte_count == sizeof(Color4));
-                    Color4& field_value = *reinterpret_cast<Color4*>(reinterpret_cast<u8*>(component) + field.byte_offset);
-                    ImGui::ColorEdit4(field.name.characters(), &field_value.r);
+                    Color4& field_value = field.get_value<Color4>(component);
+                    ImGui::ColorEdit4(field.name.characters(), field_value.value_ptr());
                 }
                 break;
             }

@@ -15,7 +15,7 @@
 #include <EditorContext/Panels/ViewportPanel.h>
 #include <Engine/Application/Events/Event.h>
 #include <Engine/Application/Window.h>
-#include <Engine/Scene/ComponentRegistry.h>
+#include <Engine/Scene/Reflection/ComponentReflectorRegistry.h>
 #include <Engine/Scene/Scene.h>
 #include <Renderer/Pipeline.h>
 #include <Renderer/RenderPass.h>
@@ -95,7 +95,7 @@ private:
 
     OwnPtr<Scene> m_active_scene;
     EditorCamera m_editor_camera;
-    ComponentRegistry m_component_registry;
+    ComponentReflectorRegistry m_component_reflector_registry;
 
     RefPtr<Framebuffer> m_scene_framebuffer;
     OwnPtr<SceneRenderer> m_scene_renderer;

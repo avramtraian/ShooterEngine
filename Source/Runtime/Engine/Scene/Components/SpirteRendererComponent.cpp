@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include <Engine/Scene/ComponentRegistry.h>
-#include <Engine/Scene/ComponentRegistryFields.h>
 #include <Engine/Scene/Components/SpriteRendererComponent.h>
+#include <Engine/Scene/Reflection/ComponentReflector.h>
 
 namespace SE
 {
@@ -17,20 +16,24 @@ UUID SpriteRendererComponent::get_static_component_type_uuid()
     return sprite_renderer_component_type_uuid;
 }
 
-void SpriteRendererComponent::on_register(ComponentRegisterBuilder& register_builder) const
+void SpriteRendererComponent::on_register(ComponentReflector& reflector)
 {
-    PFN_ComponentConstruct construct_function = [](void* address, const EntityComponentInitializer& initializer)
+    PFN_InstantiateComponent instantiate_function = [](void* address, const EntityComponentInitializer& initializer)
     {
         new (address) SpriteRendererComponent(initializer);
     };
 
-    register_builder.set_type_uuid(get_static_component_type_uuid());
-    register_builder.set_structure_byte_count(sizeof(SpriteRendererComponent));
-    register_builder.set_parent_type_uuid(Super::get_static_component_type_uuid());
-    register_builder.set_name("SpriteRendererComponent"sv);
-    register_builder.set_construct_function(construct_function);
+    reflector.parent_type_uuid = Super::get_static_component_type_uuid();
+    reflector.structure_byte_count = sizeof(SpriteRendererComponent);
+    reflector.name = "SpriteRendererComponent"sv;
+    reflector.instantiate_function = instantiate_function;
 
-    SE_TRY_ADD_COMPONENT_FIELD(m_sprite_color);
+    {
+        ComponentField& field = reflector.fields.emplace();
+        field.type_stack.add(ComponentFieldType::Color4);
+        field.byte_offset = SE_OFFSET_OF(SpriteRendererComponent, m_sprite_color);
+        field.name = "m_translation"sv;
+    }
 }
 
 SpriteRendererComponent::SpriteRendererComponent(const EntityComponentInitializer& initializer, Color4 in_sprite_color)
