@@ -41,6 +41,10 @@ public:
     {}
 
 public:
+    NODISCARD ALWAYS_INLINE float* value_ptr() { return &r; }
+    NODISCARD ALWAYS_INLINE const float* value_ptr() const { return &r; }
+
+public:
     float r;
     float g;
     float b;
@@ -101,6 +105,10 @@ public:
         a = 1.0F;
         return *this;
     }
+
+public:
+    NODISCARD ALWAYS_INLINE float* value_ptr() { return &r; }
+    NODISCARD ALWAYS_INLINE const float* value_ptr() const { return &r; }
 
 public:
     float r;
