@@ -166,11 +166,11 @@ struct Formatter<UUID>
         }
 
         // Flip the modified characters.
-        for (usize offset = 0; offset < buffer_offset / 2; ++offset)
+        for (usize offset = 0; offset < sizeof(uuid_buffer) / 2; ++offset)
         {
             const char temporary = uuid_buffer[offset];
-            uuid_buffer[offset] = uuid_buffer[buffer_offset - offset - 1];
-            uuid_buffer[buffer_offset - offset - 1] = temporary;
+            uuid_buffer[offset] = uuid_buffer[sizeof(uuid_buffer) - offset - 1];
+            uuid_buffer[sizeof(uuid_buffer) - offset - 1] = temporary;
         }
 
         const StringView uuid_buffer_string_view = StringView::create_from_utf8(uuid_buffer, sizeof(uuid_buffer));
