@@ -7,6 +7,8 @@
 
 #include <Core/Containers/Span.h>
 #include <Core/Memory/MemoryOperations.h>
+#include <Core/Misc/ComparisonResult.h>
+#include <Core/Misc/SortOrder.h>
 #include <initializer_list>
 
 namespace SE
@@ -343,6 +345,39 @@ public:
         SE_ASSERT(begin() <= remove_iterator && remove_iterator < end());
         const usize index = remove_iterator - begin();
         remove(index);
+    }
+
+public:
+    // The provided comparison function must have the following signature:
+    //   ComparisonResult f(const T& lhs, const T& rhs).
+    template<typename ComparisonFunction>
+    ALWAYS_INLINE void sort(ComparisonFunction comparison_function, SortOrder sort_order = SortOrder::Ascending)
+    {
+        if (m_count <= 1)
+            return;
+
+        if (sort_order == SortOrder::Ascending)
+        {
+            for (usize element_index = 0; element_index < m_count; ++element_index)
+            {
+                for (usize index = element_index; index < m_count - 1; ++index)
+                {
+                    if (comparison_function(m_elements[index], m_elements[index + 1]) == ComparisonResult::Greater)
+                        swap_elements(m_elements + index, m_elements + index + 1);
+                }
+            }
+        }
+        else if (sort_order == SortOrder::Descending)
+        {
+            for (usize element_index = 0; element_index < m_count; ++element_index)
+            {
+                for (usize index = element_index; index < m_count - 1; ++index)
+                {
+                    if (comparison_function(m_elements[index], m_elements[index + 1]) == ComparisonResult::Less)
+                        swap_elements(m_elements + index, m_elements + index + 1);
+                }
+            }
+        }
     }
 
 public:
