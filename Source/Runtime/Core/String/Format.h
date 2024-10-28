@@ -8,7 +8,6 @@
 #include <Core/Containers/Optional.h>
 #include <Core/Containers/Span.h>
 #include <Core/Containers/Vector.h>
-#include <Core/Misc/Version.h>
 #include <Core/String/String.h>
 #include <Core/UUID.h>
 
@@ -176,22 +175,6 @@ struct Formatter<UUID>
 
         const StringView uuid_buffer_string_view = StringView::create_from_utf8(uuid_buffer, sizeof(uuid_buffer));
         return builder.push_string(specifier, uuid_buffer_string_view);
-    }
-};
-
-template<>
-struct Formatter<Version>
-{
-    ALWAYS_INLINE static FormatErrorCode format(FormatBuilder& builder, const FormatBuilder::Specifier& specifier, const Version& value)
-    {
-        builder.push_unsigned_integer(specifier, value.variant);
-        builder.push_string(specifier, "."sv);
-        builder.push_unsigned_integer(specifier, value.major);
-        builder.push_string(specifier, "."sv);
-        builder.push_unsigned_integer(specifier, value.minor);
-        builder.push_string(specifier, "."sv);
-        builder.push_unsigned_integer(specifier, value.patch);
-        return FormatErrorCode::Success;
     }
 };
 
