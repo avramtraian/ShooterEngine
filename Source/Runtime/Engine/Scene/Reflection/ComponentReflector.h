@@ -17,6 +17,14 @@ namespace SE
 // clang-format off
 #define SE_FOR_EACH_COMPONENT_FIELD_TYPE(x) \
     x(Unknown)                              \
+    x(UInt8)                                \
+    x(UInt16)                               \
+    x(UInt32)                               \
+    x(UInt64)                               \
+    x(Int8)                                 \
+    x(Int16)                                \
+    x(Int32)                                \
+    x(Int64)                                \
     x(Float32)                              \
     x(Float64)                              \
     x(Boolean)                              \
