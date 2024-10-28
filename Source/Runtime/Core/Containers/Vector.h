@@ -239,6 +239,47 @@ public:
         m_count += elements.count();
     }
 
+    template<typename... Args>
+    ALWAYS_INLINE T& insert_emplace(usize insertion_index, Args&&... args)
+    {
+        SE_ASSERT(insertion_index <= m_count);
+        re_allocate_if_required(m_count + 1);
+
+        for (usize index = insertion_index; index < m_count; ++index)
+        {
+            usize i = m_count - (index - insertion_index) - 1;
+            new (m_elements + i + 1) T(move(m_elements[i]));
+            m_elements[i].~T();
+        }
+
+        new (m_elements + insertion_index) T(forward<Args>(args)...);
+        ++m_count;
+        return m_elements[insertion_index];
+    }
+
+    ALWAYS_INLINE T& insert(usize insertion_index, const T& element) { return insert_emplace(insertion_index, element); }
+    ALWAYS_INLINE T& insert(usize insertion_index, T&& element) { return insert_emplace(insertion_index, move(element)); }
+
+    template<typename... Args>
+    ALWAYS_INLINE T& insert_emplace_unordered(usize insertion_index, Args&&... args)
+    {
+        SE_ASSERT(insertion_index <= m_count);
+        re_allocate_if_required(m_count + 1);
+
+        if (insertion_index < m_count)
+        {
+            new (m_elements + m_count) T(move(m_elements[insertion_index]));
+            m_elements[insertion_index].~T();
+        }
+
+        new (m_elements + insertion_index) T(forward<Args>(args)...);
+        ++m_count;
+        return m_elements[insertion_index];
+    }
+
+    ALWAYS_INLINE T& insert_unordered(usize insertion_index, const T& element) { return insert_emplace_unordered(insertion_index, element); }
+    ALWAYS_INLINE T& insert_unordered(usize insertion_index, T&& element) { return insert_emplace_unordered(insertion_index, move(element)); }
+
 public:
     ALWAYS_INLINE void remove_last()
     {
@@ -427,6 +468,17 @@ private:
             new (destination + index) T(move(source[index]));
             source[index].~T();
         }
+    }
+
+    ALWAYS_INLINE static void swap_elements(T* element_a, T* element_b)
+    {
+        T temporary_element = T(move(*element_a));
+
+        element_a->~T();
+        new (element_a) T(move(*element_b));
+
+        element_b->~T();
+        new (element_b) T(move(temporary_element));
     }
 
 private:
