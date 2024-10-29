@@ -7,6 +7,9 @@
 #include <Core/UUID.h>
 #include <EditorContext/Panels/SceneHierarchyPanel.h>
 #include <EditorEngine.h>
+#include <Engine/Scene/Components/CameraComponent.h>
+#include <Engine/Scene/Components/SpriteRendererComponent.h>
+#include <Engine/Scene/Components/TransformComponent.h>
 #include <Engine/Scene/Entity.h>
 #include <imgui.h>
 
@@ -60,11 +63,46 @@ void SceneHierarchyPanel::on_render_imgui()
             is_any_entry_clicked = is_any_entry_clicked || entry_is_clicked;
         }
 
-        if (!is_any_entry_clicked && ImGui::IsWindowHovered() && ImGui::IsMouseClicked(0))
+        if (!is_any_entry_clicked && ImGui::IsWindowHovered())
         {
-            // If no entity entry was hovered but the mouse was clicked the user wants to clear
-            // the selection context.
-            clear_selected_entity();
+            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+            {
+                // If no entity entry was hovered but the mouse was clicked the user wants to clear
+                // the selection context.
+                clear_selected_entity();
+            }
+            else if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+            {
+                ImGui::OpenPopup("AddEntityPopup");
+            }
+        }
+
+        if (ImGui::BeginPopup("AddEntityPopup"))
+        {
+            ImGui::SeparatorText("Add Entity");
+
+            if (ImGui::MenuItem("Add Empty Entity"))
+            {
+                Entity* entity = m_scene_context->create_entity();
+                set_selected_entity(entity->uuid());
+            }
+
+            if (ImGui::MenuItem("Add Sprite"))
+            {
+                Entity* entity = m_scene_context->create_entity();
+                entity->add_component<TransformComponent>();
+                entity->add_component<SpriteRendererComponent>();
+                set_selected_entity(entity->uuid());
+            }
+            if (ImGui::MenuItem("Add Camera"))
+            {
+                Entity* entity = m_scene_context->create_entity();
+                entity->add_component<TransformComponent>();
+                entity->add_component<CameraComponent>();
+                set_selected_entity(entity->uuid());
+            }
+
+            ImGui::EndPopup();
         }
     }
 
