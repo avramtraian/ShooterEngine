@@ -40,13 +40,13 @@ void ViewportPanel::on_render_imgui()
     const u32 viewport_width = static_cast<u32>(viewport_size.x);
     const u32 viewport_height = static_cast<u32>(viewport_size.y);
 
-    if (m_viewport_width != viewport_width)
+    if (viewport_size.x > 0 && m_viewport_width != viewport_width)
     {
         m_viewport_width = viewport_width;
         m_is_viewport_size_dirty = true;
     }
 
-    if (m_viewport_height != viewport_height)
+    if (viewport_size.y > 0 && m_viewport_height != viewport_height)
     {
         m_viewport_height = viewport_height;
         m_is_viewport_size_dirty = true;
