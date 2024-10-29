@@ -33,6 +33,12 @@ void ToolbarPanel::on_render_imgui()
 {
     ImGui::Begin("Toolbar");
 
+    draw_save_scene_button();
+
+    ImGui::SameLine();
+    ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+    ImGui::SameLine();
+
     draw_scene_play_state_toggles();
 
     ImGui::SameLine();
@@ -69,12 +75,6 @@ void ToolbarPanel::set_scene_play_state(ScenePlayState scene_play_state)
         dispatch_on_scene_play_state_changed_callbacks(old_scene_play_state);
 }
 
-void ToolbarPanel::dispatch_on_scene_play_state_changed_callbacks(ScenePlayState old_scene_play_state)
-{
-    for (auto& callback : m_on_scene_play_state_changed_callbacks)
-        callback(old_scene_play_state, m_scene_play_state);
-}
-
 void ToolbarPanel::set_scene_camera_mode(SceneCameraMode scene_camera_mode)
 {
     const SceneCameraMode old_scene_camera_mode = m_scene_camera_mode;
@@ -83,18 +83,22 @@ void ToolbarPanel::set_scene_camera_mode(SceneCameraMode scene_camera_mode)
         dispatch_on_scene_camera_mode_changed_callbacks(old_scene_camera_mode);
 }
 
-void ToolbarPanel::dispatch_on_scene_camera_mode_changed_callbacks(SceneCameraMode old_scene_camera_mode)
-{
-    for (auto& callback : m_on_scene_camera_mode_changed_callbacks)
-        callback(old_scene_camera_mode, m_scene_camera_mode);
-}
-
 static float get_toolbar_button_height()
 {
     const float toolbar_button_max_height = 50.0F;
     const float available_content_region_height = ImGui::GetContentRegionAvail().y;
     const float toolbar_button_height = Math::min(toolbar_button_max_height, available_content_region_height);
     return toolbar_button_height;
+}
+
+void ToolbarPanel::draw_save_scene_button()
+{
+    const float toolbar_button_height = get_toolbar_button_height();
+    if (ImGui::Button("Save", { toolbar_button_height, toolbar_button_height }))
+    {
+        // Dispatch callbacks.
+        dispatch_on_save_scene_button_released_callbacks();
+    }
 }
 
 void ToolbarPanel::draw_scene_play_state_toggles()
@@ -129,17 +133,17 @@ void ToolbarPanel::draw_scene_play_state_toggles()
             pause_toggle_button_label = "Unknown"sv;
             is_pause_toggle_button_activated = false;
             break;
-        
+
         case ScenePlayState::Edit:
             pause_toggle_button_label = "Pause"sv;
             is_pause_toggle_button_activated = false;
             break;
-        
+
         case ScenePlayState::Play:
             pause_toggle_button_label = "Pause"sv;
             is_pause_toggle_button_activated = true;
             break;
-        
+
         case ScenePlayState::PlayPaused:
             pause_toggle_button_label = "Resume"sv;
             is_pause_toggle_button_activated = true;
@@ -279,6 +283,24 @@ void ToolbarPanel::draw_editor_camera_options()
             ImGui::EndPopup();
         }
     }
+}
+
+void ToolbarPanel::dispatch_on_scene_play_state_changed_callbacks(ScenePlayState old_scene_play_state)
+{
+    for (auto& callback : m_on_scene_play_state_changed_callbacks)
+        callback(old_scene_play_state, m_scene_play_state);
+}
+
+void ToolbarPanel::dispatch_on_scene_camera_mode_changed_callbacks(SceneCameraMode old_scene_camera_mode)
+{
+    for (auto& callback : m_on_scene_camera_mode_changed_callbacks)
+        callback(old_scene_camera_mode, m_scene_camera_mode);
+}
+
+void ToolbarPanel::dispatch_on_save_scene_button_released_callbacks()
+{
+    for (auto& callback : m_on_save_scene_button_released)
+        callback();
 }
 
 } // namespace SE

@@ -90,6 +90,9 @@ private:
     void on_scene_camera_mode_set_to_editor();
     void on_scene_camera_mode_set_to_game();
 
+    void on_save_scene();
+    void on_open_scene();
+
 private:
     OwnPtr<Window> m_window;
 

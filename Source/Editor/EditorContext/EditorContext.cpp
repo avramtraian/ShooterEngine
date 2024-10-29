@@ -12,10 +12,12 @@
 #include <EditorEngine.h>
 #include <Engine/Application/Events/WindowEvents.h>
 #include <Engine/Scene/Components/CameraComponent.h>
+#include <Engine/Scene/Components/SpriteRendererComponent.h>
 #include <Engine/Scene/Components/TransformComponent.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/RendererAPI.h>
 #include <Renderer/RenderingContext.h>
+#include <Serialization/EditorSceneSerializer.h>
 
 // ImGui includes.
 
@@ -243,6 +245,7 @@ bool EditorContext::post_initialize()
             }
         }
     );
+    m_toolbar_panel.add_on_save_scene_button_released([this]() { on_save_scene(); });
 
     return true;
 }
@@ -483,5 +486,18 @@ void EditorContext::on_scene_camera_mode_set_to_game()
         m_toolbar_panel.set_scene_camera_mode(SceneCameraMode::Editor);
     }
 }
+
+void EditorContext::on_save_scene()
+{
+    EditorSceneSerializer serializer(*m_active_scene, m_component_reflector_registry);
+    if (!serializer.serialize("Save.sescene"sv))
+    {
+        SE_LOG_ERROR("Failed to serialize active scene to filepath '{}'!", "Save.sescene"sv);
+        return;
+    }
+}
+
+void EditorContext::on_open_scene()
+{}
 
 } // namespace SE
