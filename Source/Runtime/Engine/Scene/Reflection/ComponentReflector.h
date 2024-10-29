@@ -32,7 +32,8 @@ namespace SE
     x(Vector3)                              \
     x(Vector4)                              \
     x(Color3)                               \
-    x(Color4)
+    x(Color4)                               \
+    x(String)                               \
 // clang-format on
 
 enum class ComponentFieldType : u16

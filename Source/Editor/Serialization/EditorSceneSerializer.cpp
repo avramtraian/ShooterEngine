@@ -132,6 +132,7 @@ bool EditorSceneSerializer::serialize_component_field(YAML::Emitter& emitter, co
         CASE_STATEMENT(Vector4, Vector4);
         CASE_STATEMENT(Color3, Color3);
         CASE_STATEMENT(Color4, Color4);
+        CASE_STATEMENT(String, String);
 
 #undef CASE_STATEMENT
     }
@@ -263,6 +264,7 @@ bool EditorSceneSerializer::deserialize_component_field(const YAML::Node& node, 
                 CASE_STATEMENT(Vector4, Vector4);
                 CASE_STATEMENT(Color3, Color3);
                 CASE_STATEMENT(Color4, Color4);
+                CASE_STATEMENT(String, String);
 
 #undef CASE_STATEMENT
             }

@@ -238,6 +238,19 @@ void EntityInspectorPanel::draw_component(EntityComponent* component)
                     ImGui::ColorEdit4(field.name.characters(), field_value.value_ptr());
                 }
                 break;
+
+                case ComponentFieldType::String:
+                {
+                    String& field_value = field.get_value<String>(component);
+                    // TODO: Allow arbitrary long strings.
+                    char field_value_buffer[1024] = {};
+                    SE_ASSERT(field_value.byte_count() < sizeof(field_value_buffer));
+                    copy_memory_from_span(field_value_buffer, field_value.byte_span());
+
+                    if (ImGui::InputText(field.name.characters(), field_value_buffer, sizeof(field_value_buffer)))
+                        field_value = StringView::create_from_utf8(field_value_buffer);
+                }
+                break;
             }
         }
 
