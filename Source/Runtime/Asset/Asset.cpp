@@ -13,7 +13,7 @@ namespace SE
 AssetHandle AssetHandle::create()
 {
     AssetHandle result;
-    result.m_handle_value = Random::UInt64();
+    result.m_uuid = UUID::create();
     return result;
 }
 

@@ -4,12 +4,12 @@
  */
 
 #include <Asset/TextureAsset.h>
-#include <Core/String/StringBuilder.h>
 #include <Core/FileSystem/FileSystem.h>
 #include <Core/Log.h>
+#include <Core/String/StringBuilder.h>
 #include <EditorAsset/TextureSerializer.h>
 #include <EditorEngine.h>
-#include <ThirdParty/yaml-cpp/include/yaml-cpp/yaml.h>
+#include <ThirdParty/yaml-cpp/include/yaml-cpp/shooteryaml.h>
 
 #define STBI_ASSERT(x) SE_ASSERT(x)
 #define STB_IMAGE_IMPLEMENTATION
@@ -26,7 +26,7 @@ bool TextureSerializer::serialize(AssetHandle handle)
     YAML::Emitter out;
     out << YAML::BeginMap;
     out << YAML::Key << "Type" << YAML::Value << get_asset_type_string(metadata.type).characters();
-    out << YAML::Key << "Handle" << YAML::Value << (u64)(metadata.handle);
+    out << YAML::Key << "Handle" << YAML::Value << metadata.handle.value();
     out << YAML::Key << "Filepath" << YAML::Value << asset->get_texture_filepath().characters();
     out << YAML::EndMap;
     const StringView yaml_view = StringView::create_from_utf8(out.c_str());
@@ -70,10 +70,10 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
 
     const String asset_type_string = StringView::create_from_utf8(asset_type_node.as<std::string>().c_str());
     const AssetType asset_type = get_asset_type_from_string(asset_type_string.view());
-    const AssetHandle asset_handle = AssetHandle(asset_handle_node.as<u64>());
+    const AssetHandle asset_handle = AssetHandle(asset_handle_node.as<UUID>());
     if (asset_type == AssetType::Unknown)
     {
-        SE_LOG_TAG_ERROR("Asset", "Invalid asset type ({}) for ID '{}'!", asset_type_string, (u64)(asset_handle));
+        SE_LOG_TAG_ERROR("Asset", "Invalid asset type ({}) for ID '{}'!", asset_type_string, asset_handle.value());
         return {};
     }
 
@@ -92,7 +92,7 @@ RefPtr<Asset> TextureSerializer::deserialize(AssetMetadata& metadata)
     if (asset_handle != editor_metadata.handle)
     {
         SE_LOG_TAG_ERROR(
-            "Asset", "Expected asset handle '{}', but found '{}'! ({})", (u64)(editor_metadata.handle), (u64)(asset_handle), editor_metadata.filepath
+            "Asset", "Expected asset handle '{}', but found '{}'! ({})", editor_metadata.handle.value(), asset_handle.value(), editor_metadata.filepath
         );
         return {};
     }

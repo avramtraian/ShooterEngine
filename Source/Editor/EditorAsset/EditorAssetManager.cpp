@@ -9,7 +9,7 @@
 #include <EditorAsset/EditorAssetManager.h>
 #include <EditorAsset/TextureSerializer.h>
 #include <EditorEngine.h>
-#include <ThirdParty/yaml-cpp/include/yaml-cpp/yaml.h>
+#include <ThirdParty/yaml-cpp/include/yaml-cpp/shooteryaml.h>
 
 namespace SE
 {
@@ -86,7 +86,7 @@ bool EditorAssetManager::serialize_asset_registry()
 
         out << YAML::BeginMap;
         out << YAML::Key << "Type" << YAML::Value << get_asset_type_string(slot.metadata.type).characters();
-        out << YAML::Key << "Handle" << YAML::Value << (u64)(slot.metadata.handle);
+        out << YAML::Key << "Handle" << YAML::Value << slot.metadata.handle.value();
         out << YAML::Key << "Filepath" << YAML::Value << slot.metadata.filepath.characters();
         out << YAML::EndMap;
 
@@ -144,14 +144,14 @@ bool EditorAssetManager::deserialize_asset_registry()
             continue;
         }
 
-        const AssetHandle asset_handle = AssetHandle(asset_handle_node.as<u64>());
+        const AssetHandle asset_handle = AssetHandle(asset_handle_node.as<UUID>());
         const String asset_filepath = StringView::create_from_utf8(asset_filepath_node.as<std::string>().c_str());
 
         const String asset_type_string = StringView::create_from_utf8(asset_type_node.as<std::string>().c_str());
         const AssetType asset_type = get_asset_type_from_string(asset_type_string.view());
         if (asset_type == AssetType::Unknown)
         {
-            SE_LOG_TAG_ERROR("Asset", "Invalid asset type ({}) encountered for asset ID '{}'! Skipping...", asset_type_string, (u64)(asset_handle));
+            SE_LOG_TAG_ERROR("Asset", "Invalid asset type ({}) encountered for asset ID '{}'! Skipping...", asset_type_string, asset_handle.value());
             continue;
         }
 
@@ -161,7 +161,7 @@ bool EditorAssetManager::deserialize_asset_registry()
                 "Asset",
                 "The filepath ({}) of the asset with handle '{}' doesn't match the asset type extension ({})! Skipping...",
                 asset_filepath,
-                (u64)(asset_handle),
+                asset_handle.value(),
                 get_asset_type_file_extension(asset_type)
             );
             continue;
@@ -169,7 +169,7 @@ bool EditorAssetManager::deserialize_asset_registry()
 
         if (m_asset_registry.contains(asset_handle))
         {
-            SE_LOG_TAG_ERROR("Asset", "The asset handle ({}) already exists in the registry! Skipping...", (u64)(asset_handle));
+            SE_LOG_TAG_ERROR("Asset", "The asset handle ({}) already exists in the registry! Skipping...", asset_handle.value());
             continue;
         }
 
@@ -191,7 +191,7 @@ RefPtr<Asset> EditorAssetManager::get_asset_sync(AssetHandle handle)
     Optional<AssetSlot&> optional_asset_slot = m_asset_registry.get_if_exists(handle);
     if (!optional_asset_slot.has_value())
     {
-        SE_LOG_TAG_ERROR("Asset", "Querying an invalid asset ID ({})!", (u64)(handle));
+        SE_LOG_TAG_ERROR("Asset", "Querying an invalid asset ID ({})!", handle.value());
         return {};
     }
     AssetSlot& asset_slot = *optional_asset_slot;
@@ -207,7 +207,7 @@ RefPtr<Asset> EditorAssetManager::get_asset_sync(AssetHandle handle)
     loaded_asset = m_asset_serializers[asset_slot.metadata.type]->deserialize(asset_slot.metadata);
     if (!loaded_asset.is_valid())
     {
-        SE_LOG_TAG_ERROR("Asset", "Failed to load asset with ID '{}'!", (u64)(handle));
+        SE_LOG_TAG_ERROR("Asset", "Failed to load asset with ID '{}'!", handle.value());
         return {};
     }
 
@@ -221,7 +221,7 @@ AssetMetadata& EditorAssetManager::get_asset_metadata(AssetHandle handle)
     Optional<AssetSlot&> optional_asset_slot = m_asset_registry.get_if_exists(handle);
     if (!optional_asset_slot.has_value())
     {
-        SE_LOG_TAG_ERROR("Asset", "Querying an invalid asset ID ({})!", (u64)(handle));
+        SE_LOG_TAG_ERROR("Asset", "Querying an invalid asset ID ({})!", handle.value());
         return m_empty_asset_slot.metadata;
     }
 

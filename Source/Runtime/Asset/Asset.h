@@ -8,6 +8,7 @@
 #include <Core/API.h>
 #include <Core/Containers/RefPtr.h>
 #include <Core/String/String.h>
+#include <Core/UUID.h>
 
 namespace SE
 {
@@ -19,28 +20,28 @@ public:
     NODISCARD SHOOTER_API static AssetHandle create();
 
     // Returns a special value that marks the asset handle as being invalid.
-    NODISCARD ALWAYS_INLINE static constexpr AssetHandle invalid() { return AssetHandle(0); }
+    NODISCARD ALWAYS_INLINE static constexpr AssetHandle invalid() { return AssetHandle(UUID::invalid()); }
 
 public:
     ALWAYS_INLINE constexpr AssetHandle()
-        : m_handle_value(invalid().m_handle_value)
+        : m_uuid(invalid().m_uuid)
     {}
 
-    ALWAYS_INLINE constexpr explicit AssetHandle(u64 handle_value)
-        : m_handle_value(handle_value)
+    ALWAYS_INLINE constexpr explicit AssetHandle(UUID uuid_value)
+        : m_uuid(uuid_value)
     {}
 
     AssetHandle(const AssetHandle&) = default;
     AssetHandle& operator=(const AssetHandle&) = default;
 
-    NODISCARD ALWAYS_INLINE operator u64&() { return m_handle_value; }
-    NODISCARD ALWAYS_INLINE operator const u64&() const { return m_handle_value; }
+    NODISCARD ALWAYS_INLINE UUID value() const { return m_uuid; }
+    NODISCARD ALWAYS_INLINE bool is_valid() const { return m_uuid.is_valid(); }
 
-    NODISCARD ALWAYS_INLINE bool operator==(const AssetHandle& other) const { return m_handle_value == other.m_handle_value; }
-    NODISCARD ALWAYS_INLINE bool operator!=(const AssetHandle& other) const { return m_handle_value != other.m_handle_value; }
+    NODISCARD ALWAYS_INLINE bool operator==(const AssetHandle& other) const { return m_uuid == other.m_uuid; }
+    NODISCARD ALWAYS_INLINE bool operator!=(const AssetHandle& other) const { return m_uuid != other.m_uuid; }
 
 private:
-    u64 m_handle_value;
+    UUID m_uuid;
 };
 
 //
