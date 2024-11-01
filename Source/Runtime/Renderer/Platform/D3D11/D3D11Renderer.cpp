@@ -102,7 +102,7 @@ void D3D11Renderer::shutdown()
 
 String D3D11Renderer::get_error_message(HRESULT result)
 {
-    std::string error_message = std::system_category().message(result);
+    const std::string error_message = std::system_category().message(result);
     return StringView::create_from_utf8(error_message.c_str(), error_message.size() - 1);
 }
 
@@ -137,10 +137,10 @@ void D3D11Renderer::on_resize(u32 new_width, u32 new_height)
     s_d3d11_renderer->device_context->ClearState();
 }
 
-void D3D11Renderer::present(RenderingContext* rendering_context)
+void D3D11Renderer::present(RenderingContext* context)
 {
-    D3D11RenderingContext* context = static_cast<D3D11RenderingContext*>(rendering_context);
-    context->get_swapchain()->Present(0, 0);
+    const D3D11RenderingContext* rendering_context = static_cast<const D3D11RenderingContext*>(context);
+    rendering_context->get_swapchain()->Present(0, 0);
 }
 
 void D3D11Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
@@ -199,8 +199,8 @@ void D3D11Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
     D3D11_VIEWPORT viewport = {};
     viewport.TopLeftX = 0;
     viewport.TopLeftY = 0;
-    viewport.Width = (FLOAT)(framebuffer->get_width());
-    viewport.Height = (FLOAT)(framebuffer->get_height());
+    viewport.Width = static_cast<FLOAT>(framebuffer->get_width());
+    viewport.Height = static_cast<FLOAT>(framebuffer->get_height());
     viewport.MinDepth = 0.0F;
     viewport.MaxDepth = 1.0F;
 
@@ -219,7 +219,7 @@ void D3D11Renderer::begin_render_pass(RefPtr<RenderPass> render_pass)
         render_target_views.add(static_cast<ID3D11RenderTargetView*>(attachment_view_handle));
     }
 
-    s_d3d11_renderer->device_context->OMSetRenderTargets((UINT)(render_target_views.count()), render_target_views.elements(), nullptr);
+    s_d3d11_renderer->device_context->OMSetRenderTargets(static_cast<UINT>(render_target_views.count()), render_target_views.elements(), nullptr);
 
     //
     // Clear the render targets (if required).
@@ -258,8 +258,8 @@ void D3D11Renderer::draw_indexed(RefPtr<VertexBuffer> vertex_buffer, RefPtr<Inde
     // Bind the vertex buffer.
     const u32 vertex_stride = s_d3d11_renderer->active_render_pass->get_pipeline()->get_vertex_stride();
     ID3D11Buffer* vertex_buffers[1] = { d3d11_vertex_buffer->get_handle() };
-    UINT strides[1] = { vertex_stride };
-    UINT offsets[1] = { 0 };
+    const UINT strides[1] = { vertex_stride };
+    const UINT offsets[1] = { 0 };
 
     s_d3d11_renderer->device_context->IASetVertexBuffers(0, SE_ARRAY_COUNT(vertex_buffers), vertex_buffers, strides, offsets);
 

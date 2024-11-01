@@ -128,7 +128,7 @@ D3D11Shader::ShaderModule D3D11Shader::create_shader_module(const ShaderStageDes
 
     if (description.source_type == ShaderSourceType::SourceCode)
     {
-        // No shadersource code has been provided.
+        // No shader source code has been provided.
         SE_ASSERT(!description.source_code.is_empty());
 
         ShaderCompilationResult compilation_result = compile_shader_module(description.stage, description.source_code);

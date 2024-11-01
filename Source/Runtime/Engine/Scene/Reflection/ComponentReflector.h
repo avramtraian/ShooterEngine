@@ -34,6 +34,7 @@ namespace SE
     x(Color3)                               \
     x(Color4)                               \
     x(String)                               \
+    x(AssetReferenceTexture)
 // clang-format on
 
 enum class ComponentFieldType : u16
@@ -105,7 +106,7 @@ public:
     }
 };
 
-// Pointer to the a function that will construct a component in the memory block
+// Pointer to the function that will construct a component in the memory block
 // provided by the first parameter.
 using PFN_InstantiateComponent = void (*)(void*, const struct EntityComponentInitializer&);
 

@@ -102,7 +102,7 @@ bool EditorSceneSerializer::serialize_entity_component(YAML::Emitter& emitter, c
     }
 
     emitter << YAML::EndSeq; // Fields.
-    emitter << YAML::EndMap; // Componenet map.
+    emitter << YAML::EndMap; // Component map.
     return true;
 }
 
