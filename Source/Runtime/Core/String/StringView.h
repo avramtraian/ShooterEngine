@@ -1,20 +1,16 @@
-/*
- * Copyright (c) 2024 Traian Avram. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0.
- */
+// Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
 #pragma once
 
-#include <Core/API.h>
-#include <Core/Containers/Span.h>
+#include <Runtime/Core/Containers/Span.h>
 
 namespace SE
 {
 
-//
-// A view towards a UTF-8 encoded string.
-// The held string is not null-terminated and can't be mutated by the string view.
-//
+/**
+ * A view towards a UTF-8 encoded string.
+ * The held string is not null-terminated and can't be mutated by the string view.
+ */
 class StringView
 {
 public:
@@ -68,8 +64,8 @@ public:
     NODISCARD ALWAYS_INLINE ReadonlyByteSpan byte_span() const { return ReadonlyByteSpan(reinterpret_cast<ReadonlyBytes>(m_characters), m_byte_count); }
 
 public:
-    // NOTE: The value these function return represents the offset in bytes and not the number
-    //       codepoints until the given character/codepoint.
+    /* NOTE: The value these function return represents the offset in bytes and not the number
+     *       codepoints until the given character/codepoint. */
     NODISCARD SHOOTER_API usize find(char ascii_character) const;
     NODISCARD SHOOTER_API usize find(UnicodeCodepoint codepoint) const;
 
@@ -86,37 +82,17 @@ private:
     usize m_byte_count;
 };
 
-#if SE_COMPILER_MSVC
-    #pragma warning(push)
-    // Disables the following compiler warning:
-    // 'operator ""sv': literal suffix identifiers that do not start with an underscore are reserved.
-    #pragma warning(disable : 4455)
-#elif SE_COMPILER_CLANG
-    #pragma clang diagnostic push
-// Disables the following compiler warning:
-// warning: user-defined literal suffixes not starting with '_' are reserved.
-    #pragma clang diagnostic ignored "-Wuser-defined-literals"
-#elif SE_COMPILER_GCC
-    #pragma GCC diagnostic push
-// Disables the following compiler warning:
-// : literal operator suffixes not preceded by '_' are reserved for future standardization
-    #pragma GCC diagnostic ignored "-Wliteral-suffix"
-#endif // Compiler enumeration.
+/* Disables the following compiler warning:
+ * 'operator ""sv': literal suffix identifiers that do not start with an underscore are reserved. */
+#pragma warning(push)
+#pragma warning(disable : 4455)
 
 NODISCARD ALWAYS_INLINE constexpr StringView operator""sv(const char* ascii_literal, usize ascii_literal_count)
 {
     // NOTE: Because ASCII is a subset of UTF-8, no conversion is needed.
-    //       Also, we can be sure that the string literals are valid, unless something truly
-    //       horrible happened to the project source files! :)
     return StringView::unsafe_create_from_utf8(ascii_literal, ascii_literal_count);
 }
 
-} // namespace SE
+#pragma warning(pop)
 
-#if SE_COMPILER_MSVC
-    #pragma warning(pop)
-#elif SE_COMPILER_CLANG
-    #pragma clang diagnostic pop
-#elif SE_COMPILER_GCC
-    #pragma GCC diagnostic pop
-#endif // Compiler enumeration.
+} // namespace SE

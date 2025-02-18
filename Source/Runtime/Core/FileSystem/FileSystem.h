@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include <Core/Containers/Optional.h>
-#include <Core/Memory/Buffer.h>
-#include <Core/String/String.h>
+#include <Runtime/Core/Containers/Optional.h>
+#include <Runtime/Core/Memory/Buffer.h>
+#include <Runtime/Core/String/String.h>
 
 //
 // Macro the checks if the return value is FileError::Success.
@@ -17,7 +17,7 @@
     if ((expression) != ::SE::FileError::Success) \
     {                                             \
         SE_LOG_ERROR("File error occured!");      \
-        SE_ASSERT(false);                         \
+        SE_CHECK(false);                         \
     }
 
 namespace SE

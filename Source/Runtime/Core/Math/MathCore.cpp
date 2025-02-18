@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include <Core/Math/MathCore.h>
+#include <Runtime/Core/Math/MathCore.h>
 #include <cmath>
 
 namespace SE::Math

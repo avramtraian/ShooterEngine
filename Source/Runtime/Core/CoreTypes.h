@@ -5,10 +5,12 @@
 
 #pragma once
 
-#include <Core/CoreDefines.h>
-#include <type_traits>
+#include <Runtime/Core/CoreDefines.h>
 
-#if SE_PLATFORM_WINDOWS
+#include <type_traits>
+#include <initializer_list>
+
+#if SE_PLATFORM_WIN64
 namespace SE
 {
 
@@ -40,7 +42,7 @@ using uintptr = u64;
 using intptr = i64;
 
 } // namespace SE
-#endif // SE_PLATFORM_WINDOWS
+#endif // SE_PLATFORM_WIN64
 
 namespace SE
 {

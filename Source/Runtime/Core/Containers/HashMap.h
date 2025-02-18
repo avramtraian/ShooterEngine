@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <Core/Containers/HashTable.h>
+#include <Runtime/Core/Containers/HashTable.h>
 
 namespace SE
 {
@@ -183,14 +183,14 @@ public:
     NODISCARD ALWAYS_INLINE ValueType& at(const KeyType& key)
     {
         auto optional_value = get_if_exists(key);
-        SE_ASSERT(optional_value.has_value());
+        SE_CHECK(optional_value.has_value());
         return *optional_value;
     }
 
     NODISCARD ALWAYS_INLINE const ValueType& at(const KeyType& key) const
     {
         auto optional_value = get_if_exists(key);
-        SE_ASSERT(optional_value.has_value());
+        SE_CHECK(optional_value.has_value());
         return *optional_value;
     }
 
@@ -198,7 +198,7 @@ public:
     ALWAYS_INLINE void add(const KeyType& key, const ValueType& value)
     {
         const usize slot_index = add_without_constructing_bucket(key);
-        SE_ASSERT(slot_index != invalid_size); // Key already exists.
+        SE_CHECK(slot_index != invalid_size); // Key already exists.
 
         Bucket& bucket = m_buckets.m_slots[slot_index];
         new (bucket.key_ptr()) KeyType(key);
@@ -208,7 +208,7 @@ public:
     ALWAYS_INLINE void add(const KeyType& key, ValueType&& value)
     {
         const usize slot_index = add_without_constructing_bucket(key);
-        SE_ASSERT(slot_index != invalid_size); // Key already exists.
+        SE_CHECK(slot_index != invalid_size); // Key already exists.
 
         Bucket& bucket = m_buckets.m_slots[slot_index];
         new (bucket.key_ptr()) KeyType(key);
@@ -218,7 +218,7 @@ public:
     ALWAYS_INLINE void add(KeyType&& key, const ValueType& value)
     {
         const usize slot_index = add_without_constructing_bucket(key);
-        SE_ASSERT(slot_index != invalid_size); // Key already exists.
+        SE_CHECK(slot_index != invalid_size); // Key already exists.
 
         Bucket& bucket = m_buckets.m_slots[slot_index];
         new (bucket.key_ptr()) KeyType(move(key));
@@ -228,7 +228,7 @@ public:
     ALWAYS_INLINE void add(KeyType&& key, ValueType&& value)
     {
         const usize slot_index = add_without_constructing_bucket(key);
-        SE_ASSERT(slot_index != invalid_size); // Key already exists.
+        SE_CHECK(slot_index != invalid_size); // Key already exists.
 
         Bucket& bucket = m_buckets.m_slots[slot_index];
         new (bucket.key_ptr()) KeyType(move(key));
@@ -239,7 +239,7 @@ public:
     ALWAYS_INLINE void emplace(const KeyType& key, Args&&... args)
     {
         const usize slot_index = add_without_constructing_bucket(key);
-        SE_ASSERT(slot_index != invalid_size); // Key already exists.
+        SE_CHECK(slot_index != invalid_size); // Key already exists.
 
         Bucket& bucket = m_buckets.m_slots[slot_index];
         new (bucket.key_ptr()) KeyType(key);
@@ -250,7 +250,7 @@ public:
     ALWAYS_INLINE void emplace(KeyType&& key, Args&&... args)
     {
         const usize slot_index = add_without_constructing_bucket(key);
-        SE_ASSERT(slot_index != invalid_size); // Key already exists.
+        SE_CHECK(slot_index != invalid_size); // Key already exists.
 
         Bucket& bucket = m_buckets.m_slots[slot_index];
         new (bucket.key_ptr()) KeyType(move(key));
@@ -282,7 +282,7 @@ public:
             // NOTE: We already know that the element doesn't exist in the table.
             slot_index = m_buckets.unchecked_find_first_available_slot(bucket_hash);
         }
-        SE_ASSERT(slot_index != invalid_size);
+        SE_CHECK(slot_index != invalid_size);
 
         Bucket& bucket = m_buckets.m_slots[slot_index];
         new (bucket.key_ptr()) KeyType(key);

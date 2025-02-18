@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include <Core/Assertions.h>
-#include <Core/CoreTypes.h>
+#include <Runtime/Core/CoreAssertions.h>
+#include <Runtime/Core/CoreTypes.h>
 
 namespace SE
 {
@@ -17,7 +17,7 @@ struct Hasher
     NODISCARD ALWAYS_INLINE static u64 get_hash(const T&)
     {
         // TODO: Uncomment the following assert!
-        // SE_ASSERT(false);
+        // SE_CHECK(false);
         return 0;
     }
 };

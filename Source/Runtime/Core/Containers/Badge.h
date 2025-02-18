@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <Core/CoreTypes.h>
+#include <Runtime/Core/CoreTypes.h>
 
 namespace SE
 {

@@ -1,12 +1,9 @@
-/*
- * Copyright (c) 2024 Traian Avram. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0.
- */
+// Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
 #pragma once
 
-#include <Core/Assertions.h>
-#include <Core/CoreTypes.h>
+#include <Runtime/Core/CoreAssertions.h>
+#include <Runtime/Core/CoreTypes.h>
 
 namespace SE
 {
@@ -29,7 +26,7 @@ public:
 private:
     NODISCARD ALWAYS_INLINE u32 get_reference_count() const
     {
-        SE_ASSERT(m_reference_count > 0);
+        SE_CHECK(m_reference_count > 0);
         return m_reference_count;
     }
 
@@ -42,7 +39,7 @@ private:
     // Returns true when the instance is destroyed.
     ALWAYS_INLINE bool decrement_reference_count()
     {
-        SE_DEBUG_ASSERT(m_reference_count > 0);
+        SE_ASSERT(m_reference_count > 0);
 
         if (--m_reference_count == 0)
         {
@@ -112,13 +109,13 @@ public:
 
     NODISCARD ALWAYS_INLINE T* get()
     {
-        SE_ASSERT(is_valid());
+        SE_CHECK(is_valid());
         return m_instance;
     }
 
     NODISCARD ALWAYS_INLINE const T* get() const
     {
-        SE_ASSERT(is_valid());
+        SE_CHECK(is_valid());
         return m_instance;
     }
 

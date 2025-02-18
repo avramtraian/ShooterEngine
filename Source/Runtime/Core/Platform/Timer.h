@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include <Core/Assertions.h>
-#include <Core/Platform/Platform.h>
+#include <Runtime/Core/CoreAssertions.h>
+#include <Runtime/Core/Platform/Platform.h>
 
 namespace SE
 {
@@ -23,7 +23,7 @@ public:
     ALWAYS_INLINE void stop()
     {
         // The timer was already stopped.
-        SE_ASSERT(!is_stopped());
+        SE_CHECK(!is_stopped());
         m_performance_counter_end = Platform::get_current_tick_counter();
     }
 
@@ -42,7 +42,7 @@ public:
             return 0;
         }
 
-        SE_ASSERT(m_performance_counter_end >= m_performance_counter_start);
+        SE_CHECK(m_performance_counter_end >= m_performance_counter_start);
         const u64 elapsed = m_performance_counter_end - m_performance_counter_start;
         return elapsed;
     }

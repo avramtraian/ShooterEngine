@@ -1,12 +1,9 @@
-/*
- * Copyright (c) 2024 Traian Avram. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0.
- */
+// Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
 #pragma once
 
-#include <Core/Assertions.h>
-#include <Core/CoreTypes.h>
+#include <Runtime/Core/CoreAssertions.h>
+#include <Runtime/Core/CoreTypes.h>
 
 namespace SE
 {
@@ -67,13 +64,13 @@ public:
 public:
     NODISCARD ALWAYS_INLINE T& at(usize index)
     {
-        SE_ASSERT(index < m_count);
+        SE_CHECK(index < m_count);
         return m_elements[index];
     }
 
     NODISCARD ALWAYS_INLINE const T& at(usize index) const
     {
-        SE_ASSERT(index < m_count);
+        SE_CHECK(index < m_count);
         return m_elements[index];
     }
 
@@ -82,50 +79,50 @@ public:
 
     NODISCARD ALWAYS_INLINE T& first()
     {
-        SE_ASSERT(has_elements());
+        SE_CHECK(has_elements());
         return m_elements[0];
     }
 
     NODISCARD ALWAYS_INLINE const T& first() const
     {
-        SE_ASSERT(has_elements());
+        SE_CHECK(has_elements());
         return m_elements[0];
     }
 
     NODISCARD ALWAYS_INLINE T& last()
     {
-        SE_ASSERT(has_elements());
+        SE_CHECK(has_elements());
         return m_elements[m_count - 1];
     }
 
     NODISCARD ALWAYS_INLINE const T& last() const
     {
-        SE_ASSERT(has_elements());
+        SE_CHECK(has_elements());
         return m_elements[m_count - 1];
     }
 
 public:
     NODISCARD ALWAYS_INLINE Span<T> slice(usize offset)
     {
-        SE_ASSERT(offset <= m_count);
+        SE_CHECK(offset <= m_count);
         return Span<T>(m_elements + offset, m_count - offset);
     }
 
     NODISCARD ALWAYS_INLINE Span<const T> slice(usize offset) const
     {
-        SE_ASSERT(offset <= m_count);
+        SE_CHECK(offset <= m_count);
         return Span<const T>(m_elements + offset, m_count - offset);
     }
 
     NODISCARD ALWAYS_INLINE Span<T> slice(usize offset, usize count)
     {
-        SE_ASSERT(count + offset <= m_count);
+        SE_CHECK(count + offset <= m_count);
         return Span<T>(m_elements + offset, count);
     }
 
     NODISCARD ALWAYS_INLINE Span<const T> slice(usize offset, usize count) const
     {
-        SE_ASSERT(count + offset <= m_count);
+        SE_CHECK(count + offset <= m_count);
         return Span<const T>(m_elements + offset, count);
     }
 

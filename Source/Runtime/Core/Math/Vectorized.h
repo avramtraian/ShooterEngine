@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include <Core/CoreDefines.h>
+#include <Runtime/Core/CoreDefines.h>
 
-#if SE_PLATFORM_WINDOWS
+#if SE_PLATFORM_WIN64
     #define SE_VECTORIZED_MATH_USE_DIRECTX 1
     #include <DirectXMath.h>
-#endif // SE_PLATFORM_WINDOWS
+#endif // SE_PLATFORM_WIN64
 
 #ifndef SE_VECTORIZED_MATH_USE_DIRECTX
     #define SE_VECTORIZED_MATH_USE_DIRECTX 0

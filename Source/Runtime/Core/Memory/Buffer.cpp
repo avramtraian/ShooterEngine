@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include <Core/Assertions.h>
-#include <Core/Memory/Buffer.h>
-#include <Core/Memory/MemoryOperations.h>
+#include <Runtime/Core/CoreAssertions.h>
+#include <Runtime/Core/Memory/Buffer.h>
+#include <Runtime/Core/Memory/MemoryOperations.h>
 
 namespace SE
 {
@@ -74,7 +74,7 @@ void Buffer::allocate_new(usize new_byte_count)
 
 void Buffer::expand(usize new_byte_count)
 {
-    SE_ASSERT(new_byte_count >= m_byte_count);
+    SE_CHECK(new_byte_count >= m_byte_count);
     if (new_byte_count == m_byte_count)
         return;
 

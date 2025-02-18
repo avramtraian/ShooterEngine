@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include <Core/Assertions.h>
-#include <Core/Containers/Hash.h>
-#include <Core/Containers/Optional.h>
+#include <Runtime/Core/CoreAssertions.h>
+#include <Runtime/Core/Containers/Hash.h>
+#include <Runtime/Core/Containers/Optional.h>
 #include <initializer_list>
 
 namespace SE
@@ -285,7 +285,7 @@ public:
         const u8 low_hash = get_low_hash(element_hash);
         const usize slot_index = unchecked_find_element_or_first_available_slot(element, element_hash, low_hash);
 
-        SE_ASSERT(m_slots_metadata[slot_index] != low_hash);
+        SE_CHECK(m_slots_metadata[slot_index] != low_hash);
 
         new (m_slots + slot_index) T(element);
         m_slots_metadata[slot_index] = low_hash;
@@ -300,7 +300,7 @@ public:
         const u8 low_hash = get_low_hash(element_hash);
         const usize slot_index = unchecked_find_element_or_first_available_slot(element, element_hash, low_hash);
 
-        SE_ASSERT(m_slots_metadata[slot_index] != low_hash);
+        SE_CHECK(m_slots_metadata[slot_index] != low_hash);
 
         new (m_slots + slot_index) T(move(element));
         m_slots_metadata[slot_index] = low_hash;
@@ -414,7 +414,7 @@ public:
     ALWAYS_INLINE void remove(const T& element)
     {
         Optional<usize> optional_slot_index = find(element);
-        SE_ASSERT(optional_slot_index);
+        SE_CHECK(optional_slot_index);
 
         const usize slot_index = *optional_slot_index;
         m_slots[slot_index].~T();
@@ -447,7 +447,7 @@ private:
     ALWAYS_INLINE static void allocate_and_initialize_memory(usize slot_count, T*& out_slots, Metadata*& out_slots_metadata)
     {
         void* memory_block = ::operator new(slot_count * (sizeof(T) + sizeof(Metadata)));
-        SE_ASSERT(memory_block);
+        SE_CHECK(memory_block);
 
         out_slots = reinterpret_cast<T*>(memory_block);
         out_slots_metadata = reinterpret_cast<Metadata*>(out_slots + slot_count);
@@ -520,13 +520,13 @@ private:
             index = (index + 1) % m_slot_count;
         }
 
-        SE_ASSERT(first_available_slot_index != invalid_size);
+        SE_CHECK(first_available_slot_index != invalid_size);
         return first_available_slot_index;
     }
 
     ALWAYS_INLINE void re_allocate_to_fixed(usize new_slot_count)
     {
-        SE_ASSERT(new_slot_count >= calculate_minimal_slot_count(m_slot_count));
+        SE_CHECK(new_slot_count >= calculate_minimal_slot_count(m_slot_count));
 
         T* slots = m_slots;
         Metadata* slots_metadata = m_slots_metadata;

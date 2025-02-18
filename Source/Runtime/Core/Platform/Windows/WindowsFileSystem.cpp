@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include <Core/String/StringBuilder.h>
-#include <Core/FileSystem/FileSystem.h>
-#include <Core/Math/MathCore.h>
-#include <Core/Platform/Windows/WindowsHeaders.h>
+#include <Runtime/Core/String/StringBuilder.h>
+#include <Runtime/Core/FileSystem/FileSystem.h>
+#include <Runtime/Core/Math/MathCore.h>
+#include <Runtime/Core/Platform/Windows/WindowsHeaders.h>
 
 namespace SE
 {
@@ -41,7 +41,7 @@ static FileError read_from_file(HANDLE file_handle, WriteonlyByteSpan output_buf
         byte_offset += bytes_read;
     }
 
-    SE_ASSERT(byte_offset == number_of_bytes_to_read);
+    SE_CHECK(byte_offset == number_of_bytes_to_read);
     return FileError::Success;
 }
 
@@ -76,7 +76,7 @@ static FileError write_to_file(HANDLE file_handle, ReadonlyByteSpan byte_buffer_
         byte_offset += bytes_written;
     }
 
-    SE_ASSERT(byte_offset == byte_buffer_to_write.count());
+    SE_CHECK(byte_offset == byte_buffer_to_write.count());
     return FileError::Success;
 }
 
@@ -130,7 +130,7 @@ void FileReader::close()
 
 FileError FileReader::read_entire(Buffer& out_buffer)
 {
-    SE_ASSERT(out_buffer.is_empty());
+    SE_CHECK(out_buffer.is_empty());
 
     // Ensure that the file stream is ready to read.
     if (!m_handle_is_opened)
@@ -264,7 +264,7 @@ FileError FileReader::read(WriteonlyByteSpan output_buffer, usize read_offset_in
 
 FileError FileReader::read_to_new_buffer(Buffer& out_buffer, usize read_offset_in_bytes, usize number_of_bytes_to_read)
 {
-    SE_ASSERT(out_buffer.is_empty());
+    SE_CHECK(out_buffer.is_empty());
 
     // Ensure that the file stream is ready to read.
     if (!m_handle_is_opened)
@@ -377,7 +377,7 @@ FileError FileWriter::write(ReadonlyByteSpan bytes_to_write)
     // Ensure that the file handle is ready for writing.
     if (!m_handle_is_opened)
         return FileError::FileHandleNotOpened;
-    SE_ASSERT(m_native_handle != INVALID_HANDLE_VALUE);
+    SE_CHECK(m_native_handle != INVALID_HANDLE_VALUE);
 
     FileError file_error = write_to_file(m_native_handle, bytes_to_write);
     if (file_error != FileError::Success)
@@ -438,7 +438,7 @@ String FileSystem::get_working_directory()
 {
     static char s_working_directory_buffer[1024] = {};
     const DWORD byte_count = GetCurrentDirectoryA(SE_ARRAY_COUNT(s_working_directory_buffer), s_working_directory_buffer);
-    SE_ASSERT(byte_count > 0);
+    SE_CHECK(byte_count > 0);
 
     const StringView working_directory_path = StringView::create_from_utf8(s_working_directory_buffer, byte_count);
     return StringBuilder::path_generic(working_directory_path);

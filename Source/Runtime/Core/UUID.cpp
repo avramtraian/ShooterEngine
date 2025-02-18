@@ -1,10 +1,7 @@
-/*
- * Copyright (c) 2024 Traian Avram. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0.
- */
+// Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
-#include <Core/Math/Random.h>
-#include <Core/UUID.h>
+#include <Runtime/Core/Math/Random.h>
+#include <Runtime/Core/UUID.h>
 
 namespace SE
 {
@@ -12,7 +9,7 @@ namespace SE
 UUID UUID::create()
 {
     // Generate a new 64-bit unsigned integer value.
-    const u64 uuid_value = Random::UInt64();
+    const u64 uuid_value = Random::uint_64();
     return UUID(uuid_value);
 }
 

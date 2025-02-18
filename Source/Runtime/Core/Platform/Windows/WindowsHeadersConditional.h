@@ -5,15 +5,15 @@
 
 #pragma once
 
-#include <Core/CoreDefines.h>
+#include <Runtime/Core/CoreDefines.h>
 
 //
 // The Windows headers are only included if they are available on the current platform.
 // Otherwise, no action is performed.
 //
 
-#if SE_PLATFORM_WINDOWS
+#if SE_PLATFORM_WIN64
     #define WIN32_LEAN_AND_MEAN
     #define NOMINMAX
     #include <Windows.h>
-#endif // SE_PLATFORM_WINDOWS
+#endif // SE_PLATFORM_WIN64

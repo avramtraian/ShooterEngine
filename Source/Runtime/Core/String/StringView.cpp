@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include <Core/String/StringView.h>
-#include <Core/String/Utf8.h>
+#include <Runtime/Core/String/StringView.h>
+#include <Runtime/Core/String/Utf8.h>
 
 namespace SE
 {
@@ -12,7 +12,7 @@ namespace SE
 StringView StringView::create_from_utf8(const char* characters, usize byte_count)
 {
     MAYBE_UNUSED bool validity = UTF8::check_validity({ reinterpret_cast<ReadonlyBytes>(characters), byte_count });
-    SE_ASSERT(validity);
+    SE_CHECK(validity);
 
     return unsafe_create_from_utf8(characters, byte_count);
 }
@@ -25,7 +25,7 @@ StringView StringView::create_from_utf8(ReadonlyByteSpan characters_byte_span)
 StringView StringView::create_from_utf8(const char* null_terminated_characters)
 {
     usize byte_count = UTF8::byte_count(reinterpret_cast<ReadonlyBytes>(null_terminated_characters));
-    SE_ASSERT(byte_count != invalid_size && byte_count != 0);
+    SE_CHECK(byte_count != invalid_size && byte_count != 0);
 
     // NOTE: The number of bytes also includes the null-termination character.
     return unsafe_create_from_utf8(null_terminated_characters, byte_count - 1);
@@ -51,7 +51,7 @@ usize StringView::find(UnicodeCodepoint codepoint_to_find) const
     {
         usize codepoint_width;
         UnicodeCodepoint codepoint = UTF8::bytes_to_codepoint(byte_span().slice(offset), codepoint_width);
-        SE_ASSERT(codepoint != invalid_unicode_codepoint);
+        SE_CHECK(codepoint != invalid_unicode_codepoint);
 
         if (codepoint == codepoint_to_find)
         {
@@ -77,13 +77,13 @@ usize StringView::find_last(char ascii_character) const
 
 StringView StringView::slice(usize offset_in_bytes) const
 {
-    SE_ASSERT(offset_in_bytes <= m_byte_count);
+    SE_CHECK(offset_in_bytes <= m_byte_count);
     return StringView::unsafe_create_from_utf8(m_characters + offset_in_bytes, m_byte_count - offset_in_bytes);
 }
 
 StringView StringView::slice(usize offset_in_bytes, usize bytes_count) const
 {
-    SE_ASSERT(offset_in_bytes + bytes_count <= m_byte_count);
+    SE_CHECK(offset_in_bytes + bytes_count <= m_byte_count);
     return StringView::unsafe_create_from_utf8(m_characters + offset_in_bytes, bytes_count);
 }
 

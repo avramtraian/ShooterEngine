@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include <Core/Math/Matrix.h>
-#include <Core/Math/Vectorized.h>
+#include <Runtime/Core/Math/Matrix.h>
+#include <Runtime/Core/Math/Vectorized.h>
 
 namespace SE::Math
 {

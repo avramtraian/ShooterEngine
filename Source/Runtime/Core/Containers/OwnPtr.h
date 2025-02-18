@@ -1,12 +1,9 @@
-/*
- * Copyright (c) 2024 Traian Avram. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0.
- */
+// Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
 #pragma once
 
-#include <Core/Assertions.h>
-#include <Core/CoreTypes.h>
+#include <Runtime/Core/CoreAssertions.h>
+#include <Runtime/Core/CoreTypes.h>
 
 namespace SE
 {
@@ -50,13 +47,13 @@ public:
 
     NODISCARD ALWAYS_INLINE T* get()
     {
-        SE_ASSERT(is_valid());
+        SE_CHECK(is_valid());
         return m_instance;
     }
 
     NODISCARD ALWAYS_INLINE const T* get() const
     {
-        SE_ASSERT(is_valid());
+        SE_CHECK(is_valid());
         return m_instance;
     }
 

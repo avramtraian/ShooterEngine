@@ -1,7 +1,4 @@
-/*
- * Copyright (c) 2024 Traian Avram. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0.
- */
+// Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
 #pragma once
 
@@ -13,15 +10,13 @@
 // It is the responsability of the build system to ensure that they are set correctly.
 //
 
-#ifndef SE_PLATFORM_WINDOWS
-    #define SE_PLATFORM_WINDOWS 0
-#endif // SE_PLATFORM_WINDOWS
+#ifndef SE_PLATFORM_WIN64
+    #define SE_PLATFORM_WIN64 0
+#endif // SE_PLATFORM_WIN64
 
-//
-// Ensure that at least one platform macro is set to 1.
-// Otherwise, the project configuration is wrong and a compiler error should be raised.
-//
-#if !SE_PLATFORM_WINDOWS
+/* Ensure that at least one platform macro is set to 1.
+ * Otherwise, the project configuration is wrong and a compiler error should be raised. */
+#if !SE_PLATFORM_WIN64
     #error Unknown or unsupported platform!
 #endif // Any supported platform.
 
@@ -29,35 +24,42 @@
 // BUILD CONFIGURATION MACROS.
 //======================================================================================
 
-#ifndef SE_CONFIGURATION_DEBUG
-    #define SE_CONFIGURATION_DEBUG 0
-#endif // SE_CONFIGURATION_DEBUG
+#ifndef SE_CONFIGURATION_EDITOR_DEBUG
+    #define SE_CONFIGURATION_EDITOR_DEBUG 0
+#endif // SE_CONFIGURATION_EDITOR_DEBUG
 
-#ifndef SE_CONFIGURATION_DEVELOPMENT
-    #define SE_CONFIGURATION_DEVELOPMENT 0
-#endif // SE_CONFIGURATION_DEVELOPMENT
+#ifndef SE_CONFIGURATION_EDITOR_DEVELOPMENT
+    #define SE_CONFIGURATION_EDITOR_DEVELOPMENT 0
+#endif // SE_CONFIGURATION_EDITOR_DEVELOPMENT
 
-#ifndef SE_CONFIGURATION_SHIPPING
-    #define SE_CONFIGURATION_SHIPPING 0
-#endif // SE_CONFIGURATION_SHIPPING
+#ifndef SE_CONFIGURATION_GAME_DEBUG
+    #define SE_CONFIGURATION_GAME_DEBUG 0
+#endif // SE_CONFIGURATION_GAME_DEBUG
 
-//
-// Ensure that at least one build configuration macro is set to 1.
-// Otherwise, the project configuration is wrong and a compiler error should be raised.
-//
+#ifndef SE_CONFIGURATION_GAME_DEVELOPMENT
+    #define SE_CONFIGURATION_GAME_DEVELOPMENT 0
+#endif // SE_CONFIGURATION_GAME_DEVELOPMENT
+
+#ifndef SE_CONFIGURATION_GAME_SHIPPING
+    #define SE_CONFIGURATION_GAME_SHIPPING 0
+#endif // SE_CONFIGURATION_GAME_SHIPPING
+
+#define SE_CONFIGURATION_DEBUG       (SE_CONFIGURATION_EDITOR_DEBUG       || SE_CONFIGURATION_GAME_DEBUG)
+#define SE_CONFIGURATION_DEVELOPMENT (SE_CONFIGURATION_EDITOR_DEVELOPMENT || SE_CONFIGURATION_GAME_DEVELOPMENT)
+#define SE_CONFIGURATION_SHIPPING    (SE_CONFIGURATION_GAME_SHIPPING)
+
+/* Ensure that at least one build configuration macro is set to 1.
+ * Otherwise, the project configuration is wrong and a compiler error should be raised. */
 #if !SE_CONFIGURATION_DEBUG && !SE_CONFIGURATION_DEVELOPMENT && !SE_CONFIGURATION_SHIPPING
     #error Unknown or unsupported build configuration!
 #endif // Any supported build configuration.
 
-#ifndef SE_CONFIGURATION_TARGET_EDITOR
-    #define SE_CONFIGURATION_TARGET_EDITOR 0
-#endif // SE_CONFIGURATION_TARGET_EDITOR
+#define SE_TARGET_EDITOR (SE_CONFIGURATION_EDITOR_DEBUG || SE_CONFIGURATION_EDITOR_DEVELOPMENT)
+#define SE_TARGET_GAME   (SE_CONFIGURATION_GAME_DEBUG   || SE_CONFIGURATION_GAME_DEVELOPMENT   || SE_CONFIGURATION_GAME_SHIPPING)
 
-#ifndef SE_CONFIGURATION_TARGET_GAME
-    #define SE_CONFIGURATION_TARGET_GAME 0
-#endif // SE_CONFIGURATION_TARGET_GAME
-
-#if !SE_CONFIGURATION_TARGET_EDITOR && !SE_CONFIGURATION_TARGET_GAME
+/* Ensure that at least one build configuration macro is set to 1.
+ * Otherwise, the project configuration is wrong and a compiler error should be raised. */
+#if !SE_TARGET_EDITOR && !SE_TARGET_GAME
     #error Unknown or unsupported build configuration target!
 #endif // Any supported build configuration target.
 
@@ -65,74 +67,46 @@
 // COMPILER CONFIGURATION MACROS.
 //======================================================================================
 
-// The `__clang__` is only set when compiling using clang.
-#ifdef __clang__
-    #define SE_COMPILER_CLANG 1
-#else
-    // The `_MSC_BUILD` is defined when compiling with MSVC, or sometimes when using clang. As we
-    // already checked for the clang compiler, we can be confident that this flag is only set when
-    // using MSVC.
-    #ifdef _MSC_BUILD
-        #define SE_COMPILER_MSVC 1
-    #endif // _MSC_BUILD
-
-    // Similarly to the `_MSC_BUILD` flag, `__gnuc__` is only set when compiling using GCC.
-    #ifdef __GNUC__
-        #define SE_COMPILER_GCC 1
-    #endif // __GNUC__
-#endif // __clang__
-
-#ifndef SE_COMPILER_MSVC
-    #define SE_COMPILER_MSVC 0
-#endif // SE_COMPILER_MSVC
-
-#ifndef SE_COMPILER_CLANG
-    #define SE_COMPILER_CLANG 0
-#endif // SE_COMPILER_CLANG
-
-#ifndef SE_COMPILER_GCC
-    #define SE_COMPILER_GCC 0
-#endif // SE_COMPILER_GCC
-
-//
-// Ensure that at least one compiler macro is set to 1.
-// Otherwise, an unknown or unsupported compiler is used, which should raise a compiler error.
-//
-#if !SE_COMPILER_MSVC && !SE_COMPILER_CLANG && !SE_COMPILER_GCC
-    #error Unknown or unsupported compiler!
-#endif // Any supported compiler.
+#if !defined(_MSC_BUILD) || defined(__clang__)
+    #error The engine can only be compiled using the MSVC toolchain!
+#endif // _MSC_BUILD
 
 //======================================================================================
 // UTILITY (GENERAL PURPOSE) MACROS.
 //======================================================================================
 
-#if SE_COMPILER_MSVC
-    // Hint for the compiler that the function should always be inlined.
-    #define ALWAYS_INLINE __forceinline
-
-    // Traps the debugger. Triggers a breakpoint if a debugger is attached or crashes the program otherwise.
-    #define SE_DEBUGBREAK __debugbreak()
-
-    // Expands to the signature of the function in which the macro is located.
-    #define SE_FUNCTION __FUNCSIG__
-#endif // SE_COMPILER_MSVC
-
-// The compiler is encouraged to issue a warning if the function return value is not stored/used.
-#define NODISCARD [[nodiscard]]
-
-// Suppreses warnings on unused entities.
-#define MAYBE_UNUSED [[maybe_unused]]
-
-// Represent hints to the compiler that the path of execution is more or less likely than the alternative.
-#define LIKELY   [[likely]]
-#define UNLIKELY [[unlikely]]
-
-// Expands to the number of elements stored in the given static array.
-#define SE_ARRAY_COUNT(x) (sizeof(x) / sizeof((x)[0]))
-
+#define ALWAYS_INLINE             __forceinline
+#define SE_PLATFORM_DEBUGBREAK    __debugbreak()
+#define SE_FUNCTION               __FUNCSIG__
+#define NODISCARD                 [[nodiscard]]
+#define MAYBE_UNUSED              [[maybe_unused]]
+#define LIKELY                    [[likely]]
+#define UNLIKELY                  [[unlikely]]
+#define SE_ARRAY_COUNT(x)         (sizeof(x) / sizeof((x)[0]))
 #define SE_OFFSET_OF(type, field) ((usize) & (((type*)0)->field))
 
-// Constants regarding memory size units.
-#define KiB (static_cast<usize>(1024))
-#define MiB (1024 * KiB)
-#define GiB (1024 * MiB)
+#define SE_KILOBYTES(x) (static_cast<usize>(1024) * (x))
+#define SE_MEGABYTES(x) (static_cast<usize>(1024) * SE_KILOBYTES(x))
+#define SE_GIGABYTES(x) (static_cast<usize>(1024) * SE_MEGABYTES(x))
+
+//======================================================================================
+// API SPECIFIERS.
+//======================================================================================
+
+#if SE_PLATFORM_WIN64
+    #define SE_API_SPECIFIER_EXPORT __declspec(dllexport)
+    #define SE_API_SPECIFIER_IMPORT __declspec(dllimport)
+#else
+    #define SE_API_SPECIFIER_EXPORT
+    #define SE_API_SPECIFIER_IMPORT
+#endif // SE_PLATFORM_WIN64
+
+#if SE_TARGET_EDITOR
+    #ifdef SE_PROJECT_RUNTIME
+        #define SHOOTER_API SE_API_SPECIFIER_EXPORT
+    #else
+        #define SHOOTER_API SE_API_SPECIFIER_IMPORT
+    #endif // SE_PROJECT_RUNTIME
+#else
+    #define SHOOTER_API
+#endif // SE_TARGET_EDITOR

@@ -1,12 +1,9 @@
-/*
- * Copyright (c) 2024 Traian Avram. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0.
- */
+// Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
 #pragma once
 
-#include <Core/Assertions.h>
-#include <Core/Math/MathCore.h>
+#include <Runtime/Core/CoreAssertions.h>
+#include <Runtime/Core/Math/MathCore.h>
 
 namespace SE
 {
@@ -52,13 +49,13 @@ public:
 
     NODISCARD ALWAYS_INLINE T& operator[](u8 axis)
     {
-        SE_ASSERT(axis < 2);
+        SE_CHECK(axis < 2);
         return value_ptr()[axis];
     }
 
     NODISCARD ALWAYS_INLINE const T& operator[](u8 axis) const
     {
-        SE_ASSERT(axis < 2);
+        SE_CHECK(axis < 2);
         return value_ptr()[axis];
     }
 
@@ -143,13 +140,13 @@ public:
 
     NODISCARD ALWAYS_INLINE T& operator[](u8 axis)
     {
-        SE_ASSERT(axis < 3);
+        SE_CHECK(axis < 3);
         return value_ptr()[axis];
     }
 
     NODISCARD ALWAYS_INLINE const T& operator[](u8 axis) const
     {
-        SE_ASSERT(axis < 3);
+        SE_CHECK(axis < 3);
         return value_ptr()[axis];
     }
 
@@ -268,13 +265,13 @@ public:
 
     NODISCARD ALWAYS_INLINE T& operator[](u8 axis)
     {
-        SE_ASSERT(axis < 4);
+        SE_CHECK(axis < 4);
         return value_ptr()[axis];
     }
 
     NODISCARD ALWAYS_INLINE const T& operator[](u8 axis) const
     {
-        SE_ASSERT(axis < 4);
+        SE_CHECK(axis < 4);
         return value_ptr()[axis];
     }
 

@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <Core/Containers/Span.h>
+#include <Runtime/Core/Containers/Span.h>
 
 namespace SE
 {
@@ -229,7 +229,7 @@ private:
     NODISCARD ALWAYS_INLINE static ReadWriteByteSpan allocate_memory(usize byte_count)
     {
         void* memory_block = ::operator new(byte_count);
-        SE_ASSERT(memory_block != nullptr);
+        SE_CHECK(memory_block != nullptr);
         return ReadWriteByteSpan(static_cast<ReadWriteBytes>(memory_block), byte_count);
     }
 

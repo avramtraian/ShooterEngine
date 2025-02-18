@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include <Core/String/Format.h>
+#include <Runtime/Core/String/Format.h>
 
 #define SE_FORMSE_SPECIFIER_BEGIN_TOKEN '{'
 #define SE_FORMSE_SPECIFIER_END_TOKEN   '}'

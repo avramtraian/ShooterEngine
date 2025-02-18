@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include <Core/Platform/Platform.h>
-#include <Core/Platform/Windows/WindowsHeaders.h>
+#include <Runtime/Core/Platform/Platform.h>
+#include <Runtime/Core/Platform/Windows/WindowsHeaders.h>
 
 namespace SE
 {
@@ -87,7 +87,7 @@ static WORD get_console_foreground_color(Platform::ConsoleColor color)
         case Platform::ConsoleColor::White: return FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
     }
 
-    SE_ASSERT(false);
+    SE_CHECK(false);
     return 0;
 }
 
@@ -99,7 +99,7 @@ static WORD get_console_background_color(Platform::ConsoleColor color)
 
 void Platform::write_to_console(StringView message, ConsoleColor text_color, ConsoleColor background_color)
 {
-    SE_ASSERT(s_windows_platform);
+    SE_CHECK(s_windows_platform);
     if (s_windows_platform->console_handle == INVALID_HANDLE_VALUE)
         return;
 

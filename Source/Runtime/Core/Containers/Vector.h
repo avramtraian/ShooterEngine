@@ -5,10 +5,10 @@
 
 #pragma once
 
-#include <Core/Containers/Span.h>
-#include <Core/Memory/MemoryOperations.h>
-#include <Core/Misc/ComparisonResult.h>
-#include <Core/Misc/SortOrder.h>
+#include <Runtime/Core/Containers/Span.h>
+#include <Runtime/Core/Memory/MemoryOperations.h>
+#include <Runtime/Core/Misc/ComparisonResult.h>
+#include <Runtime/Core/Misc/SortOrder.h>
 #include <initializer_list>
 
 namespace SE
@@ -161,13 +161,13 @@ public:
 public:
     NODISCARD ALWAYS_INLINE T& at(usize index)
     {
-        SE_ASSERT(index < m_count);
+        SE_CHECK(index < m_count);
         return m_elements[index];
     }
 
     NODISCARD ALWAYS_INLINE const T& at(usize index) const
     {
-        SE_ASSERT(index < m_count);
+        SE_CHECK(index < m_count);
         return m_elements[index];
     }
 
@@ -176,49 +176,49 @@ public:
 
     NODISCARD ALWAYS_INLINE T& first()
     {
-        SE_ASSERT(has_elements());
+        SE_CHECK(has_elements());
         return m_elements[0];
     }
 
     NODISCARD ALWAYS_INLINE const T& first() const
     {
-        SE_ASSERT(has_elements());
+        SE_CHECK(has_elements());
         return m_elements[0];
     }
 
     NODISCARD ALWAYS_INLINE T& last()
     {
-        SE_ASSERT(has_elements());
+        SE_CHECK(has_elements());
         return m_elements[m_count - 1];
     }
 
     NODISCARD ALWAYS_INLINE const T& last() const
     {
-        SE_ASSERT(has_elements());
+        SE_CHECK(has_elements());
         return m_elements[m_count - 1];
     }
 
     NODISCARD ALWAYS_INLINE Span<T> slice(usize offset)
     {
-        SE_ASSERT(offset <= m_count);
+        SE_CHECK(offset <= m_count);
         return Span<T>(m_elements + offset, m_count - offset);
     }
 
     NODISCARD ALWAYS_INLINE Span<const T> slice(usize offset) const
     {
-        SE_ASSERT(offset <= m_count);
+        SE_CHECK(offset <= m_count);
         return Span<const T>(m_elements + offset, m_count - offset);
     }
 
     NODISCARD ALWAYS_INLINE Span<T> slice(usize offset, usize in_count)
     {
-        SE_ASSERT(offset + in_count <= m_count);
+        SE_CHECK(offset + in_count <= m_count);
         return Span<T>(m_elements + offset, in_count);
     }
 
     NODISCARD ALWAYS_INLINE Span<const T> slice(usize offset, usize in_count) const
     {
-        SE_ASSERT(offset + in_count <= m_count);
+        SE_CHECK(offset + in_count <= m_count);
         return Span<const T>(m_elements + offset, in_count);
     }
 
@@ -244,7 +244,7 @@ public:
     template<typename... Args>
     ALWAYS_INLINE T& insert_emplace(usize insertion_index, Args&&... args)
     {
-        SE_ASSERT(insertion_index <= m_count);
+        SE_CHECK(insertion_index <= m_count);
         re_allocate_if_required(m_count + 1);
 
         for (usize index = insertion_index; index < m_count; ++index)
@@ -265,7 +265,7 @@ public:
     template<typename... Args>
     ALWAYS_INLINE T& insert_emplace_unordered(usize insertion_index, Args&&... args)
     {
-        SE_ASSERT(insertion_index <= m_count);
+        SE_CHECK(insertion_index <= m_count);
         re_allocate_if_required(m_count + 1);
 
         if (insertion_index < m_count)
@@ -285,13 +285,13 @@ public:
 public:
     ALWAYS_INLINE void remove_last()
     {
-        SE_ASSERT(has_elements());
+        SE_CHECK(has_elements());
         m_elements[--m_count].~T();
     }
 
     ALWAYS_INLINE void remove_last(usize count)
     {
-        SE_ASSERT(m_count >= count);
+        SE_CHECK(m_count >= count);
         const usize remove_offset = m_count - count;
         for (usize index = 0; index < count; ++index)
             m_elements[remove_offset + index].~T();
@@ -317,7 +317,7 @@ public:
     //
     ALWAYS_INLINE void remove_unordered(usize remove_index)
     {
-        SE_ASSERT(remove_index < m_count);
+        SE_CHECK(remove_index < m_count);
         m_elements[remove_index].~T();
         if (remove_index != m_count - 1)
         {
@@ -330,7 +330,7 @@ public:
 
     ALWAYS_INLINE void remove(usize remove_index, usize remove_count = 1)
     {
-        SE_ASSERT(remove_index + remove_count <= m_count);
+        SE_CHECK(remove_index + remove_count <= m_count);
         for (usize index = remove_index; index < remove_index + remove_count; ++index)
             m_elements[index].~T();
 
@@ -342,7 +342,7 @@ public:
     ALWAYS_INLINE void remove(ConstIterator remove_iterator)
     {
         // Iterator out of bounds.
-        SE_ASSERT(begin() <= remove_iterator && remove_iterator < end());
+        SE_CHECK(begin() <= remove_iterator && remove_iterator < end());
         const usize index = remove_iterator - begin();
         remove(index);
     }
@@ -430,7 +430,7 @@ public:
             return;
         }
 
-        SE_ASSERT(fixed_capacity >= m_count);
+        SE_CHECK(fixed_capacity >= m_count);
         re_allocate_to_fixed(fixed_capacity);
     }
 
@@ -477,7 +477,7 @@ private:
     NODISCARD ALWAYS_INLINE static T* allocate_memory(usize in_capacity)
     {
         void* memory_block = ::operator new(in_capacity * sizeof(T));
-        SE_ASSERT(memory_block);
+        SE_CHECK(memory_block);
         return reinterpret_cast<T*>(memory_block);
     }
 
@@ -529,8 +529,8 @@ private:
     {
         // NOTE: These assertions are triggered only by a bug in the Vector implementation.
         //       No user action/command should trigger them.
-        SE_ASSERT(new_capacity >= m_count);
-        SE_ASSERT(new_capacity != m_capacity);
+        SE_CHECK(new_capacity >= m_count);
+        SE_CHECK(new_capacity != m_capacity);
 
         clear();
         release_memory(m_elements, m_capacity);
@@ -543,8 +543,8 @@ private:
     {
         // NOTE: These assertions are triggered only by a bug in the Vector implementation.
         //       No user action/command should trigger them.
-        SE_ASSERT(new_capacity >= m_count);
-        SE_ASSERT(new_capacity != m_capacity);
+        SE_CHECK(new_capacity >= m_count);
+        SE_CHECK(new_capacity != m_capacity);
 
         T* new_elements = allocate_memory(new_capacity);
         move_elements(new_elements, m_elements, m_count);

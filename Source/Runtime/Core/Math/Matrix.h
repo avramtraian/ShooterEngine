@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <Core/Math/Vector.h>
+#include <Runtime/Core/Math/Vector.h>
 
 namespace SE
 {

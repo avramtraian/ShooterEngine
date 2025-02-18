@@ -1,12 +1,9 @@
-/*
- * Copyright (c) 2024 Traian Avram. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0.
- */
+// Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
 #pragma once
 
-#include <Core/Assertions.h>
-#include <Core/Memory/MemoryOperations.h>
+#include <Runtime/Core/CoreAssertions.h>
+#include <Runtime/Core/Memory/MemoryOperations.h>
 
 namespace SE
 {
@@ -102,13 +99,13 @@ public:
 
     NODISCARD ALWAYS_INLINE T& value()
     {
-        SE_ASSERT(has_value());
+        SE_CHECK(has_value());
         return unchecked_value();
     }
 
     NODISCARD ALWAYS_INLINE const T& value() const
     {
-        SE_ASSERT(has_value());
+        SE_CHECK(has_value());
         return unchecked_value();
     }
 
@@ -198,13 +195,13 @@ public:
 
     NODISCARD ALWAYS_INLINE T& value()
     {
-        SE_ASSERT(has_value());
+        SE_CHECK(has_value());
         return *m_value;
     }
 
     NODISCARD ALWAYS_INLINE const T& value() const
     {
-        SE_ASSERT(has_value());
+        SE_CHECK(has_value());
         return *m_value;
     }
 

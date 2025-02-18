@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0.
  */
 
-#include <Core/Log.h>
-#include <Core/Platform/Platform.h>
+#include <Runtime/Core/Log.h>
+#include <Runtime/Core/Platform/Platform.h>
 
 namespace SE
 {

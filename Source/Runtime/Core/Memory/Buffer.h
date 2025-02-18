@@ -1,13 +1,9 @@
-/*
- * Copyright (c) 2024 Traian Avram. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0.
- */
+// Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
 #pragma once
 
-#include <Core/API.h>
-#include <Core/Containers/Span.h>
-#include <Core/CoreTypes.h>
+#include <Runtime/Core/Containers/Span.h>
+#include <Runtime/Core/CoreTypes.h>
 
 namespace SE
 {

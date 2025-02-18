@@ -5,11 +5,11 @@
 
 #pragma once
 
-#include <Core/Containers/Optional.h>
-#include <Core/Containers/Span.h>
-#include <Core/Containers/Vector.h>
-#include <Core/String/String.h>
-#include <Core/UUID.h>
+#include <Runtime/Core/Containers/Optional.h>
+#include <Runtime/Core/Containers/Span.h>
+#include <Runtime/Core/Containers/Vector.h>
+#include <Runtime/Core/String/String.h>
+#include <Runtime/Core/UUID.h>
 
 namespace SE
 {
@@ -75,7 +75,7 @@ struct Formatter
     {
         // TODO: Maybe we should signal that the Formatter<T> isn't specialized by
         //       gracefully returning an error code?
-        SE_ASSERT(false);
+        SE_CHECK(false);
         return FormatErrorCode::Success;
     }
 };
