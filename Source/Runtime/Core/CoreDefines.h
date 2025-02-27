@@ -71,6 +71,7 @@
 
 #define FORCEINLINE            __forceinline
 #define SE_PLATFORM_DEBUGBREAK __debugbreak()
+#define SE_FUNCTION            __FUNCSIG__
 
 #define NODISCARD    [[nodiscard]]
 #define MAYBE_UNUSED [[maybe_unused]]
