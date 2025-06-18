@@ -6,7 +6,7 @@
 namespace SE
 {
 
-void on_assertion_failed(AssertionKind kind, const char* expression, const char* file, const char* function, uint32 line)
+void OnAssertionFailed(AssertionKind kind, const char* expression, const char* file, const char* function, uint32 line)
 {
     /* NOTE: The logging system might actually not be available, or even worse, the logging system is where
      * the assertion comes from. Using the logging system might cause an infinite recursion loop! */

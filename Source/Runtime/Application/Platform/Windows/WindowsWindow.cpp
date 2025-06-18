@@ -6,55 +6,55 @@
 namespace SE
 {
 
-Vector<WindowsWindow*> WindowsWindow::s_window_table;
+Vector<WindowsWindow*> WindowsWindow::s_WindowTable;
 
 WindowsWindow::WindowsWindow()
-    : m_native_handle(nullptr)
-    , m_should_close(false)
+    : m_NativeHandle(nullptr)
+    , m_ShouldClose(false)
 {
     /* Add this window to the static window table. */
-    s_window_table.add(this);
+    s_WindowTable.Add(this);
 }
 
 WindowsWindow::~WindowsWindow()
 {
-    DestroyWindow(m_native_handle);
-    m_native_handle = nullptr;
+    DestroyWindow(m_NativeHandle);
+    m_NativeHandle = nullptr;
 
-    SE_ENSURE(s_window_table.contains(this));
-    s_window_table.remove_index_unordered(s_window_table.find_index_of(this));
+    SE_ENSURE(s_WindowTable.Contains(this));
+    s_WindowTable.RemoveIndexUnordered(s_WindowTable.FindIndexOf(this));
 }
 
-bool WindowsWindow::initialize(const WindowsWindowInfo& info)
+bool WindowsWindow::Initialize(const WindowsWindowInfo& info)
 {
     static bool s_was_window_class_registered = false;
     if (!s_was_window_class_registered)
     {
-        WindowsWindow::win32_register_window_class();
+        WindowsWindow::Win32RegisterWindowClass();
         s_was_window_class_registered = true;
     }
 
-    DWORD window_style_flags = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
-    switch (info.mode)
+    DWORD windowStyleFlags = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+    switch (info.StartMode)
     {
-        case WindowsWindowMode::Windowed:  window_style_flags |= 0;           break;
-        case WindowsWindowMode::Maximized: window_style_flags |= WS_MAXIMIZE; break;
-        case WindowsWindowMode::Minimized: window_style_flags |= WS_MINIMIZE; break;
+        case WindowsWindowMode::Windowed:  windowStyleFlags |= 0;           break;
+        case WindowsWindowMode::Maximized: windowStyleFlags |= WS_MAXIMIZE; break;
+        case WindowsWindowMode::Minimized: windowStyleFlags |= WS_MINIMIZE; break;
         default: break;
     }
 
-    int window_position_x = CW_USEDEFAULT;
-    int window_position_y = CW_USEDEFAULT;
-    int window_size_x = info.size_x.value_or(CW_USEDEFAULT);
-    int window_size_y = info.size_y.value_or(CW_USEDEFAULT);
+    int windowPositionX = info.PositionX.ValueOr(CW_USEDEFAULT);
+    int windowPositionY = info.PositionY.ValueOr(CW_USEDEFAULT);
+    int windowSizeX = info.SizeX.ValueOr(CW_USEDEFAULT);
+    int windowSizeY = info.SizeY.ValueOr(CW_USEDEFAULT);
 
-    m_native_handle = CreateWindowA(
-        "ShooterWindowClass", "Shooter Game", window_style_flags,
-        window_position_x, window_position_y, window_size_x, window_size_y,
+    m_NativeHandle = CreateWindowA(
+        "ShooterWindowClass", "Shooter Game", windowStyleFlags,
+        windowPositionX, windowPositionY, windowSizeX, windowSizeY,
         nullptr, nullptr, GetModuleHandleA(nullptr), nullptr
     );
 
-    if (m_native_handle == nullptr)
+    if (m_NativeHandle == nullptr)
     {
         /* TODO: Query the last error code interface for better error messages. */
         return false;
@@ -63,77 +63,76 @@ bool WindowsWindow::initialize(const WindowsWindowInfo& info)
     return true;
 }
 
-void WindowsWindow::pump_messages()
+void WindowsWindow::PumpMessages()
 {
     MSG message = {};
-
-    while (PeekMessageA(&message, m_native_handle, 0, 0, PM_REMOVE))
+    while (PeekMessageA(&message, m_NativeHandle, 0, 0, PM_REMOVE))
     {
         TranslateMessage(&message);
         DispatchMessageA(&message);
     }
 }
 
-bool WindowsWindow::should_close() const
+bool WindowsWindow::ShouldClose() const
 {
-    return m_should_close;
+    return m_ShouldClose;
 }
 
-uint32 WindowsWindow::get_size_x() const
+uint32 WindowsWindow::GetSizeX() const
 {
-    if (m_native_handle == nullptr)
+    if (m_NativeHandle == nullptr)
     {
         return 0;
     }
 
     /* Get the window client area. */
     RECT window_client_rect = {};
-    const BOOL success = GetClientRect(m_native_handle, &window_client_rect);
+    const BOOL success = GetClientRect(m_NativeHandle, &window_client_rect);
     SE_ENSURE(success > 0);
 
     return window_client_rect.right - window_client_rect.left;
 }
 
-uint32 WindowsWindow::get_size_y() const
+uint32 WindowsWindow::GetSizeY() const
 {
-    if (m_native_handle == nullptr)
+    if (m_NativeHandle == nullptr)
     {
         return 0;
     }
 
     /* Get the window client area. */
     RECT window_client_rect = {};
-    const BOOL success = GetClientRect(m_native_handle, &window_client_rect);
+    const BOOL success = GetClientRect(m_NativeHandle, &window_client_rect);
     SE_ENSURE(success > 0);
 
     return window_client_rect.bottom - window_client_rect.top;
 }
 
-void* WindowsWindow::get_native_handle() const
+void* WindowsWindow::GetNativeHandle() const
 {
     /* The value of the native handle is always zero (nullptr) if the window is not initialized. */
-    return m_native_handle;
+    return m_NativeHandle;
 }
 
-void WindowsWindow::win32_register_window_class()
+void WindowsWindow::Win32RegisterWindowClass()
 {
     WNDCLASSA window_class = {};
     window_class.hInstance = GetModuleHandleA(nullptr);
-    window_class.lpfnWndProc = WindowsWindow::win32_window_procedure;
+    window_class.lpfnWndProc = WindowsWindow::Win32WindowProcedure;
     window_class.lpszClassName = "ShooterWindowClass";
     RegisterClassA(&window_class);
 }
 
-LRESULT WindowsWindow::win32_window_procedure(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param)
+LRESULT WindowsWindow::Win32WindowProcedure(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param)
 {
-    WindowsWindow* window = WindowsWindow::find_window_from_handle(window_handle);
+    WindowsWindow* window = WindowsWindow::FindWindowFromHandle(window_handle);
     if (window != nullptr)
     {
         switch (message)
         {
             case WM_CLOSE:
             {
-                window->m_should_close = true;
+                window->m_ShouldClose = true;
                 return 0;
             }
         }
@@ -143,11 +142,11 @@ LRESULT WindowsWindow::win32_window_procedure(HWND window_handle, UINT message, 
     return DefWindowProcA(window_handle, message, w_param, l_param);
 }
 
-WindowsWindow* WindowsWindow::find_window_from_handle(HWND native_handle)
+WindowsWindow* WindowsWindow::FindWindowFromHandle(HWND native_handle)
 {
-    for (WindowsWindow* window : s_window_table)
+    for (WindowsWindow* window : s_WindowTable)
     {
-        if (window->get_native_handle() == native_handle)
+        if (window->GetNativeHandle() == native_handle)
         {
             return window;
         }

@@ -9,22 +9,22 @@ namespace SE
 
 class Engine
 {
-public:
-    virtual bool initialize() = 0;
-    virtual void shutdown() = 0;
-    virtual void execute() = 0;
+    SE_MAKE_NONCOPYABLE(Engine);
+    SE_MAKE_NONMOVABLE(Engine);
 
-    SHOOTER_API virtual bool initialize_core_systems();
-    SHOOTER_API virtual void shutdown_core_systems();
+public:
+    virtual bool Initialize() = 0;
+    virtual void Shutdown() = 0;
+    virtual void Execute() = 0;
+
+    SHOOTER_API virtual bool InitializeCoreSystems();
+    SHOOTER_API virtual void ShutdownCoreSystems();
 
 public:
     Engine() = default;
     virtual ~Engine() = default;
-
-    SE_MAKE_NONCOPYABLE(Engine);
-    SE_MAKE_NONMOVABLE(Engine);
 };
 
-SHOOTER_API extern Engine* g_engine;
+SHOOTER_API extern Engine* g_Engine;
 
 }

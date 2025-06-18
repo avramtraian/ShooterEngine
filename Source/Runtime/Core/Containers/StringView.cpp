@@ -5,11 +5,11 @@
 namespace SE
 {
 
-StringView StringView::from_utf8(const char* null_terminated_characters)
+StringView StringView::FromUTF8(const char* nullTerminatedCharacters)
 {
-    const char* string_it = null_terminated_characters;
-    while (*string_it++) {}
-    return StringView::from_utf8(null_terminated_characters, string_it - null_terminated_characters - 1);
+    const char* stringIterator = nullTerminatedCharacters;
+    while (*stringIterator++) {}
+    return StringView::FromUTF8(nullTerminatedCharacters, (stringIterator - nullTerminatedCharacters) - 1);
 }
 
 }

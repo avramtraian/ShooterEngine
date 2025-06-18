@@ -7,21 +7,21 @@ namespace SE
 
 static int32 guarded_main()
 {
-    g_game_engine = new GameEngine();
-    g_engine = g_game_engine;
+    g_GameEngine = new GameEngine();
+    g_Engine = g_GameEngine;
 
-    if (!g_engine->initialize())
+    if (!g_Engine->Initialize())
     {
         /* Failed to initialize the engine. */
         return 1;
     }
 
-    g_engine->execute();
-    g_engine->shutdown();
+    g_Engine->Execute();
+    g_Engine->Shutdown();
 
-    delete g_game_engine;
-    g_game_engine = nullptr;
-    g_engine = nullptr;
+    delete g_GameEngine;
+    g_GameEngine = nullptr;
+    g_Engine = nullptr;
 
     return 0;
 }

@@ -5,35 +5,29 @@
 namespace SE
 {
 
-void copy_memory(void* destination, const void* source, usize byte_count)
+void MemoryCopy(void* destination, const void* source, usize byteCount)
 {
     const WriteonlyBytes dst = static_cast<WriteonlyBytes>(destination);
     const ReadonlyBytes src = static_cast<ReadonlyBytes>(source);
 
-    for (usize byte_offset = 0; byte_offset < byte_count; ++byte_offset)
-    {
+    for (usize byte_offset = 0; byte_offset < byteCount; ++byte_offset)
         dst[byte_offset] = src[byte_offset];
-    }
 }
 
-void set_memory(void* destination, uint8 byte_value, usize byte_count)
+void MemorySet(void* destination, uint8 byte_value, usize byteCount)
 {
     const WriteonlyBytes dst = static_cast<WriteonlyBytes>(destination);
 
-    for (usize byte_offset = 0; byte_offset < byte_count; ++byte_offset)
-    {
+    for (usize byte_offset = 0; byte_offset < byteCount; ++byte_offset)
         dst[byte_offset] = byte_value;
-    }
 }
 
-void zero_memory(void* destination, usize byte_count)
+void MemoryZero(void* destination, usize byteCount)
 {
     const WriteonlyBytes dst = static_cast<WriteonlyBytes>(destination);
 
-    for (usize byte_offset = 0; byte_offset < byte_count; ++byte_offset)
-    {
+    for (usize byte_offset = 0; byte_offset < byteCount; ++byte_offset)
         dst[byte_offset] = 0;
-    }
 }
 
 }

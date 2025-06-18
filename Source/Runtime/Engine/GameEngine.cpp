@@ -7,11 +7,11 @@
 namespace SE
 {
 
-SHOOTER_API GameEngine* g_game_engine = nullptr;
+SHOOTER_API GameEngine* g_GameEngine = nullptr;
 
-bool GameEngine::initialize()
+bool GameEngine::Initialize()
 {
-    if (!initialize_core_systems())
+    if (!InitializeCoreSystems())
     {
         /* There is no point of trying to continue the initialization process if critical
          * systems were not able to be initialized. */
@@ -20,36 +20,35 @@ bool GameEngine::initialize()
 
     SE_LOG_INFO("All core systems were initialized successfully.");
 
-    WindowInfo game_window_info = {};
-    game_window_info.mode = WindowMode::Windowed;
-    game_window_info.size_x = 1500;
-    game_window_info.size_y = 900;
-
-    m_game_window = create_own<Window>();
-    if (!m_game_window->initialize(game_window_info))
+    m_GameWindow = CreateOwn<Window>();
+    const bool windowInitializeResult = m_GameWindow->Initialize(WindowInfo()
+        .SetStartMode(WindowMode::Maximized)
+        .SetTitle(VIEW("Shooter Game"))
+    );
+    
+    if (!windowInitializeResult)
     {
         /* Failed to initialize the game window. As we don't have a window there is no point
          * in trying to continue the engine initialization process. */
         return false;
     }
 
-    SE_CHECK(false);
     return true;
 }
 
-void GameEngine::shutdown()
+void GameEngine::Shutdown()
 {
     /* Destroy the game window. */
-    m_game_window.release();
+    m_GameWindow.Release();
 
-    shutdown_core_systems();
+    ShutdownCoreSystems();
 }
 
-void GameEngine::execute()
+void GameEngine::Execute()
 {
-    while (!m_game_window->should_close())
+    while (!m_GameWindow->ShouldClose())
     {
-        m_game_window->pump_messages();
+        m_GameWindow->PumpMessages();
     }
 }
 

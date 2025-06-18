@@ -13,8 +13,8 @@ class Vector
 {
 public:
     /* By default, the container expands its internal memory block by a growth factor of 1.5. */
-    static constexpr usize growth_factor_numerator = 3;
-    static constexpr usize growth_factor_denominator = 2;
+    static constexpr usize GROWTH_FACTOR_NUMERATOR = 3;
+    static constexpr usize GROWTH_FACTOR_DENOMINATOR = 2;
 
     using Iterator             = T*;
     using ConstIterator        = const T*;
@@ -23,40 +23,40 @@ public:
 
 public:
     FORCEINLINE Vector()
-        : m_elements(nullptr)
-        , m_capacity(0)
-        , m_count(0)
+        : m_Elements(nullptr)
+        , m_Capacity(0)
+        , m_Count(0)
     {}
 
     FORCEINLINE Vector(const Vector& other)
-        : m_capacity(other.m_count)
-        , m_count(other.m_count)
+        : m_Capacity(other.m_Count)
+        , m_Count(other.m_Count)
     {
-        m_elements = Vector::allocate_memory(m_capacity);
-        Vector::copy_elements(m_elements, other.m_elements, m_count);
+        m_Elements = Vector::AllocateMemory(m_Capacity);
+        Vector::CopyElements(m_Elements, other.m_Elements, m_Count);
     }
 
     FORCEINLINE Vector(Vector&& other) noexcept
-        : m_elements(other.m_elements)
-        , m_capacity(other.m_capacity)
-        , m_count(other.m_count)
+        : m_Elements(other.m_Elements)
+        , m_Capacity(other.m_Capacity)
+        , m_Count(other.m_Count)
     {
-        other.m_elements = nullptr;
-        other.m_capacity = 0;
-        other.m_count = 0;
+        other.m_Elements = nullptr;
+        other.m_Capacity = 0;
+        other.m_Count = 0;
     }
 
-    FORCEINLINE Vector(std::initializer_list<T> init_list)
-        : m_capacity(init_list.size())
-        , m_count(init_list.size())
+    FORCEINLINE Vector(std::initializer_list<T> initializerList)
+        : m_Capacity(initializerList.size())
+        , m_Count(initializerList.size())
     {
-        m_elements = allocate_memory(m_capacity);
-        copy_elements(m_elements, init_list.begin(), m_count);
+        m_Elements = AllocateMemory(m_Capacity);
+        CopyElements(m_Elements, initializerList.begin(), m_Count);
     }
 
     FORCEINLINE ~Vector()
     {
-        clear_and_shrink();
+        ClearAndShrink();
     }
 
     FORCEINLINE Vector& operator=(const Vector& other)
@@ -67,11 +67,11 @@ public:
             return *this;
         }
 
-        clear();
-        ensure_capacity(other.m_count);
+        Clear();
+        EnsureCapacity(other.m_Count);
 
-        m_count = other.m_count;
-        copy_elements(m_elements, other.m_elements, m_count);
+        m_Count = other.m_Count;
+        CopyElements(m_Elements, other.m_Elements, m_Count);
 
         return *this;
     }
@@ -84,93 +84,91 @@ public:
             return *this;
         }
 
-        clear_and_shrink();
+        ClearAndShrink();
 
-        m_elements = other.m_elements;
-        m_capacity = other.m_capacity;
-        m_count = other.m_count;
+        m_Elements = other.m_Elements;
+        m_Capacity = other.m_Capacity;
+        m_Count = other.m_Count;
 
-        other.m_elements = nullptr;
-        other.m_capacity = 0;
-        other.m_count = 0;
-
-        return *this;
-    }
-
-    FORCEINLINE Vector& operator=(std::initializer_list<T> init_list)
-    {
-        clear();
-        ensure_capacity(init_list.size());
-
-        m_count = init_list.size();
-        copy_elements(m_elements, init_list.begin(), m_count);
+        other.m_Elements = nullptr;
+        other.m_Capacity = 0;
+        other.m_Count = 0;
 
         return *this;
     }
 
+    FORCEINLINE Vector& operator=(std::initializer_list<T> initializerList)
+    {
+        Clear();
+        EnsureCapacity(initializerList.size());
+
+        m_Count = initializerList.size();
+        CopyElements(m_Elements, initializerList.begin(), m_Count);
+
+        return *this;
+    }
+
 public:
-    NODISCARD FORCEINLINE T* elements() { return m_elements; }
-    NODISCARD FORCEINLINE const T* elements() const { return m_elements; }
+    NODISCARD FORCEINLINE T* Elements() { return m_Elements; }
+    NODISCARD FORCEINLINE const T* Elements() const { return m_Elements; }
 
-    NODISCARD FORCEINLINE usize capacity() const { return m_capacity; }
-    NODISCARD FORCEINLINE usize count() const { return m_count; }
+    NODISCARD FORCEINLINE usize Capacity() const { return m_Capacity; }
+    NODISCARD FORCEINLINE usize Count() const { return m_Count; }
 
-    NODISCARD FORCEINLINE bool is_empty() const { return m_count == 0; }
-    NODISCARD FORCEINLINE bool has_elements() const { return m_count > 0; }
+    NODISCARD FORCEINLINE bool IsEmpty() const { return m_Count == 0; }
+    NODISCARD FORCEINLINE bool HasElements() const { return m_Count > 0; }
 
 public:
-    NODISCARD FORCEINLINE T& at(usize index)
+    NODISCARD FORCEINLINE T& At(usize index)
     {
         /* Index is out of bounds. */
-        SE_CHECK(index < m_count);
-        return m_elements[index];
+        SE_CHECK(index < m_Count);
+        return m_Elements[index];
     }
 
-    NODISCARD FORCEINLINE const T& at(usize index) const
+    NODISCARD FORCEINLINE const T& At(usize index) const
     {
         /* Index is out of bounds. */
-        SE_CHECK(index < m_count);
-        return m_elements[index];
+        SE_CHECK(index < m_Count);
+        return m_Elements[index];
     }
 
-    NODISCARD FORCEINLINE T&       first()       { SE_CHECK(has_elements()); return m_elements[0]; }
-    NODISCARD FORCEINLINE const T& first() const { SE_CHECK(has_elements()); return m_elements[0]; }
-    NODISCARD FORCEINLINE T&       last()        { SE_CHECK(has_elements()); return m_elements[m_count - 1]; }
-    NODISCARD FORCEINLINE const T& last() const  { SE_CHECK(has_elements()); return m_elements[m_count - 1]; }
+    NODISCARD FORCEINLINE T&       First()       { SE_CHECK(HasElements()); return m_Elements[0]; }
+    NODISCARD FORCEINLINE const T& First() const { SE_CHECK(HasElements()); return m_Elements[0]; }
+    NODISCARD FORCEINLINE T&       Last()        { SE_CHECK(HasElements()); return m_Elements[m_Count - 1]; }
+    NODISCARD FORCEINLINE const T& Last() const  { SE_CHECK(HasElements()); return m_Elements[m_Count - 1]; }
 
 public:
-    FORCEINLINE void add(const T& element)
+    FORCEINLINE void Add(const T& element)
     {
-        ensure_capacity(m_count + 1);
-        new (m_elements + m_count) T(element);
-        ++m_count;
+        EnsureCapacity(m_Count + 1);
+        new (m_Elements + m_Count) T(element);
+        ++m_Count;
     }
 
-    FORCEINLINE void add(T&& element)
+    FORCEINLINE void Add(T&& element)
     {
-        ensure_capacity(m_count + 1);
-        new (m_elements + m_count) T(move(element));
-        ++m_count;
+        EnsureCapacity(m_Count + 1);
+        new (m_Elements + m_Count) T(Move(element));
+        ++m_Count;
     }
 
     template<typename... Args>
-    FORCEINLINE void emplace(Args&&... args)
+    FORCEINLINE void Emplace(Args&&... args)
     {
-        ensure_capacity(m_count + 1);
-        new (m_elements + m_count) T(forward<Args>(args)...);
-        ++m_count;
+        EnsureCapacity(m_Count + 1);
+        new (m_Elements + m_Count) T(Forward<Args>(args)...);
+        ++m_Count;
     }
 
-    FORCEINLINE void add(std::initializer_list<T> init_list)
+    FORCEINLINE void Add(std::initializer_list<T> initializerList)
     {
-        ensure_capacity(m_count + init_list.size());
+        EnsureCapacity(m_Count + initializerList.size());
         
-        for (usize index = m_count; index < m_count + init_list.size(); ++index)
-        {
-            new (m_elements + index) T(init_list.begin()[index]);
-        }
+        for (usize index = m_Count; index < m_Count + initializerList.size(); ++index)
+            new (m_Elements + index) T(initializerList.begin()[index]);
 
-        m_count += init_list.size();
+        m_Count += initializerList.size();
     }
 
 public:
@@ -180,139 +178,127 @@ public:
      * By performing this swap, the operation time complexity remains O(1), but the elements order
      * will not be conserved.
      */
-    FORCEINLINE void remove_index_unordered(usize element_index)
+    FORCEINLINE void RemoveIndexUnordered(usize elementIndex)
     {
         /* Index is out of bounds. */
-        SE_CHECK(element_index < m_count);
+        SE_CHECK(elementIndex < m_Count);
 
-        m_elements[element_index].~T();
-        --m_count;
+        m_Elements[elementIndex].~T();
+        --m_Count;
 
-        if (element_index != m_count)
+        if (elementIndex != m_Count)
         {
-            new (m_elements + element_index) T(m_elements[m_count]);
-            m_elements[m_count].~T();
+            new (m_Elements + elementIndex) T(m_Elements[m_Count]);
+            m_Elements[m_Count].~T();
         }
     }
 
 public:
-    /* Returns 'invalid_index' if the vector doesn't contain the provided element. */
-    FORCEINLINE usize find_index_of(const T& element) const
+    /* Returns 'INVALID_INDEX' if the vector doesn't contain the provided element. */
+    FORCEINLINE usize FindIndexOf(const T& element) const
     {
-        for (usize index = 0; index < m_count; ++index)
+        for (usize index = 0; index < m_Count; ++index)
         {
-            if (m_elements[index] == element)
-            {
+            if (m_Elements[index] == element)
                 return index;
-            }
         }
 
-        return invalid_index;
+        return INVALID_INDEX;
     }
 
-    FORCEINLINE bool contains(const T& element) const
+    FORCEINLINE bool Contains(const T& element) const
     {
-        const usize element_index = find_index_of(element);
-        return element_index != invalid_index;
+        const usize elementIndex = FindIndexOf(element);
+        return elementIndex != INVALID_INDEX;
     }
 
 public:
-    FORCEINLINE void clear()
+    FORCEINLINE void Clear()
     {
-        for (usize index = 0; index < m_count; ++index)
-        {
-            m_elements[index].~T();
-        }
-
-        m_count = 0;
+        for (usize index = 0; index < m_Count; ++index)
+            m_Elements[index].~T();
+        m_Count = 0;
     }
-    FORCEINLINE void clear_and_shrink()
+
+    FORCEINLINE void ClearAndShrink()
     {
-        clear();
-        Vector::free_memory(m_elements, m_capacity);
-        m_elements = nullptr;
-        m_capacity = 0;
+        Clear();
+        Vector::FreeMemory(m_Elements, m_Capacity);
+        m_Elements = nullptr;
+        m_Capacity = 0;
     }
      
-    FORCEINLINE void ensure_capacity(usize required_capacity)
+    FORCEINLINE void EnsureCapacity(usize requiredCapacity)
     {
-        if (required_capacity <= m_capacity)
+        if (requiredCapacity <= m_Capacity)
         {
             /* No expansion is needed. */
             return;
         }
 
-        usize new_capacity = (m_capacity * growth_factor_numerator) / growth_factor_denominator;
-        if (new_capacity < required_capacity)
+        usize newCapacity = (m_Capacity * GROWTH_FACTOR_NUMERATOR) / GROWTH_FACTOR_DENOMINATOR;
+        if (newCapacity < requiredCapacity)
         {
             /* The default (geometric) expansion size is not sufficient for storing the
              * required number of elements. */
-            new_capacity = required_capacity;
+            newCapacity = requiredCapacity;
         }
 
-        T* new_elements = Vector::allocate_memory(new_capacity);
-        move_elements(new_elements, m_elements, m_count);
-        Vector::free_memory(m_elements, m_capacity);
+        T* newElements = Vector::AllocateMemory(newCapacity);
+        MoveElements(newElements, m_Elements, m_Count);
+        Vector::FreeMemory(m_Elements, m_Capacity);
 
-        m_elements = new_elements;
-        m_capacity = new_capacity;
+        m_Elements = newElements;
+        m_Capacity = newCapacity;
     }
 
 public:
-    NODISCARD FORCEINLINE Iterator begin() { return Iterator(m_elements); }
-    NODISCARD FORCEINLINE Iterator end() { return Iterator(m_elements + m_count); }
+    NODISCARD FORCEINLINE Iterator begin() { return Iterator(m_Elements); }
+    NODISCARD FORCEINLINE Iterator end() { return Iterator(m_Elements + m_Count); }
 
-    NODISCARD FORCEINLINE ConstIterator begin() const { return ConstIterator(m_elements); }
-    NODISCARD FORCEINLINE ConstIterator end() const { return ConstIterator(m_elements + m_count); }
+    NODISCARD FORCEINLINE ConstIterator begin() const { return ConstIterator(m_Elements); }
+    NODISCARD FORCEINLINE ConstIterator end() const { return ConstIterator(m_Elements + m_Count); }
 
-    NODISCARD FORCEINLINE ReverseIterator rbegin() { return ReverseIterator(m_elements + m_count - 1); }
-    NODISCARD FORCEINLINE ReverseIterator rend() { return ReverseIterator(m_elements - 1); }
+    NODISCARD FORCEINLINE ReverseIterator rbegin() { return ReverseIterator(m_Elements + m_Count - 1); }
+    NODISCARD FORCEINLINE ReverseIterator rend() { return ReverseIterator(m_Elements - 1); }
 
-    NODISCARD FORCEINLINE ReverseConstIterator rbegin() const { return ReverseConstIterator(m_elements + m_count - 1); }
-    NODISCARD FORCEINLINE ReverseConstIterator rend() const { return ReverseConstIterator(m_elements - 1); }
+    NODISCARD FORCEINLINE ReverseConstIterator rbegin() const { return ReverseConstIterator(m_Elements + m_Count - 1); }
+    NODISCARD FORCEINLINE ReverseConstIterator rend() const { return ReverseConstIterator(m_Elements - 1); }
 
 private:
-    FORCEINLINE static T* allocate_memory(usize in_capacity)
+    FORCEINLINE static T* AllocateMemory(usize capacity)
     {
-        if (in_capacity == 0)
-        {
+        if (capacity == 0)
             return nullptr;
-        }
-
-        return static_cast<T*>(::operator new(in_capacity * sizeof(T)));
+        return static_cast<T*>(::operator new(capacity * sizeof(T)));
     }
 
-    FORCEINLINE static void free_memory(T* in_elements, usize in_capacity)
+    FORCEINLINE static void FreeMemory(T* elements, usize capacity)
     {
-        if (in_capacity == 0)
-        {
+        if (capacity == 0)
             return;
-        }
-
-        ::operator delete(in_elements);
+        ::operator delete(elements);
     }
 
-    FORCEINLINE static void copy_elements(T* destination_elements, const T* source_elements, usize in_count)
+    FORCEINLINE static void CopyElements(T* destinationElements, const T* sourceElements, usize count)
     {
-        for (usize index = 0; index < in_count; ++index)
-        {
-            new (destination_elements + index) T(source_elements[index]);
-        }
+        for (usize index = 0; index < count; ++index)
+            new (destinationElements + index) T(sourceElements[index]);
     }
 
-    FORCEINLINE static void move_elements(T* destination_elements, T* source_elements, usize in_count)
+    FORCEINLINE static void MoveElements(T* destinationElements, T* sourceElements, usize count)
     {
-        for (usize index = 0; index < in_count; ++index)
+        for (usize index = 0; index < count; ++index)
         {
-            new (destination_elements + index) T(move(source_elements[index]));
-            source_elements[index].~T();
+            new (destinationElements + index) T(Move(sourceElements[index]));
+            sourceElements[index].~T();
         }
     }
 
 private:
-    T* m_elements;
-    usize m_capacity;
-    usize m_count;
+    T* m_Elements;
+    usize m_Capacity;
+    usize m_Count;
 };
 
 }

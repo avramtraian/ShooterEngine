@@ -16,28 +16,28 @@ public:
     friend class OwnPtr;
 
     template<typename Q>
-    friend OwnPtr<Q> adopt_own(Q*);
+    friend OwnPtr<Q> AdoptOwn(Q*);
 
     SE_MAKE_NONCOPYABLE(OwnPtr);
 
 public:
     FORCEINLINE OwnPtr()
-        : m_instance(nullptr)
+        : m_Instance(nullptr)
     {}
 
     FORCEINLINE OwnPtr(OwnPtr&& other) noexcept
-        : m_instance(other.m_instance)
+        : m_Instance(other.m_Instance)
     {
-        other.m_instance = nullptr;
+        other.m_Instance = nullptr;
     }
 
     FORCEINLINE OwnPtr(NullptrType)
-        : m_instance(nullptr)
+        : m_Instance(nullptr)
     {}
 
     FORCEINLINE ~OwnPtr()
     {
-        release();
+        Release();
     }
 
     FORCEINLINE OwnPtr& operator=(OwnPtr&& other) noexcept
@@ -48,78 +48,78 @@ public:
             return *this;
         }
 
-        release();
-        m_instance = other.m_instance;
-        other.m_instance = nullptr;
+        Release();
+        m_Instance = other.m_Instance;
+        other.m_Instance = nullptr;
 
         return *this;
     }
 
     FORCEINLINE OwnPtr& operator=(NullptrType)
     {
-        release();
+        Release();
         return *this;
     }
 
 public:
-    NODISCARD FORCEINLINE bool is_valid() const { return m_instance != nullptr; }
+    NODISCARD FORCEINLINE bool IsValid() const { return m_Instance != nullptr; }
 
-    NODISCARD FORCEINLINE T* get()
+    NODISCARD FORCEINLINE T* Get()
     {
-        SE_CHECK(is_valid());
-        return m_instance;
+        SE_CHECK(IsValid());
+        return m_Instance;
     }
 
-    NODISCARD FORCEINLINE const T* get() const
+    NODISCARD FORCEINLINE const T* Get() const
     {
-        SE_CHECK(is_valid());
-        return m_instance;
+        SE_CHECK(IsValid());
+        return m_Instance;
     }
 
-    NODISCARD FORCEINLINE T* operator->() { return get(); }
-    NODISCARD FORCEINLINE const T* operator->() const { return get(); }
+    NODISCARD FORCEINLINE T* operator->() { return Get(); }
+    NODISCARD FORCEINLINE const T* operator->() const { return Get(); }
     
-    NODISCARD FORCEINLINE T& operator*() { return *get(); }
-    NODISCARD FORCEINLINE const T& operator*() const { return *get(); }
+    NODISCARD FORCEINLINE T& operator*() { return *Get(); }
+    NODISCARD FORCEINLINE const T& operator*() const { return *Get(); }
 
 public:
-    FORCEINLINE void release()
+    FORCEINLINE void Release()
     {
-        if (m_instance)
+        if (m_Instance)
         {
-            delete m_instance;
-            m_instance = nullptr;
+            delete m_Instance;
+            m_Instance = nullptr;
         }
     }
 
     template<typename Q>
-    NODISCARD FORCEINLINE OwnPtr<Q> as()
+    NODISCARD FORCEINLINE OwnPtr<Q> As()
     {
-        Q* instance = static_cast<Q*>(m_instance);
-        m_instance = nullptr;
+        Q* instance = static_cast<Q*>(m_Instance);
+        m_Instance = nullptr;
 
-        OwnPtr<Q> own_ptr;
-        own_ptr.m_instance = instance;
-        return own_ptr;
+        OwnPtr<Q> castedOwnPtr;
+        castedOwnPtr.m_Instance = instance;
+        return castedOwnPtr;
     }
 
 private:
-    T* m_instance;
+    T* m_Instance;
 };
 
 template<typename T>
-NODISCARD FORCEINLINE OwnPtr<T> adopt_own(T* instance)
+NODISCARD FORCEINLINE OwnPtr<T> AdoptOwn(T* instance)
 {
-    OwnPtr<T> own_ptr;
-    own_ptr.m_instance = instance;
-    return own_ptr;
+    OwnPtr<T> ownPtr;
+    ownPtr.m_Instance = instance;
+    return ownPtr;
 }
 
 template<typename T, typename... Args>
-NODISCARD FORCEINLINE OwnPtr<T> create_own(Args&&... args)
+NODISCARD FORCEINLINE OwnPtr<T> CreateOwn(Args&&... args)
 {
-    T* instance = new T(forward<Args>(args)...);
-    return adopt_own<T>(instance);
+    T* instance = new T(Forward<Args>(args)...);
+    return AdoptOwn<T>(instance);
 }
 
 }

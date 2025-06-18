@@ -19,9 +19,21 @@ enum class WindowsWindowMode : uint8
 
 struct WindowsWindowInfo
 {
-    WindowsWindowMode mode { WindowsWindowMode::Windowed };
-    Optional<uint32> size_x;
-    Optional<uint32> size_y;
+public:
+    WindowsWindowMode StartMode { WindowsWindowMode::Windowed };
+    bool Fullscreen { false };
+    String Title { VIEW("Unnamed Window") };
+    Optional<int32> PositionX;
+    Optional<int32> PositionY;
+    Optional<uint32> SizeX;
+    Optional<uint32> SizeY;
+
+public:
+    inline WindowsWindowInfo& SetStartMode  (WindowsWindowMode value)    { StartMode = value;                  return *this; }
+    inline WindowsWindowInfo& SetFullscreen (bool fullscreen)            { Fullscreen = fullscreen;            return *this; }
+    inline WindowsWindowInfo& SetTitle      (StringView title)           { Title = title;                      return *this; }
+    inline WindowsWindowInfo& SetPosition   (uint32 posX, uint32 posY)   { PositionX = posX; PositionY = posY; return *this; }
+    inline WindowsWindowInfo& SetSize       (uint32 sizeX, uint32 sizeY) { SizeX = sizeX; SizeY = sizeY;       return *this; }
 };
 
 class WindowsWindow
@@ -33,33 +45,33 @@ public:
     SHOOTER_API WindowsWindow();
     SHOOTER_API ~WindowsWindow();
 
-    SHOOTER_API bool initialize(const WindowsWindowInfo& info);
-    SHOOTER_API void pump_messages();
+    SHOOTER_API bool Initialize(const WindowsWindowInfo& info);
+    SHOOTER_API void PumpMessages();
 
 public:
     /* Returns zero (false) if the window hasn't been initialized yet. */
-    NODISCARD SHOOTER_API bool should_close() const;
+    NODISCARD SHOOTER_API bool ShouldClose() const;
     
     /* These return zero (0) if the window hasn't been initialized yet. */
-    NODISCARD SHOOTER_API uint32 get_size_x() const;
-    NODISCARD SHOOTER_API uint32 get_size_y() const;
+    NODISCARD SHOOTER_API uint32 GetSizeX() const;
+    NODISCARD SHOOTER_API uint32 GetSizeY() const;
 
     /* Returns zero (nullptr) if the window hasn't been initialized yet. */
-    NODISCARD SHOOTER_API void* get_native_handle() const;
+    NODISCARD SHOOTER_API void* GetNativeHandle() const;
 
 private:
-    static void win32_register_window_class();
-    static LRESULT win32_window_procedure(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
+    static void Win32RegisterWindowClass();
+    static LRESULT Win32WindowProcedure(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
 
     /* Returns a null pointer if no window with the specified native handle is found in the internal table. */
-    static WindowsWindow* find_window_from_handle(HWND native_handle);
+    static WindowsWindow* FindWindowFromHandle(HWND native_handle);
 
 private:
-    static Vector<WindowsWindow*> s_window_table;
+    static Vector<WindowsWindow*> s_WindowTable;
 
 private:
-    HWND m_native_handle;
-    bool m_should_close;
+    HWND m_NativeHandle;
+    bool m_ShouldClose;
 };
 
 }

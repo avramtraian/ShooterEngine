@@ -35,9 +35,9 @@ using ReadWriteBytes = ReadWriteByte*;
 
 using NullptrType = decltype(nullptr);
 
-static constexpr usize invalid_size   = static_cast<usize>(-1);
-static constexpr usize invalid_offset = static_cast<usize>(-1);
-static constexpr usize invalid_index  = static_cast<usize>(-1);
+static constexpr usize INVALID_SIZE   = static_cast<usize>(-1);
+static constexpr usize INVALID_OFFSET = static_cast<usize>(-1);
+static constexpr usize INVALID_INDEX  = static_cast<usize>(-1);
 
 namespace Implementation
 {
@@ -59,19 +59,19 @@ template<typename T> using RemoveConst     = typename Implementation::RemoveCons
 template<typename T> using RemovePointer   = typename Implementation::RemovePointer<T>::Type;
 
 template<typename T>
-NODISCARD FORCEINLINE RemoveReference<T>&& move(T&& instance) noexcept
+NODISCARD FORCEINLINE RemoveReference<T>&& Move(T&& instance) noexcept
 {
     return static_cast<RemoveReference<T>&&>(instance);
 }
 
 template<typename T>
-NODISCARD FORCEINLINE T&& forward(RemoveReference<T>& instance) noexcept
+NODISCARD FORCEINLINE T&& Forward(RemoveReference<T>& instance) noexcept
 {
     return static_cast<T&&>(instance);
 }
 
 template<typename T>
-NODISCARD FORCEINLINE T&& forward(RemoveReference<T>&& instance) noexcept
+NODISCARD FORCEINLINE T&& Forward(RemoveReference<T>&& instance) noexcept
 {
     return static_cast<T&&>(instance);
 }

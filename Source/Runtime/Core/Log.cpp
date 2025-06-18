@@ -6,17 +6,17 @@
 namespace SE
 {
 
-bool Logger::initialize()
+bool Logger::Initialize()
 {
     return true;
 }
 
-void Logger::shutdown()
+void Logger::Shutdown()
 {}
 
-void Logger::submit(LogCategory category, const char* message)
+void Logger::Submit(LogCategory category, const char* message)
 {
-    static constexpr const char* s_category_table[] =
+    static constexpr const char* s_CategoryTable[] =
     {
         "DEBUG", /* 0 */
         "TRACE", /* 1 */
@@ -25,7 +25,7 @@ void Logger::submit(LogCategory category, const char* message)
         "ERROR", /* 4 */
     };
 
-    static constexpr const char* s_padding_table[] =
+    static constexpr const char* s_PaddingTable[] =
     {
         "",  /* 0 (Debug) */
         "",  /* 1 (Trace) */
@@ -34,17 +34,17 @@ void Logger::submit(LogCategory category, const char* message)
         "",  /* 4 (Error) */
     };
 
-    static char s_log_message_buffer[4096] = {};
-    const usize category_index = static_cast<usize>(category);
+    static char s_LogMessageBuffer[4096] = {};
+    const usize categoryIndex = static_cast<usize>(category);
 
-    const int written_byte_count = sprintf_s(
-        s_log_message_buffer,
+    const int writtenByteCount = sprintf_s(
+        s_LogMessageBuffer,
         "[%s]: %s%s\n",
-        s_category_table[category_index], s_padding_table[category_index], message
+        s_CategoryTable[categoryIndex], s_PaddingTable[categoryIndex], message
     );
 
-    SE_CHECK(written_byte_count >= 0 && written_byte_count < sizeof(s_log_message_buffer));
-    printf_s(s_log_message_buffer);
+    SE_CHECK(writtenByteCount >= 0 && writtenByteCount < sizeof(s_LogMessageBuffer));
+    printf_s(s_LogMessageBuffer);
 }
 
 }

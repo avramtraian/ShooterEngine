@@ -12,8 +12,8 @@ namespace SE
 class String
 {
 public:
-    static constexpr usize inline_capacity = sizeof(char*);
-    static_assert(inline_capacity > 0);
+    static constexpr usize INLINE_CAPACITY = sizeof(char*);
+    static_assert(INLINE_CAPACITY > 0);
 
 public:
     SHOOTER_API String();
@@ -28,39 +28,39 @@ public:
     SHOOTER_API String& operator=(StringView view);
 
 public:
-    NODISCARD FORCEINLINE bool is_stored_inline() const { return m_byte_count <= inline_capacity; }
-    NODISCARD FORCEINLINE bool is_stored_on_heap() const { return m_byte_count > inline_capacity; }
+    NODISCARD FORCEINLINE bool IsStoredInline() const { return m_ByteCount <= INLINE_CAPACITY; }
+    NODISCARD FORCEINLINE bool IsStoredOnHeap() const { return m_ByteCount > INLINE_CAPACITY; }
 
-    NODISCARD FORCEINLINE const char* characters() const { return is_stored_inline() ? m_inline_buffer : m_heap_buffer; }
+    NODISCARD FORCEINLINE const char* Characters() const { return IsStoredInline() ? m_InlineBuffer: m_HeapBuffer; }
 
-    NODISCARD FORCEINLINE usize byte_count() const
+    NODISCARD FORCEINLINE usize ByteCount() const
     {
         /* The string container should never be in the state where the internal character array
          * doesn't contain the null-termination byte. */
-        SE_CHECK(m_byte_count > 0);
+        SE_CHECK(m_ByteCount > 0);
 
-        return m_byte_count - sizeof(char);
+        return m_ByteCount - sizeof(char);
     }
 
-    NODISCARD FORCEINLINE usize byte_count_with_null_terminator() const
+    NODISCARD FORCEINLINE usize ByteCountWithNullTerminator() const
     {
         /* The string container should never be in the state where the internal character array
          * doesn't contain the null-termination byte. */
-        SE_CHECK(m_byte_count > 0);
+        SE_CHECK(m_ByteCount > 0);
 
-        return m_byte_count;
+        return m_ByteCount;
     }
 
 private:
-    NODISCARD static char* allocate_memory(usize in_byte_count);
-    static void free_memory(char* in_heap_buffer, usize in_byte_count);
+    NODISCARD static char* AllocateMemory(usize byteCount);
+    static void FreeMemory(char* heapBuffer, usize byteCount);
 
 private:
-    usize m_byte_count;
+    usize m_ByteCount;
     union
     {
-        char* m_heap_buffer;
-        char m_inline_buffer[inline_capacity];
+        char* m_HeapBuffer;
+        char m_InlineBuffer[INLINE_CAPACITY];
     };
 };
 

@@ -8,64 +8,64 @@ namespace SE
 
 String::String()
 {
-    m_byte_count = 1;
-    m_inline_buffer[0] = 0;
+    m_ByteCount = 1;
+    m_InlineBuffer[0] = 0;
 }
 
 String::~String()
 {
-    if (is_stored_on_heap())
+    if (IsStoredOnHeap())
     {
-        String::free_memory(m_heap_buffer, m_byte_count);
+        String::FreeMemory(m_HeapBuffer, m_ByteCount);
     }
 }
 
 String::String(const String& other)
-    : m_byte_count(other.m_byte_count)
+    : m_ByteCount(other.m_ByteCount)
 {
-    if (is_stored_inline())
+    if (IsStoredInline())
     {
-        copy_memory(m_inline_buffer, other.m_inline_buffer, m_byte_count);
+        MemoryCopy(m_InlineBuffer, other.m_InlineBuffer, m_ByteCount);
     }
     else
     {
-        m_heap_buffer = String::allocate_memory(m_byte_count);
-        copy_memory(m_heap_buffer, other.m_heap_buffer, m_byte_count);
+        m_HeapBuffer = String::AllocateMemory(m_ByteCount);
+        MemoryCopy(m_HeapBuffer, other.m_HeapBuffer, m_ByteCount);
     }
 }
 
 String::String(String&& other) noexcept
-    : m_byte_count(other.m_byte_count)
+    : m_ByteCount(other.m_ByteCount)
 {
-    if (is_stored_inline())
+    if (IsStoredInline())
     {
-        copy_memory(m_inline_buffer, other.m_inline_buffer, m_byte_count);
-        zero_memory(other.m_inline_buffer, inline_capacity);
+        MemoryCopy(m_InlineBuffer, other.m_InlineBuffer, m_ByteCount);
+        MemoryZero(other.m_InlineBuffer, INLINE_CAPACITY);
     }
     else
     {
-        m_heap_buffer = other.m_heap_buffer;
-        other.m_heap_buffer = nullptr;
+        m_HeapBuffer = other.m_HeapBuffer;
+        other.m_HeapBuffer = nullptr;
     }
 
     /* Invalidate the other string. */
-    other.m_byte_count = 1;
-    other.m_inline_buffer[0] = 0;
+    other.m_ByteCount = 1;
+    other.m_InlineBuffer[0] = 0;
 }
 
 String::String(StringView view)
-    : m_byte_count(view.byte_count() + 1)
+    : m_ByteCount(view.ByteCount() + 1)
 {
-    char* destination_buffer = m_inline_buffer;
+    char* destination_buffer = m_InlineBuffer;
 
-    if (is_stored_on_heap())
+    if (IsStoredOnHeap())
     {
-        m_heap_buffer = String::allocate_memory(m_byte_count);
-        destination_buffer = m_heap_buffer;
+        m_HeapBuffer = String::AllocateMemory(m_ByteCount);
+        destination_buffer = m_HeapBuffer;
     }
 
-    copy_memory(destination_buffer, view.characters(), view.byte_count());
-    destination_buffer[m_byte_count - 1] = 0;
+    MemoryCopy(destination_buffer, view.Characters(), view.ByteCount());
+    destination_buffer[m_ByteCount - 1] = 0;
 }
 
 String& String::operator=(const String& other)
@@ -76,42 +76,42 @@ String& String::operator=(const String& other)
         return *this;
     }
 
-    if (other.is_stored_inline())
+    if (other.IsStoredInline())
     {
-        if (is_stored_inline())
+        if (IsStoredInline())
         {
             /* Discard the data previously stored by the string container. */
-            zero_memory(m_inline_buffer, inline_capacity);
+            MemoryZero(m_InlineBuffer, INLINE_CAPACITY);
         }
         else
         {
-            String::free_memory(m_heap_buffer, m_byte_count);
-            m_heap_buffer = nullptr;
+            String::FreeMemory(m_HeapBuffer, m_ByteCount);
+            m_HeapBuffer = nullptr;
         }
 
-        copy_memory(m_inline_buffer, other.m_inline_buffer, other.m_byte_count);
+        MemoryCopy(m_InlineBuffer, other.m_InlineBuffer, other.m_ByteCount);
     }
     else
     {
-        if (is_stored_inline())
+        if (IsStoredInline())
         {
             /* Discard the data previously stored by the string container. */
-            zero_memory(m_inline_buffer, inline_capacity);
-            m_heap_buffer = String::allocate_memory(other.m_byte_count);
+            MemoryZero(m_InlineBuffer, INLINE_CAPACITY);
+            m_HeapBuffer = String::AllocateMemory(other.m_ByteCount);
         }
         else
         {
-            if (m_byte_count != other.m_byte_count)
+            if (m_ByteCount != other.m_ByteCount)
             {
-                String::free_memory(m_heap_buffer, m_byte_count);
-                m_heap_buffer = String::allocate_memory(other.m_byte_count);
+                String::FreeMemory(m_HeapBuffer, m_ByteCount);
+                m_HeapBuffer = String::AllocateMemory(other.m_ByteCount);
             }
         }
 
-        copy_memory(m_heap_buffer, other.m_heap_buffer, other.m_byte_count);
+        MemoryCopy(m_HeapBuffer, other.m_HeapBuffer, other.m_ByteCount);
     }
 
-    m_byte_count = other.m_byte_count;
+    m_ByteCount = other.m_ByteCount;
     return *this;
 }
 
@@ -123,95 +123,95 @@ String& String::operator=(String&& other) noexcept
         return *this;
     }
 
-    if (is_stored_inline())
+    if (IsStoredInline())
     {
         /* Discard the data previously stored by the string container. */
-        zero_memory(m_inline_buffer, inline_capacity);
+        MemoryZero(m_InlineBuffer, INLINE_CAPACITY);
     }
     else
     {
-        String::free_memory(m_heap_buffer, m_byte_count);
+        String::FreeMemory(m_HeapBuffer, m_ByteCount);
     }
 
-    m_byte_count = other.m_byte_count;
+    m_ByteCount = other.m_ByteCount;
 
-    if (is_stored_inline())
+    if (IsStoredInline())
     {
-        copy_memory(m_inline_buffer, other.m_inline_buffer, m_byte_count);
-        zero_memory(other.m_inline_buffer, inline_capacity);
+        MemoryCopy(m_InlineBuffer, other.m_InlineBuffer, m_ByteCount);
+        MemoryZero(other.m_InlineBuffer, INLINE_CAPACITY);
     }
     else
     {
-        m_heap_buffer = other.m_heap_buffer;
-        other.m_heap_buffer = nullptr;
+        m_HeapBuffer = other.m_HeapBuffer;
+        other.m_HeapBuffer = nullptr;
     }
 
     /* Invalidate the other string. */
-    other.m_byte_count = 1;
-    other.m_inline_buffer[0] = 0;
+    other.m_ByteCount = 1;
+    other.m_InlineBuffer[0] = 0;
 
     return *this;
 }
 
 String& String::operator=(StringView view)
 {
-    if (view.byte_count() + 1 <= inline_capacity)
+    if (view.ByteCount() + 1 <= INLINE_CAPACITY)
     {
-        if (is_stored_inline())
+        if (IsStoredInline())
         {
             /* Discard the data previously stored by the string container. */
-            zero_memory(m_inline_buffer, inline_capacity);
+            MemoryZero(m_InlineBuffer, INLINE_CAPACITY);
         }
         else
         {
-            String::free_memory(m_heap_buffer, m_byte_count);
-            m_heap_buffer = nullptr;
+            String::FreeMemory(m_HeapBuffer, m_ByteCount);
+            m_HeapBuffer = nullptr;
         }
 
-        copy_memory(m_inline_buffer, view.characters(), view.byte_count());
-        m_inline_buffer[view.byte_count()] = 0;
+        MemoryCopy(m_InlineBuffer, view.Characters(), view.ByteCount());
+        m_InlineBuffer[view.ByteCount()] = 0;
     }
     else
     {
-        if (is_stored_inline())
+        if (IsStoredInline())
         {
             /* Discard the data previously stored by the string container. */
-            zero_memory(m_inline_buffer, inline_capacity);
-            m_heap_buffer = String::allocate_memory(view.byte_count() + 1);
+            MemoryZero(m_InlineBuffer, INLINE_CAPACITY);
+            m_HeapBuffer = String::AllocateMemory(view.ByteCount() + 1);
         }
         else
         {
-            if (m_byte_count != view.byte_count() + 1)
+            if (m_ByteCount != view.ByteCount() + 1)
             {
-                String::free_memory(m_heap_buffer, m_byte_count);
-                m_heap_buffer = String::allocate_memory(view.byte_count() + 1);
+                String::FreeMemory(m_HeapBuffer, m_ByteCount);
+                m_HeapBuffer = String::AllocateMemory(view.ByteCount() + 1);
             }
         }
 
-        copy_memory(m_heap_buffer, view.characters(), view.byte_count());
-        m_heap_buffer[view.byte_count()] = 0;
+        MemoryCopy(m_HeapBuffer, view.Characters(), view.ByteCount());
+        m_HeapBuffer[view.ByteCount()] = 0;
     }
 
-    m_byte_count = view.byte_count() + 1;
+    m_ByteCount = view.ByteCount() + 1;
     return *this;
 }
 
-char* String::allocate_memory(usize in_byte_count)
+char* String::AllocateMemory(usize byteCount)
 {
     /* The string container should never allocate any heap memory block that is smaller than
      * the inline buffer, as it would defeat the whole purpose of the small-string optimization. */
-    SE_CHECK(in_byte_count > inline_capacity);
+    SE_CHECK(byteCount > INLINE_CAPACITY);
     
-    return static_cast<char*>(::operator new(in_byte_count * sizeof(char)));
+    return static_cast<char*>(::operator new(byteCount * sizeof(char)));
 }
 
-void String::free_memory(char* in_heap_buffer, MAYBE_UNUSED usize in_byte_count)
+void String::FreeMemory(char* heapBuffer, MAYBE_UNUSED usize byteCount)
 {
     /* The string container should never allocate in the first place any heap memory block that is smaller
      * than the inline buffer, as it would defeat the whole purpose of the small-string optimization. */
-    SE_CHECK(in_byte_count > inline_capacity);
+    SE_CHECK(byteCount > INLINE_CAPACITY);
 
-    ::operator delete(in_heap_buffer);
+    ::operator delete(heapBuffer);
 }
 
 }

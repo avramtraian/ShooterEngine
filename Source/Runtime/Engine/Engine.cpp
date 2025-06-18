@@ -6,11 +6,11 @@
 namespace SE
 {
 
-SHOOTER_API Engine* g_engine = nullptr;
+SHOOTER_API Engine* g_Engine = nullptr;
 
-bool Engine::initialize_core_systems()
+bool Engine::InitializeCoreSystems()
 {
-    if (!Logger::initialize())
+    if (!Logger::Initialize())
     {
         return false;
     }
@@ -18,9 +18,9 @@ bool Engine::initialize_core_systems()
     return true;
 }
 
-void Engine::shutdown_core_systems()
+void Engine::ShutdownCoreSystems()
 {
-    Logger::shutdown();
+    Logger::Shutdown();
 }
 
 }

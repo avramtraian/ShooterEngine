@@ -14,7 +14,7 @@ enum class AssertionKind : uint8
     Ensure,
 };
 
-SHOOTER_API void on_assertion_failed(AssertionKind kind, const char* expression, const char* file, const char* function, uint32 line);
+SHOOTER_API void OnAssertionFailed(AssertionKind kind, const char* expression, const char* file, const char* function, uint32 line);
 
 }
 
@@ -37,33 +37,33 @@ SHOOTER_API void on_assertion_failed(AssertionKind kind, const char* expression,
 #endif // SE_CONFIGURATION_SHIPPING
 
 #if SE_ENABLE_ASSERTIONS_ASSERT
-    #define SE_ASSERT(...)                                                                                         \
-        if (!(__VA_ARGS__))                                                                                        \
-        {                                                                                                          \
-            ::SE::on_assertion_failed(::SE::AssertionKind::Assert, #__VA_ARGS__, __FILE__, SE_FUNCTION, __LINE__); \
-            SE_PLATFORM_DEBUGBREAK;                                                                                \
+    #define SE_ASSERT(...)                                                                                       \
+        if (!(__VA_ARGS__))                                                                                      \
+        {                                                                                                        \
+            ::SE::OnAssertionFailed(::SE::AssertionKind::Assert, #__VA_ARGS__, __FILE__, SE_FUNCTION, __LINE__); \
+            SE_PLATFORM_DEBUGBREAK;                                                                              \
         }
 #else
     #define SE_ASSERT(...)
 #endif // SE_ENABLE_ASSERTIONS_ASSERT
 
 #if SE_ENABLE_ASSERTIONS_CHECK
-    #define SE_CHECK(...)                                                                                         \
-        if (!(__VA_ARGS__))                                                                                       \
-        {                                                                                                         \
-            ::SE::on_assertion_failed(::SE::AssertionKind::Check, #__VA_ARGS__, __FILE__, SE_FUNCTION, __LINE__); \
-            SE_PLATFORM_DEBUGBREAK;                                                                               \
+    #define SE_CHECK(...)                                                                                       \
+        if (!(__VA_ARGS__))                                                                                     \
+        {                                                                                                       \
+            ::SE::OnAssertionFailed(::SE::AssertionKind::Check, #__VA_ARGS__, __FILE__, SE_FUNCTION, __LINE__); \
+            SE_PLATFORM_DEBUGBREAK;                                                                             \
         }
 #else
     #define SE_CHECK(...)
 #endif // SE_ENABLE_ASSERTIONS_CHECK
 
 #if SE_ENABLE_ASSERTIONS_ENSURE
-    #define SE_ENSURE(...)                                                                                         \
-        if (!(__VA_ARGS__))                                                                                        \
-        {                                                                                                          \
-            ::SE::on_assertion_failed(::SE::AssertionKind::Ensure, #__VA_ARGS__, __FILE__, SE_FUNCTION, __LINE__); \
-            SE_PLATFORM_DEBUGBREAK;                                                                                \
+    #define SE_ENSURE(...)                                                                                       \
+        if (!(__VA_ARGS__))                                                                                      \
+        {                                                                                                        \
+            ::SE::OnAssertionFailed(::SE::AssertionKind::Ensure, #__VA_ARGS__, __FILE__, SE_FUNCTION, __LINE__); \
+            SE_PLATFORM_DEBUGBREAK;                                                                              \
         }
 #else
     #define SE_ENSURE(...)

@@ -12,18 +12,18 @@ namespace SE
 class GameEngine : public Engine
 {
 public:
-    SHOOTER_API virtual bool initialize() override;
-    SHOOTER_API virtual void shutdown() override;
-    SHOOTER_API virtual void execute() override;
+    SHOOTER_API virtual bool Initialize() override;
+    SHOOTER_API virtual void Shutdown() override;
+    SHOOTER_API virtual void Execute() override;
 
 public:
     GameEngine() = default;
     virtual ~GameEngine() override = default;
 
 private:
-    OwnPtr<Window> m_game_window;
+    OwnPtr<Window> m_GameWindow;
 };
 
-SHOOTER_API extern GameEngine* g_game_engine;
+SHOOTER_API extern GameEngine* g_GameEngine;
 
 }

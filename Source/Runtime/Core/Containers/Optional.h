@@ -13,44 +13,44 @@ class Optional
 {
 public:
     FORCEINLINE Optional()
-        : m_has_value(false)
+        : m_HasValue(false)
     {}
 
     FORCEINLINE Optional(const Optional& other)
-        : m_has_value(other.m_has_value)
+        : m_HasValue(other.m_HasValue)
     {
-        if (m_has_value)
+        if (m_HasValue)
         {
-            new (m_value_buffer) T(other.unchecked_value());
+            new (m_ValueBuffer) T(other.UncheckedValue());
         }
     }
 
     FORCEINLINE Optional(Optional&& other) noexcept
-        : m_has_value(other.m_has_value)
+        : m_HasValue(other.m_HasValue)
     {
-        if (m_has_value)
+        if (m_HasValue)
         {
-            new (m_value_buffer) T(move(other.unchecked_value()));
-            other.unchecked_value().~T();
-            other.m_has_value = false;
+            new (m_ValueBuffer) T(Move(other.UncheckedValue()));
+            other.UncheckedValue().~T();
+            other.m_HasValue = false;
         }
     }
 
     FORCEINLINE Optional(const T& value)
-        : m_has_value(true)
+        : m_HasValue(true)
     {
-        new (m_value_buffer) T(value);
+        new (m_ValueBuffer) T(value);
     }
 
     FORCEINLINE Optional(T&& value)
-        : m_has_value(true)
+        : m_HasValue(true)
     {
-        new (m_value_buffer) T(move(value));
+        new (m_ValueBuffer) T(Move(value));
     }
 
     FORCEINLINE ~Optional()
     {
-        clear();
+        Clear();
     }
 
     FORCEINLINE Optional& operator=(const Optional& other)
@@ -61,12 +61,12 @@ public:
             return *this;
         }
 
-        clear();
-        m_has_value = other.m_has_value;
+        Clear();
+        m_HasValue = other.m_HasValue;
 
-        if (m_has_value)
+        if (m_HasValue)
         {
-            new (m_value_buffer) T(other.unchecked_value());
+            new (m_ValueBuffer) T(other.UncheckedValue());
         }
 
         return *this;
@@ -80,14 +80,14 @@ public:
             return *this;
         }
 
-        clear();
-        m_has_value = other.m_has_value;
+        Clear();
+        m_HasValue = other.m_HasValue;
 
-        if (m_has_value)
+        if (m_HasValue)
         {
-            new (m_value_buffer) T(move(other.unchecked_value()));
-            other.unchecked_value().~T();
-            other.m_has_value = false;
+            new (m_ValueBuffer) T(Move(other.UncheckedValue()));
+            other.UncheckedValue().~T();
+            other.m_HasValue = false;
         }
 
         return *this;
@@ -95,68 +95,65 @@ public:
 
     FORCEINLINE Optional& operator=(const T& value)
     {
-        clear();
-        new (m_value_buffer) T(value);
-        m_has_value = true;
+        Clear();
+        new (m_ValueBuffer) T(value);
+        m_HasValue = true;
         return *this;
     }
 
     FORCEINLINE Optional& operator=(T&& value)
     {
-        clear();
-        new (m_value_buffer) T(move(value));
-        m_has_value = true;
+        Clear();
+        new (m_ValueBuffer) T(Move(value));
+        m_HasValue = true;
         return *this;
     }
 
 public:
-    NODISCARD FORCEINLINE bool has_value() const { return m_has_value; }
+    NODISCARD FORCEINLINE bool HasValue() const { return m_HasValue; }
 
-    NODISCARD FORCEINLINE T& value()
+    NODISCARD FORCEINLINE T& Value()
     {
-        SE_CHECK(has_value());
-        return unchecked_value();
+        SE_CHECK(HasValue());
+        return UncheckedValue();
     }
 
-    NODISCARD FORCEINLINE const T& value() const
+    NODISCARD FORCEINLINE const T& Value() const
     {
-        SE_CHECK(has_value());
-        return unchecked_value();
+        SE_CHECK(HasValue());
+        return UncheckedValue();
     }
 
-    NODISCARD FORCEINLINE T& operator*() { return value(); }
-    NODISCARD FORCEINLINE const T& operator*() const { return value(); }
+    NODISCARD FORCEINLINE T& operator*() { return Value(); }
+    NODISCARD FORCEINLINE const T& operator*() const { return Value(); }
 
-    NODISCARD FORCEINLINE T* operator->() { return &value(); }
-    NODISCARD FORCEINLINE const T* operator->() const { return &value(); }
+    NODISCARD FORCEINLINE T* operator->() { return &Value(); }
+    NODISCARD FORCEINLINE const T* operator->() const { return &Value(); }
 
-    NODISCARD FORCEINLINE const T& value_or(const T& fallback_value) const
+    NODISCARD FORCEINLINE const T& ValueOr(const T& fallbackValue) const
     {
-        if (m_has_value)
-        {
-            return unchecked_value();
-        }
-
-        return fallback_value;
+        if (m_HasValue)
+            return UncheckedValue();
+        return fallbackValue;
     }
 
 public:
-    FORCEINLINE void clear()
+    FORCEINLINE void Clear()
     {
-        if (m_has_value)
+        if (m_HasValue)
         {
-            unchecked_value().~T();
-            m_has_value = false;
+            UncheckedValue().~T();
+            m_HasValue = false;
         }
     }
 
 private:
-    NODISCARD FORCEINLINE T& unchecked_value() { return *reinterpret_cast<T*>(m_value_buffer); }
-    NODISCARD FORCEINLINE const T& unchecked_value() const { return *reinterpret_cast<const T*>(m_value_buffer); }
+    NODISCARD FORCEINLINE T& UncheckedValue() { return *reinterpret_cast<T*>(m_ValueBuffer); }
+    NODISCARD FORCEINLINE const T& UncheckedValue() const { return *reinterpret_cast<const T*>(m_ValueBuffer); }
 
 private:
-    alignas(T) uint8 m_value_buffer[sizeof(T)];
-    bool m_has_value;
+    alignas(T) uint8 m_ValueBuffer[sizeof(T)];
+    bool m_HasValue;
 };
 
 }

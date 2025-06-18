@@ -4,7 +4,7 @@
 
 #include <Runtime/Core/CoreTypes.h>
 
-#define VIEW(string_literal) ::SE::StringView::from_utf8(string_literal, sizeof(string_literal) - 1)
+#define VIEW(string_literal) ::SE::StringView::FromUTF8(string_literal, sizeof(string_literal) - 1)
 
 namespace SE
 {
@@ -12,61 +12,61 @@ namespace SE
 class StringView
 {
 public:
-    NODISCARD FORCEINLINE static StringView from_utf8(const char* characters, usize byte_count)
+    NODISCARD FORCEINLINE static StringView FromUTF8(const char* characters, usize byteCount)
     {
         StringView view;
-        view.m_characters = characters;
-        view.m_byte_count = byte_count;
+        view.m_Characters = characters;
+        view.m_ByteCount = byteCount;
         return view;
     }
 
-    NODISCARD SHOOTER_API static StringView from_utf8(const char* null_terminated_characters);
+    NODISCARD SHOOTER_API static StringView FromUTF8(const char* nullTerminatedCharacters);
 
 public:
     FORCEINLINE StringView()
-        : m_characters(nullptr)
-        , m_byte_count(0)
+        : m_Characters(nullptr)
+        , m_ByteCount(0)
     {}
 
     FORCEINLINE StringView(const StringView& other)
-        : m_characters(other.m_characters)
-        , m_byte_count(other.m_byte_count)
+        : m_Characters(other.m_Characters)
+        , m_ByteCount(other.m_ByteCount)
     {}
 
     FORCEINLINE StringView(StringView&& other) noexcept
-        : m_characters(other.m_characters)
-        , m_byte_count(other.m_byte_count)
+        : m_Characters(other.m_Characters)
+        , m_ByteCount(other.m_ByteCount)
     {
-        other.m_characters = nullptr;
-        other.m_byte_count = 0;
+        other.m_Characters = nullptr;
+        other.m_ByteCount = 0;
     }
 
     FORCEINLINE StringView& operator=(const StringView& other)
     {
-        m_characters = other.m_characters;
-        m_byte_count = other.m_byte_count;
+        m_Characters = other.m_Characters;
+        m_ByteCount = other.m_ByteCount;
         return *this;
     }
 
     FORCEINLINE StringView& operator=(StringView&& other) noexcept
     {
-        m_characters = other.m_characters;
-        m_byte_count = other.m_byte_count;
-        other.m_characters = nullptr;
-        other.m_byte_count = 0;
+        m_Characters = other.m_Characters;
+        m_ByteCount = other.m_ByteCount;
+        other.m_Characters = nullptr;
+        other.m_ByteCount = 0;
         return *this;
     }
 
 public:
-    NODISCARD FORCEINLINE const char* characters() const { return m_characters; }
-    NODISCARD FORCEINLINE usize byte_count() const { return m_byte_count; }
+    NODISCARD FORCEINLINE const char* Characters() const { return m_Characters; }
+    NODISCARD FORCEINLINE usize ByteCount() const { return m_ByteCount; }
 
-    NODISCARD FORCEINLINE bool is_empty() const { return m_byte_count == 0; }
-    NODISCARD FORCEINLINE bool has_characters() const { return m_byte_count > 0; }
+    NODISCARD FORCEINLINE bool IsEmpty() const { return m_ByteCount == 0; }
+    NODISCARD FORCEINLINE bool HasCharacters() const { return m_ByteCount > 0; }
 
 private:
-    const char* m_characters;
-    usize m_byte_count;
+    const char* m_Characters;
+    usize m_ByteCount;
 };
 
 }
