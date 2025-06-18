@@ -16,7 +16,7 @@ void copy_memory(void* destination, const void* source, usize byte_count)
     }
 }
 
-void set_memory(void* destination, u8 byte_value, usize byte_count)
+void set_memory(void* destination, uint8 byte_value, usize byte_count)
 {
     const WriteonlyBytes dst = static_cast<WriteonlyBytes>(destination);
 

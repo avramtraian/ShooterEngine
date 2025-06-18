@@ -7,14 +7,14 @@
 namespace SE
 {
 
-enum class AssertionKind : u8
+enum class AssertionKind : uint8
 {
     Assert,
     Check,
     Ensure,
 };
 
-SHOOTER_API void on_assertion_failed(AssertionKind kind, const char* expression, const char* file, const char* function, u32 line);
+SHOOTER_API void on_assertion_failed(AssertionKind kind, const char* expression, const char* file, const char* function, uint32 line);
 
 }
 

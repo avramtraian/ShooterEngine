@@ -11,23 +11,23 @@
 namespace SE
 {
 
-using u8  = unsigned char;
-using u16 = unsigned short;
-using u32 = unsigned int;
-using u64 = unsigned long long;
+using uint8  = unsigned char;
+using uint16 = unsigned short;
+using uint32 = unsigned int;
+using uint64 = unsigned long long;
 
-using s8  = signed char;
-using s16 = signed short;
-using s32 = signed int;
-using s64 = signed long long;
+using int8  = signed char;
+using int16 = signed short;
+using int32 = signed int;
+using int64 = signed long long;
 
 using usize   = unsigned long long;
 using ssize   = signed long long;
 using uintptr = unsigned long long;
 
-using ReadonlyByte  = const u8;
-using WriteonlyByte = u8;
-using ReadWriteByte = u8;
+using ReadonlyByte  = const uint8;
+using WriteonlyByte = uint8;
+using ReadWriteByte = uint8;
 
 using ReadonlyBytes  = ReadonlyByte*;
 using WriteonlyBytes = WriteonlyByte*;

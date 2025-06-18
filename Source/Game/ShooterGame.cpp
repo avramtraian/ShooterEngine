@@ -5,7 +5,7 @@
 namespace SE
 {
 
-static s32 guarded_main()
+static int32 guarded_main()
 {
     g_game_engine = new GameEngine();
     g_engine = g_game_engine;

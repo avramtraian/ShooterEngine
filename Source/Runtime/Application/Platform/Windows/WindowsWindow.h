@@ -10,7 +10,7 @@
 namespace SE
 {
 
-enum class WindowsWindowMode : u8
+enum class WindowsWindowMode : uint8
 {
     Windowed,
     Maximized,
@@ -20,8 +20,8 @@ enum class WindowsWindowMode : u8
 struct WindowsWindowInfo
 {
     WindowsWindowMode mode { WindowsWindowMode::Windowed };
-    Optional<u32> size_x;
-    Optional<u32> size_y;
+    Optional<uint32> size_x;
+    Optional<uint32> size_y;
 };
 
 class WindowsWindow
@@ -41,8 +41,8 @@ public:
     NODISCARD SHOOTER_API bool should_close() const;
     
     /* These return zero (0) if the window hasn't been initialized yet. */
-    NODISCARD SHOOTER_API u32 get_size_x() const;
-    NODISCARD SHOOTER_API u32 get_size_y() const;
+    NODISCARD SHOOTER_API uint32 get_size_x() const;
+    NODISCARD SHOOTER_API uint32 get_size_y() const;
 
     /* Returns zero (nullptr) if the window hasn't been initialized yet. */
     NODISCARD SHOOTER_API void* get_native_handle() const;

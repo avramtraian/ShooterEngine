@@ -11,7 +11,7 @@
 namespace SE
 {
 
-enum class LogCategory : u8
+enum class LogCategory : uint8
 {
     Debug = 0,
     Trace = 1,

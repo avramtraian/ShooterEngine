@@ -79,7 +79,7 @@ bool WindowsWindow::should_close() const
     return m_should_close;
 }
 
-u32 WindowsWindow::get_size_x() const
+uint32 WindowsWindow::get_size_x() const
 {
     if (m_native_handle == nullptr)
     {
@@ -94,7 +94,7 @@ u32 WindowsWindow::get_size_x() const
     return window_client_rect.right - window_client_rect.left;
 }
 
-u32 WindowsWindow::get_size_y() const
+uint32 WindowsWindow::get_size_y() const
 {
     if (m_native_handle == nullptr)
     {

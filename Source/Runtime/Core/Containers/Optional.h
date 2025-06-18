@@ -155,7 +155,7 @@ private:
     NODISCARD FORCEINLINE const T& unchecked_value() const { return *reinterpret_cast<const T*>(m_value_buffer); }
 
 private:
-    alignas(T) u8 m_value_buffer[sizeof(T)];
+    alignas(T) uint8 m_value_buffer[sizeof(T)];
     bool m_has_value;
 };
 
