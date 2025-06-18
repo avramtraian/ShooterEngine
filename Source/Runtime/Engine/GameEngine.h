@@ -12,13 +12,15 @@ namespace SE
 class GameEngine : public Engine
 {
 public:
+    GameEngine() = default;
+    virtual ~GameEngine() override = default;
+    
     SHOOTER_API virtual bool Initialize() override;
     SHOOTER_API virtual void Shutdown() override;
     SHOOTER_API virtual void Execute() override;
 
-public:
-    GameEngine() = default;
-    virtual ~GameEngine() override = default;
+private:
+    void OnUpdate();
 
 private:
     OwnPtr<Window> m_GameWindow;
