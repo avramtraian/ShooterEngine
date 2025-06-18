@@ -22,7 +22,7 @@ enum class LogCategory : uint8
 
 class Logger
 {
-    SE_MAKE_SINGLETON(Logger);
+    SE_MAKE_NAMESPACE_CLASS(Logger);
 
 public:
     SHOOTER_API static bool Initialize();

@@ -88,11 +88,22 @@ NODISCARD FORCEINLINE T&& Forward(RemoveReference<T>&& instance) noexcept
     type_name(type_name&&) noexcept = delete; \
     type_name& operator=(type_name&&) noexcept = delete
 
-/* Marks the type as non-copyable and non-movable using the above macros and
- * marks the default constructor and destructor as deleted, so no instance of this type can be created. */
-#define SE_MAKE_SINGLETON(type_name)    \
-    private:                            \
-        SE_MAKE_NONCOPYABLE(type_name); \
-        SE_MAKE_NONMOVABLE(type_name);  \
-        type_name() = delete;           \
+/* Marks the type as non-copyable and non-movable and marks the default constructor
+* and destructor as deleted, so no instance of this type can be created. */
+#define SE_MAKE_NAMESPACE_CLASS(type_name) \
+    private:                               \
+        SE_MAKE_NONCOPYABLE(type_name);    \
+        SE_MAKE_NONMOVABLE(type_name);     \
+        type_name() = delete;              \
         ~type_name() = delete;
+
+/* Marks the type as non-copyable and non-movable and marks the default constructor and
+* destructor as protected, so any instance of this class must be created by the class
+* itself via a static function (Initialize/Create) or a subclass. */
+#define SE_MAKE_SINGLETON_CLASS(type_name) \
+    private:                               \
+        SE_MAKE_NONCOPYABLE(type_name);    \
+        SE_MAKE_NONMOVABLE(type_name);     \
+    protected:                             \
+        type_name() = default;             \
+        virtual ~type_name() = default;

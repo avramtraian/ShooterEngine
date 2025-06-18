@@ -9,8 +9,7 @@ namespace SE
 
 class Engine
 {
-    SE_MAKE_NONCOPYABLE(Engine);
-    SE_MAKE_NONMOVABLE(Engine);
+    SE_MAKE_SINGLETON_CLASS(Engine);
 
 public:
     virtual bool Initialize() = 0;
@@ -19,10 +18,6 @@ public:
 
     SHOOTER_API virtual bool InitializeCoreSystems();
     SHOOTER_API virtual void ShutdownCoreSystems();
-
-public:
-    Engine() = default;
-    virtual ~Engine() = default;
 };
 
 SHOOTER_API extern Engine* g_Engine;
