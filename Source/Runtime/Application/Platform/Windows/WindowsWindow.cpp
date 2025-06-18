@@ -1,159 +1,177 @@
 // Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
-#include <Runtime/Application/Platform/Windows/WindowsWindow.h>
-#include <Runtime/Core/Containers/Vector.h>
+#include <Runtime/Application/Window.h>
+#include <Runtime/Core/Platform/PlatformCoreInclude.h>
+
+#include <unordered_map>
 
 namespace SE
 {
 
-Vector<WindowsWindow*> WindowsWindow::s_WindowTable;
-
-WindowsWindow::WindowsWindow()
-    : m_NativeHandle(nullptr)
-    , m_ShouldClose(false)
+struct WindowPlatformData
 {
-    /* Add this window to the static window table. */
-    s_WindowTable.Add(this);
+    HWND Handle;
+};
+
+OwnPtr<Window> Window::Create(const WindowInfo& info)
+{
+    Window* windowInstance = new Window(info);
+    if (windowInstance->m_IsInitialized)
+        return AdoptOwn<Window>(windowInstance);
+
+    delete windowInstance;
+    return {};
 }
 
-WindowsWindow::~WindowsWindow()
-{
-    DestroyWindow(m_NativeHandle);
-    m_NativeHandle = nullptr;
+static std::unordered_map<HWND, Window*> s_ActiveWindowTable;
 
-    SE_ENSURE(s_WindowTable.Contains(this));
-    s_WindowTable.RemoveIndexUnordered(s_WindowTable.FindIndexOf(this));
-}
-
-bool WindowsWindow::Initialize(const WindowsWindowInfo& info)
+static LRESULT Win32WindowProcedure(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    static bool s_was_window_class_registered = false;
-    if (!s_was_window_class_registered)
+    switch (message)
     {
-        WindowsWindow::Win32RegisterWindowClass();
-        s_was_window_class_registered = true;
+        case WM_CLOSE:
+        {
+            if (s_ActiveWindowTable.contains(windowHandle))
+            {
+                Window& window = *s_ActiveWindowTable.at(windowHandle);
+                window.SubmitCloseRequest();
+                return 0;
+            }
+
+            /* Forward the message handling to the default Win32 layer. */
+            break;
+        }
     }
 
-    DWORD windowStyleFlags = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+    return DefWindowProcA(windowHandle, message, wParam, lParam);
+}
+
+Window::Window(const WindowInfo& info)
+    : m_PlatformData(nullptr)
+    , m_IsInitialized(false)
+    , m_IsRequestedToClose(false)
+{
+    static bool s_IsWindowClassRegistered = false;
+    if (!s_IsWindowClassRegistered)
+    {
+        WNDCLASSA windowClass = {};
+        windowClass.hInstance = GetModuleHandle(nullptr);
+        windowClass.lpszClassName = "ShooterWindowClass";
+        windowClass.lpfnWndProc = Win32WindowProcedure;
+
+        RegisterClassA(&windowClass);
+        s_IsWindowClassRegistered = true;
+    }
+
+    DWORD windowStyleFlags = WS_OVERLAPPEDWINDOW;
+    int showCommand = 0;
+
     switch (info.StartMode)
     {
-        case WindowsWindowMode::Windowed:  windowStyleFlags |= 0;           break;
-        case WindowsWindowMode::Maximized: windowStyleFlags |= WS_MAXIMIZE; break;
-        case WindowsWindowMode::Minimized: windowStyleFlags |= WS_MINIMIZE; break;
-        default: break;
+        case WindowMode::Windowed:  windowStyleFlags |= 0;           showCommand = SW_NORMAL;   break;
+        case WindowMode::Maximized: windowStyleFlags |= WS_MAXIMIZE; showCommand = SW_MAXIMIZE; break;
+        case WindowMode::Minimized: windowStyleFlags |= WS_MINIMIZE; showCommand = SW_MINIMIZE; break;
     }
 
-    int windowPositionX = info.PositionX.ValueOr(CW_USEDEFAULT);
-    int windowPositionY = info.PositionY.ValueOr(CW_USEDEFAULT);
-    int windowSizeX = info.SizeX.ValueOr(CW_USEDEFAULT);
-    int windowSizeY = info.SizeY.ValueOr(CW_USEDEFAULT);
+    const int windowPositionX = info.PositionX.ValueOr(CW_USEDEFAULT);
+    const int windowPositionY = info.PositionY.ValueOr(CW_USEDEFAULT);
+    const int windowSizeX = info.SizeX.ValueOr(CW_USEDEFAULT);
+    const int windowSizeY = info.SizeY.ValueOr(CW_USEDEFAULT);
 
-    m_NativeHandle = CreateWindowA(
-        "ShooterWindowClass", "Shooter Game", windowStyleFlags,
+    /* Create the window. */
+    const HWND windowHandle = CreateWindowA(
+        "ShooterWindowClass", info.Title.Characters(), windowStyleFlags,
         windowPositionX, windowPositionY, windowSizeX, windowSizeY,
-        nullptr, nullptr, GetModuleHandleA(nullptr), nullptr
+        nullptr, nullptr, GetModuleHandle(nullptr), nullptr
     );
+    if (windowHandle == nullptr)
+        return;
 
-    if (m_NativeHandle == nullptr)
-    {
-        /* TODO: Query the last error code interface for better error messages. */
-        return false;
-    }
+    /* Show the window. */
+    ShowWindow(windowHandle, showCommand);
 
-    return true;
+    m_IsInitialized = true;
+    m_PlatformData = new WindowPlatformData();
+    m_PlatformData->Handle = windowHandle;
+
+    /* Add this window to the active windows table. */
+    s_ActiveWindowTable.insert({ windowHandle, this });
 }
 
-void WindowsWindow::PumpMessages()
+Window::~Window()
 {
+    if (!m_IsInitialized)
+        return;
+
+    /* Destroy the native window object. */
+    DestroyWindow(m_PlatformData->Handle);
+    m_PlatformData->Handle = nullptr;
+
+    delete m_PlatformData;
+    m_PlatformData = nullptr;
+}
+
+void Window::SubmitCloseRequest()
+{
+    if (!m_IsInitialized)
+        return;
+
+    /* Mark the window was waiting to be closed. */
+    m_IsRequestedToClose = true;
+}
+
+void Window::PumpMessages()
+{
+    if (!m_IsInitialized)
+        return;
+
     MSG message = {};
-    while (PeekMessageA(&message, m_NativeHandle, 0, 0, PM_REMOVE))
+    while (PeekMessageA(&message, m_PlatformData->Handle, 0, 0, PM_REMOVE))
     {
         TranslateMessage(&message);
         DispatchMessageA(&message);
     }
 }
 
-bool WindowsWindow::ShouldClose() const
+Vector2u Window::GetSize() const
 {
-    return m_ShouldClose;
-}
+    Vector2u windowSize = { 0, 0 };
 
-uint32 WindowsWindow::GetSizeX() const
-{
-    if (m_NativeHandle == nullptr)
+    if (!m_IsInitialized)
+        return windowSize;
+
+    RECT windowRect = {};
+    if (GetClientRect(m_PlatformData->Handle, &windowRect))
     {
-        return 0;
+        windowSize.X = (uint32)(windowRect.right - windowRect.left);
+        windowSize.Y = (uint32)(windowRect.bottom - windowRect.top);
     }
 
-    /* Get the window client area. */
-    RECT window_client_rect = {};
-    const BOOL success = GetClientRect(m_NativeHandle, &window_client_rect);
-    SE_ENSURE(success > 0);
-
-    return window_client_rect.right - window_client_rect.left;
+    return windowSize;
 }
 
-uint32 WindowsWindow::GetSizeY() const
+Vector2i Window::GetPosition() const
 {
-    if (m_NativeHandle == nullptr)
+    Vector2i windowPosition = { 0, 0 };
+
+    if (!m_IsInitialized)
+        return windowPosition;
+
+    RECT windowRect = {};
+    if (GetClientRect(m_PlatformData->Handle, &windowRect))
     {
-        return 0;
+        windowPosition.X = windowRect.left;
+        windowPosition.Y = windowRect.top;
     }
 
-    /* Get the window client area. */
-    RECT window_client_rect = {};
-    const BOOL success = GetClientRect(m_NativeHandle, &window_client_rect);
-    SE_ENSURE(success > 0);
-
-    return window_client_rect.bottom - window_client_rect.top;
+    return windowPosition;
 }
 
-void* WindowsWindow::GetNativeHandle() const
+void* Window::GetNativeHandle() const
 {
-    /* The value of the native handle is always zero (nullptr) if the window is not initialized. */
-    return m_NativeHandle;
-}
-
-void WindowsWindow::Win32RegisterWindowClass()
-{
-    WNDCLASSA window_class = {};
-    window_class.hInstance = GetModuleHandleA(nullptr);
-    window_class.lpfnWndProc = WindowsWindow::Win32WindowProcedure;
-    window_class.lpszClassName = "ShooterWindowClass";
-    RegisterClassA(&window_class);
-}
-
-LRESULT WindowsWindow::Win32WindowProcedure(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param)
-{
-    WindowsWindow* window = WindowsWindow::FindWindowFromHandle(window_handle);
-    if (window != nullptr)
-    {
-        switch (message)
-        {
-            case WM_CLOSE:
-            {
-                window->m_ShouldClose = true;
-                return 0;
-            }
-        }
-    }
-
-    /* Forward the event handling to the default Windows implementation. */
-    return DefWindowProcA(window_handle, message, w_param, l_param);
-}
-
-WindowsWindow* WindowsWindow::FindWindowFromHandle(HWND native_handle)
-{
-    for (WindowsWindow* window : s_WindowTable)
-    {
-        if (window->GetNativeHandle() == native_handle)
-        {
-            return window;
-        }
-    }
-
-    /* No window with the specified native handle was found. Returning null pointer. */
-    return nullptr;
+    if (!m_IsInitialized)
+        return nullptr;
+    return m_PlatformData->Handle;
 }
 
 }

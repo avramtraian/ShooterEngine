@@ -20,13 +20,11 @@ bool GameEngine::Initialize()
 
     SE_LOG_INFO("All core systems were initialized successfully.");
 
-    m_GameWindow = CreateOwn<Window>();
-    const bool windowInitializeResult = m_GameWindow->Initialize(WindowInfo()
+    m_GameWindow = Window::Create(WindowInfo()
         .SetStartMode(WindowMode::Maximized)
         .SetTitle(VIEW("Shooter Game"))
     );
-    
-    if (!windowInitializeResult)
+    if (!m_GameWindow.IsValid())
     {
         /* Failed to initialize the game window. As we don't have a window there is no point
          * in trying to continue the engine initialization process. */
@@ -46,7 +44,7 @@ void GameEngine::Shutdown()
 
 void GameEngine::Execute()
 {
-    while (!m_GameWindow->ShouldClose())
+    while (!m_GameWindow->IsRequestedToClose())
     {
         m_GameWindow->PumpMessages();
     }
