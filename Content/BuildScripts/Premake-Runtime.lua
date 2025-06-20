@@ -25,9 +25,8 @@ project "SE-Runtime"
         "%{wks.location}/Source/Runtime/**.inl"
     }
 
-    links {
-        "d3d11.lib",
-        "dxgi.lib",
-        "d3dcompiler.lib"
-    }
+    local VULKAN_PATH = os.getenv("VULKAN_SDK")
+    links { (VULKAN_PATH.."/Lib/vulkan-1") }
+    includedirs { (VULKAN_PATH.."/Include/") }
+
 -- project "SE-Runtime"
