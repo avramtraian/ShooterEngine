@@ -4,6 +4,7 @@
 #include <Runtime/Core/Containers/StringView.h>
 #include <Runtime/Core/Log.h>
 #include <Runtime/Engine/GameEngine.h>
+#include <Runtime/Renderer/RHI/RenderingDriver.h>
 
 namespace SE
 {
@@ -18,7 +19,6 @@ bool GameEngine::Initialize()
          * systems were not able to be initialized. */
         return false;
     }
-
     SE_LOG_INFO("All core systems were initialized successfully.");
 
     m_GameWindow = Window::Create(WindowInfo()
@@ -29,9 +29,9 @@ bool GameEngine::Initialize()
     {
         /* Failed to initialize the game window. As we don't have a window there is no point
          * in trying to continue the engine initialization process. */
+        SE_LOG_ERROR("Failed to initialize the primary game window! Aborting the initialization process.");
         return false;
     }
-
     SE_LOG_INFO("The primary game window was created successfully.");
 
     const bool inputInitializeResult = Input::Initialize(InputInfo()
@@ -41,19 +41,32 @@ bool GameEngine::Initialize()
     {
         /* Failed to initialize the input system. As the user can't input any commands into the game,
         * there is no point in trying to continue the engine initialization. */
+        SE_LOG_ERROR("Failed to initialize the input system! Aborting the initialization process.");
         return false;
     }
-
     SE_LOG_INFO("The input system was initialized successfully.");
     
+    const bool renderingDriverInitializeResult = RenderingDriver::Initialize(RenderingDriverInfo()
+        .SetBackend(RenderingDriverBackend::Vulkan)
+    );
+    if (!renderingDriverInitializeResult)
+    {
+        /* Failed to initialize the rendering driver. As nothing can be rendered to the screen, there
+        * is no point in trying to continue the engine initialization. */
+        SE_LOG_ERROR("Failed to initialize the rendering driver! Aborting the initialization process.");
+        return false;
+    }
+    SE_LOG_INFO("The rendering driver was initialized successfully.");
+
     return true;
 }
 
 void GameEngine::Shutdown()
 {
-    SE_LOG_INFO("Shutting down the game engine...");
+    SE_LOG_INFO("Shutting down the engine systems...");
 
-    /* Shutdown the input system. */
+    /* Shutdown various engine system. */
+    RenderingDriver::Shutdown();
     Input::Shutdown();
 
     /* Destroy the game window. */
