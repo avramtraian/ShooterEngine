@@ -77,3 +77,5 @@
 #define MAYBE_UNUSED [[maybe_unused]]
 #define LIKELY       [[likely]]
 #define UNLIKELY     [[unlikely]]
+
+#define SE_ARRAY_COUNT(x) (sizeof(x) / sizeof((x)[0]))
