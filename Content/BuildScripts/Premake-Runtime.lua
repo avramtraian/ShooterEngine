@@ -25,8 +25,17 @@ project "SE-Runtime"
         "%{wks.location}/Source/Runtime/**.inl"
     }
 
+    -- Link against the VulkanSDK.
     local VULKAN_PATH = os.getenv("VULKAN_SDK")
     links { (VULKAN_PATH.."/Lib/vulkan-1") }
     includedirs { (VULKAN_PATH.."/Include/") }
+
+    -- Link against the DXC compiler binaries. This allows us to programatically compile HLSL shaders.
+    begin_filter_configuration_debug()
+        links { (VULKAN_PATH.."/Lib/dxcompilerd") }
+    end_filter()
+    begin_filter_configuration_development_or_shipping()
+        links { (VULKAN_PATH.."/Lib/dxcompiler") }
+    end_filter()
 
 -- project "SE-Runtime"
