@@ -24,6 +24,10 @@ function default_project_configuration()
     targetdir (g_binaries_directory)
     objdir (g_binaries_intermediate_directory)
 
+    -- NOTE(Traian): https://premake.github.io/docs/flags/
+    -- Allows Visual Studio to use multiple compiler processes when building.
+    flags { "MultiProcessorCompile" }
+
     filter "platforms:Win64"
         defines { "SE_PLATFORM_WIN64=1" }
     filter {}
