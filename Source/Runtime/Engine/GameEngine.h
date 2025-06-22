@@ -5,6 +5,9 @@
 #include <Runtime/Application/Window.h>
 #include <Runtime/Core/Containers/OwnPtr.h>
 #include <Runtime/Engine/Engine.h>
+#include <Runtime/Renderer/RHI/RenderingSurface.h>
+
+#include <memory>
 
 namespace SE
 {
@@ -24,6 +27,7 @@ private:
 
 private:
     OwnPtr<Window> m_GameWindow;
+    std::unique_ptr<RenderingSurface> m_GameRenderingSurface;
 };
 
 SHOOTER_API extern GameEngine* g_GameEngine;

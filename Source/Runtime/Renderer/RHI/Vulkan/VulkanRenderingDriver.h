@@ -38,6 +38,9 @@ public:
     NODISCARD FORCEINLINE VkDevice GetDevice() const { return m_LogicalDevice; }
     NODISCARD FORCEINLINE const PhysicalDevice& GetPhysicalDevice() const { return m_PhysicalDevice; }
 
+public:
+    virtual std::unique_ptr<RenderingSurface> CreateSurface(const RenderingSurfaceInfo& info) override;
+
 private:
     virtual bool InitializeBackend(const RenderingDriverInfo& info) override;
     virtual void ShutdownBackend() override;

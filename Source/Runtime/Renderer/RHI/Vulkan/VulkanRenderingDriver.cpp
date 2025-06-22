@@ -2,6 +2,7 @@
 
 #include <Runtime/Core/Log.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderingDriver.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanRenderingSurface.h>
 
 #include <string>
 #include <unordered_map>
@@ -507,6 +508,12 @@ void VulkanRenderingDriver::ShutdownBackend()
     m_Instance = VK_NULL_HANDLE;
 
     g_VulkanDriver = nullptr;
+}
+
+std::unique_ptr<RenderingSurface> VulkanRenderingDriver::CreateSurface(const RenderingSurfaceInfo& info)
+{
+    VulkanRenderingSurface* vulkanSurfaceInstance = new VulkanRenderingSurface(info);
+    return std::unique_ptr<RenderingSurface>(vulkanSurfaceInstance);
 }
 
 }

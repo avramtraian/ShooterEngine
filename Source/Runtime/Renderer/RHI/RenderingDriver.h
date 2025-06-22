@@ -3,6 +3,9 @@
 #pragma once
 
 #include <Runtime/Core/CoreTypes.h>
+#include <Runtime/Renderer/RHI/RHICore.h>
+
+#include <memory>
 
 namespace SE
 {
@@ -30,6 +33,9 @@ class RenderingDriver
 public:
     static bool Initialize(const RenderingDriverInfo& info);
     static void Shutdown();
+
+public:
+    virtual std::unique_ptr<RenderingSurface> CreateSurface(const RenderingSurfaceInfo& info) = 0;
 
 private:
     virtual bool InitializeBackend(const RenderingDriverInfo& info) = 0;

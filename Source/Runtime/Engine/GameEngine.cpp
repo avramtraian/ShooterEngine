@@ -5,6 +5,7 @@
 #include <Runtime/Core/Log.h>
 #include <Runtime/Engine/GameEngine.h>
 #include <Runtime/Renderer/RHI/RenderingDriver.h>
+#include <Runtime/Renderer/RHI/RenderingSurface.h>
 
 namespace SE
 {
@@ -40,7 +41,7 @@ bool GameEngine::Initialize()
     if (!inputInitializeResult)
     {
         /* Failed to initialize the input system. As the user can't input any commands into the game,
-        * there is no point in trying to continue the engine initialization. */
+         * there is no point in trying to continue the engine initialization. */
         SE_LOG_ERROR("Failed to initialize the input system! Aborting the initialization process.");
         return false;
     }
@@ -52,11 +53,25 @@ bool GameEngine::Initialize()
     if (!renderingDriverInitializeResult)
     {
         /* Failed to initialize the rendering driver. As nothing can be rendered to the screen, there
-        * is no point in trying to continue the engine initialization. */
+         * is no point in trying to continue the engine initialization. */
         SE_LOG_ERROR("Failed to initialize the rendering driver! Aborting the initialization process.");
         return false;
     }
     SE_LOG_INFO("The rendering driver was initialized successfully.");
+
+    m_GameRenderingSurface = g_RenderingDriver->CreateSurface(RenderingSurfaceInfo()
+        .SetOwningWindow(m_GameWindow.Get())
+        .SetSwapchainImageCount(3)
+        .SetEnableVSync(true)
+    );
+    if (!m_GameRenderingSurface)
+    {
+        /* Failed to create the rendering surface. As the user can't see anything on the screen without
+         * it, there is no point in trying to continue the engine initialization. */
+        SE_LOG_ERROR("Failed to create the primary game rendering surface. Aborting the initialization process.");
+        return false;
+    }
+    SE_LOG_INFO("The primary game rendering surface was created successfully.");
 
     return true;
 }
@@ -64,6 +79,9 @@ bool GameEngine::Initialize()
 void GameEngine::Shutdown()
 {
     SE_LOG_INFO("Shutting down the engine systems...");
+
+    /* Destroy the game rendering surface. */
+    m_GameRenderingSurface.reset();
 
     /* Shutdown various engine system. */
     RenderingDriver::Shutdown();
