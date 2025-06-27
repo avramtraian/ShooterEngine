@@ -40,6 +40,7 @@ public:
 
 public:
     virtual std::unique_ptr<RenderingSurface> CreateSurface(const RenderingSurfaceInfo& info) override;
+    virtual std::shared_ptr<Shader> CreateShader(const ShaderInfo& info) override;
 
 private:
     virtual bool InitializeBackend(const RenderingDriverInfo& info) override;

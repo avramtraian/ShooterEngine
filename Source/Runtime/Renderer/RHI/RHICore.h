@@ -10,10 +10,12 @@ namespace SE
 /* RHI classes forward declarations. */
 class RenderingDriver;
 class RenderingSurface;
+class Shader;
 
 /* RHI info structs forward declarations. */
 struct RenderingDriverInfo;
 struct RenderingSurfaceInfo;
+struct ShaderInfo;
 
 }
 

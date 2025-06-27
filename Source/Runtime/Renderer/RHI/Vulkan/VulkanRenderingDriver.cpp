@@ -3,6 +3,7 @@
 #include <Runtime/Core/Log.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderingDriver.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderingSurface.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanShader.h>
 
 #include <string>
 #include <unordered_map>
@@ -514,6 +515,12 @@ std::unique_ptr<RenderingSurface> VulkanRenderingDriver::CreateSurface(const Ren
 {
     VulkanRenderingSurface* vulkanSurfaceInstance = new VulkanRenderingSurface(info);
     return std::unique_ptr<RenderingSurface>(vulkanSurfaceInstance);
+}
+
+std::shared_ptr<Shader> VulkanRenderingDriver::CreateShader(const ShaderInfo& info)
+{
+    VulkanShader* vulkanShaderInstance = new VulkanShader(info);
+    return std::shared_ptr<VulkanShader>(vulkanShaderInstance);
 }
 
 }
