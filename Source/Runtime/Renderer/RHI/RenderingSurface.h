@@ -4,6 +4,8 @@
 
 #include <Runtime/Renderer/RHI/RHICore.h>
 
+#include <memory>
+
 namespace SE
 {
 
@@ -32,6 +34,8 @@ public:
 
     NODISCARD virtual uint32 GetSurfaceSizeX() const = 0;
     NODISCARD virtual uint32 GetSurfaceSizeY() const = 0;
+
+    virtual std::shared_ptr<Texture2D> GetSurfaceTexture2D(uint32 imageIndex) = 0;
 };
 
 }

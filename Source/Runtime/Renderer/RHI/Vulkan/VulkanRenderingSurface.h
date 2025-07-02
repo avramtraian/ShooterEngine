@@ -13,13 +13,16 @@ class VulkanRenderingSurface : public RenderingSurface
 public:
     struct Swapchain
     {
-        VkSwapchainKHR       Handle      { VK_NULL_HANDLE };
-        uint32               SizeX       { 0 };
-        uint32               SizeY       { 0 };
-        VkFormat             Format      { VK_FORMAT_UNDEFINED };
-        VkColorSpaceKHR      ColorSpace  { VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
-        VkPresentModeKHR     PresentMode { VK_PRESENT_MODE_FIFO_KHR };
-        std::vector<VkImage> Images;
+        VkSwapchainKHR           Handle      { VK_NULL_HANDLE };
+        uint32                   SizeX       { 0 };
+        uint32                   SizeY       { 0 };
+        VkFormat                 Format      { VK_FORMAT_UNDEFINED };
+        VkColorSpaceKHR          ColorSpace  { VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
+        VkPresentModeKHR         PresentMode { VK_PRESENT_MODE_FIFO_KHR };
+        std::vector<VkImage>     Images;
+        std::vector<VkImageView> ImageViews;
+
+        std::vector<std::shared_ptr<VulkanTexture2D>> Textures;
     };
 
 public:
@@ -31,7 +34,9 @@ public:
     NODISCARD FORCEINLINE virtual uint32 GetSurfaceSizeY() const override { return m_Swapchain.SizeY; }
 
     virtual bool Invalidate() override;
-    void Destroy();
+    void Destroy(bool shouldDestroyTextures);
+
+    virtual std::shared_ptr<Texture2D> GetSurfaceTexture2D(uint32 imageIndex) override;
 
 public:
     NODISCARD FORCEINLINE VkSurfaceKHR GetSurface() const { return m_Surface; }
@@ -39,10 +44,16 @@ public:
 
     NODISCARD FORCEINLINE uint32 GetSwapchainImageCount() const { return (uint32)m_Swapchain.Images.size(); }
     NODISCARD FORCEINLINE const std::vector<VkImage>& GetSwapchainImages() const { return m_Swapchain.Images; }
+    NODISCARD FORCEINLINE const std::vector<VkImageView>& GetSwapchainImageViews() const { return m_Swapchain.ImageViews; }
     NODISCARD FORCEINLINE VkImage GetSwapchainImage(uint32 imageIndex) const
     {
         SE_CHECK(imageIndex < m_Swapchain.Images.size());
         return m_Swapchain.Images[imageIndex];
+    }
+    NODISCARD FORCEINLINE VkImageView GetSwapchainImageView(uint32 imageIndex) const
+    {
+        SE_CHECK(imageIndex < m_Swapchain.ImageViews.size());
+        return m_Swapchain.ImageViews[imageIndex];
     }
 
 private:

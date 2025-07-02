@@ -3,6 +3,7 @@
 #include <Runtime/Application/Window.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderingDriver.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderingSurface.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanTexture.h>
 
 namespace SE
 {
@@ -16,7 +17,7 @@ VulkanRenderingSurface::VulkanRenderingSurface(const RenderingSurfaceInfo& info)
 
 VulkanRenderingSurface::~VulkanRenderingSurface()
 {
-    Destroy();
+    Destroy(true);
 }
 
 VkPresentModeKHR VulkanRenderingSurface::FindSwapchainPresentMode() const
@@ -92,7 +93,7 @@ static std::string VulkanPresentModeToString(VkPresentModeKHR presentMode)
 
 bool VulkanRenderingSurface::Invalidate()
 {
-    Destroy();
+    Destroy(false);
 
 #if SE_PLATFORM_WIN64
     VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
@@ -139,16 +140,83 @@ bool VulkanRenderingSurface::Invalidate()
         return false;
     }
 
+    /* Query the images from the swapchain object. */
+    uint32 swapchainImageCount = 0;
+    SE_VULKAN_CHECK(vkGetSwapchainImagesKHR(g_VulkanDriver->GetDevice(), m_Swapchain.Handle, &swapchainImageCount, nullptr));
+    m_Swapchain.Images.resize(swapchainImageCount);
+    SE_VULKAN_CHECK(vkGetSwapchainImagesKHR(g_VulkanDriver->GetDevice(), m_Swapchain.Handle, &swapchainImageCount, m_Swapchain.Images.data()));
+
+    /* Create views for each swapchain image. */
+    m_Swapchain.ImageViews.reserve(swapchainImageCount);
+    for (VkImage image : m_Swapchain.Images)
+    {
+        VkImageViewCreateInfo imageViewCreateInfo = {};
+        imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        imageViewCreateInfo.image = image;
+        imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        imageViewCreateInfo.format = m_Swapchain.Format;
+        imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+        imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
+        imageViewCreateInfo.subresourceRange.levelCount = 1;
+        imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
+        imageViewCreateInfo.subresourceRange.layerCount = 1;
+
+        VkImageView imageViewHandle = VK_NULL_HANDLE;
+        if (VkResult result = vkCreateImageView(g_VulkanDriver->GetDevice(), &imageViewCreateInfo, nullptr, &imageViewHandle); result != VK_SUCCESS)
+        {
+            SE_LOG_ERROR("Failed to create [Vulkan] image view for swapchain image! (Result: %d)", result);
+            return false;
+        }
+        m_Swapchain.ImageViews.push_back(imageViewHandle);
+    }
+
+    if (m_Swapchain.Textures.empty())
+    {
+        /* Create 2D textures owned by the swapchain for later access. */
+        m_Swapchain.Textures.reserve(m_Swapchain.Images.size());
+        for (uint32 imageIndex = 0; imageIndex < (uint32)m_Swapchain.Images.size(); ++imageIndex)
+        {
+            auto texture = std::make_shared<VulkanTexture2D>(*this, imageIndex);
+            m_Swapchain.Textures.push_back(std::move(texture));
+        }
+    }
+    else
+    {
+        for (uint32 imageIndex = 0; imageIndex < (uint32)m_Swapchain.Images.size(); ++imageIndex)
+        {
+            m_Swapchain.Textures[imageIndex]->InvalidateFromSurface(*this, imageIndex);
+        }
+    }
+
     /* Submit information about the swapchain creation to the logger. */
     SE_LOG_INFO("The [Vulkan] swapchain was created with the following parameters:");
+    SE_LOG_INFO("  Image count:  %d", m_Swapchain.Images.size())
     SE_LOG_INFO("  Format:       %s", VulkanFormatToString(m_Swapchain.Format).c_str());
     SE_LOG_INFO("  Present mode: %s", VulkanPresentModeToString(m_Swapchain.PresentMode).c_str());
 
     return true;
 }
 
-void VulkanRenderingSurface::Destroy()
+void VulkanRenderingSurface::Destroy(bool shouldDestroyTextures)
 {
+    /* Destroy the swapchain textures. */
+    for (auto& texture : m_Swapchain.Textures)
+        texture->DestroyFromSurface(*this);
+
+    if (shouldDestroyTextures)
+        m_Swapchain.Textures.clear();
+
+    /* Destroy swapchain image views.
+     * NOTE(Traian): Images themselves are created and managed by the swapchain object. */
+    for (VkImageView imageView : m_Swapchain.ImageViews)
+        vkDestroyImageView(g_VulkanDriver->GetDevice(), imageView, nullptr);
+    m_Swapchain.ImageViews.clear();
+    m_Swapchain.Images.clear();
+
     /* Destroy the swapchain. */
     vkDestroySwapchainKHR(g_VulkanDriver->GetDevice(), m_Swapchain.Handle, nullptr);
     m_Swapchain = {};
@@ -156,6 +224,11 @@ void VulkanRenderingSurface::Destroy()
     /* Destroy the surface. */
     vkDestroySurfaceKHR(g_VulkanDriver->GetInstance(), m_Surface, nullptr);
     m_Surface = VK_NULL_HANDLE;
+}
+
+std::shared_ptr<Texture2D> VulkanRenderingSurface::GetSurfaceTexture2D(uint32 imageIndex)
+{
+    return {};
 }
 
 }

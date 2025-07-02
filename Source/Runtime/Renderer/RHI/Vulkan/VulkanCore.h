@@ -24,6 +24,9 @@
         SE_ASSERT_NOT_REACHED;                                        \
     }
 
+namespace SE
+{
+
 NODISCARD FORCEINLINE static std::string VulkanFormatToString(VkFormat format)
 {
 
@@ -41,4 +44,22 @@ NODISCARD FORCEINLINE static std::string VulkanFormatToString(VkFormat format)
     /* TODO(Traian): Extend the switch statement above to include more image
      * formats such this return case is never reached! */
     return "<unstringifyable>";
+}
+
+/* Forward declarations of RHI interfaces. */
+class VulkanCommandList;
+class VulkanCommandPool;
+class VulkanFramebuffer;
+class VulkanIndexBuffer;
+class VulkanRenderPass;
+class VulkanRenderingDriver;
+class VulkanRenderingSurface;
+class VulkanShader;
+class VulkanTexture2D;
+class VulkanVertexBuffer;
+
+/* Forward declarations of information structures. */
+struct VulkanCommandPoolInfo;
+struct VulkanFramebufferInfo;
+
 }

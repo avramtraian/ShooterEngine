@@ -1,8 +1,11 @@
 // Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
 #include <Runtime/Core/Log.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanBuffer.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanCommandList.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderingDriver.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderingSurface.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanTexture.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanShader.h>
 
 #include <string>
@@ -298,6 +301,9 @@ bool VulkanRenderingDriver::PickPhysicalDevice()
             SE_ENSURE(physicalDevice.AvailableExtensions.size() == extensionCount);
         }
 
+        /* Get memory properties. */
+        vkGetPhysicalDeviceMemoryProperties(physicalDevice.Handle, &physicalDevice.MemoryProperties);
+
         physicalDevices.push_back(physicalDevice);
     }
 
@@ -517,10 +523,126 @@ std::unique_ptr<RenderingSurface> VulkanRenderingDriver::CreateSurface(const Ren
     return std::unique_ptr<RenderingSurface>(vulkanSurfaceInstance);
 }
 
+std::shared_ptr<CommandList> VulkanRenderingDriver::CreateCommandList(const CommandListInfo& info)
+{
+    VulkanCommandList* vulkanCommandListInstance = new VulkanCommandList(info);
+    return std::shared_ptr<CommandList>(vulkanCommandListInstance);
+}
+
+std::shared_ptr<IndexBuffer> VulkanRenderingDriver::CreateIndexBuffer(const IndexBufferInfo& info)
+{
+    VulkanIndexBuffer* vulkanIndexBufferInstance = new VulkanIndexBuffer(info);
+    return std::shared_ptr<IndexBuffer>(vulkanIndexBufferInstance);
+}
+
+std::shared_ptr<Texture2D> VulkanRenderingDriver::CreateTexture2D(const Texture2DInfo& info)
+{
+    VulkanTexture2D* vulkanTextureInstance = new VulkanTexture2D(info);
+    return std::shared_ptr<Texture2D>(vulkanTextureInstance);
+}
+
 std::shared_ptr<Shader> VulkanRenderingDriver::CreateShader(const ShaderInfo& info)
 {
     VulkanShader* vulkanShaderInstance = new VulkanShader(info);
-    return std::shared_ptr<VulkanShader>(vulkanShaderInstance);
+    return std::shared_ptr<Shader>(vulkanShaderInstance);
+}
+
+std::shared_ptr<VertexBuffer> VulkanRenderingDriver::CreateVertexBuffer(const VertexBufferInfo& info)
+{
+    VulkanVertexBuffer* vulkanVertexBufferInstance = new VulkanVertexBuffer(info);
+    return std::shared_ptr<VertexBuffer>(vulkanVertexBufferInstance);
+}
+
+VkRenderPass VulkanRenderingDriver::AcquireRenderPass(const RenderPassInfo& renderPassInfo)
+{
+    /* Check if a compatible render pass already exists and it is not in use. */
+    const VulkanRenderPassLayout renderPassLayout = VulkanRenderPass::GetLayoutFromInfo(renderPassInfo);
+    for (uint32 renderPassIndex : m_RenderPassCache.UnusedIndices)
+    {
+        const auto& renderPass = m_RenderPassCache.CreatedObjects[renderPassIndex];
+        if (VulkanRenderPass::CheckIfLayoutsAreCompatible(renderPassLayout, renderPass->GetLayout()))
+            return renderPass->GetHandle();
+    }
+
+    /* Create the vulkan render pass. */
+    auto renderPass = std::make_unique<VulkanRenderPass>(renderPassLayout);
+    VkRenderPass renderPassHandle = renderPass->GetHandle();
+
+    /* Register it to the cache as in-use. */
+    m_RenderPassCache.CreatedObjects.push_back(std::move(renderPass));
+    m_RenderPassCache.InUseIndices.insert((uint32)(m_RenderPassCache.CreatedObjects.size() - 1));
+
+    /* Return the render pass vulkan handle back to the caller. */
+    return renderPassHandle;
+}
+
+void VulkanRenderingDriver::RetireRenderPass(VkRenderPass renderPassHandle)
+{
+    int32 renderPassIndex = -1;
+    for (uint32 inUseRenderPassIndex : m_RenderPassCache.InUseIndices)
+    {
+        if (m_RenderPassCache.CreatedObjects[inUseRenderPassIndex]->GetHandle() == renderPassHandle)
+        {
+            renderPassIndex = inUseRenderPassIndex;
+            break;
+        }
+    }
+
+    if (renderPassIndex < 0)
+    {
+        SE_LOG_ERROR("The provided [Vulkan] render pass handle is not registered in the cache or was already retired!");
+        return;
+    }
+
+    /* Update the cache to mark the render pass as unused. */
+    m_RenderPassCache.InUseIndices.erase(renderPassIndex);
+    m_RenderPassCache.UnusedIndices.push_back(renderPassIndex);
+}
+
+VkFramebuffer VulkanRenderingDriver::AcquireFramebuffer(VkRenderPass renderPassHandle, const RenderPassInfo& renderPassInfo)
+{
+    /* Check if a compatible framebuffer already exists and it is not in use. */
+    const VulkanFramebufferInfo framebufferInfo = VulkanFramebuffer::GetInfoFromRenderPass(renderPassHandle, renderPassInfo);
+    for (uint32 framebufferIndex : m_FramebufferCache.UnusedIndices)
+    {
+        const auto& framebuffer = m_FramebufferCache.CreatedObjects[framebufferIndex];
+        if (VulkanFramebuffer::CheckIfFramebuffersAreCompatible(framebufferInfo, framebuffer->GetInfo()))
+            return framebuffer->GetHandle();
+    }
+
+    /* Create the vulkan render pass. */
+    auto framebuffer = std::make_unique<VulkanFramebuffer>(framebufferInfo);
+    VkFramebuffer framebufferHandle = framebuffer->GetHandle();
+
+    /* Register it to the cache as in-use. */
+    m_FramebufferCache.CreatedObjects.push_back(std::move(framebuffer));
+    m_FramebufferCache.InUseIndices.insert((uint32)(m_FramebufferCache.CreatedObjects.size() - 1));
+
+    /* Return the render pass vulkan handle back to the caller. */
+    return framebufferHandle;
+}
+
+void VulkanRenderingDriver::RetireFramebuffer(VkFramebuffer framebufferHandle)
+{
+    int32 framebufferIndex = -1;
+    for (uint32 inUseFramebufferIndex : m_FramebufferCache.InUseIndices)
+    {
+        if (m_FramebufferCache.CreatedObjects[inUseFramebufferIndex]->GetHandle() == framebufferHandle)
+        {
+            framebufferIndex = inUseFramebufferIndex;
+            break;
+        }
+    }
+
+    if (framebufferIndex < 0)
+    {
+        SE_LOG_ERROR("The provided [Vulkan] framebuffer handle is not registered in the cache or was already retired!");
+        return;
+    }
+
+    /* Update the cache to mark the render pass as unused. */
+    m_FramebufferCache.InUseIndices.erase(framebufferIndex);
+    m_FramebufferCache.UnusedIndices.push_back(framebufferIndex);
 }
 
 }
