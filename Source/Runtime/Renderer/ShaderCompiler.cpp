@@ -107,8 +107,16 @@ ShaderCompilationResult ShaderCompiler::Compile(ShaderSourceLanguage language, S
         arguments.push_back(L"-T"); arguments.push_back(entryPointAndTarget.Target.c_str());
 
         /* Set the bytecode output type. */
-        if (outputBytecodeType == ShaderBytecodeType::SPIRV) { arguments.push_back(L"-spirv"); }
-        if (outputBytecodeType == ShaderBytecodeType::DXIL)  { /* No additional arguments are required. */ }
+        if (outputBytecodeType == ShaderBytecodeType::SPIRV)
+        {
+            arguments.push_back(L"-spirv");
+            arguments.push_back(L"-fspv-target-env=vulkan1.1");
+
+            /* NOTE(Traian): By default, DirectX expects the coordinate-origin to be in the top-left corner of the screen, while
+             * Vulkan expects it to be in the bottom-left corner. This flag allows the same shader to be used with both rendering APIs. */
+            if (stage == ShaderStage::Vertex)
+                arguments.push_back(L"-fvk-invert-y");
+        }
 
         /* Create the source code buffer. */
         DxcBuffer sourceCodeBuffer = {};
