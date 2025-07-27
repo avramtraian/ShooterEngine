@@ -4,6 +4,7 @@
 
 #include <Runtime/Renderer/RHI/RenderPass.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanFramebuffer.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanPipeline.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanTexture.h>
 
@@ -36,19 +37,16 @@ public:
         return colorAttachmentCount;
     }
 
-    NODISCARD FORCEINLINE VkFramebuffer GetFramebuffer() const { return m_Framebuffer; }
-    NODISCARD FORCEINLINE uint32 GetFramebufferSizeX() const { return m_Attachments.front().Texture->GetSizeX(); }
-    NODISCARD FORCEINLINE uint32 GetFramebufferSizeY() const { return m_Attachments.front().Texture->GetSizeY(); }
-
 public:
     NODISCARD VulkanPipeline* AcquireCompatiblePipeline(const GraphicsState& graphicsState);
+    NODISCARD VulkanFramebuffer* AcquireCompatibleFramebuffer(const RenderPassBeginInfo& beginInfo);
 
 private:
     VkRenderPass m_Handle;
-    VkFramebuffer m_Framebuffer;
     std::vector<RenderPassAttachment> m_Attachments;
     bool m_HasDepthStencilAttachment;
 
+    std::vector<std::unique_ptr<VulkanFramebuffer>> m_Framebuffers;
     std::vector<std::unique_ptr<VulkanPipeline>> m_Pipelines;
 };
 

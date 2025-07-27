@@ -21,7 +21,7 @@ public:
     virtual void Begin() override;
     virtual void End() override;
 
-    virtual void BeginRenderPass(const std::shared_ptr<RenderPass>& renderPass) override;
+    virtual void BeginRenderPass(const std::shared_ptr<RenderPass>& renderPass, const RenderPassBeginInfo& beginInfo) override;
     virtual void EndRenderPass() override;
 
     virtual void BindGraphicsState(const GraphicsState& graphicsState) override;
@@ -39,13 +39,17 @@ public:
     virtual void SetAccumulateStatisticsPolicy(AccumultateStatisticsPolicy policy) override;
 
 private:
+    NODISCARD bool ValidateRenderPass(const std::shared_ptr<VulkanRenderPass>& renderPass, const RenderPassBeginInfo& beginInfo) const;
+
+private:
     VkCommandBuffer m_CommandBuffer;
     std::shared_ptr<VulkanCommandPool> m_ParentCommandPool;
     CommandListFamily m_Family;
 
     std::shared_ptr<VulkanRenderPass> m_ActiveRenderPass;
-    VulkanPipeline* m_ActivePipeline;
     std::vector<std::shared_ptr<VulkanRenderPass>> m_UsedRenderPasses;
+    VulkanFramebuffer* m_ActiveFramebuffer;
+    VulkanPipeline* m_ActivePipeline;
 
     std::vector<std::shared_ptr<VulkanVertexBuffer>> m_UsedVertexBuffers;
     std::vector<std::shared_ptr<VulkanIndexBuffer>> m_UsedIndexBuffers;

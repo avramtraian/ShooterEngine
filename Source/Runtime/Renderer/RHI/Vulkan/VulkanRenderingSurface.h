@@ -34,6 +34,7 @@ public:
     NODISCARD FORCEINLINE virtual uint32 GetCurrentFrameIndex() const override { return m_CurrentFrameIndex; }
     NODISCARD FORCEINLINE virtual uint32 GetCurrentSwapchainImageIndex() const override { return m_CurrentSwapchainImageIndex; }
 
+    NODISCARD FORCEINLINE virtual TextureFormat GetSurfaceFormat() const override { return TextureFormatFromVulkan(m_Swapchain.Format); }
     NODISCARD FORCEINLINE virtual uint32 GetSurfaceSizeX() const override { return m_Swapchain.SizeX; }
     NODISCARD FORCEINLINE virtual uint32 GetSurfaceSizeY() const override { return m_Swapchain.SizeY; }
 

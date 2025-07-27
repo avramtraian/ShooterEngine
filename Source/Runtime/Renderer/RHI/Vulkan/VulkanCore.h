@@ -64,7 +64,6 @@ class VulkanVertexBuffer;
 
 /* Forward declarations of information structures. */
 struct VulkanCommandPoolInfo;
-struct VulkanFramebufferInfo;
 
 template<typename VulkanHandleType>
 struct VulkanObjectPool

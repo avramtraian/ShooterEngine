@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <Runtime/Core/CoreAssertions.h>
 #include <Runtime/Core/CoreTypes.h>
 
 namespace SE
@@ -32,6 +33,7 @@ struct VertexBufferInfo;
 
 /* Structures used for command dispatching. */
 struct CommandListExecuteInfo;
+struct RenderPassBeginInfo;
 
 }
 

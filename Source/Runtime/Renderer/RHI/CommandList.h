@@ -79,7 +79,7 @@ public:
     virtual void Begin() = 0;
     virtual void End() = 0;
 
-    virtual void BeginRenderPass(const std::shared_ptr<RenderPass>& renderPass) = 0;
+    virtual void BeginRenderPass(const std::shared_ptr<RenderPass>& renderPass, const RenderPassBeginInfo& beginInfo) = 0;
     virtual void EndRenderPass() = 0;
 
     virtual void BindGraphicsState(const GraphicsState& graphicsState) = 0;

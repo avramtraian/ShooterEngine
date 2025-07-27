@@ -18,6 +18,13 @@ enum class TextureFormat : uint8
     MaxEnumValue,
 };
 
+enum class TextureLayout : uint16
+{
+    Undefined = 0,
+    PresentSource,
+    ShaderReadOptimal,
+};
+
 enum TextureFlagsEnum : uint32
 {
     TEXTURE_FLAG_NONE            = 0,

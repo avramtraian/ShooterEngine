@@ -4,6 +4,7 @@
 
 #include <Runtime/Renderer/RHI/RHICore.h>
 #include <Runtime/Renderer/RHI/Synchronization.h>
+#include <Runtime/Renderer/RHI/Texture.h>
 
 #include <memory>
 
@@ -37,6 +38,7 @@ public:
     NODISCARD virtual uint32 GetCurrentFrameIndex() const = 0;
     NODISCARD virtual uint32 GetCurrentSwapchainImageIndex() const = 0;
 
+    NODISCARD virtual TextureFormat GetSurfaceFormat() const = 0;
     NODISCARD virtual uint32 GetSurfaceSizeX() const = 0;
     NODISCARD virtual uint32 GetSurfaceSizeY() const = 0;
 
