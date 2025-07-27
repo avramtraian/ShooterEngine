@@ -22,10 +22,11 @@ VulkanShader::VulkanShader(const ShaderInfo& info)
             continue;
         }
 
-        switch (shaderStage.Stage)
+        module.Stage = shaderStage.Stage;
+        switch (module.Stage)
         {
-            case ShaderStage::Vertex:   module.Stage = VK_SHADER_STAGE_VERTEX_BIT;   break;
-            case ShaderStage::Fragment: module.Stage = VK_SHADER_STAGE_FRAGMENT_BIT; break;
+            case ShaderStage::Vertex:   module.VulkanStage = VK_SHADER_STAGE_VERTEX_BIT;   break;
+            case ShaderStage::Fragment: module.VulkanStage = VK_SHADER_STAGE_FRAGMENT_BIT; break;
             default:                    SE_ASSERT_NOT_REACHED;                       break;
         }
 

@@ -14,7 +14,8 @@ public:
     struct Module
     {
         VkShaderModule Handle { VK_NULL_HANDLE };
-        VkShaderStageFlagBits Stage;
+        VkShaderStageFlagBits VulkanStage;
+        ShaderStage Stage;
     };
 
 public:
