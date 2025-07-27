@@ -35,6 +35,7 @@ bool GameEngine::Initialize()
         SE_LOG_ERROR("Failed to initialize the primary game window! Aborting the initialization process.");
         return false;
     }
+    m_GameWindow->AddEventCallback(EventType::WindowResized, [](const Window&, const Event& event) { g_GameEngine->OnGameWindowResized((const WindowResizedEvent&)event); });
     SE_LOG_INFO("The primary game window was created successfully.");
 
     const bool inputInitializeResult = Input::Initialize(InputInfo()
@@ -130,6 +131,11 @@ void GameEngine::OnUpdate()
 {
     Input::OnUpdate();
     Input::OnPostUpdate();
+}
+
+void GameEngine::OnGameWindowResized(const WindowResizedEvent& resizedEvent)
+{
+    m_GameRenderingSurface->Invalidate();
 }
 
 }

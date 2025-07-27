@@ -25,6 +25,8 @@ public:
 private:
     void OnUpdate();
 
+    void OnGameWindowResized(const WindowResizedEvent& resizedEvent);
+
 private:
     OwnPtr<Window> m_GameWindow;
     std::unique_ptr<RenderingSurface> m_GameRenderingSurface;
