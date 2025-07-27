@@ -30,6 +30,10 @@ public:
     virtual ~VulkanRenderingSurface() override;
 
 public:
+    NODISCARD FORCEINLINE virtual uint32 GetMaxFramesInFlight() const override { return m_MaxFramesInFlight; }
+    NODISCARD FORCEINLINE virtual uint32 GetCurrentFrameIndex() const override { return m_CurrentFrameIndex; }
+    NODISCARD FORCEINLINE virtual uint32 GetCurrentSwapchainImageIndex() const override { return m_CurrentSwapchainImageIndex; }
+
     NODISCARD FORCEINLINE virtual uint32 GetSurfaceSizeX() const override { return m_Swapchain.SizeX; }
     NODISCARD FORCEINLINE virtual uint32 GetSurfaceSizeY() const override { return m_Swapchain.SizeY; }
 
@@ -37,6 +41,14 @@ public:
     void Destroy(bool shouldDestroyTextures);
 
     virtual std::shared_ptr<Texture2D> GetSurfaceTexture2D(uint32 imageIndex) override;
+    virtual std::shared_ptr<Texture2D> GetCurrentSurfaceTexture2D() override { return GetSurfaceTexture2D(m_CurrentSwapchainImageIndex); }
+
+    virtual void BeginFrame() override;
+    virtual void EndFrame() override;
+
+    FORCEINLINE virtual SemaphoreHandle GetImageAvailableSemaphore() override { return m_ImageAvailableSemaphores[m_CurrentFrameIndex]; }
+    FORCEINLINE virtual SemaphoreHandle GetRenderFinishedSemaphore() override { return m_RenderFinishedSemaphores[m_CurrentFrameIndex]; }
+    FORCEINLINE virtual FenceHandle GetRenderFinishedFence() override { return m_RenderFinishedFences[m_CurrentFrameIndex]; }
 
 public:
     NODISCARD FORCEINLINE VkSurfaceKHR GetSurface() const { return m_Surface; }
@@ -63,6 +75,14 @@ private:
     RenderingSurfaceInfo m_Info;
     VkSurfaceKHR m_Surface;
     Swapchain m_Swapchain;
+
+    uint32 m_MaxFramesInFlight;
+    uint32 m_CurrentFrameIndex;
+    uint32 m_CurrentSwapchainImageIndex;
+
+    std::vector<SemaphoreHandle> m_ImageAvailableSemaphores;
+    std::vector<SemaphoreHandle> m_RenderFinishedSemaphores;
+    std::vector<FenceHandle> m_RenderFinishedFences;
 };
 
 }

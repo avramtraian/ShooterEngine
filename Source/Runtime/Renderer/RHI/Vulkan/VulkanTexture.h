@@ -58,9 +58,10 @@ public:
 
 public:
     NODISCARD FORCEINLINE const Handle& GetHandle() const { return m_Handle; }
+    NODISCARD FORCEINLINE bool IsOwnedBySwapchain() const { return m_IsOwnedBySwapchain; }
 
     void InvalidateFromSurface(VulkanRenderingSurface& owningSurface, uint32 imageIndex);
-    void DestroyFromSurface(VulkanRenderingSurface& owningSurface);
+    void DestroyFromSurface();
 
 private:
     bool m_IsOwnedBySwapchain;

@@ -34,6 +34,10 @@ VulkanTexture2D::~VulkanTexture2D()
         vkDestroyImageView(g_VulkanDriver->GetDevice(), m_Handle.View, nullptr);
         vkDestroyImage(g_VulkanDriver->GetDevice(), m_Handle.Image, nullptr);
     }
+    else
+    {
+        DestroyFromSurface();
+    }
     
     m_Handle = {};
     m_SizeX = 0;
@@ -44,7 +48,7 @@ VulkanTexture2D::~VulkanTexture2D()
 void VulkanTexture2D::InvalidateFromSurface(VulkanRenderingSurface& owningSurface, uint32 imageIndex)
 {
     SE_ENSURE(m_IsOwnedBySwapchain);
-    DestroyFromSurface(owningSurface);
+    DestroyFromSurface();
 
     SE_ENSURE(imageIndex < owningSurface.GetSwapchainImageCount());
     m_Handle.Image = owningSurface.GetSwapchainImage(imageIndex);
@@ -55,7 +59,7 @@ void VulkanTexture2D::InvalidateFromSurface(VulkanRenderingSurface& owningSurfac
     m_SizeY = owningSurface.GetSwapchain().SizeY;
 }
 
-void VulkanTexture2D::DestroyFromSurface(VulkanRenderingSurface& owningSurface)
+void VulkanTexture2D::DestroyFromSurface()
 {
     m_Handle = {};
     m_SizeX = 0;

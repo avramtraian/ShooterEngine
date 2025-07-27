@@ -11,6 +11,9 @@ namespace SE
 VulkanRenderingSurface::VulkanRenderingSurface(const RenderingSurfaceInfo& info)
     : m_Info(info)
     , m_Surface(VK_NULL_HANDLE)
+    , m_MaxFramesInFlight(info.SwapchainImageCount)
+    , m_CurrentFrameIndex(0)
+    , m_CurrentSwapchainImageIndex(0)
 {
     Invalidate();
 }
@@ -93,6 +96,14 @@ static std::string VulkanPresentModeToString(VkPresentModeKHR presentMode)
 
 bool VulkanRenderingSurface::Invalidate()
 {
+    /* NOTE(Traian): Invalidating the rendering surface causes the invalidation of a lot of resources, especially textures. While it is
+     * definitely possible to keep track of them and not cause such a big wait period, the complexity it requires is just not worth it.
+     * How many times is the window resized during a game session? And how important is for the user to not drop 2-3 frames?
+     * 
+     * If for whatever reason you want to refactor this function and refactor this function (and remove the 'vkDeviceWaitIdle' call), keep
+     * in mind that a lot of the following code assumes that there are no resources that are in use on the GPU! */
+    SE_VULKAN_CHECK(vkDeviceWaitIdle(g_VulkanDriver->GetDevice()));
+
     Destroy(false);
 
 #if SE_PLATFORM_WIN64
@@ -198,14 +209,43 @@ bool VulkanRenderingSurface::Invalidate()
     SE_LOG_INFO("  Format:       %s", VulkanFormatToString(m_Swapchain.Format).c_str());
     SE_LOG_INFO("  Present mode: %s", VulkanPresentModeToString(m_Swapchain.PresentMode).c_str());
 
+    /* Create synchronization objects. */
+    {
+        m_ImageAvailableSemaphores.reserve(m_MaxFramesInFlight);
+        m_RenderFinishedSemaphores.reserve(m_MaxFramesInFlight);
+        m_RenderFinishedFences.reserve(m_MaxFramesInFlight);
+
+        for (uint32 frameIndex = 0; frameIndex < m_MaxFramesInFlight; ++frameIndex)
+        {
+            m_ImageAvailableSemaphores.push_back(g_VulkanDriver->AcquireSemaphore());
+            m_RenderFinishedSemaphores.push_back(g_VulkanDriver->AcquireSemaphore());
+            m_RenderFinishedFences.push_back(g_VulkanDriver->AcquireFence());
+        }
+    }
+
     return true;
 }
 
 void VulkanRenderingSurface::Destroy(bool shouldDestroyTextures)
 {
+    /* Destroy synchronization objects. */
+    if (!m_ImageAvailableSemaphores.empty())
+    {
+        for (uint32 frameIndex = 0; frameIndex < m_MaxFramesInFlight; ++frameIndex)
+        {
+            g_VulkanDriver->RetireSemaphore(m_ImageAvailableSemaphores[frameIndex]);
+            g_VulkanDriver->RetireSemaphore(m_RenderFinishedSemaphores[frameIndex]);
+            g_VulkanDriver->RetireFence(m_RenderFinishedFences[frameIndex]);
+        }
+
+        m_ImageAvailableSemaphores.clear();
+        m_RenderFinishedSemaphores.clear();
+        m_RenderFinishedFences.clear();
+    }
+
     /* Destroy the swapchain textures. */
     for (auto& texture : m_Swapchain.Textures)
-        texture->DestroyFromSurface(*this);
+        texture->DestroyFromSurface();
 
     if (shouldDestroyTextures)
         m_Swapchain.Textures.clear();
@@ -228,7 +268,49 @@ void VulkanRenderingSurface::Destroy(bool shouldDestroyTextures)
 
 std::shared_ptr<Texture2D> VulkanRenderingSurface::GetSurfaceTexture2D(uint32 imageIndex)
 {
-    return {};
+    auto vulkanTexture2D = std::make_shared<VulkanTexture2D>(*this, imageIndex);
+    return vulkanTexture2D;
+}
+
+void VulkanRenderingSurface::BeginFrame()
+{
+    /* Wait for the previous frame with the same index as this one to end. */
+    g_VulkanDriver->WaitForFence(m_RenderFinishedFences[m_CurrentFrameIndex], UINT64_MAX);
+    g_VulkanDriver->ResetFence(m_RenderFinishedFences[m_CurrentFrameIndex]);
+
+    /* Acquire the swapchain image. */
+    SE_VULKAN_CHECK(vkAcquireNextImageKHR(
+        g_VulkanDriver->GetDevice(),
+        m_Swapchain.Handle,
+        UINT64_MAX,
+        (VkSemaphore)m_ImageAvailableSemaphores[m_CurrentFrameIndex],
+        VK_NULL_HANDLE,
+        &m_CurrentSwapchainImageIndex));
+}
+
+void VulkanRenderingSurface::EndFrame()
+{
+    /* List of semaphores that are required to be signaled before the presentation occurs. */
+    VkSemaphore submitWaitSemaphores[] = {
+        (VkSemaphore)m_RenderFinishedSemaphores[m_CurrentFrameIndex]
+    };
+
+    VkResult presentResult = VK_SUCCESS;
+    VkPresentInfoKHR presentInfo = {};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    presentInfo.waitSemaphoreCount = (uint32)SE_ARRAY_COUNT(submitWaitSemaphores);
+    presentInfo.pWaitSemaphores = submitWaitSemaphores;
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = &m_Swapchain.Handle;
+    presentInfo.pImageIndices = &m_CurrentSwapchainImageIndex;
+    presentInfo.pResults = &presentResult;
+
+    /* Submit the presentation request to the present queue. */
+    const VkResult queuePresentResult = vkQueuePresentKHR(g_VulkanDriver->GetPresentQueue(), &presentInfo);
+
+    /* Increment the current frame index. */
+    SE_ENSURE(m_MaxFramesInFlight > 0);
+    m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % m_MaxFramesInFlight;
 }
 
 }
