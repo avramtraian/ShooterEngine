@@ -204,10 +204,10 @@ bool VulkanRenderingSurface::Invalidate()
     }
 
     /* Submit information about the swapchain creation to the logger. */
-    SE_LOG_INFO("The [Vulkan] swapchain was created with the following parameters:");
-    SE_LOG_INFO("  Image count:  %d", m_Swapchain.Images.size())
-    SE_LOG_INFO("  Format:       %s", VulkanFormatToString(m_Swapchain.Format).c_str());
-    SE_LOG_INFO("  Present mode: %s", VulkanPresentModeToString(m_Swapchain.PresentMode).c_str());
+    SE_LOG_TRACE("The [Vulkan] swapchain was created with the following parameters:");
+    SE_LOG_TRACE("  Image count:  %d", m_Swapchain.Images.size())
+    SE_LOG_TRACE("  Format:       %s", VulkanFormatToString(m_Swapchain.Format).c_str());
+    SE_LOG_TRACE("  Present mode: %s", VulkanPresentModeToString(m_Swapchain.PresentMode).c_str());
 
     /* Create synchronization objects. */
     {
