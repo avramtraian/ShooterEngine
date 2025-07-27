@@ -42,6 +42,12 @@ public:
     NODISCARD FORCEINLINE VkInstance GetInstance() const { return m_Instance; }
     NODISCARD FORCEINLINE VkDevice GetDevice() const { return m_LogicalDevice; }
     NODISCARD FORCEINLINE const PhysicalDevice& GetPhysicalDevice() const { return m_PhysicalDevice; }
+    NODISCARD FORCEINLINE const QueueFamilyIndices& GetQueueFamilyIndices() const { return m_QueueFamilyIndices; }
+
+    NODISCARD FORCEINLINE VkQueue GetGraphicsQueue() const { return m_QueueGraphics; }
+    NODISCARD FORCEINLINE VkQueue GetTransferQueue() const { return m_QueueTransfer; }
+    NODISCARD FORCEINLINE VkQueue GetComputeQueue() const { return m_QueueCompute; }
+    NODISCARD FORCEINLINE VkQueue GetPresentQueue() const { return m_QueuePresent; }
 
     NODISCARD FORCEINLINE std::shared_ptr<VulkanCommandPool> GetCommandPool(uint32 queueFamilyIndex) const
     {
@@ -61,18 +67,9 @@ public:
     virtual void RetireFence(FenceHandle fenceHandle) override;
     virtual SemaphoreHandle AcquireSemaphore() override;
     virtual void RetireSemaphore(SemaphoreHandle semaphoreHandle) override;
-public:
-    /* NOTE(Traian): Vulkan render pass objects are created on demand. There is no RHI-abstract class
-     * that a user can create that represents a render pass. Instead, a big pool of already created
-     * render passes is managed by the driver. When the user begins a render pass, the 'RenderPassInfo'
-     * structure is "hashed" and if a compatible render pass already exists that's great. Otheriwse,
-     * the driver creates a new render pass using 'vkCreateRenderPass'. */
-    VkRenderPass AcquireRenderPass(const RenderPassInfo& renderPassInfo);
-    void RetireRenderPass(VkRenderPass renderPassHandle);
 
-    /* NOTE(Traian): Similar behaviour to how render passes are managed. Read the above documentation/comments. */
-    VkFramebuffer AcquireFramebuffer(VkRenderPass renderPassHandle, const RenderPassInfo& renderPassInfo);
-    void RetireFramebuffer(VkFramebuffer framebufferHandle);
+public:
+
     virtual void WaitForFence(FenceHandle fence, uint64 timeout) override;
     virtual bool IsFenceSignaled(FenceHandle fence) override;
     virtual void ResetFence(FenceHandle fence) override;
@@ -85,6 +82,7 @@ private:
     bool PickPhysicalDevice();
     bool FindQueueFamilyIndices();
     bool CreateLogicalDevice();
+    bool CreateQueues();
     bool CreateCommandPools(const RenderingDriverInfo& info);
 
 private:
@@ -94,27 +92,17 @@ private:
     QueueFamilyIndices m_QueueFamilyIndices;
     VkDevice m_LogicalDevice;
 
+    VkQueue m_QueueGraphics;
+    VkQueue m_QueueTransfer;
+    VkQueue m_QueueCompute;
+    VkQueue m_QueuePresent;
+
     /* NOTE(Traian): The driver currently only creates one commnd pool per queue family index.
      * Once we will start extending the renderer to be multi-threaded, this architecture must
      * be expanded to allow for multiple command pools per queue family index (one for each
      * active thread for example). */
     std::unordered_map<uint32, std::shared_ptr<VulkanCommandPool>> m_CommandPoolForQueueFamilyIndex;
 
-    struct RenderPassCache
-    {
-        std::vector<std::unique_ptr<VulkanRenderPass>> CreatedObjects;
-        std::unordered_set<uint32> InUseIndices;
-        std::vector<uint32> UnusedIndices;
-    };
-    RenderPassCache m_RenderPassCache;
-
-    struct FramebufferCache
-    {
-        std::vector<std::unique_ptr<VulkanFramebuffer>> CreatedObjects;
-        std::unordered_set<uint32> InUseIndices;
-        std::vector<uint32> UnusedIndices;
-    };
-    FramebufferCache m_FramebufferCache;
     VulkanObjectPool<VkFence> m_FencePool;
     VulkanObjectPool<VkSemaphore> m_SemaphorePool;
 };

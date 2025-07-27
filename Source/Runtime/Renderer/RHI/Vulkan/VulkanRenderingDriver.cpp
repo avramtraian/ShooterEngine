@@ -323,11 +323,38 @@ bool VulkanRenderingDriver::PickPhysicalDevice()
 
 bool VulkanRenderingDriver::FindQueueFamilyIndices()
 {
+    /* NOTE(Traian): Because device creation happens before creating the main window and 
+     * other windows can be created dynamically at runtime, there is no other way to test if
+     * a queue family supports presentation functionality other than to create a dummy window,
+     * a dummy surface and to test against them. */
+    VkSurfaceKHR dummySurface = VK_NULL_HANDLE;
+
+#if SE_PLATFORM_WIN64
+    WNDCLASSA windowClass = {};
+    windowClass.hInstance = GetModuleHandle(nullptr);
+    windowClass.lpszClassName = "ShooterVulkanDummyWindowClass";
+    windowClass.lpfnWndProc = DefWindowProcA;
+    RegisterClassA(&windowClass);
+    
+    HWND dummyWindow = CreateWindowA(
+        "ShooterVulkanDummyWindowClass", "", WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+        nullptr, nullptr, GetModuleHandle(nullptr), nullptr
+    );
+
+    VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
+    surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+    surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
+    surfaceCreateInfo.hwnd = dummyWindow;
+    SE_VULKAN_CHECK(vkCreateWin32SurfaceKHR(m_Instance, &surfaceCreateInfo, nullptr, &dummySurface));
+#endif // SE_PLATFORM_WIN64
+
     enum class QueueFamilyType : uint8_t
     {
         Graphics,
         Compute,
         Transfer,
+        Present,
     };
 
     struct QueueFamily
@@ -344,14 +371,23 @@ bool VulkanRenderingDriver::FindQueueFamilyIndices()
         queueFamily.Index = familyIndex;
         queueFamily.SupportedTypeCount = 0;
 
-        if (properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) queueFamily.SupportedTypeCount++;
-        if (properties.queueFlags & VK_QUEUE_TRANSFER_BIT) queueFamily.SupportedTypeCount++;
-        if (properties.queueFlags & VK_QUEUE_COMPUTE_BIT)  queueFamily.SupportedTypeCount++;
+        VkBool32 presentSupport = false;
+        SE_VULKAN_CHECK(vkGetPhysicalDeviceSurfaceSupportKHR(m_PhysicalDevice.Handle, familyIndex, dummySurface, &presentSupport));
 
-        if (properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) queueFamilyMap[QueueFamilyType::Graphics].push_back(queueFamily);
-        if (properties.queueFlags & VK_QUEUE_TRANSFER_BIT) queueFamilyMap[QueueFamilyType::Transfer].push_back(queueFamily);
-        if (properties.queueFlags & VK_QUEUE_COMPUTE_BIT)  queueFamilyMap[QueueFamilyType::Compute].push_back(queueFamily);
+        if (properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) { queueFamily.SupportedTypeCount++; }
+        if (properties.queueFlags & VK_QUEUE_TRANSFER_BIT) { queueFamily.SupportedTypeCount++; }
+        if (properties.queueFlags & VK_QUEUE_COMPUTE_BIT)  { queueFamily.SupportedTypeCount++; }
+        if (presentSupport)                                { queueFamily.SupportedTypeCount++; }
+
+        if (properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) { queueFamilyMap[QueueFamilyType::Graphics].push_back(queueFamily); }
+        if (properties.queueFlags & VK_QUEUE_TRANSFER_BIT) { queueFamilyMap[QueueFamilyType::Transfer].push_back(queueFamily); }
+        if (properties.queueFlags & VK_QUEUE_COMPUTE_BIT)  { queueFamilyMap[QueueFamilyType::Compute].push_back(queueFamily); }
+        if (presentSupport)                                { queueFamilyMap[QueueFamilyType::Present].push_back(queueFamily); }
     }
+
+    /* Destroy the dummy surface. */
+    vkDestroySurfaceKHR(m_Instance, dummySurface, nullptr);
+    dummySurface = VK_NULL_HANDLE;
 
     auto getLowestSupportedTypeCountFamilyIndex = [&](QueueFamilyType type) -> uint32
         {
@@ -382,6 +418,10 @@ bool VulkanRenderingDriver::FindQueueFamilyIndices()
     if (queueFamilyMap[QueueFamilyType::Compute].empty())
         return false;
     m_QueueFamilyIndices.Compute = getLowestSupportedTypeCountFamilyIndex(QueueFamilyType::Compute);
+
+    if (queueFamilyMap[QueueFamilyType::Present].empty())
+        return false;
+    m_QueueFamilyIndices.Present = getLowestSupportedTypeCountFamilyIndex(QueueFamilyType::Present);
 
     return true;
 }
@@ -425,7 +465,7 @@ bool VulkanRenderingDriver::CreateLogicalDevice()
         (uint32)m_QueueFamilyIndices.Graphics,
         (uint32)m_QueueFamilyIndices.Transfer,
         (uint32)m_QueueFamilyIndices.Compute,
-        // (uint32)m_QueueFamilyIndices.Present,
+        (uint32)m_QueueFamilyIndices.Present,
     });
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -468,6 +508,34 @@ bool VulkanRenderingDriver::CreateLogicalDevice()
     return true;
 }
 
+bool VulkanRenderingDriver::CreateQueues()
+{
+    vkGetDeviceQueue(m_LogicalDevice, m_QueueFamilyIndices.Graphics, 0, &m_QueueGraphics);
+    vkGetDeviceQueue(m_LogicalDevice, m_QueueFamilyIndices.Transfer, 0, &m_QueueTransfer);
+    vkGetDeviceQueue(m_LogicalDevice, m_QueueFamilyIndices.Compute, 0, &m_QueueCompute);
+    vkGetDeviceQueue(m_LogicalDevice, m_QueueFamilyIndices.Present, 0, &m_QueuePresent);
+
+    return true;
+}
+
+bool VulkanRenderingDriver::CreateCommandPools(const RenderingDriverInfo& info)
+{
+    m_CommandPoolForQueueFamilyIndex[m_QueueFamilyIndices.Graphics] = std::make_shared<VulkanCommandPool>(VulkanCommandPoolInfo()
+        .SetCommandBufferCount(16)
+        .SetQueueFamilyIndex(m_QueueFamilyIndices.Graphics)
+    );
+    m_CommandPoolForQueueFamilyIndex[m_QueueFamilyIndices.Transfer] = std::make_shared<VulkanCommandPool>(VulkanCommandPoolInfo()
+        .SetCommandBufferCount(8)
+        .SetQueueFamilyIndex(m_QueueFamilyIndices.Transfer)
+    );
+    m_CommandPoolForQueueFamilyIndex[m_QueueFamilyIndices.Compute] = std::make_shared<VulkanCommandPool>(VulkanCommandPoolInfo()
+        .SetCommandBufferCount(4)
+        .SetQueueFamilyIndex(m_QueueFamilyIndices.Compute)
+    );
+
+    return true;
+}
+
 bool VulkanRenderingDriver::InitializeBackend(const RenderingDriverInfo& info)
 {
     SE_LOG_INFO("Initializing the [Vulkan] rendering driver backend...");
@@ -477,12 +545,17 @@ bool VulkanRenderingDriver::InitializeBackend(const RenderingDriverInfo& info)
         return false;
     }
 
+    /* Initialize the driver. */
     if (!CreateInstance())         { return false; }
     if (!PickPhysicalDevice())     { return false; }
     if (!FindQueueFamilyIndices()) { return false; }
     if (!CreateLogicalDevice())    { return false; }
-
+    if (!CreateQueues())           { return false; }
     g_VulkanDriver = this;
+
+    /* Initialize rendering subsystems. */
+    if (!CreateCommandPools(info)) { return false; }
+    
     return true;
 }
 
@@ -507,6 +580,9 @@ void VulkanRenderingDriver::ShutdownBackend()
         for (VkSemaphore semaphore : m_SemaphorePool.Unused)
             vkDestroySemaphore(m_LogicalDevice, semaphore, nullptr);
     }
+
+    /* Destroy command pools. */
+    m_CommandPoolForQueueFamilyIndex.clear();
 
     /* Destroy logical device. */
     vkDestroyDevice(m_LogicalDevice, nullptr);
