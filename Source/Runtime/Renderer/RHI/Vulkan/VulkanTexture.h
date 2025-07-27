@@ -52,7 +52,7 @@ public:
     virtual ~VulkanTexture2D() override;
 
     NODISCARD FORCEINLINE virtual TextureFormat GetFormat() const override { return m_Format; }
-    NODISCARD FORCEINLINE virtual uint32 GetSizeX() const override { return m_SizeY; }
+    NODISCARD FORCEINLINE virtual uint32 GetSizeX() const override { return m_SizeX; }
     NODISCARD FORCEINLINE virtual uint32 GetSizeY() const override { return m_SizeY; }
 
 public:
