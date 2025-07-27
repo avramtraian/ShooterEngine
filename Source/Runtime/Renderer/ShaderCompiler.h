@@ -48,6 +48,8 @@ public:
 
     SHOOTER_API static ShaderCompilationResult Compile(ShaderSourceLanguage language, ShaderBytecodeType outputBytecodeType, const std::string& sourceCode);
 
+    SHOOTER_API static std::string GetEntryPointForStage(ShaderStage stage);
+
 private:
     static bool CheckIfShaderStageIsPresent(ShaderStage stage, const std::string& sourceCode);
 };

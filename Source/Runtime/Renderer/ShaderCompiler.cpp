@@ -158,22 +158,26 @@ ShaderCompilationResult ShaderCompiler::Compile(ShaderSourceLanguage language, S
     return compilationResult;
 }
 
-bool ShaderCompiler::CheckIfShaderStageIsPresent(ShaderStage stage, const std::string& sourceCode)
+std::string ShaderCompiler::GetEntryPointForStage(ShaderStage stage)
 {
-    std::string pragmaTokenName;
-
     switch (stage)
     {
-        case ShaderStage::Vertex:   pragmaTokenName = "vertex"; break;
-        case ShaderStage::Fragment: pragmaTokenName = "fragment"; break;
+        case ShaderStage::Vertex:   return "VSMain";
+        case ShaderStage::Fragment: return "FSMain";
     }
 
+    return {};
+}
+
+bool ShaderCompiler::CheckIfShaderStageIsPresent(ShaderStage stage, const std::string& sourceCode)
+{
+    std::string mainFunctionName = GetEntryPointForStage(stage);
+
     /* Invalid shader stage. */
-    if (pragmaTokenName.empty())
+    if (mainFunctionName.empty())
         return false;
 
-    const std::string pragmaExpression = std::string("#pragma shader_stage(") + pragmaTokenName + std::string(")");
-    const size_t findPosition = sourceCode.find(pragmaExpression);
+    const size_t findPosition = sourceCode.find(mainFunctionName);
     return (findPosition != std::string::npos);
 }
 
