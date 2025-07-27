@@ -494,6 +494,20 @@ void VulkanRenderingDriver::ShutdownBackend()
         return;
     }
 
+    /* Ensure all GPU operations have finished and all resources can safely be destroyed. */
+    SE_VULKAN_CHECK(vkDeviceWaitIdle(m_LogicalDevice));
+
+    /* Destroy synchronization objects. */
+    {
+        SE_ASSERT(m_FencePool.InUse.empty());
+        for (VkFence fence : m_FencePool.Unused)
+            vkDestroyFence(m_LogicalDevice, fence, nullptr);
+
+        SE_ASSERT(m_SemaphorePool.InUse.empty());
+        for (VkSemaphore semaphore : m_SemaphorePool.Unused)
+            vkDestroySemaphore(m_LogicalDevice, semaphore, nullptr);
+    }
+
     /* Destroy logical device. */
     vkDestroyDevice(m_LogicalDevice, nullptr);
     m_LogicalDevice = VK_NULL_HANDLE;
@@ -553,73 +567,55 @@ std::shared_ptr<VertexBuffer> VulkanRenderingDriver::CreateVertexBuffer(const Ve
     return std::shared_ptr<VertexBuffer>(vulkanVertexBufferInstance);
 }
 
-VkRenderPass VulkanRenderingDriver::AcquireRenderPass(const RenderPassInfo& renderPassInfo)
+FenceHandle VulkanRenderingDriver::AcquireFence()
 {
-    /* Check if a compatible render pass already exists and it is not in use. */
-    const VulkanRenderPassLayout renderPassLayout = VulkanRenderPass::GetLayoutFromInfo(renderPassInfo);
-    for (uint32 renderPassIndex : m_RenderPassCache.UnusedIndices)
+    if (!m_FencePool.HasUnusedObjects())
     {
-        const auto& renderPass = m_RenderPassCache.CreatedObjects[renderPassIndex];
-        if (VulkanRenderPass::CheckIfLayoutsAreCompatible(renderPassLayout, renderPass->GetLayout()))
-            return renderPass->GetHandle();
+        VkFenceCreateInfo fenceCreateInfo = {};
+        fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+        VkFence fence = VK_NULL_HANDLE;
+        SE_VULKAN_CHECK(vkCreateFence(m_LogicalDevice, &fenceCreateInfo, nullptr, &fence));
+        m_FencePool.AddUnusedObject(fence);
     }
 
-    /* Create the vulkan render pass. */
-    auto renderPass = std::make_unique<VulkanRenderPass>(renderPassLayout);
-    VkRenderPass renderPassHandle = renderPass->GetHandle();
-
-    /* Register it to the cache as in-use. */
-    m_RenderPassCache.CreatedObjects.push_back(std::move(renderPass));
-    m_RenderPassCache.InUseIndices.insert((uint32)(m_RenderPassCache.CreatedObjects.size() - 1));
-
-    /* Return the render pass vulkan handle back to the caller. */
-    return renderPassHandle;
+    VkFence fence = m_FencePool.Acquire();
+    SE_ASSERT(IsFenceSignaled((FenceHandle)fence));
+    return (FenceHandle)fence;
 }
 
-void VulkanRenderingDriver::RetireRenderPass(VkRenderPass renderPassHandle)
+void VulkanRenderingDriver::RetireFence(FenceHandle fenceHandle)
 {
-    int32 renderPassIndex = -1;
-    for (uint32 inUseRenderPassIndex : m_RenderPassCache.InUseIndices)
+    if (!IsFenceSignaled((FenceHandle)fenceHandle))
     {
-        if (m_RenderPassCache.CreatedObjects[inUseRenderPassIndex]->GetHandle() == renderPassHandle)
-        {
-            renderPassIndex = inUseRenderPassIndex;
-            break;
-        }
-    }
-
-    if (renderPassIndex < 0)
-    {
-        SE_LOG_ERROR("The provided [Vulkan] render pass handle is not registered in the cache or was already retired!");
+        SE_LOG_ERROR("Trying to retire a fence that isn't signaled!");
+        SE_ASSERT_NOT_REACHED;
         return;
     }
 
-    /* Update the cache to mark the render pass as unused. */
-    m_RenderPassCache.InUseIndices.erase(renderPassIndex);
-    m_RenderPassCache.UnusedIndices.push_back(renderPassIndex);
+    VkFence fence = (VkFence)fenceHandle;
+    m_FencePool.Retire(fence);
 }
 
-VkFramebuffer VulkanRenderingDriver::AcquireFramebuffer(VkRenderPass renderPassHandle, const RenderPassInfo& renderPassInfo)
+SemaphoreHandle VulkanRenderingDriver::AcquireSemaphore()
 {
-    /* Check if a compatible framebuffer already exists and it is not in use. */
-    const VulkanFramebufferInfo framebufferInfo = VulkanFramebuffer::GetInfoFromRenderPass(renderPassHandle, renderPassInfo);
-    for (uint32 framebufferIndex : m_FramebufferCache.UnusedIndices)
+    if (!m_SemaphorePool.HasUnusedObjects())
     {
-        const auto& framebuffer = m_FramebufferCache.CreatedObjects[framebufferIndex];
-        if (VulkanFramebuffer::CheckIfFramebuffersAreCompatible(framebufferInfo, framebuffer->GetInfo()))
-            return framebuffer->GetHandle();
+        VkSemaphoreCreateInfo semaphoreCreateInfo = {};
+        semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+        VkSemaphore semaphore = VK_NULL_HANDLE;
+        SE_VULKAN_CHECK(vkCreateSemaphore(m_LogicalDevice, &semaphoreCreateInfo, nullptr, &semaphore));
+        m_SemaphorePool.AddUnusedObject(semaphore);
     }
 
-    /* Create the vulkan render pass. */
-    auto framebuffer = std::make_unique<VulkanFramebuffer>(framebufferInfo);
-    VkFramebuffer framebufferHandle = framebuffer->GetHandle();
+    VkSemaphore semaphore = m_SemaphorePool.Acquire();
+    return (SemaphoreHandle)semaphore;
+}
 
-    /* Register it to the cache as in-use. */
-    m_FramebufferCache.CreatedObjects.push_back(std::move(framebuffer));
-    m_FramebufferCache.InUseIndices.insert((uint32)(m_FramebufferCache.CreatedObjects.size() - 1));
-
-    /* Return the render pass vulkan handle back to the caller. */
-    return framebufferHandle;
+void VulkanRenderingDriver::RetireSemaphore(SemaphoreHandle semaphoreHandle)
+{
+    VkSemaphore semaphore = (VkSemaphore)semaphoreHandle;
+    m_SemaphorePool.Retire(semaphore);
 }
 
 void VulkanRenderingDriver::RetireFramebuffer(VkFramebuffer framebufferHandle)
@@ -643,6 +639,22 @@ void VulkanRenderingDriver::RetireFramebuffer(VkFramebuffer framebufferHandle)
     /* Update the cache to mark the render pass as unused. */
     m_FramebufferCache.InUseIndices.erase(framebufferIndex);
     m_FramebufferCache.UnusedIndices.push_back(framebufferIndex);
+void VulkanRenderingDriver::WaitForFence(FenceHandle fence, uint64 timeout)
+{
+    VkFence fenceHandle = (VkFence)fence;
+    SE_VULKAN_CHECK(vkWaitForFences(m_LogicalDevice, 1, &fenceHandle, VK_TRUE, timeout));
+}
+
+bool VulkanRenderingDriver::IsFenceSignaled(FenceHandle fence)
+{
+    const VkResult fenceStatus = vkGetFenceStatus(m_LogicalDevice, (VkFence)fence);
+    return (fenceStatus == VK_SUCCESS);
+}
+
+void VulkanRenderingDriver::ResetFence(FenceHandle fence)
+{
+    VkFence fenceHandle = (VkFence)fence;
+    SE_VULKAN_CHECK(vkResetFences(m_LogicalDevice, 1, &fenceHandle));
 }
 
 }

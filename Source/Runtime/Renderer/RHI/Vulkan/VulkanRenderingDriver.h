@@ -5,7 +5,7 @@
 #include <Runtime/Renderer/RHI/RenderingDriver.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCommandPool.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
-#include <Runtime/Renderer/RHI/Vulkan/VulkanFramebuffer.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanPipeline.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderPass.h>
 
 #include <unordered_map>
@@ -57,6 +57,10 @@ public:
     virtual std::shared_ptr<Texture2D> CreateTexture2D(const Texture2DInfo& info) override;
     virtual std::shared_ptr<VertexBuffer> CreateVertexBuffer(const VertexBufferInfo& info) override;
 
+    virtual FenceHandle AcquireFence() override;
+    virtual void RetireFence(FenceHandle fenceHandle) override;
+    virtual SemaphoreHandle AcquireSemaphore() override;
+    virtual void RetireSemaphore(SemaphoreHandle semaphoreHandle) override;
 public:
     /* NOTE(Traian): Vulkan render pass objects are created on demand. There is no RHI-abstract class
      * that a user can create that represents a render pass. Instead, a big pool of already created
@@ -69,6 +73,9 @@ public:
     /* NOTE(Traian): Similar behaviour to how render passes are managed. Read the above documentation/comments. */
     VkFramebuffer AcquireFramebuffer(VkRenderPass renderPassHandle, const RenderPassInfo& renderPassInfo);
     void RetireFramebuffer(VkFramebuffer framebufferHandle);
+    virtual void WaitForFence(FenceHandle fence, uint64 timeout) override;
+    virtual bool IsFenceSignaled(FenceHandle fence) override;
+    virtual void ResetFence(FenceHandle fence) override;
 
 private:
     virtual bool InitializeBackend(const RenderingDriverInfo& info) override;
@@ -108,6 +115,8 @@ private:
         std::vector<uint32> UnusedIndices;
     };
     FramebufferCache m_FramebufferCache;
+    VulkanObjectPool<VkFence> m_FencePool;
+    VulkanObjectPool<VkSemaphore> m_SemaphorePool;
 };
 
 SHOOTER_API extern VulkanRenderingDriver* g_VulkanDriver;
