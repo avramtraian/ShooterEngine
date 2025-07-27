@@ -8,13 +8,20 @@ namespace SE
 {
 
 VulkanTexture2D::VulkanTexture2D(const Texture2DInfo& info)
-    : m_Format(info.Format)
+    : m_IsOwnedBySwapchain(false)
+    , m_Format(info.Format)
+    , m_Flags(info.Flags)
     , m_SizeX(info.SizeX)
     , m_SizeY(info.SizeY)
 {}
 
 VulkanTexture2D::VulkanTexture2D(VulkanRenderingSurface& owningSurface, uint32 imageIndex)
     : m_IsOwnedBySwapchain(true)
+    , m_Format(TextureFormat::Unknown)
+    /* TODO(Traian): Ensure that these flags are actually valid! */
+    , m_Flags(TEXTURE_FLAG_RENDER_TARGET)
+    , m_SizeX(0)
+    , m_SizeY(0)
 {
     InvalidateFromSurface(owningSurface, imageIndex);
 }

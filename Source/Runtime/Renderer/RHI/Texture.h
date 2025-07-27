@@ -36,6 +36,13 @@ public:
     uint32 SizeY             { 0 };
 
 public:
+    inline Texture2DInfo& SetDebugName (std::string_view debugName) { DebugName = debugName;        return *this; }
+    inline Texture2DInfo& SetFormat    (TextureFormat format)       { Format = format;              return *this; }
+    inline Texture2DInfo& SetFlags     (TextureFlags flags)         { Flags = flags;                return *this; }
+    inline Texture2DInfo& SetSizeX     (uint32 sizeX)               { SizeX = sizeX;                return *this; }
+    inline Texture2DInfo& SetSizeY     (uint32 sizeY)               { SizeY = sizeY;                return *this; }
+    inline Texture2DInfo& SetSize      (uint32 sizeX, uint32 sizeY) { SizeX = sizeX; SizeY = sizeY; return *this; }
+    inline Texture2DInfo& AddFlags     (TextureFlags flags)         { Flags |= flags;               return *this; }
 };
 
 class Texture2D
@@ -44,6 +51,7 @@ class Texture2D
 
 public:
     NODISCARD virtual TextureFormat GetFormat() const = 0;
+    NODISCARD virtual TextureFlags GetFlags() const = 0;
     NODISCARD virtual uint32 GetSizeX() const = 0;
     NODISCARD virtual uint32 GetSizeY() const = 0;
 };

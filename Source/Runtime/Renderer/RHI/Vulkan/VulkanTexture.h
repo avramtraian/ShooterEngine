@@ -52,6 +52,7 @@ public:
     virtual ~VulkanTexture2D() override;
 
     NODISCARD FORCEINLINE virtual TextureFormat GetFormat() const override { return m_Format; }
+    NODISCARD FORCEINLINE virtual TextureFlags GetFlags() const override { return m_Flags; }
     NODISCARD FORCEINLINE virtual uint32 GetSizeX() const override { return m_SizeX; }
     NODISCARD FORCEINLINE virtual uint32 GetSizeY() const override { return m_SizeY; }
 
@@ -65,6 +66,7 @@ private:
     bool m_IsOwnedBySwapchain;
     Handle m_Handle;
     TextureFormat m_Format;
+    TextureFlags m_Flags;
     uint32 m_SizeX;
     uint32 m_SizeY;
 };
