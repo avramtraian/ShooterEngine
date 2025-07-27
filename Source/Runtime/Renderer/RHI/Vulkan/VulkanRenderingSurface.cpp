@@ -268,8 +268,8 @@ void VulkanRenderingSurface::Destroy(bool shouldDestroyTextures)
 
 std::shared_ptr<Texture2D> VulkanRenderingSurface::GetSurfaceTexture2D(uint32 imageIndex)
 {
-    auto vulkanTexture2D = std::make_shared<VulkanTexture2D>(*this, imageIndex);
-    return vulkanTexture2D;
+    SE_ENSURE(imageIndex < m_Swapchain.Textures.size());
+    return m_Swapchain.Textures[imageIndex];
 }
 
 void VulkanRenderingSurface::BeginFrame()
