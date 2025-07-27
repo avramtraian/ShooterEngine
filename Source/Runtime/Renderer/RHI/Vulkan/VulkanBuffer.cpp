@@ -98,7 +98,7 @@ VulkanIndexBuffer::VulkanIndexBuffer(const IndexBufferInfo& info)
     , m_DataType(info.DataType)
     , m_IndexCount(info.IndexCount)
 {
-    const usize bufferSize = (usize)m_DataType * GetIndexDataTypeByteCount(m_DataType);
+    const usize bufferSize = (usize)m_IndexCount * GetIndexDataTypeByteCount(m_DataType);
 
     VkBufferCreateInfo bufferCreateInfo = {};
     bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
