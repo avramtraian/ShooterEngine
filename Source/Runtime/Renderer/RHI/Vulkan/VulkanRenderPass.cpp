@@ -1,104 +1,84 @@
 // Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
+#include <Runtime/Core/Memory/MemoryOperations.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderPass.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderingDriver.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanTexture.h>
 
 namespace SE
 {
 
-VulkanRenderPassLayout VulkanRenderPass::GetLayoutFromInfo(const RenderPassInfo& info)
-{
-    VulkanRenderPassLayout layout = {};
-    return layout;
-}
-
-static bool CompareAttachments(const VulkanRenderPassAttachment& attachmentA, const VulkanRenderPassAttachment& attachmentB)
-{
-    const bool result =
-        (attachmentA.Format == attachmentB.Format) &&
-        (attachmentA.LoadOp == attachmentB.LoadOp) &&
-        (attachmentA.StoreOp == attachmentB.StoreOp) &&
-        (attachmentA.InitialLayout == attachmentB.InitialLayout) &&
-        (attachmentA.FinalLayout == attachmentB.FinalLayout);
-    return result;
-}
-
-bool VulkanRenderPass::CheckIfLayoutsAreCompatible(const VulkanRenderPassLayout& layoutA, const VulkanRenderPassLayout& layoutB)
-{
-    if (layoutA.ColorAttachments.size() != layoutB.ColorAttachments.size())
-        return false;
-
-    if ((layoutA.HasDepthStencilAttachment && !layoutB.HasDepthStencilAttachment) ||
-        (!layoutA.HasDepthStencilAttachment && layoutB.HasDepthStencilAttachment))
-    {
-        return false;
-    }
-
-    for (uint32 colorAttachmentIndex = 0; colorAttachmentIndex < (uint32)layoutA.ColorAttachments.size(); ++colorAttachmentIndex)
-    {
-        const VulkanRenderPassAttachment& attachmentA = layoutA.ColorAttachments[colorAttachmentIndex];
-        const VulkanRenderPassAttachment& attachmentB = layoutB.ColorAttachments[colorAttachmentIndex];
-        if (!CompareAttachments(attachmentA, attachmentB))
-            return false;
-    }
-
-    if (layoutA.HasDepthStencilAttachment)
-    {
-        if (!CompareAttachments(layoutA.DepthStencilAttachment, layoutB.DepthStencilAttachment))
-            return false;
-    }
-
-    return true;
-}
-
-VulkanRenderPass::VulkanRenderPass(const VulkanRenderPassLayout& layout)
+VulkanRenderPass::VulkanRenderPass(const RenderPassInfo& info)
     : m_Handle(VK_NULL_HANDLE)
-    , m_Layout(layout)
+    , m_Framebuffer(VK_NULL_HANDLE)
+    , m_HasDepthStencilAttachment(false)
 {
-    /* NOTE(Traian): The order in wich framebuffer attachments appear in the 'VkFramebufferCreateInfo.pAttachments' must match the order
-     * in which they appear in the 'VkRenderPassCreateInfo.pAttachments'. In order to ensure this contraint, the color attachments are
-     * always enumerated first, and the depth-stencil attachment (if exists) is put at the end. */
-    std::vector<VulkanRenderPassAttachment> renderPassAttachments = m_Layout.ColorAttachments;
-    if (m_Layout.HasDepthStencilAttachment)
-        renderPassAttachments.push_back(m_Layout.DepthStencilAttachment);
+    m_HasDepthStencilAttachment = (info.DepthStencilAttachment.Texture != nullptr);
+    m_Attachments = info.ColorAttachments;
+    if (m_HasDepthStencilAttachment)
+        m_Attachments.push_back(info.DepthStencilAttachment);
 
     std::vector<VkAttachmentDescription> attachmentDescriptions;
-    attachmentDescriptions.reserve(renderPassAttachments.size());
-    for (const VulkanRenderPassAttachment& attachment : renderPassAttachments)
+    attachmentDescriptions.reserve(m_Attachments.size());
+
+    for (const RenderPassAttachment& attachment : m_Attachments)
     {
         VkAttachmentDescription& attachmentDescription = attachmentDescriptions.emplace_back();
-        attachmentDescription.format = attachment.Format;
+        attachmentDescription.format = TextureFormatToVulkan(attachment.Texture->GetFormat());
         attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-        attachmentDescription.loadOp = attachment.LoadOp;
-        attachmentDescription.storeOp = attachment.StoreOp;
-        attachmentDescription.initialLayout = attachment.InitialLayout;
-        attachmentDescription.finalLayout = attachment.FinalLayout;
+
+        switch (attachment.LoadOp)
+        {
+            case AttachmentLoadOp::Load:     attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD; break;
+            case AttachmentLoadOp::Clear:    attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR; break;
+            case AttachmentLoadOp::DontCare: attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE; break;
+            default: SE_ASSERT_NOT_REACHED;
+        }
+
+        switch (attachment.StoreOp)
+        {
+            case AttachmentStoreOp::Store:    attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE; break;
+            case AttachmentStoreOp::DontCare: attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE; break;
+            default: SE_ASSERT_NOT_REACHED;
+        }
+
+        attachmentDescription.stencilLoadOp = attachmentDescription.loadOp;
+        attachmentDescription.stencilStoreOp = attachmentDescription.storeOp;
+
+        auto vulkanTexture = std::static_pointer_cast<VulkanTexture2D>(attachment.Texture);
+        attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        if (vulkanTexture->IsOwnedBySwapchain())
+            attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        else
+            attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     }
 
-    std::vector<VkAttachmentReference> subpassColorAttachments;
-    subpassColorAttachments.reserve(m_Layout.ColorAttachments.size());
+    std::vector<VkAttachmentReference> colorAttachmentReferences;
+    colorAttachmentReferences.reserve(info.ColorAttachments.size());
 
-    for (uint32 attachmentIndex = 0; attachmentIndex < (uint32)m_Layout.ColorAttachments.size(); ++attachmentIndex)
+    for (uint32 colorAttachmentIndex = 0; colorAttachmentIndex < (uint32)info.ColorAttachments.size(); ++colorAttachmentIndex)
     {
-        VkAttachmentReference& attachmentReference = subpassColorAttachments.emplace_back();
-        attachmentReference.attachment = attachmentIndex;
+        VkAttachmentReference& attachmentReference = colorAttachmentReferences.emplace_back();
+        attachmentReference.attachment = colorAttachmentIndex;
         attachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     }
 
-    VkAttachmentReference subpassDepthStencilAttachment = {};
-    if (m_Layout.HasDepthStencilAttachment)
+    VkAttachmentReference depthStencilAttachmentReference = {};
+    if (m_HasDepthStencilAttachment)
     {
-        subpassDepthStencilAttachment.attachment = (uint32)(renderPassAttachments.size() - 1);
+        /* NOTE(Traian): The depth-stencil attachment is *always* the last attachment, which means that all color attachments come before it. */
+        depthStencilAttachmentReference.attachment = (uint32)info.ColorAttachments.size();
+
         /* TODO(Traian): Use 'VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL' or 'VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL'
          * when possible instead of assuming the texture format contains both depth and stencil components. */
-        subpassDepthStencilAttachment.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        depthStencilAttachmentReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
     }
 
     VkSubpassDescription subpassDescription = {};
     subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpassDescription.colorAttachmentCount = (uint32)subpassColorAttachments.size();
-    subpassDescription.pColorAttachments = subpassColorAttachments.data();
-    subpassDescription.pDepthStencilAttachment = m_Layout.HasDepthStencilAttachment ? &subpassDepthStencilAttachment : nullptr;
+    subpassDescription.colorAttachmentCount = (uint32)colorAttachmentReferences.size();
+    subpassDescription.pColorAttachments = colorAttachmentReferences.data();
+    subpassDescription.pDepthStencilAttachment = m_HasDepthStencilAttachment ? &depthStencilAttachmentReference : nullptr;
 
     VkRenderPassCreateInfo renderPassCreateInfo = {};
     renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -109,14 +89,70 @@ VulkanRenderPass::VulkanRenderPass(const VulkanRenderPassLayout& layout)
 
     /* Create the render pass object. */
     SE_VULKAN_CHECK(vkCreateRenderPass(g_VulkanDriver->GetDevice(), &renderPassCreateInfo, nullptr, &m_Handle));
+
+    SE_ENSURE(!m_Attachments.empty());
+    const uint32 framebufferWidth = m_Attachments.front().Texture->GetSizeX();
+    const uint32 framebufferHeight = m_Attachments.front().Texture->GetSizeY();
+
+    std::vector<VkImageView> framebufferAttachments;
+    framebufferAttachments.reserve(m_Attachments.size());
+
+    for (const RenderPassAttachment& attachment : m_Attachments)
+    {
+        std::shared_ptr<VulkanTexture2D> attachmentTexture = std::static_pointer_cast<VulkanTexture2D>(attachment.Texture);
+        framebufferAttachments.push_back(attachmentTexture->GetHandle().View);
+
+        if (attachmentTexture->GetSizeX() != framebufferWidth || attachmentTexture->GetSizeY() != framebufferHeight)
+        {
+            SE_LOG_ERROR(
+                "Not all provided textures have the same dimensions! (%dx%d vs %dx%d)",
+                attachmentTexture->GetSizeX(), attachmentTexture->GetSizeY(),
+                framebufferWidth, framebufferHeight);
+            SE_ASSERT_NOT_REACHED;
+            return;
+        }
+    }
+
+    VkFramebufferCreateInfo framebufferCreateInfo = {};
+    framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+    framebufferCreateInfo.renderPass = m_Handle;
+    framebufferCreateInfo.attachmentCount = (uint32)framebufferAttachments.size();
+    framebufferCreateInfo.pAttachments = framebufferAttachments.data();
+    framebufferCreateInfo.width = framebufferWidth;
+    framebufferCreateInfo.height = framebufferHeight;
+    framebufferCreateInfo.layers = 1;
+
+    /* Create the framebuffer object. */
+    SE_VULKAN_CHECK(vkCreateFramebuffer(g_VulkanDriver->GetDevice(), &framebufferCreateInfo, nullptr, &m_Framebuffer));
 }
 
 VulkanRenderPass::~VulkanRenderPass()
 {
+    /* TODO(Traian): Investigate if these pipelines could be in use by the time this render pass is destroyed.
+     * As these pipelines are only used when this render pass is active, this should theoretically never be the case. */
+    m_Pipelines.clear();
+
+    /* Destroy the framebuffer object. */
+    vkDestroyFramebuffer(g_VulkanDriver->GetDevice(), m_Framebuffer, nullptr);
+    m_Framebuffer = {};
+
     /* Destroy the render pass object. */
     vkDestroyRenderPass(g_VulkanDriver->GetDevice(), m_Handle, nullptr);
     m_Handle = VK_NULL_HANDLE;
-    m_Layout = {};
+}
+
+VulkanPipeline* VulkanRenderPass::AcquireCompatiblePipeline(const GraphicsState& graphicsState)
+{
+    /* Check if a compatible pipeline already exists. */
+    for (const auto& pipeline : m_Pipelines)
+    {
+        if (pipeline->IsCompatibleWithGraphicsState(graphicsState))
+            return pipeline.get();
+    }
+
+    /* Create a new pipeline that matches the provided graphics state. */
+    m_Pipelines.push_back(std::make_unique<VulkanPipeline>(graphicsState, m_Handle, GetColorAttachmentCount()));
+    return m_Pipelines.back().get();
 }
 
 }

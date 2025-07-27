@@ -10,6 +10,9 @@ namespace SE
 /* RHI classes forward declarations. */
 class CommandList;
 class IndexBuffer;
+class GraphicsState;
+class Pipeline;
+class RenderPass;
 class RenderingDriver;
 class RenderingSurface;
 class Shader;
@@ -19,6 +22,8 @@ class VertexBuffer;
 /* RHI info structs forward declarations. */
 struct CommandListInfo;
 struct IndexBufferInfo;
+struct PipelineInfo;
+struct RenderPassInfo;
 struct RenderingDriverInfo;
 struct RenderingSurfaceInfo;
 struct ShaderInfo;
@@ -26,8 +31,7 @@ struct Texture2DInfo;
 struct VertexBufferInfo;
 
 /* Structures used for command dispatching. */
-struct RenderPassAttachment;
-struct RenderPassInfo;
+struct CommandListExecuteInfo;
 
 }
 

@@ -8,6 +8,8 @@
 #include <Runtime/Core/Platform/PlatformCoreInclude.h>
 
 #include <string>
+#include <unordered_set>
+#include <vector>
 
 #include <vulkan/vulkan.h>
 
@@ -50,7 +52,9 @@ NODISCARD FORCEINLINE static std::string VulkanFormatToString(VkFormat format)
 class VulkanCommandList;
 class VulkanCommandPool;
 class VulkanFramebuffer;
+class VulkanGraphicsState;
 class VulkanIndexBuffer;
+class VulkanPipeline;
 class VulkanRenderPass;
 class VulkanRenderingDriver;
 class VulkanRenderingSurface;
@@ -61,5 +65,49 @@ class VulkanVertexBuffer;
 /* Forward declarations of information structures. */
 struct VulkanCommandPoolInfo;
 struct VulkanFramebufferInfo;
+
+template<typename VulkanHandleType>
+struct VulkanObjectPool
+{
+public:
+    NODISCARD FORCEINLINE uint32 GetNumberOfUnusedObjects() const { return (uint32)Unused.size(); }
+    NODISCARD FORCEINLINE uint32 GetNumberOfInUseObjects() const { return (uint32)InUse.size(); }
+    NODISCARD FORCEINLINE bool HasUnusedObjects() const { return (GetNumberOfUnusedObjects() > 0); }
+
+public:
+    NODISCARD FORCEINLINE VulkanHandleType Acquire()
+    {
+        if (Unused.empty())
+            return VK_NULL_HANDLE;
+
+        VulkanHandleType handle = Unused.back();
+        Unused.pop_back();
+        InUse.insert(handle);
+
+        return handle;
+    }
+
+    FORCEINLINE void Retire(VulkanHandleType handle)
+    {
+        SE_ENSURE(InUse.contains(handle));
+        InUse.erase(handle);
+        Unused.push_back(handle);
+    }
+
+public:
+    NODISCARD void AddUnusedObject(VulkanHandleType handle)
+    {
+        Unused.push_back(handle);
+    }
+
+    NODISCARD void AddInUseObject(VulkanHandleType handle)
+    {
+        InUse.insert(handle);
+    }
+
+public:
+    std::vector<VulkanHandleType> Unused;
+    std::unordered_set<VulkanHandleType> InUse;
+};
 
 }

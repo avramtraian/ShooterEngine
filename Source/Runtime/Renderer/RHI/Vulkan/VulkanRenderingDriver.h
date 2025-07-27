@@ -59,6 +59,7 @@ public:
     virtual std::unique_ptr<RenderingSurface> CreateSurface(const RenderingSurfaceInfo& info) override;
     virtual std::shared_ptr<CommandList> CreateCommandList(const CommandListInfo& info) override;
     virtual std::shared_ptr<IndexBuffer> CreateIndexBuffer(const IndexBufferInfo& info) override;
+    virtual std::shared_ptr<RenderPass> CreateRenderPass(const RenderPassInfo& info) override;
     virtual std::shared_ptr<Shader> CreateShader(const ShaderInfo& info) override;
     virtual std::shared_ptr<Texture2D> CreateTexture2D(const Texture2DInfo& info) override;
     virtual std::shared_ptr<VertexBuffer> CreateVertexBuffer(const VertexBufferInfo& info) override;

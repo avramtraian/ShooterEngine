@@ -5,8 +5,9 @@
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCommandList.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderingDriver.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderingSurface.h>
-#include <Runtime/Renderer/RHI/Vulkan/VulkanTexture.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanRenderPass.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanShader.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanTexture.h>
 
 #include <string>
 #include <unordered_map>
@@ -623,6 +624,12 @@ std::shared_ptr<IndexBuffer> VulkanRenderingDriver::CreateIndexBuffer(const Inde
 {
     VulkanIndexBuffer* vulkanIndexBufferInstance = new VulkanIndexBuffer(info);
     return std::shared_ptr<IndexBuffer>(vulkanIndexBufferInstance);
+}
+
+std::shared_ptr<RenderPass> VulkanRenderingDriver::CreateRenderPass(const RenderPassInfo& info)
+{
+    VulkanRenderPass* vulkanRenderPassInstance = new VulkanRenderPass(info);
+    return std::shared_ptr<RenderPass>(vulkanRenderPassInstance);
 }
 
 std::shared_ptr<Texture2D> VulkanRenderingDriver::CreateTexture2D(const Texture2DInfo& info)

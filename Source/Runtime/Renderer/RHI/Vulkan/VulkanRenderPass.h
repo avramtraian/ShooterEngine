@@ -2,53 +2,54 @@
 
 #pragma once
 
-#include <Runtime/Renderer/RHI/RHICore.h>
+#include <Runtime/Renderer/RHI/RenderPass.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
-
-#include <vector>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanPipeline.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanTexture.h>
 
 namespace SE
 {
 
-struct VulkanRenderPassAttachment
+class VulkanRenderPass : public RenderPass
 {
-    VkFormat Format;
-    VkAttachmentLoadOp LoadOp;
-    VkAttachmentStoreOp StoreOp;
-    VkImageLayout InitialLayout;
-    VkImageLayout FinalLayout;
-};
-
-struct VulkanRenderPassLayout
-{
-    std::vector<VulkanRenderPassAttachment> ColorAttachments;
-    bool HasDepthStencilAttachment;
-    VulkanRenderPassAttachment DepthStencilAttachment;
-};
-
-class VulkanRenderPass
-{
-    SE_MAKE_NONCOPYABLE(VulkanRenderPass);
-    SE_MAKE_NONMOVABLE(VulkanRenderPass);
-
 public:
-    /* Utility functions that converts a generic render pass info into a vulkan render pass layout. */
-    NODISCARD static VulkanRenderPassLayout GetLayoutFromInfo(const RenderPassInfo& info);
-
-    /* Utility function that determines if two render pass layouts are compatible. */
-    NODISCARD static bool CheckIfLayoutsAreCompatible(const VulkanRenderPassLayout& layoutA, const VulkanRenderPassLayout& layoutB);
-
-public:
-    VulkanRenderPass(const VulkanRenderPassLayout& layout);
+    VulkanRenderPass(const RenderPassInfo& info);
     ~VulkanRenderPass();
 
+public:
     NODISCARD FORCEINLINE VkRenderPass GetHandle() const { return m_Handle; }
-    NODISCARD FORCEINLINE const VulkanRenderPassLayout& GetLayout() const { return m_Layout; }
+    NODISCARD FORCEINLINE bool HasDepthStencilAttachment() const { return m_HasDepthStencilAttachment; }
+    NODISCARD FORCEINLINE const std::vector<RenderPassAttachment>& GetAttachments() const { return m_Attachments; }
+    NODISCARD FORCEINLINE const RenderPassAttachment& GetAttachment(uint32 attachmentIndex) const
+    {
+        SE_ENSURE(attachmentIndex < m_Attachments.size());
+        return m_Attachments[attachmentIndex];
+    }
+
+    NODISCARD FORCEINLINE uint32 GetAttachmentCount() const { return (uint32)m_Attachments.size(); }
+    NODISCARD FORCEINLINE uint32 GetColorAttachmentCount() const
+    {
+        SE_ENSURE(!m_Attachments.empty());
+        uint32 colorAttachmentCount = (uint32)m_Attachments.size();
+        if (m_HasDepthStencilAttachment)
+            colorAttachmentCount--;
+        return colorAttachmentCount;
+    }
+
+    NODISCARD FORCEINLINE VkFramebuffer GetFramebuffer() const { return m_Framebuffer; }
+    NODISCARD FORCEINLINE uint32 GetFramebufferSizeX() const { return m_Attachments.front().Texture->GetSizeX(); }
+    NODISCARD FORCEINLINE uint32 GetFramebufferSizeY() const { return m_Attachments.front().Texture->GetSizeY(); }
+
+public:
+    NODISCARD VulkanPipeline* AcquireCompatiblePipeline(const GraphicsState& graphicsState);
 
 private:
     VkRenderPass m_Handle;
-    VulkanRenderPassLayout m_Layout;
+    VkFramebuffer m_Framebuffer;
+    std::vector<RenderPassAttachment> m_Attachments;
+    bool m_HasDepthStencilAttachment;
+
+    std::vector<std::unique_ptr<VulkanPipeline>> m_Pipelines;
 };
 
 }
-;

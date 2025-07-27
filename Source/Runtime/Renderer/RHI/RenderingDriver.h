@@ -41,6 +41,7 @@ public:
     
     virtual std::shared_ptr<CommandList>        CreateCommandList       (const CommandListInfo& info)       = 0;
     virtual std::shared_ptr<IndexBuffer>        CreateIndexBuffer       (const IndexBufferInfo& info)       = 0;
+    virtual std::shared_ptr<RenderPass>         CreateRenderPass        (const RenderPassInfo& info)        = 0;
     virtual std::shared_ptr<Shader>             CreateShader            (const ShaderInfo& info)            = 0;
     virtual std::shared_ptr<Texture2D>          CreateTexture2D         (const Texture2DInfo& info)         = 0;
     virtual std::shared_ptr<VertexBuffer>       CreateVertexBuffer      (const VertexBufferInfo& info)      = 0;
