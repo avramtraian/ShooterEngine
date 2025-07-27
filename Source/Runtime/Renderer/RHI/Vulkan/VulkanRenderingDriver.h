@@ -70,6 +70,7 @@ public:
     virtual void RetireSemaphore(SemaphoreHandle semaphoreHandle) override;
 
 public:
+    virtual void ExecuteCommandList(const std::shared_ptr<CommandList>& commandList, const CommandListExecuteInfo& executeInfo) override;
 
     virtual void WaitForFence(FenceHandle fence, uint64 timeout) override;
     virtual bool IsFenceSignaled(FenceHandle fence) override;

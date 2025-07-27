@@ -52,6 +52,9 @@ public:
     virtual void                                RetireSemaphore         (SemaphoreHandle semaphoreHandle)   = 0;
 
 public:
+    virtual void                                ExecuteCommandList      (const std::shared_ptr<CommandList>& commandList,
+                                                                         const CommandListExecuteInfo& executeInfo) = 0;
+
     virtual void                                WaitForFence            (FenceHandle fence, uint64 timeout) = 0;
     virtual bool                                IsFenceSignaled         (FenceHandle fence)                 = 0;
     virtual void                                ResetFence              (FenceHandle fence)                 = 0;

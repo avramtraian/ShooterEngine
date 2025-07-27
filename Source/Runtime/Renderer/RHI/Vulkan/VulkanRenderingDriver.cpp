@@ -701,27 +701,54 @@ void VulkanRenderingDriver::RetireSemaphore(SemaphoreHandle semaphoreHandle)
     m_SemaphorePool.Retire(semaphore);
 }
 
-void VulkanRenderingDriver::RetireFramebuffer(VkFramebuffer framebufferHandle)
+void VulkanRenderingDriver::ExecuteCommandList(const std::shared_ptr<CommandList>& commandList, const CommandListExecuteInfo& executeInfo)
 {
-    int32 framebufferIndex = -1;
-    for (uint32 inUseFramebufferIndex : m_FramebufferCache.InUseIndices)
+    std::shared_ptr<VulkanCommandList> vulkanCommandList = std::static_pointer_cast<VulkanCommandList>(commandList);
+    VkCommandBuffer commandBufferHandle = vulkanCommandList->GetHandle();
+
+    std::vector<VkSemaphore> waitSemaphores;
+    waitSemaphores.reserve(executeInfo.WaitSemaphores.size());
+    std::vector<VkPipelineStageFlags> waitStageMasks;
+    waitStageMasks.reserve(executeInfo.WaitSemaphores.size());
+
+    for (uint32 semaphoreIndex = 0; semaphoreIndex < executeInfo.WaitSemaphores.size(); ++semaphoreIndex)
     {
-        if (m_FramebufferCache.CreatedObjects[inUseFramebufferIndex]->GetHandle() == framebufferHandle)
-        {
-            framebufferIndex = inUseFramebufferIndex;
-            break;
-        }
+        VkPipelineStageFlags waitStageMask = 0;
+        if (executeInfo.WaitStageBits[semaphoreIndex] & PIPELINE_STAGE_TOP_OF_PIPE_BIT)             { waitStageMask |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT; }
+        if (executeInfo.WaitStageBits[semaphoreIndex] & PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT) { waitStageMask |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; }
+
+        waitSemaphores.push_back((VkSemaphore)executeInfo.WaitSemaphores[semaphoreIndex]);
+        waitStageMasks.push_back(waitStageMask);
     }
 
-    if (framebufferIndex < 0)
+    std::vector<VkSemaphore> signalSemaphores;
+    signalSemaphores.reserve(executeInfo.SignalSemaphores.size());
+    for (SemaphoreHandle semaphore : executeInfo.SignalSemaphores)
+        signalSemaphores.push_back((VkSemaphore)semaphore);
+
+    VkSubmitInfo submitInfo = {};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.waitSemaphoreCount = (uint32)waitSemaphores.size();
+    submitInfo.pWaitSemaphores = waitSemaphores.data();
+    submitInfo.pWaitDstStageMask = waitStageMasks.data();
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBufferHandle;
+    submitInfo.signalSemaphoreCount = (uint32)signalSemaphores.size();
+    submitInfo.pSignalSemaphores = signalSemaphores.data();
+
+    VkQueue submisionQueue = VK_NULL_HANDLE;
+    switch (commandList->GetFamily())
     {
-        SE_LOG_ERROR("The provided [Vulkan] framebuffer handle is not registered in the cache or was already retired!");
-        return;
+        case CommandListFamily::Graphics: submisionQueue = m_QueueGraphics; break;
+        case CommandListFamily::Transfer: submisionQueue = m_QueueTransfer; break;
+        case CommandListFamily::Compute:  submisionQueue = m_QueueCompute; break;
+        default: SE_ASSERT_NOT_REACHED;
     }
 
-    /* Update the cache to mark the render pass as unused. */
-    m_FramebufferCache.InUseIndices.erase(framebufferIndex);
-    m_FramebufferCache.UnusedIndices.push_back(framebufferIndex);
+    SE_ASSERT(submisionQueue != VK_NULL_HANDLE);
+    SE_VULKAN_CHECK(vkQueueSubmit(submisionQueue, 1, &submitInfo, (VkFence)executeInfo.SignalFence));
+}
+
 void VulkanRenderingDriver::WaitForFence(FenceHandle fence, uint64 timeout)
 {
     VkFence fenceHandle = (VkFence)fence;

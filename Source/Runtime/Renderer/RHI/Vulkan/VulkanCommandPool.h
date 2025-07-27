@@ -12,8 +12,13 @@ namespace SE
 
 struct VulkanCommandPoolInfo
 {
+public:
     uint32 CommandBufferCount { 0 };
     int32 QueueFamilyIndex { -1 };
+
+public:
+    inline VulkanCommandPoolInfo& SetCommandBufferCount (uint32 count)           { CommandBufferCount = count;          return *this; }
+    inline VulkanCommandPoolInfo& SetQueueFamilyIndex   (int32 queueFamilyIndex) { QueueFamilyIndex = queueFamilyIndex; return *this; }
 };
 
 class VulkanCommandPool

@@ -2,54 +2,57 @@
 
 #pragma once
 
-#include <Runtime/Renderer/RHI/RHICore.h>
+#include <Runtime/Renderer/RHI/RenderPass.h>
+#include <Runtime/Renderer/RHI/Buffer.h>
+#include <Runtime/Renderer/RHI/Synchronization.h>
 #include <Runtime/Renderer/RHI/Texture.h>
-
-#include <map>
-#include <memory>
-#include <string>
-#include <vector>
 
 namespace SE
 {
 
-enum class AttachmentLoadOp : uint8
+enum PipelineStageBitsEnum : uint64
 {
-    Load,
-    Clear,
-    DontCare,
+    PIPELINE_STAGE_NONE_BIT = 0,
+    PIPELINE_STAGE_TOP_OF_PIPE_BIT             = BIT(0),
+    PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT = BIT(1),
+};
+using PipelineStageBits = uint64;
+
+struct CommandListExecuteInfo
+{
+public:
+    std::vector<SemaphoreHandle> WaitSemaphores;
+    std::vector<PipelineStageBits> WaitStageBits;
+    std::vector<SemaphoreHandle> SignalSemaphores;
+    FenceHandle SignalFence { nullptr };
+
+public:
+    inline CommandListExecuteInfo& AddSignalSemaphore (SemaphoreHandle semaphore) { SignalSemaphores.push_back(semaphore); return *this; }
+    inline CommandListExecuteInfo& SetSignalFence     (FenceHandle fence)         { SignalFence = fence;                   return *this; }
+    
+    inline CommandListExecuteInfo& AddWaitSemaphore   (SemaphoreHandle semaphore, PipelineStageBits stageBits)
+    {
+        WaitSemaphores.push_back(semaphore);
+        WaitStageBits.push_back(stageBits);
+        return *this;
+    }
 };
 
-enum class AttachmentStoreOp : uint8
+enum class CommandListFamily : uint8
 {
-    Store,
-    DontCare,
+    Unknown = 0,
+    Graphics,
+    Transfer,
+    Compute,
 };
 
-struct RenderPassAttachment
+struct CommandListInfo
 {
 public:
-    std::shared_ptr<Texture2D> Texture { nullptr };
-    AttachmentLoadOp LoadOp            { AttachmentLoadOp::Load };
-    AttachmentStoreOp StoreOp          { AttachmentStoreOp::Store };
+    CommandListFamily Family { CommandListFamily::Unknown };
 
 public:
-    inline RenderPassAttachment& SetTexture (const std::shared_ptr<Texture2D>& texture) { Texture = texture; return *this; }
-    inline RenderPassAttachment& SetLoadOp  (AttachmentLoadOp loadOp)                   { LoadOp = loadOp;   return *this; }
-    inline RenderPassAttachment& SetStoreOp (AttachmentStoreOp storeOp)                 { StoreOp = storeOp; return *this; }
-};
-
-struct RenderPassInfo
-{
-public:
-    std::string DebugName;
-    std::vector<RenderPassAttachment> ColorAttachments;
-    RenderPassAttachment DepthStencilAttachment;
-
-public:
-    inline RenderPassInfo& SetDebugName              (std::string_view debugName)      { DebugName = debugName;                             return *this; }
-    inline RenderPassInfo& AddColorAttachment        (RenderPassAttachment attachment) { ColorAttachments.push_back(std::move(attachment)); return *this; }
-    inline RenderPassInfo& SetDepthStencilAttachment (RenderPassAttachment attachment) { DepthStencilAttachment = attachment;               return *this; }
+    inline CommandListInfo& SetFamily(CommandListFamily family) { Family = family; return *this; }
 };
 
 class CommandList
@@ -57,8 +60,41 @@ class CommandList
     SE_MAKE_RENDERER_RHI_INTERFACE(CommandList);
 
 public:
-    virtual void BeginRenderPass(const RenderPassInfo& renderPassInfo) = 0;
+    struct DrawStatistics
+    {
+        uint32 DrawCalls { 0 };
+        uint32 Triangles { 0 };
+        uint32 Vertices { 0 };
+    };
+
+    enum class AccumultateStatisticsPolicy : uint8
+    {
+        PerBeginEndCycle,
+        PerLifetime,
+    };
+
+public:
+    NODISCARD virtual CommandListFamily GetFamily() const = 0;
+
+    virtual void Begin() = 0;
+    virtual void End() = 0;
+
+    virtual void BeginRenderPass(const std::shared_ptr<RenderPass>& renderPass) = 0;
     virtual void EndRenderPass() = 0;
+
+    virtual void BindGraphicsState(const GraphicsState& graphicsState) = 0;
+
+    virtual void BindVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer) = 0;
+    virtual void BindIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer) = 0;
+
+    virtual void DrawIndexed(uint32 firstIndex, uint32 indexCount) = 0;
+
+public:
+    NODISCARD virtual const DrawStatistics& GetDrawStatistics() const = 0;
+    virtual void ResetDrawStatistics() = 0;
+
+    virtual void SetAccumulateStatisticsPolicy(AccumultateStatisticsPolicy policy) = 0;
+    NODISCARD virtual AccumultateStatisticsPolicy GetAccumulateStatisticsPolicy() const = 0;
 };
 
 }
