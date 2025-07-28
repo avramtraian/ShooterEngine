@@ -90,6 +90,10 @@ public:
     uint32                    ArrayCount   { 1 };
 
 public:
+    inline GraphicsResourceBinding& SetBindingIndex (uint32 bindingIndex)                    { BindingIndex = bindingIndex; return *this; }
+    inline GraphicsResourceBinding& SetStages       (GraphicsStateStageBits stages)          { Stages = stages;             return *this; }
+    inline GraphicsResourceBinding& SetResourceType (GraphicsStateResourceType resourceType) { ResourceType = resourceType; return *this; }
+    inline GraphicsResourceBinding& SetArrayCount   (uint32 arrayCount)                      { ArrayCount = arrayCount;     return *this; }
 };
 
 struct GraphicsResourceSet
@@ -99,6 +103,8 @@ public:
     std::vector<GraphicsResourceBinding> Bindings;
 
 public:
+    inline GraphicsResourceSet& SetSetIndex (uint32 setIndex)                 { SetIndex = setIndex;                    return *this; }
+    inline GraphicsResourceSet& AddBinding  (GraphicsResourceBinding binding) { Bindings.push_back(std::move(binding)); return *this; }
 };
 
 class GraphicsState
@@ -124,6 +130,7 @@ public:
     inline GraphicsState& SetHasStencilAttachment      (bool value)                           { HasStencilAttachment = value;                                     return *this; }
     inline GraphicsState& SetHasDepthStencilAttachment (bool hasDepth, bool hasStencil)       { HasDepthAttachment = hasDepth; HasStencilAttachment = hasStencil; return *this; }
     inline GraphicsState& SetEnableBlending            (bool value)                           { EnableBlending = value;                                           return *this; }
+    inline GraphicsState& AddResourceSet               (GraphicsResourceSet set)              { ResourceSets.push_back(std::move(set));                           return *this; }
 };
 
 }
