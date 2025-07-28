@@ -274,6 +274,12 @@ std::shared_ptr<Texture2D> VulkanRenderingSurface::GetSurfaceTexture2D(uint32 im
 
 void VulkanRenderingSurface::BeginFrame()
 {
+    if (m_Info.OwningWindow->GetSizeX() == 0 || m_Info.OwningWindow->GetSizeY() == 0)
+    {
+        SE_LOG_ERROR("Trying to begin a frame on a rendering surface whose parent window is zero-sized. Rendering should be skipped!");
+        return;
+    }
+
     /* Wait for the previous frame with the same index as this one to end. */
     g_VulkanDriver->WaitForFence(m_RenderFinishedFences[m_CurrentFrameIndex], UINT64_MAX);
     g_VulkanDriver->ResetFence(m_RenderFinishedFences[m_CurrentFrameIndex]);

@@ -135,7 +135,18 @@ void GameEngine::OnUpdate()
 
 void GameEngine::OnGameWindowResized(const WindowResizedEvent& resizedEvent)
 {
-    m_GameRenderingSurface->Invalidate();
+    if (resizedEvent.GetNewSizeX() > 0 && resizedEvent.GetNewSizeY() > 0)
+    {
+        /* NOTE(Traian): Invalidating a rendering surface that targets a zero-sized window might
+         * cause undefined behaviour and trigger the validation layers. */
+        
+        if (m_GameRenderingSurface->GetSurfaceSizeX() != resizedEvent.GetNewSizeX() || m_GameRenderingSurface->GetSurfaceSizeY() != resizedEvent.GetNewSizeY())
+        {
+            /* NOTE(Traian): Only recreate the rendering surface if the new window size doesn't match
+             * the size of the existing rendering surface. */
+            m_GameRenderingSurface->Invalidate();
+        }
+    }
 }
 
 }
