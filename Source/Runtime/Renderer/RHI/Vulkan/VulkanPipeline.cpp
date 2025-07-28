@@ -128,6 +128,8 @@ void VulkanPipeline::InvalidatePipelineLayout()
 
             VkDescriptorSetLayoutBinding& layoutBinding = bindings.emplace_back();
             layoutBinding.binding = resourceBinding.BindingIndex;
+            layoutBinding.descriptorCount = resourceBinding.ArrayCount;
+            layoutBinding.pImmutableSamplers = nullptr;
 
             switch (resourceBinding.ResourceType)
             {
