@@ -50,17 +50,18 @@ NODISCARD FORCEINLINE static std::string VulkanFormatToString(VkFormat format)
 
 /* Forward declarations of RHI interfaces. */
 class VulkanCommandList;
-class VulkanCommandPool;
-class VulkanFramebuffer;
-class VulkanGraphicsState;
 class VulkanIndexBuffer;
-class VulkanPipeline;
 class VulkanRenderPass;
 class VulkanRenderingDriver;
 class VulkanRenderingSurface;
 class VulkanShader;
 class VulkanTexture2D;
 class VulkanVertexBuffer;
+
+/* Forward declarations of Vulkan-specific classes. */
+class VulkanCommandPool;
+class VulkanFramebuffer;
+class VulkanPipeline;
 
 /* Forward declarations of information structures. */
 struct VulkanCommandPoolInfo;
