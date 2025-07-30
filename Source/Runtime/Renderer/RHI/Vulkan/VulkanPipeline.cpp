@@ -3,7 +3,6 @@
 #include <Runtime/Renderer/RHI/Vulkan/VulkanPipeline.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderingDriver.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanShader.h>
-#include <Runtime/Renderer/ShaderCompiler.h>
 
 namespace SE
 {
@@ -168,25 +167,14 @@ void VulkanPipeline::InvalidatePipeline(VkRenderPass renderPassHandle, uint32 co
     std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
     shaderStages.reserve(shader->GetModuleCount());
 
-    /* NOTE(Traian): Because the 'VkPipelineShaderStageCreateInfo' expects raw C-style string pointers, the actual 'std::string' object
-     * that holds the shader entry point name must be kept alive until the pipeline is created. For the same reason, re-allocations
-     * inside the 'std::vector' must be avoided, as the movement of the strings in the internal memory block will cause the C-style
-     * string pointers to be invalidated. */
-    std::vector<std::string> shaderEntryPoints;
-    shaderEntryPoints.resize(shader->GetModuleCount());
-
-    for (uint32 moduleIndex = 0; moduleIndex < shader->GetModuleCount(); ++moduleIndex)
+    for (const VulkanShader::Module& module : shader->GetModules())
     {
-        const VulkanShader::Module& module = shader->GetModules()[moduleIndex];
-        shaderEntryPoints[moduleIndex] = ShaderCompiler::GetEntryPointForStage(module.Stage);
-
-        VkPipelineShaderStageCreateInfo stageCreateInfo = {};
+        VkPipelineShaderStageCreateInfo& stageCreateInfo = shaderStages.emplace_back();
         stageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        stageCreateInfo.stage = module.VulkanStage;
+        stageCreateInfo.stage = module.Stage;
         stageCreateInfo.module = module.Handle;
-        stageCreateInfo.pName = shaderEntryPoints[moduleIndex].c_str();
+        stageCreateInfo.pName = module.EntryPoint.c_str();
         stageCreateInfo.pSpecializationInfo = nullptr;
-        shaderStages.push_back(stageCreateInfo);
     }
 
     std::vector<VkVertexInputAttributeDescription> vertexAttributes;

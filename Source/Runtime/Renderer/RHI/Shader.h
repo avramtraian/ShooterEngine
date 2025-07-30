@@ -4,7 +4,8 @@
 
 #include <Runtime/Core/CoreAssertions.h>
 #include <Runtime/Renderer/RHI/RHICore.h>
-#include <Runtime/Renderer/ShaderStage.h>
+#include <Runtime/Renderer/ShaderCompiler/ShaderReflectionData.h>
+#include <Runtime/Renderer/ShaderCompiler/ShaderStage.h>
 
 #include <string>
 #include <vector>
@@ -12,16 +13,26 @@
 namespace SE
 {
 
+struct ShaderStageInfo
+{
+public:
+    ShaderStage Stage { ShaderStage::Unknown };
+    std::vector<uint8> Bytecode;
+    ShaderReflectionData ReflectionData;
+
+public:
+    inline ShaderStageInfo& SetStage          (ShaderStage stage)                   { Stage = stage;                              return *this; }
+    inline ShaderStageInfo& SetBytecode       (std::vector<uint8> bytecode)         { Bytecode = std::move(bytecode);             return *this; }
+    inline ShaderStageInfo& SetReflectionData (ShaderReflectionData reflectionData) { ReflectionData = std::move(reflectionData); return *this; }
+};
+
 struct ShaderInfo
 {
 public:
-    std::string DebugName;
     std::vector<ShaderStageInfo> Stages;
 
 public:
-    inline ShaderInfo& SetDebugName (std::string_view debugName)          { DebugName = debugName;      return *this; }
-    inline ShaderInfo& SetStages    (std::vector<ShaderStageInfo> stages) { Stages = std::move(stages); return *this; }
-    inline ShaderInfo& AddStage     (const ShaderStageInfo& stage)        { Stages.push_back(stage);    return *this; }
+    inline ShaderInfo& AddStage (ShaderStageInfo stage) { Stages.push_back(std::move(stage)); return *this; }
 };
 
 class Shader

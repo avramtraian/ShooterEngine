@@ -6,7 +6,6 @@
 #include <Runtime/Engine/GameEngine.h>
 #include <Runtime/Renderer/RHI/RenderingDriver.h>
 #include <Runtime/Renderer/RHI/RenderingSurface.h>
-#include <Runtime/Renderer/ShaderCompiler.h>
 #include <Runtime/Renderer/ShaderLibrary.h>
 
 namespace SE
@@ -76,15 +75,6 @@ bool GameEngine::Initialize()
     }
     SE_LOG_INFO("The primary game rendering surface was created successfully.");
 
-    const bool shaderCompilerInitializeResult = ShaderCompiler::Initialize();
-    if (!shaderCompilerInitializeResult)
-    {
-        /* The engine might not require to compile any shaders, so this is not a critical error.
-         * Don't exit the engine initialization process yet. */
-        SE_LOG_ERROR("Failed to initilize the shader compiler!");
-    }
-    SE_LOG_INFO("The shader compiler was initialized successfully.");
-
     const bool shaderLibraryInitializeResult = ShaderLibrary::Initialize();
     if (!shaderLibraryInitializeResult)
     {
@@ -100,9 +90,8 @@ void GameEngine::Shutdown()
 {
     SE_LOG_INFO("Shutting down the engine systems...");
 
-    /* Shutdown the shader library and compiler. */
+    /* Shutdown the shader library. */
     ShaderLibrary::Shutdown();
-    ShaderCompiler::Shutdown();
 
     /* Destroy the game rendering surface. */
     m_GameRenderingSurface.reset();

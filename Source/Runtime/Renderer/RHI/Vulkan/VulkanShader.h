@@ -14,8 +14,8 @@ public:
     struct Module
     {
         VkShaderModule Handle { VK_NULL_HANDLE };
-        VkShaderStageFlagBits VulkanStage;
-        ShaderStage Stage;
+        VkShaderStageFlagBits Stage;
+        std::string EntryPoint;
     };
 
 public:
@@ -25,8 +25,13 @@ public:
     NODISCARD FORCEINLINE uint32 GetModuleCount() const { return (uint32)m_Modules.size(); }
     NODISCARD FORCEINLINE const std::vector<Module>& GetModules() const { return m_Modules; }
 
+    NODISCARD FORCEINLINE VkPipelineLayout GetPipelineLayout() const { return m_PipelineLayout; }
+
 private:
     std::vector<Module> m_Modules;
+
+    std::vector<VkDescriptorSetLayout> m_DescriptorSetLayouts;
+    VkPipelineLayout m_PipelineLayout;
 };
 
 }

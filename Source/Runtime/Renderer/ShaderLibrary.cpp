@@ -3,7 +3,7 @@
 #include <Runtime/Core/Log.h>
 #include <Runtime/Renderer/RHI/RenderingDriver.h>
 #include <Runtime/Renderer/RHI/Shader.h>
-#include <Runtime/Renderer/ShaderCompiler.h>
+#include <Runtime/Renderer/ShaderCompiler/ShaderCompiler.h>
 #include <Runtime/Renderer/ShaderLibrary.h>
 
 #include <fstream>
@@ -44,10 +44,11 @@ bool ShaderLibrary::LoadFromFile(std::string shaderName, const std::filesystem::
     if (!s_LibraryData)
         return false;
 
-    /* There already exists a shader associated with the given name. */
+    // There already exists a shader associated with the given name.
     if (s_LibraryData->LoadedShaders.contains(shaderName))
         return false;
 
+    // Read the source code from the provided source file.
     std::ifstream fileInputStream(sourceFilepath);
     if (!fileInputStream.is_open())
     {
@@ -58,35 +59,37 @@ bool ShaderLibrary::LoadFromFile(std::string shaderName, const std::filesystem::
         );
         return false;
     }
-
     std::stringstream fileData;
     fileData << fileInputStream.rdbuf();
+    const std::string shaderSourceCode = fileData.str();
 
-    /* Compile the shader. */
-    const ShaderCompilationResult compilationResult = ShaderCompiler::Compile(
-        ShaderSourceLanguage::HLSL,
-        ShaderBytecodeType::SPIRV,
-        fileData.str()
-    );
-
-    if (!compilationResult.ErrorStream.empty())
+    // Compile the shader from source code.
+    ShaderCompiler compiler = ShaderCompiler(shaderSourceCode);
+    if (!compiler.Compile())
     {
-        /* NOTE(Traian): The shader compilation failed. The compile function already logs the
-         * compilation errors/warnings, so we don't have to do it again. */
+        SE_LOG_WARN("Shader '%s' wasn't compiled successfully!", shaderName.c_str());
         return false;
     }
 
-    /* Create the RHI shader. */
-    std::shared_ptr<Shader> loadedShader = g_RenderingDriver->CreateShader(ShaderInfo()
-        .SetStages(compilationResult.CompiledStages)
-    );
+    // Create the RHI shader object information structure which contains the compiled stages.
+    ShaderInfo shaderInfo = {};
+    for (const CompiledShaderStage& compiledStage : compiler.GetCompiledStages())
+    {
+        shaderInfo.AddStage(ShaderStageInfo()
+            .SetStage(compiledStage.Stage)
+            .SetBytecode(compiledStage.Bytecode)
+            .SetReflectionData(compiledStage.ReflectionData));
+    }
+
+    // Create the RHI shader object.
+    std::shared_ptr<Shader> loadedShader = g_RenderingDriver->CreateShader(shaderInfo);
     if (!loadedShader)
     {
-        SE_LOG_WARN("Shader '%s' wasn't created successfully.", shaderName);
+        SE_LOG_WARN("Shader '%s' RHI object wasn't created successfully.", shaderName.c_str());
         return false;
     }
 
-    /* Insert the loaded shader in the table. */
+    // Insert the loaded shader in the table.
     s_LibraryData->LoadedShaders.insert({ std::move(shaderName), loadedShader });
     return true;
 }
