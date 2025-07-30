@@ -67,58 +67,17 @@ enum class GraphicsFrontFace : uint8
     CounterClockwise,
 };
 
-enum GraphicStateStageEnum : uint32
-{
-    GRAPHICS_STATE_STAGE_BIT_NONE     = 0,
-    GRAPHICS_STATE_STAGE_BIT_VERTEX   = BIT(0),
-    GRAPHICS_STATE_STAGE_BIT_FRAGMENT = BIT(1),
-};
-using GraphicsStateStageBits = uint32;
-
-enum class GraphicsStateResourceType : uint16
-{
-    Unknown = 0,
-    Texture2D,
-};
-
-struct GraphicsResourceBinding
-{
-public:
-    int32                     BindingIndex { -1 };
-    GraphicsStateStageBits    Stages       { GRAPHICS_STATE_STAGE_BIT_NONE };
-    GraphicsStateResourceType ResourceType { GraphicsStateResourceType::Unknown };
-    uint32                    ArrayCount   { 1 };
-
-public:
-    inline GraphicsResourceBinding& SetBindingIndex (uint32 bindingIndex)                    { BindingIndex = bindingIndex; return *this; }
-    inline GraphicsResourceBinding& SetStages       (GraphicsStateStageBits stages)          { Stages = stages;             return *this; }
-    inline GraphicsResourceBinding& SetResourceType (GraphicsStateResourceType resourceType) { ResourceType = resourceType; return *this; }
-    inline GraphicsResourceBinding& SetArrayCount   (uint32 arrayCount)                      { ArrayCount = arrayCount;     return *this; }
-};
-
-struct GraphicsResourceSet
-{
-public:
-    int32 SetIndex { -1 };
-    std::vector<GraphicsResourceBinding> Bindings;
-
-public:
-    inline GraphicsResourceSet& SetSetIndex (uint32 setIndex)                 { SetIndex = setIndex;                    return *this; }
-    inline GraphicsResourceSet& AddBinding  (GraphicsResourceBinding binding) { Bindings.push_back(std::move(binding)); return *this; }
-};
-
 class GraphicsState
 {
 public:
-    std::shared_ptr<Shader>          Shader;
-    GraphicsVertexInputLayout        VertexInputLayout;
-    GraphicsTopology                 Topology             { GraphicsTopology::Unknown };
-    GraphicsCullMode                 CullMode             { GraphicsCullMode::Disabled };
-    GraphicsFrontFace                FrontFace            { GraphicsFrontFace::Clockwise };
-    bool                             HasDepthAttachment   { false };
-    bool                             HasStencilAttachment { false };
-    bool                             EnableBlending       { true };
-    std::vector<GraphicsResourceSet> ResourceSets;
+    std::shared_ptr<Shader>   Shader;
+    GraphicsVertexInputLayout VertexInputLayout;
+    GraphicsTopology          Topology             { GraphicsTopology::Unknown };
+    GraphicsCullMode          CullMode             { GraphicsCullMode::Disabled };
+    GraphicsFrontFace         FrontFace            { GraphicsFrontFace::Clockwise };
+    bool                      HasDepthAttachment   { false };
+    bool                      HasStencilAttachment { false };
+    bool                      EnableBlending       { true };
 
 public:
     inline GraphicsState& SetShader                    (std::shared_ptr<class Shader> shader) { Shader = std::move(shader);                                       return *this; }
@@ -130,7 +89,6 @@ public:
     inline GraphicsState& SetHasStencilAttachment      (bool value)                           { HasStencilAttachment = value;                                     return *this; }
     inline GraphicsState& SetHasDepthStencilAttachment (bool hasDepth, bool hasStencil)       { HasDepthAttachment = hasDepth; HasStencilAttachment = hasStencil; return *this; }
     inline GraphicsState& SetEnableBlending            (bool value)                           { EnableBlending = value;                                           return *this; }
-    inline GraphicsState& AddResourceSet               (GraphicsResourceSet set)              { ResourceSets.push_back(std::move(set));                           return *this; }
 };
 
 }

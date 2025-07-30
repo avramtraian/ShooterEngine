@@ -59,7 +59,6 @@ VulkanPipeline::VulkanPipeline(const GraphicsState& graphicsState, VkRenderPass 
     : m_Handle(VK_NULL_HANDLE)
     , m_GraphicsState(graphicsState)
 {
-    InvalidatePipelineLayout();
     InvalidatePipeline(renderPassHandle, colorAttachmentCount);
 }
 
@@ -69,100 +68,15 @@ VulkanPipeline::~VulkanPipeline()
     vkDestroyPipeline(g_VulkanDriver->GetDevice(), m_Handle, nullptr);
     m_Handle = VK_NULL_HANDLE;
 
-    /* Destroy the pipeline layout object. */
-    vkDestroyPipelineLayout(g_VulkanDriver->GetDevice(), m_PipelineLayout.Handle, nullptr);
-    m_PipelineLayout.Handle = VK_NULL_HANDLE;
-    
-    /* Destroy the descriptor set layout objects. */
-    for (VkDescriptorSetLayout setLayout : m_PipelineLayout.SetLayouts)
-        vkDestroyDescriptorSetLayout(g_VulkanDriver->GetDevice(), setLayout, nullptr);
-    m_PipelineLayout.SetLayouts.clear();
-
     /* Invalidate the graphics state. */
     m_GraphicsState = {};
-}
-
-void VulkanPipeline::InvalidatePipelineLayout()
-{
-    int32 maxSetIndex = -1;
-    for (const GraphicsResourceSet& resourceSet : m_GraphicsState.ResourceSets)
-    {
-        if (resourceSet.SetIndex > maxSetIndex)
-            maxSetIndex = resourceSet.SetIndex;
-    }
-
-    /* NOTE(Traian):
-     *
-     * The indices corresponding to each descriptor set layout are implicitly determined by the order in which elements
-     * appear in the 'VkPipelineLayoutCreateInfo::pSetLayouts' array. If a descriptor set index is not used by the shader,
-     * it is acceptable for the corresponding set layout to be VK_NULL_HANDLE.
-     *
-     * For example, if a shader uses descriptor sets 0, 1 and 3, in order to correctly implement this "gap" feature we must
-     * set the descriptor set layout corresponding to index 2 to VK_NULL_HANDLE. */
-    m_PipelineLayout.SetLayouts.resize(maxSetIndex + 1, VK_NULL_HANDLE);
-
-    for (const GraphicsResourceSet& resourceSet : m_GraphicsState.ResourceSets)
-    {
-        if (resourceSet.SetIndex < 0)
-        {
-            SE_LOG_ERROR("All graphics resource sets must have a valid SetIndex! (SetIndex = %d)", resourceSet.SetIndex);
-            continue;
-        }
-        if (m_PipelineLayout.SetLayouts[resourceSet.SetIndex])
-        {
-            SE_LOG_ERROR("Multiple graphics resource sets correspond to the same set index! (SetIndex = %d)", resourceSet.SetIndex);
-            continue;
-        }
-
-        std::vector<VkDescriptorSetLayoutBinding> bindings;
-        bindings.reserve(resourceSet.Bindings.size());
-
-        for (const GraphicsResourceBinding& resourceBinding : resourceSet.Bindings)
-        {
-            if (resourceBinding.BindingIndex < 0)
-            {
-                SE_LOG_ERROR("All graphics resource bindings must have a valid BindingIndex! (SetIndex = %d, BindingIndex = %d)", resourceSet.SetIndex, resourceBinding.BindingIndex);
-                continue;
-            }
-
-            VkDescriptorSetLayoutBinding& layoutBinding = bindings.emplace_back();
-            layoutBinding.binding = resourceBinding.BindingIndex;
-            layoutBinding.descriptorCount = resourceBinding.ArrayCount;
-            layoutBinding.pImmutableSamplers = nullptr;
-
-            switch (resourceBinding.ResourceType)
-            {
-                case GraphicsStateResourceType::Texture2D: layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER; break;
-                default: SE_ASSERT_NOT_REACHED;
-            }
-
-            layoutBinding.stageFlags = 0;
-            if (resourceBinding.Stages & GRAPHICS_STATE_STAGE_BIT_VERTEX) { layoutBinding.stageFlags |= VK_SHADER_STAGE_VERTEX_BIT; }
-            if (resourceBinding.Stages & GRAPHICS_STATE_STAGE_BIT_FRAGMENT) { layoutBinding.stageFlags |= VK_SHADER_STAGE_FRAGMENT_BIT; }
-        }
-
-        VkDescriptorSetLayoutCreateInfo setLayoutCreateInfo = {};
-        setLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        setLayoutCreateInfo.bindingCount = (uint32)bindings.size();
-        setLayoutCreateInfo.pBindings = bindings.data();
-
-        VkDescriptorSetLayout setLayout = VK_NULL_HANDLE;
-        SE_VULKAN_CHECK(vkCreateDescriptorSetLayout(g_VulkanDriver->GetDevice(), &setLayoutCreateInfo, nullptr, &setLayout));
-        m_PipelineLayout.SetLayouts[resourceSet.SetIndex] = setLayout;
-    }
-
-    VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
-    pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutCreateInfo.setLayoutCount = (uint32)m_PipelineLayout.SetLayouts.size();
-    pipelineLayoutCreateInfo.pSetLayouts = m_PipelineLayout.SetLayouts.data();
-
-    SE_VULKAN_CHECK(vkCreatePipelineLayout(g_VulkanDriver->GetDevice(), &pipelineLayoutCreateInfo, nullptr, &m_PipelineLayout.Handle));
 }
 
 void VulkanPipeline::InvalidatePipeline(VkRenderPass renderPassHandle, uint32 colorAttachmentCount)
 {
     std::shared_ptr<VulkanShader> shader = std::static_pointer_cast<VulkanShader>(m_GraphicsState.Shader);
     SE_ASSERT(shader);
+    VkPipelineLayout pipelineLayout = shader->GetPipelineLayout();
 
     std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
     shaderStages.reserve(shader->GetModuleCount());
@@ -332,7 +246,7 @@ void VulkanPipeline::InvalidatePipeline(VkRenderPass renderPassHandle, uint32 co
     graphicsPipelineCreateInfo.pDepthStencilState = &depthStencilState;
     graphicsPipelineCreateInfo.pColorBlendState = &colorBlendState;
     graphicsPipelineCreateInfo.pDynamicState = &dynamicState;
-    graphicsPipelineCreateInfo.layout = m_PipelineLayout.Handle;
+    graphicsPipelineCreateInfo.layout = pipelineLayout;
     graphicsPipelineCreateInfo.renderPass = renderPassHandle;
     graphicsPipelineCreateInfo.subpass = 0;
     graphicsPipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;

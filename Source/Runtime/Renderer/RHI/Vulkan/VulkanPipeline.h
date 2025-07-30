@@ -26,19 +26,10 @@ public:
     NODISCARD bool IsCompatibleWithGraphicsState(const GraphicsState& graphicsState) const;
 
 private:
-    void InvalidatePipelineLayout();
     void InvalidatePipeline(VkRenderPass renderPassHandle, uint32 colorAttachmentCount);
 
 private:
     VkPipeline m_Handle;
-
-    struct PipelineLayout
-    {
-        VkPipelineLayout Handle { VK_NULL_HANDLE };
-        std::vector<VkDescriptorSetLayout> SetLayouts;
-    };
-
-    PipelineLayout m_PipelineLayout;
     GraphicsState m_GraphicsState;
 };
 
