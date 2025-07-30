@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <Runtime/Core/Memory/Buffer.h>
 #include <Runtime/Renderer/ShaderCompiler/ShaderReflectionData.h>
 #include <Runtime/Renderer/ShaderCompiler/ShaderStage.h>
 
@@ -17,7 +18,7 @@ struct CompiledShaderStage
 public:
     ShaderStage          Stage { ShaderStage::Unknown };
     ShaderReflectionData ReflectionData;
-    std::vector<uint8>   Bytecode;
+    Buffer               Bytecode;
 };
 
 class ShaderCompiler
@@ -44,8 +45,8 @@ private:
     void AddBaseCompilerArguments(std::vector<const wchar_t*>& outArguments);
     void AddStageSpecificCompilerArguments(std::vector<const wchar_t*>& outArguments, ShaderStage stage);
 
-    std::vector<uint8> GenerateBytecodeForStage(ShaderStage stage, const std::vector<const wchar_t*>& compilerArguments);
-    std::optional<ShaderReflectionData> GenerateReflectionData(ShaderStage stage, const std::vector<uint8>& compiledStage);
+    Buffer GenerateBytecodeForStage(ShaderStage stage, VectorView<const wchar_t*> compilerArguments);
+    std::optional<ShaderReflectionData> GenerateReflectionData(ShaderStage stage, ReadonlyBufferView bytecode);
 
 private:
     std::string m_SourceCode;

@@ -25,8 +25,8 @@ VulkanShader::VulkanShader(const ShaderInfo& info)
         // Create the shader module object.
         VkShaderModuleCreateInfo shaderModuleCreateInfo = {};
         shaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        shaderModuleCreateInfo.codeSize = shaderStage.Bytecode.size();
-        shaderModuleCreateInfo.pCode = (const uint32*)shaderStage.Bytecode.data();
+        shaderModuleCreateInfo.codeSize = shaderStage.Bytecode.Count();
+        shaderModuleCreateInfo.pCode = (const uint32*)shaderStage.Bytecode.Elements();
         VkShaderModule shaderModule = VK_NULL_HANDLE;
         SE_VULKAN_CHECK(vkCreateShaderModule(g_VulkanDriver->GetDevice(), &shaderModuleCreateInfo, nullptr, &shaderModule));
 

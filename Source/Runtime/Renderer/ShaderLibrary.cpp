@@ -77,7 +77,7 @@ bool ShaderLibrary::LoadFromFile(std::string shaderName, const std::filesystem::
     {
         shaderInfo.AddStage(ShaderStageInfo()
             .SetStage(compiledStage.Stage)
-            .SetBytecode(compiledStage.Bytecode)
+            .SetBytecode(compiledStage.Bytecode.ToVectorView())
             .SetReflectionData(compiledStage.ReflectionData));
     }
 

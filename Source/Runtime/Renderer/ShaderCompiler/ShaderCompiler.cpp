@@ -1,5 +1,6 @@
 // Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
+#include <Runtime/Core/Containers/VectorView.h>
 #include <Runtime/Core/Memory/MemoryOperations.h>
 #include <Runtime/Core/Log.h>
 #include <Runtime/Renderer/ShaderCompiler/ShaderCompiler.h>
@@ -83,8 +84,8 @@ bool ShaderCompiler::Compile()
         AddStageSpecificCompilerArguments(compilerArguments, shaderStage);
 
         // Generate the bytecode.
-        std::vector<uint8> bytecode = GenerateBytecodeForStage(shaderStage, compilerArguments);
-        if (bytecode.empty())
+        Buffer bytecode = GenerateBytecodeForStage(shaderStage, compilerArguments);
+        if (bytecode.IsEmpty())
             return false;
 
         // Generate the reflection data.
@@ -143,7 +144,7 @@ void ShaderCompiler::AddStageSpecificCompilerArguments(std::vector<const wchar_t
     }
 }
 
-std::vector<uint8> ShaderCompiler::GenerateBytecodeForStage(ShaderStage stage, const std::vector<const wchar_t*>& compilerArguments)
+Buffer ShaderCompiler::GenerateBytecodeForStage(ShaderStage stage, VectorView<const wchar_t*> compilerArguments)
 {
     DxcBuffer sourceCodeBuffer = {};
     sourceCodeBuffer.Encoding = DXC_CP_ACP;
@@ -154,7 +155,7 @@ std::vector<uint8> ShaderCompiler::GenerateBytecodeForStage(ShaderStage stage, c
     CComPtr<IDxcResult> stageCompilationResult;
     HRESULT compileResult = s_DXCInstance->Compiler->Compile(
         &sourceCodeBuffer,
-        (LPCWSTR*)compilerArguments.data(), (uint32)compilerArguments.size(),
+        (LPCWSTR*)compilerArguments.Elements(), (uint32)compilerArguments.Count(),
         nullptr, IID_PPV_ARGS(&stageCompilationResult));
     if (SUCCEEDED(compileResult))
         stageCompilationResult->GetStatus(&compileResult);
@@ -164,9 +165,9 @@ std::vector<uint8> ShaderCompiler::GenerateBytecodeForStage(ShaderStage stage, c
         // Read the stage bytecode.
         CComPtr<IDxcBlob> bycodeBlob;
         stageCompilationResult->GetResult(&bycodeBlob);
-        std::vector<uint8> bytecode;
-        bytecode.resize(bycodeBlob->GetBufferSize());
-        MemoryCopy(bytecode.data(), bycodeBlob->GetBufferPointer(), bycodeBlob->GetBufferSize());
+        Buffer bytecode;
+        bytecode.SetByteCount(bycodeBlob->GetBufferSize());
+        MemoryCopy(bytecode.Data(), bycodeBlob->GetBufferPointer(), bycodeBlob->GetBufferSize());
         return bytecode;
     }
 
@@ -186,10 +187,10 @@ std::vector<uint8> ShaderCompiler::GenerateBytecodeForStage(ShaderStage stage, c
     return {};
 }
 
-std::optional<ShaderReflectionData> ShaderCompiler::GenerateReflectionData(ShaderStage stage, const std::vector<uint8>& bytecode)
+std::optional<ShaderReflectionData> ShaderCompiler::GenerateReflectionData(ShaderStage stage, ReadonlyBufferView bytecode)
 {
     SpvReflectShaderModule shaderModule = {};
-    SpvReflectResult result = spvReflectCreateShaderModule(bytecode.size(), bytecode.data(), &shaderModule);
+    SpvReflectResult result = spvReflectCreateShaderModule(bytecode.ByteCount(), bytecode.Data(), &shaderModule);
     if (result != SPV_REFLECT_RESULT_SUCCESS)
     {
         // TODO(Traian): Include the shader stage name in the error message. Currently, this is not implemented

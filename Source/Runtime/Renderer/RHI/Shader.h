@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <Runtime/Core/CoreAssertions.h>
+#include <Runtime/Core/Containers/VectorView.h>
 #include <Runtime/Renderer/RHI/RHICore.h>
 #include <Runtime/Renderer/ShaderCompiler/ShaderReflectionData.h>
 #include <Runtime/Renderer/ShaderCompiler/ShaderStage.h>
@@ -17,12 +17,12 @@ struct ShaderStageInfo
 {
 public:
     ShaderStage Stage { ShaderStage::Unknown };
-    std::vector<uint8> Bytecode;
+    VectorView<const uint8> Bytecode;
     ShaderReflectionData ReflectionData;
 
 public:
     inline ShaderStageInfo& SetStage          (ShaderStage stage)                   { Stage = stage;                              return *this; }
-    inline ShaderStageInfo& SetBytecode       (std::vector<uint8> bytecode)         { Bytecode = std::move(bytecode);             return *this; }
+    inline ShaderStageInfo& SetBytecode       (VectorView<const uint8> bytecode)    { Bytecode = bytecode;                        return *this; }
     inline ShaderStageInfo& SetReflectionData (ShaderReflectionData reflectionData) { ReflectionData = std::move(reflectionData); return *this; }
 };
 
