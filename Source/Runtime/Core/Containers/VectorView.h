@@ -101,6 +101,12 @@ public:
     NODISCARD FORCEINLINE bool HasElements() const { return (m_Count > 0); }
 
 public:
+    NODISCARD FORCEINLINE uint8* Bytes() { return (uint8*)m_Elements; }
+    NODISCARD FORCEINLINE const uint8* Bytes() const { return (const uint8*)m_Elements; }
+
+    NODISCARD FORCEINLINE usize ByteCount() const { return m_Count * sizeof(T); }
+
+public:
     NODISCARD FORCEINLINE T& At(usize index)
     {
         SE_ASSERT(index < m_Count);
@@ -161,5 +167,8 @@ private:
     T* m_Elements;
     usize m_Count;
 };
+
+template<typename T>
+using ConstVectorView = VectorView<const T>;
 
 }
