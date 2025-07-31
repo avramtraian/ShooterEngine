@@ -743,6 +743,23 @@ void VulkanRenderingDriver::ExecuteCommandList(const RefPtr<CommandList>& comman
     SE_VULKAN_CHECK(vkQueueSubmit(submisionQueue, 1, &submitInfo, (VkFence)executeInfo.SignalFence));
 }
 
+
+void VulkanRenderingDriver::ExecuteCommandListAndWait(const RefPtr<CommandList>& commandList, const CommandListExecuteInfo& executeInfo)
+{
+    if (executeInfo.SignalFence)
+    {
+        SE_LOG_WARN("Executing a command list with automatic waiting doesn't accept a fence to signal!");
+    }
+
+    CommandListExecuteInfo newExecuteInfo = executeInfo;
+    newExecuteInfo.SignalFence = AcquireFence();
+    ResetFence(newExecuteInfo.SignalFence);
+
+    ExecuteCommandList(commandList, newExecuteInfo);
+    WaitForFence(newExecuteInfo.SignalFence, UINT64_MAX);
+    RetireFence(newExecuteInfo.SignalFence);
+}
+
 void VulkanRenderingDriver::WaitForFence(FenceHandle fence, uint64 timeout)
 {
     VkFence fenceHandle = (VkFence)fence;

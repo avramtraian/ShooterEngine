@@ -54,6 +54,8 @@ public:
 public:
     virtual void                                ExecuteCommandList                  (const RefPtr<CommandList>& commandList,
                                                                                     const CommandListExecuteInfo& executeInfo) = 0;
+    virtual void                                ExecuteCommandListAndWait           (const RefPtr<CommandList>& commandList,
+                                                                                    const CommandListExecuteInfo& executeInfo) = 0;
 
     virtual void                                WaitForFence                        (FenceHandle fence, uint64 timeout) = 0;
     virtual bool                                IsFenceSignaled                     (FenceHandle fence)                 = 0;

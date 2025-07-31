@@ -71,6 +71,7 @@ public:
 
 public:
     virtual void ExecuteCommandList(const RefPtr<CommandList>& commandList, const CommandListExecuteInfo& executeInfo) override;
+    virtual void ExecuteCommandListAndWait(const RefPtr<CommandList>& commandList, const CommandListExecuteInfo& executeInfo) override;
 
     virtual void WaitForFence(FenceHandle fence, uint64 timeout) override;
     virtual bool IsFenceSignaled(FenceHandle fence) override;
