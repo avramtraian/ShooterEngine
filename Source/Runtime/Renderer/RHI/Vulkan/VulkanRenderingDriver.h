@@ -49,7 +49,7 @@ public:
     NODISCARD FORCEINLINE VkQueue GetComputeQueue() const { return m_QueueCompute; }
     NODISCARD FORCEINLINE VkQueue GetPresentQueue() const { return m_QueuePresent; }
 
-    NODISCARD FORCEINLINE std::shared_ptr<VulkanCommandPool> GetCommandPool(uint32 queueFamilyIndex) const
+    NODISCARD FORCEINLINE RefPtr<VulkanCommandPool> GetCommandPool(uint32 queueFamilyIndex) const
     {
         SE_ENSURE(m_CommandPoolForQueueFamilyIndex.contains(queueFamilyIndex));
         return m_CommandPoolForQueueFamilyIndex.at(queueFamilyIndex);
@@ -57,12 +57,12 @@ public:
 
 public:
     virtual std::unique_ptr<RenderingSurface> CreateSurface(const RenderingSurfaceInfo& info) override;
-    virtual std::shared_ptr<CommandList> CreateCommandList(const CommandListInfo& info) override;
-    virtual std::shared_ptr<IndexBuffer> CreateIndexBuffer(const IndexBufferInfo& info) override;
-    virtual std::shared_ptr<RenderPass> CreateRenderPass(const RenderPassInfo& info) override;
-    virtual std::shared_ptr<Shader> CreateShader(const ShaderInfo& info) override;
-    virtual std::shared_ptr<Texture2D> CreateTexture2D(const Texture2DInfo& info) override;
-    virtual std::shared_ptr<VertexBuffer> CreateVertexBuffer(const VertexBufferInfo& info) override;
+    virtual RefPtr<CommandList> CreateCommandList(const CommandListInfo& info) override;
+    virtual RefPtr<IndexBuffer> CreateIndexBuffer(const IndexBufferInfo& info) override;
+    virtual RefPtr<RenderPass> CreateRenderPass(const RenderPassInfo& info) override;
+    virtual RefPtr<Shader> CreateShader(const ShaderInfo& info) override;
+    virtual RefPtr<Texture2D> CreateTexture2D(const Texture2DInfo& info) override;
+    virtual RefPtr<VertexBuffer> CreateVertexBuffer(const VertexBufferInfo& info) override;
 
     virtual FenceHandle AcquireFence() override;
     virtual void RetireFence(FenceHandle fenceHandle) override;
@@ -70,7 +70,7 @@ public:
     virtual void RetireSemaphore(SemaphoreHandle semaphoreHandle) override;
 
 public:
-    virtual void ExecuteCommandList(const std::shared_ptr<CommandList>& commandList, const CommandListExecuteInfo& executeInfo) override;
+    virtual void ExecuteCommandList(const RefPtr<CommandList>& commandList, const CommandListExecuteInfo& executeInfo) override;
 
     virtual void WaitForFence(FenceHandle fence, uint64 timeout) override;
     virtual bool IsFenceSignaled(FenceHandle fence) override;
@@ -103,7 +103,7 @@ private:
      * Once we will start extending the renderer to be multi-threaded, this architecture must
      * be expanded to allow for multiple command pools per queue family index (one for each
      * active thread for example). */
-    std::unordered_map<uint32, std::shared_ptr<VulkanCommandPool>> m_CommandPoolForQueueFamilyIndex;
+    std::unordered_map<uint32, RefPtr<VulkanCommandPool>> m_CommandPoolForQueueFamilyIndex;
 
     VulkanObjectPool<VkFence> m_FencePool;
     VulkanObjectPool<VkSemaphore> m_SemaphorePool;

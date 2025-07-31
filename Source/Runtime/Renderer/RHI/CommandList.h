@@ -55,7 +55,7 @@ public:
     inline CommandListInfo& SetFamily(CommandListFamily family) { Family = family; return *this; }
 };
 
-class CommandList
+class CommandList : public RefCounted
 {
     SE_MAKE_RENDERER_RHI_INTERFACE(CommandList);
 
@@ -79,13 +79,13 @@ public:
     virtual void Begin() = 0;
     virtual void End() = 0;
 
-    virtual void BeginRenderPass(const std::shared_ptr<RenderPass>& renderPass, const RenderPassBeginInfo& beginInfo) = 0;
+    virtual void BeginRenderPass(const RefPtr<RenderPass>& renderPass, const RenderPassBeginInfo& beginInfo) = 0;
     virtual void EndRenderPass() = 0;
 
     virtual void BindGraphicsState(const GraphicsState& graphicsState) = 0;
 
-    virtual void BindVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer) = 0;
-    virtual void BindIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer) = 0;
+    virtual void BindVertexBuffer(const RefPtr<VertexBuffer>& vertexBuffer) = 0;
+    virtual void BindIndexBuffer(const RefPtr<IndexBuffer>& indexBuffer) = 0;
 
     virtual void DrawIndexed(uint32 firstIndex, uint32 indexCount) = 0;
 

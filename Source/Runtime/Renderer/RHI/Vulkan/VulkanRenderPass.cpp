@@ -130,7 +130,7 @@ VulkanFramebuffer* VulkanRenderPass::AcquireCompatibleFramebuffer(const RenderPa
             return framebuffer.get();
     }
 
-    std::vector<std::shared_ptr<Texture2D>> framebufferTextures;
+    std::vector<RefPtr<Texture2D>> framebufferTextures;
     framebufferTextures.resize(beginInfo.ColorAttachmentTextures.size());
     for (const auto& colorAttachmentTextureIt : beginInfo.ColorAttachmentTextures)
     {
@@ -148,7 +148,7 @@ VulkanFramebuffer* VulkanRenderPass::AcquireCompatibleFramebuffer(const RenderPa
 
     if (m_HasDepthStencilAttachment)
     {
-        if (beginInfo.DepthStencilAttachmentTexture.Texture == nullptr)
+        if (!beginInfo.DepthStencilAttachmentTexture.Texture.IsValid())
         {
             SE_LOG_ERROR("The render pass was created with a depth-stencil attachment while the render pass begin info structure doesn't have one!");
             return nullptr;

@@ -74,8 +74,8 @@ VulkanPipeline::~VulkanPipeline()
 
 void VulkanPipeline::InvalidatePipeline(VkRenderPass renderPassHandle, uint32 colorAttachmentCount)
 {
-    std::shared_ptr<VulkanShader> shader = std::static_pointer_cast<VulkanShader>(m_GraphicsState.Shader);
-    SE_ASSERT(shader);
+    RefPtr<VulkanShader> shader = m_GraphicsState.Shader.As<VulkanShader>();
+    SE_ASSERT(shader.IsValid());
     VkPipelineLayout pipelineLayout = shader->GetPipelineLayout();
 
     std::vector<VkPipelineShaderStageCreateInfo> shaderStages;

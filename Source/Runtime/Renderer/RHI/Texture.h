@@ -52,7 +52,7 @@ public:
     inline Texture2DInfo& AddFlags     (TextureFlags flags)         { Flags |= flags;               return *this; }
 };
 
-class Texture2D
+class Texture2D : public RefCounted
 {
     SE_MAKE_RENDERER_RHI_INTERFACE(Texture2D);
 

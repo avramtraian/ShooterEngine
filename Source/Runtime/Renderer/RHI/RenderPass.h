@@ -73,11 +73,11 @@ union RenderPassAttachmentClearValue
 struct RenderPassAttachmentTexture
 {
 public:
-    std::shared_ptr<Texture2D> Texture;
+    RefPtr<Texture2D> Texture;
     RenderPassAttachmentClearValue ClearValue {};
 
 public:
-    inline RenderPassAttachmentTexture& SetTexture(const std::shared_ptr<Texture2D>& texture) { Texture = texture; return *this; }
+    inline RenderPassAttachmentTexture& SetTexture(const RefPtr<Texture2D>& texture) { Texture = texture; return *this; }
 
     inline RenderPassAttachmentTexture& SetClearValueFloat32(float r, float g, float b, float a)
     {
@@ -123,13 +123,13 @@ public:
 
     inline RenderPassBeginInfo& SetDepthStencilttachmentTexture(const RenderPassAttachmentTexture& attachmentTexture)
     {
-        SE_ASSERT(DepthStencilAttachmentTexture.Texture == nullptr);
+        SE_ASSERT(!DepthStencilAttachmentTexture.Texture.IsValid());
         DepthStencilAttachmentTexture = attachmentTexture;
         return *this;
     }
 };
 
-class RenderPass
+class RenderPass : public RefCounted
 {
     SE_MAKE_RENDERER_RHI_INTERFACE(RenderPass);
 };

@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/RefPtr.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
 
 #include <unordered_set>
@@ -21,14 +22,11 @@ public:
     inline VulkanCommandPoolInfo& SetQueueFamilyIndex   (int32 queueFamilyIndex) { QueueFamilyIndex = queueFamilyIndex; return *this; }
 };
 
-class VulkanCommandPool
+class VulkanCommandPool : public RefCounted
 {
-    SE_MAKE_NONCOPYABLE(VulkanCommandPool);
-    SE_MAKE_NONMOVABLE(VulkanCommandPool);
-
 public:
     VulkanCommandPool(const VulkanCommandPoolInfo& info);
-    ~VulkanCommandPool();
+    virtual ~VulkanCommandPool() override;
 
     NODISCARD FORCEINLINE uint32 GetInUseCommandBufferCount() const { return (uint32)m_InUseCommandBuffers.size(); }
     NODISCARD FORCEINLINE uint32 GetUnusedCommandBufferCount() const { return (uint32)m_UnusedCommandBuffers.size(); }

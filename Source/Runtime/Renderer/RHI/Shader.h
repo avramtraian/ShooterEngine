@@ -35,7 +35,7 @@ public:
     inline ShaderInfo& AddStage (ShaderStageInfo stage) { Stages.push_back(std::move(stage)); return *this; }
 };
 
-class Shader
+class Shader : public RefCounted
 {
     SE_MAKE_RENDERER_RHI_INTERFACE(Shader);
 };

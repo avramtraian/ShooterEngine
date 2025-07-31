@@ -28,7 +28,7 @@ public:
     inline VertexBufferInfo& SetInitialData (const void* initialData, usize initialDataSize) { InitialData = initialData; InitialDataSize = initialDataSize; return *this; }
 };
 
-class VertexBuffer
+class VertexBuffer : public RefCounted
 {
     SE_MAKE_RENDERER_RHI_INTERFACE(VertexBuffer);
 };
@@ -63,7 +63,7 @@ public:
     inline IndexBufferInfo& SetInitialIndices (const void* indices, uint32 indexCount) { InitialIndices = indices; InitialIndexCount = indexCount; return *this; }
 };
 
-class IndexBuffer
+class IndexBuffer : public RefCounted
 {
     SE_MAKE_RENDERER_RHI_INTERFACE(IndexBuffer);
 

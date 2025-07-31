@@ -6,7 +6,7 @@
 namespace SE
 {
 
-VulkanFramebuffer::VulkanFramebuffer(const std::vector<std::shared_ptr<Texture2D>>& textures, VkRenderPass renderPassHandle)
+VulkanFramebuffer::VulkanFramebuffer(const std::vector<RefPtr<Texture2D>>& textures, VkRenderPass renderPassHandle)
     : m_Handle(VK_NULL_HANDLE)
 {
     if (textures.empty())
@@ -22,15 +22,15 @@ VulkanFramebuffer::VulkanFramebuffer(const std::vector<std::shared_ptr<Texture2D
     const uint32 framebufferWidth = textures.front()->GetSizeX();
     const uint32 framebufferHeight = textures.front()->GetSizeY();
 
-    for (const std::shared_ptr<Texture2D>& texture : textures)
+    for (const RefPtr<Texture2D>& texture : textures)
     {
         /* NOTE(Traian): Vulkan framebuffers are created by the render pass on demand. The most likely cause of these errors is an invalid
          * render pass begin info structure passed to the 'CommandList::BeginRenderPass' function. However, these errors should have been
          * caught at the previously mentioned API level, and not in the framebuffer creation code. */
-        SE_ENSURE(texture != nullptr);
+        SE_ENSURE(texture.IsValid());
         SE_ENSURE(texture->GetSizeX() == framebufferWidth && texture->GetSizeY() == framebufferHeight);
 
-        auto vulkanTexture = std::static_pointer_cast<VulkanTexture2D>(texture);
+        auto vulkanTexture = texture.As<VulkanTexture2D>();
         m_Textures.push_back(vulkanTexture);
         framebufferAttachments.push_back(vulkanTexture->GetHandle().View);
 
@@ -61,7 +61,7 @@ VulkanFramebuffer::~VulkanFramebuffer()
 
 bool VulkanFramebuffer::IsCompatibleWithRenderPassBeginInfo(const RenderPassBeginInfo& beginInfo) const
 {
-    const bool hasDepthStencilAttachment = (beginInfo.DepthStencilAttachmentTexture.Texture != nullptr);
+    const bool hasDepthStencilAttachment = beginInfo.DepthStencilAttachmentTexture.Texture.IsValid();
     uint32 attachmentCount = (uint32)beginInfo.ColorAttachmentTextures.size();
     if (hasDepthStencilAttachment)
         attachmentCount++;
@@ -76,11 +76,11 @@ bool VulkanFramebuffer::IsCompatibleWithRenderPassBeginInfo(const RenderPassBegi
 
         if (attachmentIndex >= m_Textures.size())
             return false;
-        if (m_Textures[attachmentIndex].get() != attachmentTexture.Texture.get())
+        if (m_Textures[attachmentIndex].Get() != attachmentTexture.Texture.Get())
             return false;
     }
 
-    if (hasDepthStencilAttachment && (m_Textures.back().get() != beginInfo.DepthStencilAttachmentTexture.Texture.get()))
+    if (hasDepthStencilAttachment && (m_Textures.back().Get() != beginInfo.DepthStencilAttachmentTexture.Texture.Get()))
         return false;
 
     return true;

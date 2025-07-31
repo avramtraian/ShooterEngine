@@ -17,7 +17,7 @@ class VulkanFramebuffer
     SE_MAKE_NONMOVABLE(VulkanFramebuffer);
 
 public:
-    VulkanFramebuffer(const std::vector<std::shared_ptr<Texture2D>>& textures, VkRenderPass renderPassHandle);
+    VulkanFramebuffer(const std::vector<RefPtr<Texture2D>>& textures, VkRenderPass renderPassHandle);
     ~VulkanFramebuffer();
 
     NODISCARD bool IsCompatibleWithRenderPassBeginInfo(const RenderPassBeginInfo& beginInfo) const;
@@ -39,7 +39,7 @@ public:
 
 private:
     VkFramebuffer m_Handle;
-    std::vector<std::shared_ptr<VulkanTexture2D>> m_Textures;
+    std::vector<RefPtr<VulkanTexture2D>> m_Textures;
 };
 
 }

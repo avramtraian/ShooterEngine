@@ -14,7 +14,7 @@ namespace SE
 
 struct ShaderLibraryData
 {
-    std::unordered_map<std::string, std::shared_ptr<Shader>> LoadedShaders;
+    std::unordered_map<std::string, RefPtr<Shader>> LoadedShaders;
 };
 static ShaderLibraryData* s_LibraryData;
 
@@ -82,8 +82,8 @@ bool ShaderLibrary::LoadFromFile(std::string shaderName, const std::filesystem::
     }
 
     // Create the RHI shader object.
-    std::shared_ptr<Shader> loadedShader = g_RenderingDriver->CreateShader(shaderInfo);
-    if (!loadedShader)
+    RefPtr<Shader> loadedShader = g_RenderingDriver->CreateShader(shaderInfo);
+    if (!loadedShader.IsValid())
     {
         SE_LOG_WARN("Shader '%s' RHI object wasn't created successfully.", shaderName.c_str());
         return false;
@@ -94,7 +94,7 @@ bool ShaderLibrary::LoadFromFile(std::string shaderName, const std::filesystem::
     return true;
 }
 
-std::shared_ptr<Shader> ShaderLibrary::Get(const std::string& shaderName)
+RefPtr<Shader> ShaderLibrary::Get(const std::string& shaderName)
 {
     if (!s_LibraryData)
         return nullptr;

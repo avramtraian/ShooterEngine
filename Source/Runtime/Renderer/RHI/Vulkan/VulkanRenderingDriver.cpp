@@ -521,15 +521,15 @@ bool VulkanRenderingDriver::CreateQueues()
 
 bool VulkanRenderingDriver::CreateCommandPools(const RenderingDriverInfo& info)
 {
-    m_CommandPoolForQueueFamilyIndex[m_QueueFamilyIndices.Graphics] = std::make_shared<VulkanCommandPool>(VulkanCommandPoolInfo()
+    m_CommandPoolForQueueFamilyIndex[m_QueueFamilyIndices.Graphics] = CreateRef<VulkanCommandPool>(VulkanCommandPoolInfo()
         .SetCommandBufferCount(16)
         .SetQueueFamilyIndex(m_QueueFamilyIndices.Graphics)
     );
-    m_CommandPoolForQueueFamilyIndex[m_QueueFamilyIndices.Transfer] = std::make_shared<VulkanCommandPool>(VulkanCommandPoolInfo()
+    m_CommandPoolForQueueFamilyIndex[m_QueueFamilyIndices.Transfer] = CreateRef<VulkanCommandPool>(VulkanCommandPoolInfo()
         .SetCommandBufferCount(8)
         .SetQueueFamilyIndex(m_QueueFamilyIndices.Transfer)
     );
-    m_CommandPoolForQueueFamilyIndex[m_QueueFamilyIndices.Compute] = std::make_shared<VulkanCommandPool>(VulkanCommandPoolInfo()
+    m_CommandPoolForQueueFamilyIndex[m_QueueFamilyIndices.Compute] = CreateRef<VulkanCommandPool>(VulkanCommandPoolInfo()
         .SetCommandBufferCount(4)
         .SetQueueFamilyIndex(m_QueueFamilyIndices.Compute)
     );
@@ -614,40 +614,34 @@ std::unique_ptr<RenderingSurface> VulkanRenderingDriver::CreateSurface(const Ren
     return std::unique_ptr<RenderingSurface>(vulkanSurfaceInstance);
 }
 
-std::shared_ptr<CommandList> VulkanRenderingDriver::CreateCommandList(const CommandListInfo& info)
+RefPtr<CommandList> VulkanRenderingDriver::CreateCommandList(const CommandListInfo& info)
 {
-    VulkanCommandList* vulkanCommandListInstance = new VulkanCommandList(info);
-    return std::shared_ptr<CommandList>(vulkanCommandListInstance);
+    return CreateRef<VulkanCommandList>(info);
 }
 
-std::shared_ptr<IndexBuffer> VulkanRenderingDriver::CreateIndexBuffer(const IndexBufferInfo& info)
+RefPtr<IndexBuffer> VulkanRenderingDriver::CreateIndexBuffer(const IndexBufferInfo& info)
 {
-    VulkanIndexBuffer* vulkanIndexBufferInstance = new VulkanIndexBuffer(info);
-    return std::shared_ptr<IndexBuffer>(vulkanIndexBufferInstance);
+    return CreateRef<VulkanIndexBuffer>(info);
 }
 
-std::shared_ptr<RenderPass> VulkanRenderingDriver::CreateRenderPass(const RenderPassInfo& info)
+RefPtr<RenderPass> VulkanRenderingDriver::CreateRenderPass(const RenderPassInfo& info)
 {
-    VulkanRenderPass* vulkanRenderPassInstance = new VulkanRenderPass(info);
-    return std::shared_ptr<RenderPass>(vulkanRenderPassInstance);
+    return CreateRef<VulkanRenderPass>(info);
 }
 
-std::shared_ptr<Texture2D> VulkanRenderingDriver::CreateTexture2D(const Texture2DInfo& info)
+RefPtr<Texture2D> VulkanRenderingDriver::CreateTexture2D(const Texture2DInfo& info)
 {
-    VulkanTexture2D* vulkanTextureInstance = new VulkanTexture2D(info);
-    return std::shared_ptr<Texture2D>(vulkanTextureInstance);
+    return CreateRef<VulkanTexture2D>(info);
 }
 
-std::shared_ptr<Shader> VulkanRenderingDriver::CreateShader(const ShaderInfo& info)
+RefPtr<Shader> VulkanRenderingDriver::CreateShader(const ShaderInfo& info)
 {
-    VulkanShader* vulkanShaderInstance = new VulkanShader(info);
-    return std::shared_ptr<Shader>(vulkanShaderInstance);
+    return CreateRef<VulkanShader>(info);
 }
 
-std::shared_ptr<VertexBuffer> VulkanRenderingDriver::CreateVertexBuffer(const VertexBufferInfo& info)
+RefPtr<VertexBuffer> VulkanRenderingDriver::CreateVertexBuffer(const VertexBufferInfo& info)
 {
-    VulkanVertexBuffer* vulkanVertexBufferInstance = new VulkanVertexBuffer(info);
-    return std::shared_ptr<VertexBuffer>(vulkanVertexBufferInstance);
+    return CreateRef<VulkanVertexBuffer>(info);
 }
 
 FenceHandle VulkanRenderingDriver::AcquireFence()
@@ -701,9 +695,9 @@ void VulkanRenderingDriver::RetireSemaphore(SemaphoreHandle semaphoreHandle)
     m_SemaphorePool.Retire(semaphore);
 }
 
-void VulkanRenderingDriver::ExecuteCommandList(const std::shared_ptr<CommandList>& commandList, const CommandListExecuteInfo& executeInfo)
+void VulkanRenderingDriver::ExecuteCommandList(const RefPtr<CommandList>& commandList, const CommandListExecuteInfo& executeInfo)
 {
-    std::shared_ptr<VulkanCommandList> vulkanCommandList = std::static_pointer_cast<VulkanCommandList>(commandList);
+    RefPtr<VulkanCommandList> vulkanCommandList = commandList.As<VulkanCommandList>();
     VkCommandBuffer commandBufferHandle = vulkanCommandList->GetHandle();
 
     std::vector<VkSemaphore> waitSemaphores;

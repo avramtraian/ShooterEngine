@@ -22,7 +22,7 @@ public:
         std::vector<VkImage>     Images;
         std::vector<VkImageView> ImageViews;
 
-        std::vector<std::shared_ptr<VulkanTexture2D>> Textures;
+        std::vector<RefPtr<VulkanTexture2D>> Textures;
     };
 
 public:
@@ -41,8 +41,8 @@ public:
     virtual bool Invalidate() override;
     void Destroy(bool shouldDestroyTextures);
 
-    virtual std::shared_ptr<Texture2D> GetSurfaceTexture2D(uint32 imageIndex) override;
-    virtual std::shared_ptr<Texture2D> GetCurrentSurfaceTexture2D() override { return GetSurfaceTexture2D(m_CurrentSwapchainImageIndex); }
+    virtual RefPtr<Texture2D> GetSurfaceTexture2D(uint32 imageIndex) override;
+    virtual RefPtr<Texture2D> GetCurrentSurfaceTexture2D() override { return GetSurfaceTexture2D(m_CurrentSwapchainImageIndex); }
 
     virtual void BeginFrame() override;
     virtual void EndFrame() override;

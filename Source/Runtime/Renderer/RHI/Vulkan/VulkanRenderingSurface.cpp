@@ -191,7 +191,7 @@ bool VulkanRenderingSurface::Invalidate()
         m_Swapchain.Textures.reserve(m_Swapchain.Images.size());
         for (uint32 imageIndex = 0; imageIndex < (uint32)m_Swapchain.Images.size(); ++imageIndex)
         {
-            auto texture = std::make_shared<VulkanTexture2D>(*this, imageIndex);
+            auto texture = CreateRef<VulkanTexture2D>(*this, imageIndex);
             m_Swapchain.Textures.push_back(std::move(texture));
         }
     }
@@ -266,7 +266,7 @@ void VulkanRenderingSurface::Destroy(bool shouldDestroyTextures)
     m_Surface = VK_NULL_HANDLE;
 }
 
-std::shared_ptr<Texture2D> VulkanRenderingSurface::GetSurfaceTexture2D(uint32 imageIndex)
+RefPtr<Texture2D> VulkanRenderingSurface::GetSurfaceTexture2D(uint32 imageIndex)
 {
     SE_ENSURE(imageIndex < m_Swapchain.Textures.size());
     return m_Swapchain.Textures[imageIndex];

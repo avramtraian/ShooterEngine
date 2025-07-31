@@ -2,11 +2,10 @@
 
 #pragma once
 
-#include <Runtime/Core/CoreTypes.h>
+#include <Runtime/Core/Containers/RefPtr.h>
 #include <Runtime/Renderer/RHI/Shader.h>
 
 #include <filesystem>
-#include <memory>
 #include <string_view>
 
 namespace SE
@@ -26,7 +25,7 @@ public:
     
     /* Returns the RHI shader object associated with the given name. If no shader in the library is associated
      * with the provided name, an invalid shared pointer (nullptr) will be returned. */
-    SHOOTER_API static std::shared_ptr<Shader> Get(const std::string& shaderName);
+    SHOOTER_API static RefPtr<Shader> Get(const std::string& shaderName);
 };
 
 }

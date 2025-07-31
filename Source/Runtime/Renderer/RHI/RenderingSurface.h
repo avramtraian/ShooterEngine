@@ -29,7 +29,12 @@ public:
 
 class RenderingSurface
 {
-    SE_MAKE_RENDERER_RHI_INTERFACE(RenderingSurface);
+    SE_MAKE_NONCOPYABLE(RenderingSurface);
+    SE_MAKE_NONMOVABLE(RenderingSurface);
+
+public:
+    RenderingSurface() = default;
+    virtual ~RenderingSurface() = default;
 
 public:
     virtual bool Invalidate() = 0;
@@ -42,8 +47,8 @@ public:
     NODISCARD virtual uint32 GetSurfaceSizeX() const = 0;
     NODISCARD virtual uint32 GetSurfaceSizeY() const = 0;
 
-    virtual std::shared_ptr<Texture2D> GetSurfaceTexture2D(uint32 imageIndex) = 0;
-    virtual std::shared_ptr<Texture2D> GetCurrentSurfaceTexture2D() = 0;
+    virtual RefPtr<Texture2D> GetSurfaceTexture2D(uint32 imageIndex) = 0;
+    virtual RefPtr<Texture2D> GetCurrentSurfaceTexture2D() = 0;
 
     virtual void BeginFrame() = 0;
     virtual void EndFrame() = 0;

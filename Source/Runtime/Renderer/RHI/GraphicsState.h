@@ -5,8 +5,6 @@
 #include <Runtime/Renderer/RHI/RHICore.h>
 #include <Runtime/Renderer/RHI/Shader.h>
 
-#include <memory>
-
 namespace SE
 {
 
@@ -70,7 +68,7 @@ enum class GraphicsFrontFace : uint8
 class GraphicsState
 {
 public:
-    std::shared_ptr<Shader>   Shader;
+    RefPtr<Shader>            Shader;
     GraphicsVertexInputLayout VertexInputLayout;
     GraphicsTopology          Topology             { GraphicsTopology::Unknown };
     GraphicsCullMode          CullMode             { GraphicsCullMode::Disabled };
@@ -80,15 +78,15 @@ public:
     bool                      EnableBlending       { true };
 
 public:
-    inline GraphicsState& SetShader                    (std::shared_ptr<class Shader> shader) { Shader = std::move(shader);                                       return *this; }
-    inline GraphicsState& SetVertexInputLayout         (GraphicsVertexInputLayout layout)     { VertexInputLayout = std::move(layout);                            return *this; }
-    inline GraphicsState& SetTopology                  (GraphicsTopology topology)            { Topology = topology;                                              return *this; }
-    inline GraphicsState& SetCullMode                  (GraphicsCullMode cullMode)            { CullMode = cullMode;                                              return *this; }
-    inline GraphicsState& SetFrontFace                 (GraphicsFrontFace frontFace)          { FrontFace = frontFace;                                            return *this; }
-    inline GraphicsState& SetHasDepthAttachment        (bool value)                           { HasDepthAttachment = value;                                       return *this; }
-    inline GraphicsState& SetHasStencilAttachment      (bool value)                           { HasStencilAttachment = value;                                     return *this; }
-    inline GraphicsState& SetHasDepthStencilAttachment (bool hasDepth, bool hasStencil)       { HasDepthAttachment = hasDepth; HasStencilAttachment = hasStencil; return *this; }
-    inline GraphicsState& SetEnableBlending            (bool value)                           { EnableBlending = value;                                           return *this; }
+    inline GraphicsState& SetShader                    (RefPtr<class Shader> shader)      { Shader = std::move(shader);                                       return *this; }
+    inline GraphicsState& SetVertexInputLayout         (GraphicsVertexInputLayout layout) { VertexInputLayout = std::move(layout);                            return *this; }
+    inline GraphicsState& SetTopology                  (GraphicsTopology topology)        { Topology = topology;                                              return *this; }
+    inline GraphicsState& SetCullMode                  (GraphicsCullMode cullMode)        { CullMode = cullMode;                                              return *this; }
+    inline GraphicsState& SetFrontFace                 (GraphicsFrontFace frontFace)      { FrontFace = frontFace;                                            return *this; }
+    inline GraphicsState& SetHasDepthAttachment        (bool value)                       { HasDepthAttachment = value;                                       return *this; }
+    inline GraphicsState& SetHasStencilAttachment      (bool value)                       { HasStencilAttachment = value;                                     return *this; }
+    inline GraphicsState& SetHasDepthStencilAttachment (bool hasDepth, bool hasStencil)   { HasDepthAttachment = hasDepth; HasStencilAttachment = hasStencil; return *this; }
+    inline GraphicsState& SetEnableBlending            (bool value)                       { EnableBlending = value;                                           return *this; }
 };
 
 }

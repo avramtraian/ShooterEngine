@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/RefPtr.h>
 #include <Runtime/Core/CoreAssertions.h>
 #include <Runtime/Core/CoreTypes.h>
 
@@ -32,6 +33,7 @@ struct VertexBufferInfo;
 /* Structures used for command dispatching. */
 struct CommandListExecuteInfo;
 struct RenderPassBeginInfo;
+struct TransitionTextureInfo;
 
 }
 
@@ -42,7 +44,7 @@ struct RenderPassBeginInfo;
     protected:                                    \
         type_name() = default;                    \
     public:                                       \
-        virtual ~type_name() = default;           \
+        virtual ~type_name() override = default;  \
         friend class RenderingDriver;             \
         friend class VulkanRenderingDriver;       \
     private:

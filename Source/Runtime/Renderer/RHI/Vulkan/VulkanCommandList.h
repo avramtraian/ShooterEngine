@@ -21,13 +21,13 @@ public:
     virtual void Begin() override;
     virtual void End() override;
 
-    virtual void BeginRenderPass(const std::shared_ptr<RenderPass>& renderPass, const RenderPassBeginInfo& beginInfo) override;
+    virtual void BeginRenderPass(const RefPtr<RenderPass>& renderPass, const RenderPassBeginInfo& beginInfo) override;
     virtual void EndRenderPass() override;
 
     virtual void BindGraphicsState(const GraphicsState& graphicsState) override;
 
-    virtual void BindVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer) override;
-    virtual void BindIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer) override;
+    virtual void BindVertexBuffer(const RefPtr<VertexBuffer>& vertexBuffer) override;
+    virtual void BindIndexBuffer(const RefPtr<IndexBuffer>& indexBuffer) override;
 
     virtual void DrawIndexed(uint32 firstIndex, uint32 indexCount) override;
 
@@ -39,20 +39,20 @@ public:
     virtual void SetAccumulateStatisticsPolicy(AccumultateStatisticsPolicy policy) override;
 
 private:
-    NODISCARD bool ValidateRenderPass(const std::shared_ptr<VulkanRenderPass>& renderPass, const RenderPassBeginInfo& beginInfo) const;
+    NODISCARD bool ValidateRenderPass(const RefPtr<VulkanRenderPass>& renderPass, const RenderPassBeginInfo& beginInfo) const;
 
 private:
     VkCommandBuffer m_CommandBuffer;
-    std::shared_ptr<VulkanCommandPool> m_ParentCommandPool;
+    RefPtr<VulkanCommandPool> m_ParentCommandPool;
     CommandListFamily m_Family;
 
-    std::shared_ptr<VulkanRenderPass> m_ActiveRenderPass;
-    std::vector<std::shared_ptr<VulkanRenderPass>> m_UsedRenderPasses;
+    RefPtr<VulkanRenderPass> m_ActiveRenderPass;
+    std::vector<RefPtr<VulkanRenderPass>> m_UsedRenderPasses;
     VulkanFramebuffer* m_ActiveFramebuffer;
     VulkanPipeline* m_ActivePipeline;
 
-    std::vector<std::shared_ptr<VulkanVertexBuffer>> m_UsedVertexBuffers;
-    std::vector<std::shared_ptr<VulkanIndexBuffer>> m_UsedIndexBuffers;
+    std::vector<RefPtr<VulkanVertexBuffer>> m_UsedVertexBuffers;
+    std::vector<RefPtr<VulkanIndexBuffer>> m_UsedIndexBuffers;
     bool m_IsVertexBufferBound;
     bool m_IsIndexBufferBound;
 

@@ -81,7 +81,7 @@ void VulkanCommandList::End()
     m_IsIndexBufferBound = false;
 }
 
-bool VulkanCommandList::ValidateRenderPass(const std::shared_ptr<VulkanRenderPass>& renderPass, const RenderPassBeginInfo& beginInfo) const
+bool VulkanCommandList::ValidateRenderPass(const RefPtr<VulkanRenderPass>& renderPass, const RenderPassBeginInfo& beginInfo) const
 {
     if (renderPass->GetAttachmentCount() == 0)
     {
@@ -98,13 +98,13 @@ bool VulkanCommandList::ValidateRenderPass(const std::shared_ptr<VulkanRenderPas
         return false;
     }
 
-    if (renderPass->HasDepthStencilAttachment() && (beginInfo.DepthStencilAttachmentTexture.Texture == nullptr))
+    if (renderPass->HasDepthStencilAttachment() && !beginInfo.DepthStencilAttachmentTexture.Texture.IsValid())
     {
         SE_LOG_ERROR("The render pass was created with a depth-stencil attachment but the 'RenderPassBeginInfo' doesn't have one!");
         return false;
     }
 
-    if (!renderPass->HasDepthStencilAttachment() && (beginInfo.DepthStencilAttachmentTexture.Texture != nullptr))
+    if (!renderPass->HasDepthStencilAttachment() && beginInfo.DepthStencilAttachmentTexture.Texture.IsValid())
     {
         SE_LOG_WARN("The render pass was created without a depth-stencil attachment but the 'RenderPassBeginInfo' has one!");
         return false;
@@ -145,9 +145,9 @@ bool VulkanCommandList::ValidateRenderPass(const std::shared_ptr<VulkanRenderPas
     return true;
 }
 
-void VulkanCommandList::BeginRenderPass(const std::shared_ptr<RenderPass>& renderPass, const RenderPassBeginInfo& beginInfo)
+void VulkanCommandList::BeginRenderPass(const RefPtr<RenderPass>& renderPass, const RenderPassBeginInfo& beginInfo)
 {
-    auto vulkanRenderPass = std::static_pointer_cast<VulkanRenderPass>(renderPass);
+    auto vulkanRenderPass = renderPass.As<VulkanRenderPass>();
     if (!ValidateRenderPass(vulkanRenderPass, beginInfo))
         return;
 
@@ -163,7 +163,7 @@ void VulkanCommandList::BeginRenderPass(const std::shared_ptr<RenderPass>& rende
             (attachmentIndex < m_ActiveRenderPass->GetColorAttachmentCount())
                 ? beginInfo.ColorAttachmentTextures.at(attachmentIndex)
                 : beginInfo.DepthStencilAttachmentTexture;
-        SE_ASSERT(attachmentTexture.Texture);
+        SE_ASSERT(attachmentTexture.Texture.IsValid());
 
         VkClearValue& clearValue = clearValues.emplace_back();
 
@@ -223,9 +223,9 @@ void VulkanCommandList::BindGraphicsState(const GraphicsState& graphicsState)
     vkCmdSetScissor(m_CommandBuffer, 0, 1, &scissor);
 }
 
-void VulkanCommandList::BindVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer)
+void VulkanCommandList::BindVertexBuffer(const RefPtr<VertexBuffer>& vertexBuffer)
 {
-    auto vulkanVertexBuffer = std::static_pointer_cast<VulkanVertexBuffer>(vertexBuffer);
+    auto vulkanVertexBuffer = vertexBuffer.As<VulkanVertexBuffer>();
     VkBuffer bufferHandle = vulkanVertexBuffer->GetHandle();
     VkDeviceSize bufferOffset = 0;
 
@@ -235,9 +235,9 @@ void VulkanCommandList::BindVertexBuffer(const std::shared_ptr<VertexBuffer>& ve
     m_IsVertexBufferBound = true;
 }
 
-void VulkanCommandList::BindIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer)
+void VulkanCommandList::BindIndexBuffer(const RefPtr<IndexBuffer>& indexBuffer)
 {
-    auto vulkanIndexBuffer = std::static_pointer_cast<VulkanIndexBuffer>(indexBuffer);
+    auto vulkanIndexBuffer = indexBuffer.As<VulkanIndexBuffer>();
     VkBuffer bufferHandle = vulkanIndexBuffer->GetHandle();
 
     VkIndexType indexType = VK_INDEX_TYPE_UINT16;
@@ -257,7 +257,7 @@ void VulkanCommandList::BindIndexBuffer(const std::shared_ptr<IndexBuffer>& inde
 void VulkanCommandList::DrawIndexed(uint32 firstIndex, uint32 indexCount)
 {
     /* Validate command list state. */
-    if (!m_ActiveRenderPass)
+    if (!m_ActiveRenderPass.IsValid())
     {
         SE_LOG_ERROR("Trying to call DrawIndexed without a render pass being active!");
         return;
