@@ -78,6 +78,7 @@ public:
     virtual void WaitForFence(FenceHandle fence, uint64 timeout) override;
     virtual bool IsFenceSignaled(FenceHandle fence) override;
     virtual void ResetFence(FenceHandle fence) override;
+    virtual void WaitForDeviceIdle() override;
 
 private:
     virtual bool InitializeBackend(const RenderingDriverInfo& info) override;

@@ -37,29 +37,30 @@ public:
     static void Shutdown();
 
 public:
-    virtual std::unique_ptr<RenderingSurface>   CreateSurface                       (const RenderingSurfaceInfo& info)  = 0;
+    virtual std::unique_ptr<RenderingSurface>   CreateSurface                       (const RenderingSurfaceInfo& info)          = 0;
     
-    virtual RefPtr<CommandList>                 CreateCommandList                   (const CommandListInfo& info)       = 0;
-    virtual RefPtr<IndexBuffer>                 CreateIndexBuffer                   (const IndexBufferInfo& info)       = 0;
-    virtual RefPtr<RenderPass>                  CreateRenderPass                    (const RenderPassInfo& info)        = 0;
-    virtual RefPtr<Shader>                      CreateShader                        (const ShaderInfo& info)            = 0;
-    virtual RefPtr<Texture2D>                   CreateTexture2D                     (const Texture2DInfo& info)         = 0;
-    virtual RefPtr<VertexBuffer>                CreateVertexBuffer                  (const VertexBufferInfo& info)      = 0;
+    virtual RefPtr<CommandList>                 CreateCommandList                   (const CommandListInfo& info)               = 0;
+    virtual RefPtr<IndexBuffer>                 CreateIndexBuffer                   (const IndexBufferInfo& info)               = 0;
+    virtual RefPtr<RenderPass>                  CreateRenderPass                    (const RenderPassInfo& info)                = 0;
+    virtual RefPtr<Shader>                      CreateShader                        (const ShaderInfo& info)                    = 0;
+    virtual RefPtr<Texture2D>                   CreateTexture2D                     (const Texture2DInfo& info)                 = 0;
+    virtual RefPtr<VertexBuffer>                CreateVertexBuffer                  (const VertexBufferInfo& info)              = 0;
 
-    virtual FenceHandle                         AcquireFence                        ()                                  = 0;
-    virtual void                                RetireFence                         (FenceHandle fenceHandle)           = 0;
-    virtual SemaphoreHandle                     AcquireSemaphore                    ()                                  = 0;
-    virtual void                                RetireSemaphore                     (SemaphoreHandle semaphoreHandle)   = 0;
+    virtual FenceHandle                         AcquireFence                        ()                                          = 0;
+    virtual void                                RetireFence                         (FenceHandle fenceHandle)                   = 0;
+    virtual SemaphoreHandle                     AcquireSemaphore                    ()                                          = 0;
+    virtual void                                RetireSemaphore                     (SemaphoreHandle semaphoreHandle)           = 0;
 
 public:
     virtual void                                ExecuteCommandList                  (const RefPtr<CommandList>& commandList,
-                                                                                    const CommandListExecuteInfo& executeInfo) = 0;
+                                                                                    const CommandListExecuteInfo& executeInfo)  = 0;
     virtual void                                ExecuteCommandListAndWait           (const RefPtr<CommandList>& commandList,
-                                                                                    const CommandListExecuteInfo& executeInfo) = 0;
+                                                                                    const CommandListExecuteInfo& executeInfo)  = 0;
 
-    virtual void                                WaitForFence                        (FenceHandle fence, uint64 timeout) = 0;
-    virtual bool                                IsFenceSignaled                     (FenceHandle fence)                 = 0;
-    virtual void                                ResetFence                          (FenceHandle fence)                 = 0;
+    virtual void                                WaitForFence                        (FenceHandle fence, uint64 timeout)         = 0;
+    virtual bool                                IsFenceSignaled                     (FenceHandle fence)                         = 0;
+    virtual void                                ResetFence                          (FenceHandle fence)                         = 0;
+    virtual void                                WaitForDeviceIdle                   ()                                          = 0;
 
 private:
     virtual bool InitializeBackend(const RenderingDriverInfo& info) = 0;

@@ -102,7 +102,7 @@ bool VulkanRenderingSurface::Invalidate()
      * 
      * If for whatever reason you want to refactor this function and refactor this function (and remove the 'vkDeviceWaitIdle' call), keep
      * in mind that a lot of the following code assumes that there are no resources that are in use on the GPU! */
-    SE_VULKAN_CHECK(vkDeviceWaitIdle(g_VulkanDriver->GetDevice()));
+    g_VulkanDriver->WaitForDeviceIdle();
 
     Destroy(false);
 

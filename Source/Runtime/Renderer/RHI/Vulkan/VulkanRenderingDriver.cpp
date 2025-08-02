@@ -600,7 +600,7 @@ void VulkanRenderingDriver::ShutdownBackend()
     }
 
     /* Ensure all GPU operations have finished and all resources can safely be destroyed. */
-    SE_VULKAN_CHECK(vkDeviceWaitIdle(m_LogicalDevice));
+    WaitForDeviceIdle();
 
     /* Destroy synchronization objects. */
     {
@@ -811,6 +811,12 @@ void VulkanRenderingDriver::ResetFence(FenceHandle fence)
 {
     VkFence fenceHandle = (VkFence)fence;
     SE_VULKAN_CHECK(vkResetFences(m_LogicalDevice, 1, &fenceHandle));
+}
+
+
+void VulkanRenderingDriver::WaitForDeviceIdle()
+{
+    SE_VULKAN_CHECK(vkDeviceWaitIdle(m_LogicalDevice));
 }
 
 }
