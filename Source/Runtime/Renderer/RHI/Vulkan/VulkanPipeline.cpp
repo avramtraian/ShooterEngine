@@ -257,6 +257,34 @@ void VulkanPipeline::InvalidatePipeline(VkRenderPass renderPassHandle, uint32 co
 
 bool VulkanPipeline::IsCompatibleWithGraphicsState(const GraphicsState& graphicsState) const
 {
+    // Check if the shaders are the same.
+    if (m_GraphicsState.Shader.Get() != graphicsState.Shader.Get())
+        return false;
+    
+    // Check if the vertex input layouts are the same.
+    {
+        const auto& thisVertexAttributes = m_GraphicsState.VertexInputLayout.Attributes;
+        const auto& otherVertexAttributes = graphicsState.VertexInputLayout.Attributes;
+        if (thisVertexAttributes.size() != otherVertexAttributes.size())
+            return false;
+        for (uint32 attributeIndex = 0; attributeIndex < thisVertexAttributes.size(); ++attributeIndex)
+        {
+            const GraphicsVertexInputAttribute& thisAttribute = thisVertexAttributes[attributeIndex];
+            const GraphicsVertexInputAttribute& otherAttribute = otherVertexAttributes[attributeIndex];
+    
+            if (thisAttribute.Name != otherAttribute.Name) { return false; }
+            if (thisAttribute.Type != otherAttribute.Type) { return false; }
+        }
+    }
+
+    // Check other pipeline creation flags.
+    if (m_GraphicsState.Topology             != graphicsState.Topology)             { return false; }
+    if (m_GraphicsState.CullMode             != graphicsState.CullMode)             { return false; }
+    if (m_GraphicsState.FrontFace            != graphicsState.FrontFace)            { return false; }
+    if (m_GraphicsState.HasDepthAttachment   != graphicsState.HasDepthAttachment)   { return false; }
+    if (m_GraphicsState.HasStencilAttachment != graphicsState.HasStencilAttachment) { return false; }
+    if (m_GraphicsState.EnableBlending       != graphicsState.EnableBlending)       { return false; }
+
     return true;
 }
 
