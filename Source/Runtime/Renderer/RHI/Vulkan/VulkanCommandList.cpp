@@ -246,10 +246,10 @@ void VulkanCommandList::BindGraphicsState(const GraphicsState& graphicsState)
     vkCmdSetScissor(m_CommandBuffer, 0, 1, &scissor);
 }
 
-void VulkanCommandList::BindShaderResources(const BindShaderResourcesInfo& bindInfo)
+void VulkanCommandList::BindShaderResources(const ShaderResourcesBindPack& bindPack)
 {
     RefPtr<VulkanShader> activeShader = m_ActivePipeline->GetGraphicsState().Shader.As<VulkanShader>();
-    std::vector<VulkanDescriptorSet*> descriptorSets = activeShader->GetDescriptorSetManager().AcquireDescriptorSets(bindInfo);
+    std::vector<VulkanDescriptorSet*> descriptorSets = activeShader->GetDescriptorSetManager().AcquireDescriptorSets(bindPack);
 
     std::vector<VkDescriptorSet> descriptorSetHandles;
     descriptorSetHandles.reserve(descriptorSets.size());

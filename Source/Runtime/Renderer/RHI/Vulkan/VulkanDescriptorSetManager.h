@@ -21,7 +21,7 @@ public:
     VulkanDescriptorSetManager(const std::unordered_map<uint32, VulkanDescriptorSetLayout>& setLayouts);
     ~VulkanDescriptorSetManager();
 
-    NODISCARD std::vector<VulkanDescriptorSet*> AcquireDescriptorSets(const BindShaderResourcesInfo& bindInfo);
+    NODISCARD std::vector<VulkanDescriptorSet*> AcquireDescriptorSets(const ShaderResourcesBindPack& bindPack);
 
 private:
     std::unordered_map<uint32, DescriptorSetCache> m_SetCaches;

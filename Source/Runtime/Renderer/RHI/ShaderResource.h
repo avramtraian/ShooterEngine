@@ -53,4 +53,27 @@ enum AccessFlagsBitsEnum : uint64
 };
 using AccessFlagsBits = uint64;
 
+
+struct ShaderResourceTexture
+{
+public:
+    uint32 SetIndex { 0 };
+    uint32 BindingIndex { 0 };
+    RefPtr<Texture2D> Texture;
+
+public:
+    inline ShaderResourceTexture& SetSetIndex     (uint32 setIndex)           { SetIndex = setIndex;          return *this; }
+    inline ShaderResourceTexture& SetBindingIndex (uint32 bindingIndex)       { BindingIndex = bindingIndex;  return *this; }
+    inline ShaderResourceTexture& SetTexture      (RefPtr<Texture2D> texture) { Texture = std::move(texture); return *this; }
+};
+
+struct ShaderResourcesBindPack
+{
+public:
+    std::vector<ShaderResourceTexture> Textures;
+
+public:
+    inline ShaderResourcesBindPack& AddTexture(ShaderResourceTexture texture) { Textures.push_back(std::move(texture)); return *this; }
+};
+
 }

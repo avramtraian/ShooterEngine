@@ -84,28 +84,6 @@ public:
     }
 };
 
-struct ShaderResourceTexture
-{
-public:
-    uint32 SetIndex { 0 };
-    uint32 BindingIndex { 0 };
-    RefPtr<Texture2D> Texture;
-
-public:
-    inline ShaderResourceTexture& SetSetIndex     (uint32 setIndex)           { SetIndex = setIndex;          return *this; }
-    inline ShaderResourceTexture& SetBindingIndex (uint32 bindingIndex)       { BindingIndex = bindingIndex;  return *this; }
-    inline ShaderResourceTexture& SetTexture      (RefPtr<Texture2D> texture) { Texture = std::move(texture); return *this; }
-};
-
-struct BindShaderResourcesInfo
-{
-public:
-    std::vector<ShaderResourceTexture> Textures;
-
-public:
-    inline BindShaderResourcesInfo& AddTexture(ShaderResourceTexture texture) { Textures.push_back(std::move(texture)); return *this; }
-};
-
 struct CommandListInfo
 {
 public:
@@ -144,7 +122,7 @@ public:
 
     virtual void BindGraphicsState(const GraphicsState& graphicsState) = 0;
 
-    virtual void BindShaderResources(const BindShaderResourcesInfo& bindInfo) = 0;
+    virtual void BindShaderResources(const ShaderResourcesBindPack& bindInfo) = 0;
 
     virtual void BindVertexBuffer(const RefPtr<VertexBuffer>& vertexBuffer) = 0;
     virtual void BindIndexBuffer(const RefPtr<IndexBuffer>& indexBuffer) = 0;

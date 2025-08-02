@@ -27,7 +27,7 @@ public:
 
     virtual void BindGraphicsState(const GraphicsState& graphicsState) override;
 
-    virtual void BindShaderResources(const BindShaderResourcesInfo& bindInfo) override;
+    virtual void BindShaderResources(const ShaderResourcesBindPack& bindPack) override;
 
     virtual void BindVertexBuffer(const RefPtr<VertexBuffer>& vertexBuffer) override;
     virtual void BindIndexBuffer(const RefPtr<IndexBuffer>& indexBuffer) override;
@@ -48,8 +48,9 @@ public:
 
 private:
     void ReleaseObjectReferences();
-    NODISCARD bool ValidateRenderPass(const RefPtr<VulkanRenderPass>& renderPass, const RenderPassBeginInfo& beginInfo) const;
 
+    NODISCARD bool ValidateRenderPass(const RefPtr<VulkanRenderPass>& renderPass, const RenderPassBeginInfo& beginInfo) const;
+    
 private:
     VkCommandBuffer m_CommandBuffer;
     RefPtr<VulkanCommandPool> m_ParentCommandPool;

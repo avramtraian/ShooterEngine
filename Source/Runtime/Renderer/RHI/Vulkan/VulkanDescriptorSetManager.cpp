@@ -29,10 +29,10 @@ VulkanDescriptorSetManager::~VulkanDescriptorSetManager()
     m_SetCaches.clear();
 }
 
-std::vector<VulkanDescriptorSet*> VulkanDescriptorSetManager::AcquireDescriptorSets(const BindShaderResourcesInfo& bindInfo)
+std::vector<VulkanDescriptorSet*> VulkanDescriptorSetManager::AcquireDescriptorSets(const ShaderResourcesBindPack& bindPack)
 {
     std::unordered_map<uint32, std::unordered_map<uint32, ShaderResource*>> resourceSets;
-    for (const auto& texture : bindInfo.Textures)
+    for (const auto& texture : bindPack.Textures)
         resourceSets[texture.SetIndex][texture.BindingIndex] = texture.Texture.GetNonConst();
 
     // List of descriptor sets that are required to be bound to the pipeline in order to provide access to all
