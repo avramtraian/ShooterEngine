@@ -67,7 +67,12 @@ bool ShaderLibrary::LoadFromFile(std::string shaderName, const std::filesystem::
     ShaderCompiler compiler = ShaderCompiler(shaderSourceCode);
     if (!compiler.Compile())
     {
-        SE_LOG_WARN("Shader '%s' wasn't compiled successfully!", shaderName.c_str());
+        SE_LOG_WARN("Shader '%s' compilation has failed with the following error messages:", shaderName.c_str());
+        for (const std::string& errorMessage : compiler.GetErrorMessages())
+        {
+            SE_LOG_WARN("  %s", errorMessage.c_str());
+        }
+
         return false;
     }
 
