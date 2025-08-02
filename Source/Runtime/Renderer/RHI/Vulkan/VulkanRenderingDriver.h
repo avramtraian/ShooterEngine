@@ -55,6 +55,8 @@ public:
         return m_CommandPoolForQueueFamilyIndex.at(queueFamilyIndex);
     }
 
+    NODISCARD FORCEINLINE VkDescriptorPool GetDescriptorPool() const { return m_DescriptorPool; }
+
 public:
     virtual std::unique_ptr<RenderingSurface> CreateSurface(const RenderingSurfaceInfo& info) override;
     virtual RefPtr<CommandList> CreateCommandList(const CommandListInfo& info) override;
@@ -86,6 +88,8 @@ private:
     bool FindQueueFamilyIndices();
     bool CreateLogicalDevice();
     bool CreateQueues();
+    bool CreateDescriptorPool();
+
     bool CreateCommandPools(const RenderingDriverInfo& info);
 
 private:
@@ -108,6 +112,8 @@ private:
 
     VulkanObjectPool<VkFence> m_FencePool;
     VulkanObjectPool<VkSemaphore> m_SemaphorePool;
+
+    VkDescriptorPool m_DescriptorPool;
 };
 
 SHOOTER_API extern VulkanRenderingDriver* g_VulkanDriver;

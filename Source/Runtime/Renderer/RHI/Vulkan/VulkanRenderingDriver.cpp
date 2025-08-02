@@ -519,6 +519,35 @@ bool VulkanRenderingDriver::CreateQueues()
     return true;
 }
 
+bool VulkanRenderingDriver::CreateDescriptorPool()
+{
+    const uint32 descriptorPoolMaxSets = 1024;
+    std::vector<VkDescriptorPoolSize> descriptorPoolSizes;
+
+    VkDescriptorPoolSize& uniformBufferPool = descriptorPoolSizes.emplace_back();
+    uniformBufferPool.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    uniformBufferPool.descriptorCount = 512;
+
+    VkDescriptorPoolSize& combinedImageSamplerPool = descriptorPoolSizes.emplace_back();
+    combinedImageSamplerPool.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    combinedImageSamplerPool.descriptorCount = 512;
+
+    VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
+    descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    descriptorPoolCreateInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+    descriptorPoolCreateInfo.poolSizeCount = (uint32)descriptorPoolSizes.size();
+    descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes.data();
+    descriptorPoolCreateInfo.maxSets = descriptorPoolMaxSets;
+
+    if (vkCreateDescriptorPool(m_LogicalDevice, &descriptorPoolCreateInfo, nullptr, &m_DescriptorPool) != VK_SUCCESS)
+    {
+        SE_LOG_ERROR("Failed to create the [Vulkan] descriptor pool!");
+        return false;
+    }
+
+    return true;
+}
+
 bool VulkanRenderingDriver::CreateCommandPools(const RenderingDriverInfo& info)
 {
     m_CommandPoolForQueueFamilyIndex[m_QueueFamilyIndices.Graphics] = CreateRef<VulkanCommandPool>(VulkanCommandPoolInfo()
@@ -552,6 +581,8 @@ bool VulkanRenderingDriver::InitializeBackend(const RenderingDriverInfo& info)
     if (!FindQueueFamilyIndices()) { return false; }
     if (!CreateLogicalDevice())    { return false; }
     if (!CreateQueues())           { return false; }
+    if (!CreateDescriptorPool())   { return false; }
+
     g_VulkanDriver = this;
 
     /* Initialize rendering subsystems. */
@@ -581,6 +612,10 @@ void VulkanRenderingDriver::ShutdownBackend()
         for (VkSemaphore semaphore : m_SemaphorePool.Unused)
             vkDestroySemaphore(m_LogicalDevice, semaphore, nullptr);
     }
+
+    // Destroy the descriptor pool.
+    vkDestroyDescriptorPool(m_LogicalDevice, m_DescriptorPool, nullptr);
+    m_DescriptorPool = VK_NULL_HANDLE;
 
     /* Destroy command pools. */
     m_CommandPoolForQueueFamilyIndex.clear();
