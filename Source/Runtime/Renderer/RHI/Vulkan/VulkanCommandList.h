@@ -50,6 +50,7 @@ private:
     void ReleaseObjectReferences();
 
     NODISCARD bool ValidateRenderPass(const RefPtr<VulkanRenderPass>& renderPass, const RenderPassBeginInfo& beginInfo) const;
+    NODISCARD bool ValidateShaderResourcesBindPack(const RefPtr<VulkanShader>& shader, const ShaderResourcesBindPack& bindPack) const;
     
 private:
     VkCommandBuffer m_CommandBuffer;

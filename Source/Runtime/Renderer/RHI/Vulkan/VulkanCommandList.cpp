@@ -246,9 +246,53 @@ void VulkanCommandList::BindGraphicsState(const GraphicsState& graphicsState)
     vkCmdSetScissor(m_CommandBuffer, 0, 1, &scissor);
 }
 
+bool VulkanCommandList::ValidateShaderResourcesBindPack(const RefPtr<VulkanShader>& shader, const ShaderResourcesBindPack& bindPack) const
+{
+    const auto& descriptorSetLayouts = shader->GetDescriptorSetLayouts();
+
+    for (const ShaderResourceTexture& resourceTexture : bindPack.Textures)
+    {
+        // Check if set exists.
+        auto setLayoutIt = descriptorSetLayouts.find(resourceTexture.SetIndex);
+        if (setLayoutIt == descriptorSetLayouts.end())
+        {
+            SE_LOG_ERROR(
+                "Trying to bind a texture at a set index that doesn't exist! (Set: %d, Binding: %d)",
+                resourceTexture.SetIndex, resourceTexture.BindingIndex);
+            return false;
+        }
+        const VulkanDescriptorSetLayout& setLayout = (*setLayoutIt).second;
+
+        // Check if binding exists.
+        auto bindingIt = setLayout.BindingDescriptorTypes.find(resourceTexture.BindingIndex);
+        if (bindingIt == setLayout.BindingDescriptorTypes.end())
+        {
+            SE_LOG_ERROR(
+                "Trying to bind a texture at a binding index that doesn't exist! (Set: %d, Binding: %d)",
+                resourceTexture.SetIndex, resourceTexture.BindingIndex);
+            return false;
+        }
+        const VkDescriptorType descriptorType = (*bindingIt).second;
+
+        // Check that the descriptor type matches the expected shader resource type.
+        if (descriptorType != VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
+        {
+            SE_LOG_ERROR(
+                "Trying to bind a texture at a location that represents a descriptor of another type! (Set: %d, Binding: %d)",
+                resourceTexture.SetIndex, resourceTexture.BindingIndex);
+            return false;
+        }
+    }
+
+    return true;
+}
+
 void VulkanCommandList::BindShaderResources(const ShaderResourcesBindPack& bindPack)
 {
     RefPtr<VulkanShader> activeShader = m_ActivePipeline->GetGraphicsState().Shader.As<VulkanShader>();
+    if (!ValidateShaderResourcesBindPack(activeShader, bindPack))
+        return;
+
     std::vector<VulkanDescriptorSet*> descriptorSets = activeShader->GetDescriptorSetManager().AcquireDescriptorSets(bindPack);
 
     std::vector<VkDescriptorSet> descriptorSetHandles;
