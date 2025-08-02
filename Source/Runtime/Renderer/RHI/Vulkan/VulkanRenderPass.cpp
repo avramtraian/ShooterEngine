@@ -116,6 +116,10 @@ VulkanPipeline* VulkanRenderPass::AcquireCompatiblePipeline(const GraphicsState&
             return pipeline.get();
     }
 
+    // TODO(Traian): Try to destroy/invalidate existing but unused pipelines instead of creating
+    // a new every time it is required. This can cause big memory leaks.
+    SE_ASSERT(m_Pipelines.size() < 1024);
+
     /* Create a new pipeline that matches the provided graphics state. */
     m_Pipelines.push_back(std::make_unique<VulkanPipeline>(graphicsState, m_Handle, GetColorAttachmentCount()));
     return m_Pipelines.back().get();
@@ -156,6 +160,10 @@ VulkanFramebuffer* VulkanRenderPass::AcquireCompatibleFramebuffer(const RenderPa
 
         framebufferTextures.push_back(beginInfo.DepthStencilAttachmentTexture.Texture);
     }
+
+    // TODO(Traian): Try to destroy/invalidate existing but unused framebuffers instead of creating
+    // a new every time it is required. This can cause big memory leaks.
+    SE_ASSERT(m_Framebuffers.size() < 1024);
 
     /* Create a new framebuffer that matches the provided render pass begin info. */
     m_Framebuffers.push_back(std::make_unique<VulkanFramebuffer>(framebufferTextures, m_Handle));
