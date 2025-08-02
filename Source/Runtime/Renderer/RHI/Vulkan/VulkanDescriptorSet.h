@@ -21,7 +21,7 @@ enum class DescriptorSetCompatibility : uint8
 {
     Incompatible,
     Compatible,
-    WorthUpdating,
+    // WorthUpdating,
 };
 
 class VulkanDescriptorSet

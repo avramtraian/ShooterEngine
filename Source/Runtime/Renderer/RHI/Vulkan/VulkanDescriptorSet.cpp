@@ -33,7 +33,19 @@ VulkanDescriptorSet::~VulkanDescriptorSet()
 
 DescriptorSetCompatibility VulkanDescriptorSet::IsCompatibleWithBindings(const std::unordered_map<uint32, ShaderResource*>& bindings) const
 {
-    // TODO(Traian): Implement this function!
+    for (const auto& [bindingIndex, resource] : bindings)
+    {
+        // Check if the binding exists.
+        auto currentBindingIt = m_BindingResources.find(bindingIndex);
+        if (currentBindingIt == m_BindingResources.end())
+            return DescriptorSetCompatibility::Incompatible;
+
+        // Check if the resources bound at the given binding are the same.
+        ShaderResource* currentResource = (*currentBindingIt).second;
+        if (resource != currentResource)
+            return DescriptorSetCompatibility::Incompatible;
+    }
+
     return DescriptorSetCompatibility::Compatible;
 }
 
