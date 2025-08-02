@@ -10,14 +10,6 @@
 namespace SE
 {
 
-enum PipelineStageBitsEnum : uint64
-{
-    PIPELINE_STAGE_NONE_BIT = 0,
-    PIPELINE_STAGE_TOP_OF_PIPE_BIT             = BIT(0),
-    PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT = BIT(1),
-};
-using PipelineStageBits = uint64;
-
 struct CommandListExecuteInfo
 {
 public:
@@ -44,6 +36,74 @@ enum class CommandListFamily : uint8
     Graphics,
     Transfer,
     Compute,
+};
+
+struct TransitionTextureInfo
+{
+public:
+    RefPtr<Texture2D> Texture;
+    TextureLayout     OldLayout         { TextureLayout::Undefined };
+    TextureLayout     NewLayout         { TextureLayout::Undefined };
+    PipelineStageBits SrcPipelineStages { PIPELINE_STAGE_TOP_OF_PIPE_BIT };
+    PipelineStageBits DstPipelineStages { PIPELINE_STAGE_TOP_OF_PIPE_BIT };
+    AccessFlagsBits   SrcAccessFlags    { ACCESS_FLAG_NONE_BIT };
+    AccessFlagsBits   DstAccessFlags    { ACCESS_FLAG_NONE_BIT };
+
+public:
+    inline TransitionTextureInfo& SetTexture           (const RefPtr<Texture2D>& texture) { Texture = texture;             return *this; }
+    inline TransitionTextureInfo& SetOldLayout         (TextureLayout layout)             { OldLayout = layout;            return *this; }
+    inline TransitionTextureInfo& SetNewLayout         (TextureLayout layout)             { NewLayout = layout;            return *this; }
+    inline TransitionTextureInfo& SetSrcPipelineStages (PipelineStageBits stages)         { SrcPipelineStages = stages;    return *this; }
+    inline TransitionTextureInfo& SetDstPipelineStages (PipelineStageBits stages)         { DstPipelineStages = stages;    return *this; }
+    inline TransitionTextureInfo& AddSrcPipelineStages (PipelineStageBits stages)         { SrcPipelineStages |= stages;   return *this; }
+    inline TransitionTextureInfo& AddDstPipelineStages (PipelineStageBits stages)         { DstPipelineStages |= stages;   return *this; }
+    inline TransitionTextureInfo& SetSrcAccessFlags    (AccessFlagsBits accessFlags)      { SrcAccessFlags = accessFlags;  return *this; }
+    inline TransitionTextureInfo& SetDstAccessFlags    (AccessFlagsBits accessFlags)      { DstAccessFlags = accessFlags;  return *this; }
+    inline TransitionTextureInfo& AddSrcAccessFlags    (AccessFlagsBits accessFlags)      { SrcAccessFlags |= accessFlags; return *this; }
+    inline TransitionTextureInfo& AddDstAccessFlags    (AccessFlagsBits accessFlags)      { DstAccessFlags |= accessFlags; return *this; }
+
+    inline TransitionTextureInfo& SetLayouts           (TextureLayout oldLayout, TextureLayout newLayout)
+    {
+        OldLayout = oldLayout;
+        NewLayout = newLayout;
+        return *this;
+    }
+
+    inline TransitionTextureInfo& SetPipelineStages    (PipelineStageBits srcStages, PipelineStageBits dstStages)
+    {
+        SrcPipelineStages = srcStages;
+        DstPipelineStages = dstStages;
+        return *this;
+    }
+
+    inline TransitionTextureInfo& SetAccessFlags       (AccessFlagsBits srcAccessFlags, AccessFlagsBits dstAccessFlags)
+    {
+        SrcAccessFlags = srcAccessFlags;
+        DstAccessFlags = dstAccessFlags;
+        return *this;
+    }
+};
+
+struct ShaderResourceTexture
+{
+public:
+    uint32 SetIndex { 0 };
+    uint32 BindingIndex { 0 };
+    RefPtr<Texture2D> Texture;
+
+public:
+    inline ShaderResourceTexture& SetSetIndex     (uint32 setIndex)           { SetIndex = setIndex;          return *this; }
+    inline ShaderResourceTexture& SetBindingIndex (uint32 bindingIndex)       { BindingIndex = bindingIndex;  return *this; }
+    inline ShaderResourceTexture& SetTexture      (RefPtr<Texture2D> texture) { Texture = std::move(texture); return *this; }
+};
+
+struct BindShaderResourcesInfo
+{
+public:
+    std::vector<ShaderResourceTexture> Textures;
+
+public:
+    inline BindShaderResourcesInfo& AddTexture(ShaderResourceTexture texture) { Textures.push_back(std::move(texture)); return *this; }
 };
 
 struct CommandListInfo
@@ -84,10 +144,15 @@ public:
 
     virtual void BindGraphicsState(const GraphicsState& graphicsState) = 0;
 
+    virtual void BindShaderResources(const BindShaderResourcesInfo& bindInfo) = 0;
+
     virtual void BindVertexBuffer(const RefPtr<VertexBuffer>& vertexBuffer) = 0;
     virtual void BindIndexBuffer(const RefPtr<IndexBuffer>& indexBuffer) = 0;
 
     virtual void DrawIndexed(uint32 firstIndex, uint32 indexCount) = 0;
+
+public:
+    virtual void TransitionTexture(const TransitionTextureInfo& info) = 0;
 
 public:
     NODISCARD virtual const DrawStatistics& GetDrawStatistics() const = 0;

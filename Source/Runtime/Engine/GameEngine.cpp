@@ -90,14 +90,13 @@ void GameEngine::Shutdown()
 {
     SE_LOG_INFO("Shutting down the engine systems...");
 
-    /* Shutdown the shader library. */
+    // Shutdown rendering subsystems and driver.
+    g_RenderingDriver->WaitForDeviceIdle();
     ShaderLibrary::Shutdown();
-
-    /* Destroy the game rendering surface. */
     m_GameRenderingSurface.reset();
-
-    /* Shutdown various engine system. */
     RenderingDriver::Shutdown();
+    
+    // Shutdown the input system.
     Input::Shutdown();
 
     /* Destroy the game window. */

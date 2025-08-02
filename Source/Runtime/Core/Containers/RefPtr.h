@@ -167,6 +167,8 @@ public:
     NODISCARD FORCEINLINE T* Get() { SE_ASSERT(IsValid()); return m_Instance; }
     NODISCARD FORCEINLINE const T* Get() const { SE_ASSERT(IsValid()); return m_Instance; }
 
+    NODISCARD FORCEINLINE T* GetNonConst() const { SE_ASSERT(IsValid()); return m_Instance; }
+
     NODISCARD FORCEINLINE T* operator->() { return Get(); }
     NODISCARD FORCEINLINE const T* operator->() const { return Get(); }
 

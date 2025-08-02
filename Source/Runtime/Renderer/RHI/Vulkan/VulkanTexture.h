@@ -41,8 +41,18 @@ class VulkanTexture2D : public Texture2D
 public:
     struct Handle
     {
-        VkImage Image    { VK_NULL_HANDLE };
-        VkImageView View { VK_NULL_HANDLE };
+        VkImage Image         { VK_NULL_HANDLE };
+        VkImageView View      { VK_NULL_HANDLE };
+        VkDeviceMemory Memory { VK_NULL_HANDLE };
+    };
+
+    struct Sampler
+    {
+        VkSampler          Handle       { VK_NULL_HANDLE };
+        TextureFilter      MinFilter    { TextureFilter::Linear };
+        TextureFilter      MagFilter    { TextureFilter::Linear };
+        TextureAddressMode AddressModeU { TextureAddressMode::Repeat };
+        TextureAddressMode AddressModeV { TextureAddressMode::Repeat };
     };
 
 public:
@@ -58,7 +68,12 @@ public:
 
 public:
     NODISCARD FORCEINLINE const Handle& GetHandle() const { return m_Handle; }
+    NODISCARD FORCEINLINE const Sampler& GetSampler() const { return m_Sampler; }
     NODISCARD FORCEINLINE bool IsOwnedBySwapchain() const { return m_IsOwnedBySwapchain; }
+
+    void Invalidate(uint32 sizeX, uint32 sizeY, ConstVectorView<uint8> initialData);
+    void UploadTextureData(ConstVectorView<uint8> initialData);
+    void Destroy();
 
     void InvalidateFromSurface(VulkanRenderingSurface& owningSurface, uint32 imageIndex);
     void DestroyFromSurface();
@@ -70,6 +85,7 @@ private:
     TextureFlags m_Flags;
     uint32 m_SizeX;
     uint32 m_SizeY;
+    Sampler m_Sampler;
 };
 
 }

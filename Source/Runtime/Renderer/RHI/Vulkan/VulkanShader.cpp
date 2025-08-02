@@ -88,7 +88,10 @@ VulkanShader::VulkanShader(const ShaderInfo& info)
         }
     }
 
-    std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutbindings;
+    std::vector<VkDescriptorSetLayout> descriptorSetLayoutHandles;
+    descriptorSetLayoutHandles.resize(maxSetIndex + 1, VK_NULL_HANDLE);
+
+    std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings;
     for (int32 setIndex = 0; setIndex <= maxSetIndex; ++setIndex)
     {
         if (bindingsPerSet[setIndex].empty())
@@ -99,38 +102,50 @@ VulkanShader::VulkanShader(const ShaderInfo& info)
             // 
             // For example, if a shader uses descriptor sets 0, 1 and 3, in order to correctly implement this "gap" feature we must
             // set the descriptor set layout corresponding to index 2 to VK_NULL_HANDLE. */
-            m_DescriptorSetLayouts.push_back(VK_NULL_HANDLE);
+            descriptorSetLayoutHandles[setIndex] = VK_NULL_HANDLE;
+            continue;
         }
 
-        descriptorSetLayoutbindings.clear();
-        descriptorSetLayoutbindings.reserve(bindingsPerSet[setIndex].size());
+        VulkanDescriptorSetLayout& descriptorSetLayout = m_DescriptorSetLayouts[setIndex];
+
+        descriptorSetLayoutBindings.clear();
+        descriptorSetLayoutBindings.reserve(bindingsPerSet[setIndex].size());
         for (const auto& [bindingIndex, binding] : bindingsPerSet[setIndex])
-            descriptorSetLayoutbindings.push_back(binding);
+        {
+            SE_ASSERT(!descriptorSetLayout.BindingDescriptorTypes.contains(bindingIndex));
+            descriptorSetLayout.BindingDescriptorTypes.insert({ bindingIndex, binding.descriptorType });
+            descriptorSetLayoutBindings.push_back(binding);
+        }
 
         VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
         descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        descriptorSetLayoutCreateInfo.bindingCount = (uint32)descriptorSetLayoutbindings.size();
-        descriptorSetLayoutCreateInfo.pBindings = descriptorSetLayoutbindings.data();
+        descriptorSetLayoutCreateInfo.bindingCount = (uint32)descriptorSetLayoutBindings.size();
+        descriptorSetLayoutCreateInfo.pBindings = descriptorSetLayoutBindings.data();
 
-        VkDescriptorSetLayout setLayout = VK_NULL_HANDLE;
-        SE_VULKAN_CHECK(vkCreateDescriptorSetLayout(g_VulkanDriver->GetDevice(), &descriptorSetLayoutCreateInfo, nullptr, &setLayout));
-        m_DescriptorSetLayouts.push_back(setLayout);
+        SE_VULKAN_CHECK(vkCreateDescriptorSetLayout(g_VulkanDriver->GetDevice(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout.Handle));
+        descriptorSetLayoutHandles[setIndex] = descriptorSetLayout.Handle;
     }
 
     // Create the pipeline layout.
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
     pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutCreateInfo.setLayoutCount = (uint32)m_DescriptorSetLayouts.size();
-    pipelineLayoutCreateInfo.pSetLayouts = m_DescriptorSetLayouts.data();
+    pipelineLayoutCreateInfo.setLayoutCount = (uint32)descriptorSetLayoutHandles.size();
+    pipelineLayoutCreateInfo.pSetLayouts = descriptorSetLayoutHandles.data();
 
     SE_VULKAN_CHECK(vkCreatePipelineLayout(g_VulkanDriver->GetDevice(), &pipelineLayoutCreateInfo, nullptr, &m_PipelineLayout));
+
+    // Create the descriptor set manager.
+    m_DescriptorSetManager = std::make_unique<VulkanDescriptorSetManager>(m_DescriptorSetLayouts);
 }
 
 VulkanShader::~VulkanShader()
 {
+    // Destroy the descriptor set manager.
+    m_DescriptorSetManager = nullptr;
+
     // Destroy the descriptor set layouts.
-    for (VkDescriptorSetLayout setLayout : m_DescriptorSetLayouts)
-        vkDestroyDescriptorSetLayout(g_VulkanDriver->GetDevice(), setLayout, nullptr);
+    for (const auto& [setIndex, setLayout] : m_DescriptorSetLayouts)
+        vkDestroyDescriptorSetLayout(g_VulkanDriver->GetDevice(), setLayout.Handle, nullptr);
     m_DescriptorSetLayouts.clear();
 
     // Destroy the pipeline layout.

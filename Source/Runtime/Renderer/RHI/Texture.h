@@ -2,7 +2,9 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/VectorView.h>
 #include <Runtime/Renderer/RHI/RHICore.h>
+#include <Runtime/Renderer/RHI/ShaderResource.h>
 
 #include <string>
 
@@ -18,12 +20,10 @@ enum class TextureFormat : uint8
     MaxEnumValue,
 };
 
-enum class TextureLayout : uint16
+NODISCARD FORCEINLINE bool IsTextureDepthFormat(TextureFormat format)
 {
-    Undefined = 0,
-    PresentSource,
-    ShaderReadOptimal,
-};
+    return false;
+}
 
 enum TextureFlagsEnum : uint32
 {
@@ -33,26 +33,63 @@ enum TextureFlagsEnum : uint32
 };
 using TextureFlags = uint32;
 
+enum class TextureFilter : uint8
+{
+    Linear = 0,
+    Nearest,
+};
+
+enum class TextureAddressMode : uint8
+{
+    Repeat = 0,
+    ClampToEdge,
+    MirroredRepeat,
+    MirroredClampToEdge,
+    ClampToBorder,
+};
+
 struct Texture2DInfo
 {
 public:
-    std::string DebugName;
-    TextureFormat Format     { TextureFormat::Unknown };
-    TextureFlags Flags       { TEXTURE_FLAG_NONE };
-    uint32 SizeX             { 0 };
-    uint32 SizeY             { 0 };
+    TextureFormat          Format       { TextureFormat::Unknown };
+    TextureFlags           Flags        { TEXTURE_FLAG_NONE };
+    uint32                 SizeX        { 0 };
+    uint32                 SizeY        { 0 };
+    TextureFilter          MinFilter    { TextureFilter::Linear };
+    TextureFilter          MagFilter    { TextureFilter::Linear };
+    TextureAddressMode     AddressModeU { TextureAddressMode::Repeat };
+    TextureAddressMode     AddressModeV { TextureAddressMode::Repeat };
+    ConstVectorView<uint8> InitialData;
 
 public:
-    inline Texture2DInfo& SetDebugName (std::string_view debugName) { DebugName = debugName;        return *this; }
-    inline Texture2DInfo& SetFormat    (TextureFormat format)       { Format = format;              return *this; }
-    inline Texture2DInfo& SetFlags     (TextureFlags flags)         { Flags = flags;                return *this; }
-    inline Texture2DInfo& SetSizeX     (uint32 sizeX)               { SizeX = sizeX;                return *this; }
-    inline Texture2DInfo& SetSizeY     (uint32 sizeY)               { SizeY = sizeY;                return *this; }
-    inline Texture2DInfo& SetSize      (uint32 sizeX, uint32 sizeY) { SizeX = sizeX; SizeY = sizeY; return *this; }
-    inline Texture2DInfo& AddFlags     (TextureFlags flags)         { Flags |= flags;               return *this; }
+    inline Texture2DInfo& SetFormat       (TextureFormat format)          { Format = format;              return *this; }
+    inline Texture2DInfo& SetFlags        (TextureFlags flags)            { Flags = flags;                return *this; }
+    inline Texture2DInfo& SetSizeX        (uint32 sizeX)                  { SizeX = sizeX;                return *this; }
+    inline Texture2DInfo& SetSizeY        (uint32 sizeY)                  { SizeY = sizeY;                return *this; }
+    inline Texture2DInfo& SetSize         (uint32 sizeX, uint32 sizeY)    { SizeX = sizeX; SizeY = sizeY; return *this; }
+    inline Texture2DInfo& AddFlags        (TextureFlags flags)            { Flags |= flags;               return *this; }
+    inline Texture2DInfo& SetMinFilter    (TextureFilter filter)          { MinFilter = filter;           return *this; }
+    inline Texture2DInfo& SetMagFilter    (TextureFilter filter)          { MagFilter = filter;           return *this; }
+    inline Texture2DInfo& SetAddressModeU (TextureAddressMode adressMode) { AddressModeU = adressMode;    return *this; }
+    inline Texture2DInfo& SetAddressModeV (TextureAddressMode adressMode) { AddressModeV = adressMode;    return *this; }
+    inline Texture2DInfo& SetInitialData  (ConstVectorView<uint8> data)   { InitialData = data;           return *this; }
+
+    inline Texture2DInfo& SetFilters      (TextureFilter minFilter, TextureFilter magFilter)
+    {
+        MinFilter = minFilter;
+        MagFilter = magFilter;
+        return *this;
+    }
+
+    inline Texture2DInfo& SetAddressModes (TextureAddressMode addressModeU, TextureAddressMode addressModeV)
+    {
+        AddressModeU = addressModeU;
+        AddressModeV = addressModeV;
+        return *this;
+    }
 };
 
-class Texture2D : public RefCounted
+class Texture2D : public ShaderResource
 {
     SE_MAKE_RENDERER_RHI_INTERFACE(Texture2D);
 

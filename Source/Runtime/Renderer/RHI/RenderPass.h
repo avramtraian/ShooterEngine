@@ -30,7 +30,7 @@ struct RenderPassAttachment
 {
 public:
     TextureFormat     Format      { TextureFormat::Unknown };
-    TextureLayout     FinalLayout { TextureLayout::ShaderReadOptimal };
+    TextureLayout     FinalLayout { TextureLayout::ShaderReadOnlyOptimal };
     AttachmentLoadOp  LoadOp      { AttachmentLoadOp::Load };
     AttachmentStoreOp StoreOp     { AttachmentStoreOp::Store };
 

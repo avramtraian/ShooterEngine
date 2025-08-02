@@ -7,6 +7,7 @@
 #include <Runtime/Renderer/RHI/Vulkan/VulkanPipeline.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderPass.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderingDriver.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanShader.h>
 
 namespace SE
 {
@@ -47,21 +48,35 @@ VulkanCommandList::~VulkanCommandList()
      * the command buffer. */
     SE_VULKAN_CHECK(vkQueueWaitIdle(submisionQueue));
 
+    ReleaseObjectReferences();
+
     m_ParentCommandPool->RetireCommandBuffer(m_CommandBuffer);
     m_CommandBuffer = VK_NULL_HANDLE;
     m_ParentCommandPool = nullptr;
 }
 
-void VulkanCommandList::Begin()
+void VulkanCommandList::ReleaseObjectReferences()
 {
-    /* Reset draw statisticsif neccessary. */
-    if (m_AccumulateStatisticsPolicy == AccumultateStatisticsPolicy::PerBeginEndCycle)
-        ResetDrawStatistics();
-
-    /* Release all resource references previously held by the command list. */
     m_UsedRenderPasses.clear();
     m_UsedVertexBuffers.clear();
     m_UsedIndexBuffers.clear();
+
+    // Release textures that were transitioned.
+    m_TransitionedTextures.clear();
+
+    // Release descriptor sets that were bound.
+    for (VulkanDescriptorSet* descriptorSet : m_UsedDescriptorSets)
+        descriptorSet->DecrementLockCount();
+    m_UsedDescriptorSets.clear();
+}
+
+void VulkanCommandList::Begin()
+{
+    ReleaseObjectReferences();
+
+    /* Reset draw statisticsif neccessary. */
+    if (m_AccumulateStatisticsPolicy == AccumultateStatisticsPolicy::PerBeginEndCycle)
+        ResetDrawStatistics();
 
     /* Reset the command buffer before reusing it. */
     SE_VULKAN_CHECK(vkResetCommandBuffer(m_CommandBuffer, 0));
@@ -131,6 +146,14 @@ bool VulkanCommandList::ValidateRenderPass(const RefPtr<VulkanRenderPass>& rende
         if ((int32)colorAttachmentIndex > maxColorAttachmentIndex)
             maxColorAttachmentIndex = colorAttachmentIndex;
         const auto& texture = colorAttachmentTextureIt.second.Texture;
+
+        if (!(texture->GetFlags() & TEXTURE_FLAG_RENDER_TARGET))
+        {
+            SE_LOG_ERROR(
+                "Color attachment [%d] references a texture that was not created using the 'TEXTURE_FLAG_RENDER_TARGET' flag!",
+                colorAttachmentIndex);
+            return false;
+        }
 
         if (texture->GetSizeX() != framebufferWidth || texture->GetSizeY() != framebufferHeight)
         {
@@ -223,6 +246,29 @@ void VulkanCommandList::BindGraphicsState(const GraphicsState& graphicsState)
     vkCmdSetScissor(m_CommandBuffer, 0, 1, &scissor);
 }
 
+void VulkanCommandList::BindShaderResources(const BindShaderResourcesInfo& bindInfo)
+{
+    RefPtr<VulkanShader> activeShader = m_ActivePipeline->GetGraphicsState().Shader.As<VulkanShader>();
+    std::vector<VulkanDescriptorSet*> descriptorSets = activeShader->GetDescriptorSetManager().AcquireDescriptorSets(bindInfo);
+
+    std::vector<VkDescriptorSet> descriptorSetHandles;
+    descriptorSetHandles.reserve(descriptorSets.size());
+    m_UsedDescriptorSets.reserve(m_UsedDescriptorSets.size() + descriptorSets.size());
+
+    for (VulkanDescriptorSet* descriptorSet : descriptorSets)
+    {
+        m_UsedDescriptorSets.push_back(descriptorSet);
+        descriptorSetHandles.push_back(descriptorSet->GetHandle());
+    }
+
+    vkCmdBindDescriptorSets(
+        m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+        activeShader->GetPipelineLayout(), 0,
+        (uint32)descriptorSetHandles.size(), descriptorSetHandles.data(), // Descriptor sets.
+        0, nullptr                                                        // Dynamic offses.
+    );
+}
+
 void VulkanCommandList::BindVertexBuffer(const RefPtr<VertexBuffer>& vertexBuffer)
 {
     auto vulkanVertexBuffer = vertexBuffer.As<VulkanVertexBuffer>();
@@ -291,6 +337,120 @@ void VulkanCommandList::DrawIndexed(uint32 firstIndex, uint32 indexCount)
 
         default: SE_ASSERT_NOT_REACHED; /* TODO(Traian): Implement all primitive topologies! */
     }
+}
+
+inline VkImageLayout TextureLayoutToVulkan(TextureLayout layout)
+{
+    switch (layout)
+    {
+        case TextureLayout::Undefined:              return VK_IMAGE_LAYOUT_UNDEFINED;
+        case TextureLayout::PresentSource:          return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        case TextureLayout::ColorAttachmentOptimal: return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        case TextureLayout::DepthAttachmentOptimal: return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+        case TextureLayout::ShaderReadOnlyOptimal:  return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        case TextureLayout::TransferDstOptimal:     return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        case TextureLayout::TransferSrcOptimal:     return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    }
+
+    SE_ASSERT_NOT_REACHED;
+    return VK_IMAGE_LAYOUT_UNDEFINED;
+}
+
+inline VkPipelineStageFlags PipelineStageBitsToVulkan(PipelineStageBits stages)
+{
+    VkPipelineStageFlags pipelineStageFlags = 0;
+    if (stages & PIPELINE_STAGE_TOP_OF_PIPE_BIT)             { pipelineStageFlags |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT; }
+    if (stages & PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT) { pipelineStageFlags |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; }
+    if (stages & PIPELINE_STAGE_TRANSFER_BIT)                { pipelineStageFlags |= VK_PIPELINE_STAGE_TRANSFER_BIT; }
+    if (stages & PIPELINE_STAGE_VERTEX_SHADER_BIT)           { pipelineStageFlags |= VK_PIPELINE_STAGE_VERTEX_SHADER_BIT; }
+    if (stages & PIPELINE_STAGE_FRAGMENT_SHADER_BIT)         { pipelineStageFlags |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT; }
+
+    SE_ASSERT(pipelineStageFlags != 0);
+    return pipelineStageFlags;
+}
+
+inline VkAccessFlags AccessFlagsBitsToVulkan(AccessFlagsBits accessFlags)
+{
+    VkAccessFlags vulkanAccessFlags = VK_ACCESS_NONE;
+    if (accessFlags & ACCESS_FLAG_VERTEX_ATTRIBUTE_READ_BIT)          { vulkanAccessFlags |= VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT; }
+    if (accessFlags & ACCESS_FLAG_UNIFORM_READ_BIT)                   { vulkanAccessFlags |= VK_ACCESS_UNIFORM_READ_BIT; }
+    if (accessFlags & ACCESS_FLAG_INPUT_ATTACHMENT_READ_BIT)          { vulkanAccessFlags |= VK_ACCESS_INPUT_ATTACHMENT_READ_BIT; }
+    if (accessFlags & ACCESS_FLAG_SHADER_READ_BIT)                    { vulkanAccessFlags |= VK_ACCESS_SHADER_READ_BIT; }
+    if (accessFlags & ACCESS_FLAG_SHADER_WRITE_BIT)                   { vulkanAccessFlags |= VK_ACCESS_SHADER_WRITE_BIT; }
+    if (accessFlags & ACCESS_FLAG_COLOR_ATTACHMENT_READ_BIT)          { vulkanAccessFlags |= VK_ACCESS_COLOR_ATTACHMENT_READ_BIT; }
+    if (accessFlags & ACCESS_FLAG_COLOR_ATTACHMENT_WRITE_BIT)         { vulkanAccessFlags |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; }
+    if (accessFlags & ACCESS_FLAG_DEPTH_STENCIL_ATTACHMENT_READ_BIT)  { vulkanAccessFlags |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT; }
+    if (accessFlags & ACCESS_FLAG_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT) { vulkanAccessFlags |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT; }
+    if (accessFlags & ACCESS_FLAG_TRANSFER_READ_BIT)                  { vulkanAccessFlags |= VK_ACCESS_TRANSFER_READ_BIT; }
+    if (accessFlags & ACCESS_FLAG_TRANSFER_WRITE_BIT)                 { vulkanAccessFlags |= VK_ACCESS_TRANSFER_WRITE_BIT; }
+
+    return vulkanAccessFlags;
+}
+
+void VulkanCommandList::TransitionTexture(const TransitionTextureInfo& info)
+{
+    auto vulkanTexture = info.Texture.As<VulkanTexture2D>();
+    m_TransitionedTextures.push_back(vulkanTexture);
+
+    const VkImageAspectFlags imageAspect = IsTextureDepthFormat(vulkanTexture->GetFormat())
+        ? VK_IMAGE_ASPECT_DEPTH_BIT
+        : VK_IMAGE_ASPECT_COLOR_BIT;
+
+    VkImageMemoryBarrier imageBarrier = {};
+    imageBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    imageBarrier.srcAccessMask = AccessFlagsBitsToVulkan(info.SrcAccessFlags);
+    imageBarrier.dstAccessMask = AccessFlagsBitsToVulkan(info.DstAccessFlags);
+    imageBarrier.oldLayout = TextureLayoutToVulkan(info.OldLayout);
+    imageBarrier.newLayout = TextureLayoutToVulkan(info.NewLayout);
+    imageBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    imageBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    imageBarrier.image = vulkanTexture->GetHandle().Image;
+    imageBarrier.subresourceRange.aspectMask = imageAspect;
+    imageBarrier.subresourceRange.baseMipLevel = 0;
+    imageBarrier.subresourceRange.levelCount = 1;
+    imageBarrier.subresourceRange.baseArrayLayer = 0;
+    imageBarrier.subresourceRange.layerCount = 1;
+
+    const VkPipelineStageFlags srcStage = PipelineStageBitsToVulkan(info.SrcPipelineStages);
+    const VkPipelineStageFlags dstStage = PipelineStageBitsToVulkan(info.DstPipelineStages);
+
+    vkCmdPipelineBarrier(
+        m_CommandBuffer, srcStage, dstStage, 0,
+        0, nullptr,      // Memory barries.
+        0, nullptr,      // Buffer memory barries.
+        1, &imageBarrier // Image memory barries.
+    );
+}
+
+void VulkanCommandList::CopyBufferToImage(const RefPtr<VulkanTexture2D>& dstTexture, VkBuffer srcBuffer)
+{
+    const VkImageAspectFlags imageAspect = IsTextureDepthFormat(dstTexture->GetFormat())
+        ? VK_IMAGE_ASPECT_DEPTH_BIT
+        : VK_IMAGE_ASPECT_COLOR_BIT;
+
+    VkBufferImageCopy imageCopyRegion = {};
+    imageCopyRegion.bufferOffset = 0;
+    imageCopyRegion.bufferRowLength = 0;
+    imageCopyRegion.bufferImageHeight = 0;
+    imageCopyRegion.bufferImageHeight = 0;
+    imageCopyRegion.imageSubresource.aspectMask = imageAspect;
+    imageCopyRegion.imageSubresource.mipLevel = 0;
+    imageCopyRegion.imageSubresource.baseArrayLayer = 0;
+    imageCopyRegion.imageSubresource.layerCount = 1;
+    imageCopyRegion.imageOffset.x = 0;
+    imageCopyRegion.imageOffset.y = 0;
+    imageCopyRegion.imageOffset.z = 0;
+    imageCopyRegion.imageExtent.width = dstTexture->GetSizeX();
+    imageCopyRegion.imageExtent.height = dstTexture->GetSizeY();
+    imageCopyRegion.imageExtent.depth = 1;
+
+    vkCmdCopyBufferToImage(
+        m_CommandBuffer,
+        srcBuffer,
+       dstTexture->GetHandle().Image,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        1, &imageCopyRegion
+    );
 }
 
 void VulkanCommandList::ResetDrawStatistics()
