@@ -4,9 +4,14 @@
 
 #include <Runtime/Renderer/RHI/Texture.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanSwapchain.h>
 
 namespace SE
 {
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// TEXTURE UTILITY FUNCTIONS. ////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 NODISCARD static inline VkFormat TextureFormatToVulkan(TextureFormat textureFormat)
 {
@@ -36,16 +41,60 @@ NODISCARD static inline TextureFormat TextureFormatFromVulkan(VkFormat format)
     return TextureFormat::Unknown;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// VULKAN GENERIC TEXTURE 2D. ////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+enum class VulkanTexture2DType : uint8
+{
+    Unknown = 0,
+    Storage,
+    Swapchain,
+};
+
 class VulkanTexture2D : public Texture2D
 {
 public:
     struct Handle
     {
-        VkImage Image         { VK_NULL_HANDLE };
-        VkImageView View      { VK_NULL_HANDLE };
-        VkDeviceMemory Memory { VK_NULL_HANDLE };
+        VkImage     Image { VK_NULL_HANDLE };
+        VkImageView View  { VK_NULL_HANDLE };
     };
 
+    struct Properties
+    {
+        TextureFormat Format { TextureFormat::Unknown };
+        TextureFlags  Flags  { TEXTURE_FLAG_NONE };
+        uint32        SizeX  { 0 };
+        uint32        SizeY  { 0 };
+    };
+
+public:
+    VulkanTexture2D(VulkanTexture2DType type) : m_Type(type) {}
+    virtual ~VulkanTexture2D() override = default;
+    NODISCARD FORCEINLINE VulkanTexture2DType GetType() const { return m_Type; }
+
+    NODISCARD FORCEINLINE const Handle& GetHandle() const { return m_Handle; }
+    NODISCARD FORCEINLINE const Properties& GetProperties() const { return m_Properties; }
+
+    NODISCARD FORCEINLINE virtual uint32 GetSizeX() const override { return m_Properties.SizeX; }
+    NODISCARD FORCEINLINE virtual uint32 GetSizeY() const override { return m_Properties.SizeY; }
+    NODISCARD FORCEINLINE virtual TextureFormat GetFormat() const override { return m_Properties.Format; }
+    NODISCARD FORCEINLINE virtual TextureFlags GetFlags() const override { return m_Properties.Flags; }
+
+protected:
+    VulkanTexture2DType m_Type;
+    Handle m_Handle;
+    Properties m_Properties;
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// VULKAN STORAGE TEXTURE 2D. ////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+class VulkanStorageTexture2D : public VulkanTexture2D
+{
+public:
     struct Sampler
     {
         VkSampler          Handle       { VK_NULL_HANDLE };
@@ -56,36 +105,38 @@ public:
     };
 
 public:
-    VulkanTexture2D(const Texture2DInfo& info);
-    VulkanTexture2D(VulkanRenderingSurface& owningSurface, uint32 imageIndex);
+    VulkanStorageTexture2D(const Texture2DInfo& info);
+    virtual ~VulkanStorageTexture2D() override;
+    NODISCARD FORCEINLINE static VulkanTexture2DType GetStaticType() { return VulkanTexture2DType::Storage; }
 
-    virtual ~VulkanTexture2D() override;
-
-    NODISCARD FORCEINLINE virtual TextureFormat GetFormat() const override { return m_Format; }
-    NODISCARD FORCEINLINE virtual TextureFlags GetFlags() const override { return m_Flags; }
-    NODISCARD FORCEINLINE virtual uint32 GetSizeX() const override { return m_SizeX; }
-    NODISCARD FORCEINLINE virtual uint32 GetSizeY() const override { return m_SizeY; }
-
-public:
-    NODISCARD FORCEINLINE const Handle& GetHandle() const { return m_Handle; }
+    NODISCARD FORCEINLINE VkDeviceMemory GetTextureMemory() const { return m_TextureMemory; }
     NODISCARD FORCEINLINE const Sampler& GetSampler() const { return m_Sampler; }
-    NODISCARD FORCEINLINE bool IsOwnedBySwapchain() const { return m_IsOwnedBySwapchain; }
-
-    void Invalidate(uint32 sizeX, uint32 sizeY, ConstVectorView<uint8> initialData);
-    void UploadTextureData(ConstVectorView<uint8> initialData);
-    void Destroy();
-
-    void InvalidateFromSurface(VulkanRenderingSurface& owningSurface, uint32 imageIndex);
-    void DestroyFromSurface();
 
 private:
-    bool m_IsOwnedBySwapchain;
-    Handle m_Handle;
-    TextureFormat m_Format;
-    TextureFlags m_Flags;
-    uint32 m_SizeX;
-    uint32 m_SizeY;
+    void CreateImageAndAllocateMemory(const Texture2DInfo& info);
+    void CreateImageView();
+    void CreateSampler(const Texture2DInfo& info);
+    void SyncUploadData(ConstVectorView<uint8> textureData);
+
+private:
+    VkDeviceMemory m_TextureMemory;
     Sampler m_Sampler;
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// VULKAN SWAPCHAIN TEXTURE 2D. ///////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+class VulkanSwapchainTexture2D : public VulkanTexture2D
+{
+public:
+    VulkanSwapchainTexture2D(const RefPtr<VulkanSwapchain>& swapchain, uint32 imageIndex);
+    virtual ~VulkanSwapchainTexture2D() override;
+    NODISCARD FORCEINLINE static VulkanTexture2DType GetStaticType() { return VulkanTexture2DType::Swapchain; }
+
+private:
+    RefPtr<VulkanSwapchain> m_Swapchain;
+    uint32 m_ImageIndex;
 };
 
 }

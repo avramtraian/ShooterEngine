@@ -77,7 +77,10 @@ void VulkanDescriptorSet::Invalidate(const std::unordered_map<uint32, ShaderReso
 
         if (descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
         {
-            VulkanTexture2D* textureResource = (VulkanTexture2D*)resource;
+            VulkanTexture2D* vulkanTexture = (VulkanTexture2D*)resource;
+            SE_ASSERT(vulkanTexture->GetType() == VulkanStorageTexture2D::GetStaticType());
+            VulkanStorageTexture2D* textureResource = (VulkanStorageTexture2D*)vulkanTexture;
+
             VkDescriptorImageInfo descriptorImageInfo = {};
             descriptorImageInfo.sampler = textureResource->GetSampler().Handle;
             descriptorImageInfo.imageView = textureResource->GetHandle().View;
