@@ -33,7 +33,7 @@ VulkanDescriptorSet::~VulkanDescriptorSet()
     m_DescriptorPool = VK_NULL_HANDLE;
 }
 
-DescriptorSetCompatibility VulkanDescriptorSet::IsCompatibleWithBindings(const std::unordered_map<uint32, ShaderResource*>& bindings) const
+DescriptorSetCompatibility VulkanDescriptorSet::IsCompatibleWithBindings(const std::unordered_map<uint32, RefPtr<ShaderResource>>& bindings) const
 {
     for (const auto& [bindingIndex, resource] : bindings)
     {
@@ -43,7 +43,7 @@ DescriptorSetCompatibility VulkanDescriptorSet::IsCompatibleWithBindings(const s
             return DescriptorSetCompatibility::Incompatible;
 
         // Check if the resources bound at the given binding are the same.
-        ShaderResource* currentResource = (*currentBindingIt).second;
+        WeakRefPtr<ShaderResource> currentResource = (*currentBindingIt).second;
         if (resource != currentResource)
             return DescriptorSetCompatibility::Incompatible;
     }
@@ -51,7 +51,7 @@ DescriptorSetCompatibility VulkanDescriptorSet::IsCompatibleWithBindings(const s
     return DescriptorSetCompatibility::Compatible;
 }
 
-void VulkanDescriptorSet::Invalidate(const std::unordered_map<uint32, ShaderResource*>& bindings)
+void VulkanDescriptorSet::Invalidate(const std::unordered_map<uint32, RefPtr<ShaderResource>>& bindings)
 {
     if (IsLocked())
     {
@@ -60,7 +60,7 @@ void VulkanDescriptorSet::Invalidate(const std::unordered_map<uint32, ShaderReso
     }
 
     std::vector<VkWriteDescriptorSet> descriptorWrites;
-    for (auto [bindingIndex, resource] : bindings)
+    for (const auto& [bindingIndex, resource] : bindings)
     {
         if (m_BindingResources.contains(bindingIndex) && m_BindingResources.at(bindingIndex) == resource)
             continue;
@@ -79,9 +79,9 @@ void VulkanDescriptorSet::Invalidate(const std::unordered_map<uint32, ShaderReso
 
         if (descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
         {
-            VulkanTexture2D* vulkanTexture = (VulkanTexture2D*)resource;
+            RefPtr<VulkanTexture2D> vulkanTexture = resource.As<VulkanTexture2D>();
             SE_ASSERT(vulkanTexture->GetType() == VulkanStorageTexture2D::GetStaticType());
-            VulkanStorageTexture2D* textureResource = (VulkanStorageTexture2D*)vulkanTexture;
+            RefPtr<VulkanStorageTexture2D> textureResource = vulkanTexture.As<VulkanStorageTexture2D>();
 
             VkDescriptorImageInfo descriptorImageInfo = {};
             descriptorImageInfo.sampler = textureResource->GetSampler().Handle;
@@ -91,7 +91,7 @@ void VulkanDescriptorSet::Invalidate(const std::unordered_map<uint32, ShaderReso
         }
         if (descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
         {
-            VulkanUniformBuffer* uniformBufferResource = (VulkanUniformBuffer*)resource;
+            RefPtr<VulkanUniformBuffer> uniformBufferResource = resource.As<VulkanUniformBuffer>();
             VkDescriptorBufferInfo descriptorBufferInfo = {};
             descriptorBufferInfo.buffer = uniformBufferResource->GetHandle();
             descriptorBufferInfo.offset = 0;
@@ -112,8 +112,8 @@ void VulkanDescriptorSet::IncrementLockCount()
 
         for (auto [bindingIndex, resource] : m_BindingResources)
         {
-            RefPtr<ShaderResource> trackedResource = AdoptRef<ShaderResource>(resource);
-            m_LockedResources.push_back(trackedResource);
+            RefPtr<ShaderResource> trackedResource = RefPtr<ShaderResource>(resource);
+            m_LockedResources.push_back(std::move(trackedResource));
         }
     }
 

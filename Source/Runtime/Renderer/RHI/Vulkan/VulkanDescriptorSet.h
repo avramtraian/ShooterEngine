@@ -35,8 +35,8 @@ public:
     NODISCARD FORCEINLINE VkDescriptorSetLayout GetLayout() const { return m_DescriptorSetLayout.Handle; }
     NODISCARD FORCEINLINE bool IsLocked() const { return (m_LockCount > 0); }
 
-    NODISCARD DescriptorSetCompatibility IsCompatibleWithBindings(const std::unordered_map<uint32, ShaderResource*>& bindings) const;
-    void Invalidate(const std::unordered_map<uint32, ShaderResource*>& bindings);
+    NODISCARD DescriptorSetCompatibility IsCompatibleWithBindings(const std::unordered_map<uint32, RefPtr<ShaderResource>>& bindings) const;
+    void Invalidate(const std::unordered_map<uint32, RefPtr<ShaderResource>>& bindings);
 
     void IncrementLockCount();
     void DecrementLockCount();
@@ -53,15 +53,14 @@ private:
     const VulkanDescriptorSetLayout& m_DescriptorSetLayout;
 
     // NOTE(Traian): The following container maps binding indices to the resoures that are actually bound at that location.
-    // We explicitly don't hold references to those resources (that is managed by the 'm_InUseResources' vector) because these
-    // descriptor sets are usually very aggressively cached, which can cause unneccessary reference holding.
-    // Shader resources have a callback mechanism that is triggered before the resource is invalidated/destroyed. We listen to
-    // these callbacks and invalidate/update the descriptor set accordingly.
-    std::unordered_map<uint32, ShaderResource*> m_BindingResources;
+    // We explicitly don't hold references to those resources because these // descriptor sets are usually very aggressively cached,
+    // which can cause unneccessary reference holding. Shader resources have a callback mechanism that is triggered before the
+    // resource is invalidated/destroyed. We listen to these callbacks and invalidate/update the descriptor set accordingly.
+    std::unordered_map<uint32, WeakRefPtr<ShaderResource>> m_BindingResources;
 
     // NOTE(Traian): Is used the ensure that the resources are not destroyed (as these ref pointers maintain references) and
     // only has elements stored in it when the descriptor set is bounded.
-    std::vector<RefPtr<ShaderResource>> m_LockedResources;
+    std::vector<StrongRefPtr<ShaderResource>> m_LockedResources;
 };
 
 }
