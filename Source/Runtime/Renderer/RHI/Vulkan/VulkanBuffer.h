@@ -66,4 +66,18 @@ private:
     uint32 m_IndexCount;
 };
 
+class VulkanUniformBuffer : public UniformBuffer
+{
+public:
+    VulkanUniformBuffer(const UniformBufferInfo& info);
+    virtual ~VulkanUniformBuffer() override = default;
+
+public:
+    NODISCARD FORCEINLINE VkBuffer GetHandle() const { return m_Buffer.GetHandle(); }
+    NODISCARD FORCEINLINE usize GetBufferSize() const { return m_Buffer.GetSize(); }
+
+public:
+    VulkanBuffer m_Buffer;
+};
+
 }

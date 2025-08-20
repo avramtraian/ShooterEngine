@@ -2,9 +2,13 @@
 
 #pragma once
 
-#include <Runtime/Core/CoreTypes.h>
+#include <Runtime/Renderer/RHI/Buffer.h>
+#include <Runtime/Renderer/RHI/CommandList.h>
+#include <Runtime/Renderer/RHI/RenderPass.h>
 #include <Runtime/Renderer/RHI/RHICore.h>
+#include <Runtime/Renderer/RHI/Shader.h>
 #include <Runtime/Renderer/RHI/Synchronization.h>
+#include <Runtime/Renderer/RHI/Texture.h>
 
 #include <memory>
 
@@ -43,8 +47,10 @@ public:
     virtual RefPtr<IndexBuffer>                 CreateIndexBuffer                   (const IndexBufferInfo& info)               = 0;
     virtual RefPtr<RenderPass>                  CreateRenderPass                    (const RenderPassInfo& info)                = 0;
     virtual RefPtr<Shader>                      CreateShader                        (const ShaderInfo& info)                    = 0;
-    virtual RefPtr<Texture2D>                   CreateTexture2D                     (const Texture2DInfo& info)                 = 0;
     virtual RefPtr<VertexBuffer>                CreateVertexBuffer                  (const VertexBufferInfo& info)              = 0;
+
+    virtual RefPtr<Texture2D>                   CreateTexture2D                     (const Texture2DInfo& info)                 = 0;
+    virtual RefPtr<UniformBuffer>               CreateUniformBuffer                 (const UniformBufferInfo& info)             = 0;
 
     virtual FenceHandle                         AcquireFence                        ()                                          = 0;
     virtual void                                RetireFence                         (FenceHandle fenceHandle)                   = 0;

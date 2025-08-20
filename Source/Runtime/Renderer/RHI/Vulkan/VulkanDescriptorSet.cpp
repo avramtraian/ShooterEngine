@@ -1,7 +1,9 @@
 // Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
+#include <Runtime/Renderer/RHI/Vulkan/VulkanBuffer.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanDescriptorSet.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderingDriver.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanTexture.h>
 
 namespace SE
 {
@@ -83,6 +85,15 @@ void VulkanDescriptorSet::Invalidate(const std::unordered_map<uint32, ShaderReso
             descriptorImageInfo.imageView = textureResource->GetHandle().View;
             descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             descriptorWrite.pImageInfo = &descriptorImageInfo;
+        }
+        if (descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+        {
+            VulkanUniformBuffer* uniformBufferResource = (VulkanUniformBuffer*)resource;
+            VkDescriptorBufferInfo descriptorBufferInfo = {};
+            descriptorBufferInfo.buffer = uniformBufferResource->GetHandle();
+            descriptorBufferInfo.offset = 0;
+            descriptorBufferInfo.range = uniformBufferResource->GetBufferSize();
+            descriptorWrite.pBufferInfo = &descriptorBufferInfo;
         }
     }
 

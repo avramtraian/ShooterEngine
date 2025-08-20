@@ -97,13 +97,28 @@ public:
     inline ShaderResourceTexture& SetTexture      (RefPtr<Texture2D> texture) { Texture = std::move(texture); return *this; }
 };
 
+struct ShaderResourceUniformBuffer
+{
+public:
+    uint32 SetIndex { 0 };
+    uint32 BindingIndex { 0 };
+    RefPtr<UniformBuffer> Buffer;
+
+public:
+    inline ShaderResourceUniformBuffer& SetSetIndex      (uint32 setIndex)       { SetIndex = setIndex;         return *this; }
+    inline ShaderResourceUniformBuffer& SetBindingIndex  (uint32 bindingIndex)   { BindingIndex = bindingIndex; return *this; }
+    inline ShaderResourceUniformBuffer& SetBuffer (RefPtr<UniformBuffer> buffer) { Buffer = std::move(buffer);  return *this; }
+};
+
 struct ShaderResourcesBindPack
 {
 public:
     std::vector<ShaderResourceTexture> Textures;
+    std::vector<ShaderResourceUniformBuffer> UniformBuffers;
 
 public:
-    inline ShaderResourcesBindPack& AddTexture(ShaderResourceTexture texture) { Textures.push_back(std::move(texture)); return *this; }
+    inline ShaderResourcesBindPack& AddTexture       (ShaderResourceTexture texture)             { Textures.push_back(std::move(texture));             return *this; }
+    inline ShaderResourcesBindPack& AddUniformBuffer (ShaderResourceUniformBuffer uniformBuffer) { UniformBuffers.push_back(std::move(uniformBuffer)); return *this; }
 };
 
 struct CommandListInfo

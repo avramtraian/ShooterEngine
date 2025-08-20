@@ -16,6 +16,7 @@ enum class ShaderReflectionDescriptorType : uint16
     Image,
     Sampler,
     CombinedImageSampler,
+    UniformBuffer,
 };
 
 struct ShaderReflectionDescriptorBinding

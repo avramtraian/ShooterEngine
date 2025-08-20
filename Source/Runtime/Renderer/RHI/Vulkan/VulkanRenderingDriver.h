@@ -59,12 +59,15 @@ public:
 
 public:
     virtual std::unique_ptr<RenderingSurface> CreateSurface(const RenderingSurfaceInfo& info) override;
+    
     virtual RefPtr<CommandList> CreateCommandList(const CommandListInfo& info) override;
     virtual RefPtr<IndexBuffer> CreateIndexBuffer(const IndexBufferInfo& info) override;
     virtual RefPtr<RenderPass> CreateRenderPass(const RenderPassInfo& info) override;
     virtual RefPtr<Shader> CreateShader(const ShaderInfo& info) override;
-    virtual RefPtr<Texture2D> CreateTexture2D(const Texture2DInfo& info) override;
     virtual RefPtr<VertexBuffer> CreateVertexBuffer(const VertexBufferInfo& info) override;
+
+    virtual RefPtr<Texture2D> CreateTexture2D(const Texture2DInfo& info) override;
+    virtual RefPtr<UniformBuffer> CreateUniformBuffer(const UniformBufferInfo& info) override;
 
     virtual FenceHandle AcquireFence() override;
     virtual void RetireFence(FenceHandle fenceHandle) override;

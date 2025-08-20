@@ -679,6 +679,12 @@ RefPtr<VertexBuffer> VulkanRenderingDriver::CreateVertexBuffer(const VertexBuffe
     return CreateRef<VulkanVertexBuffer>(info);
 }
 
+
+RefPtr<UniformBuffer> VulkanRenderingDriver::CreateUniformBuffer(const UniformBufferInfo& info)
+{
+    return CreateRef<VulkanUniformBuffer>(info);
+}
+
 FenceHandle VulkanRenderingDriver::AcquireFence()
 {
     if (!m_FencePool.HasUnusedObjects())

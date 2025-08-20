@@ -61,6 +61,7 @@ VulkanShader::VulkanShader(const ShaderInfo& info)
                 {
                     // Supported descriptor types.
                     case ShaderReflectionDescriptorType::CombinedImageSampler: descriptorSetLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER; break;
+                    case ShaderReflectionDescriptorType::UniformBuffer:        descriptorSetLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; break;
                     
                     // Unsupported descriptor types.
                     case ShaderReflectionDescriptorType::Image:

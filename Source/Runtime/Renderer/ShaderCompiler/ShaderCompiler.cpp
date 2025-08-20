@@ -258,6 +258,13 @@ std::optional<ShaderReflectionData> ShaderCompiler::GenerateReflectionData(Shade
                     binding.DescriptorType = ShaderReflectionDescriptorType::CombinedImageSampler;
                     break;
                 }
+                
+                case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+                {
+                    SE_ASSERT(binding.DescriptorType == ShaderReflectionDescriptorType::Unknown);
+                    binding.DescriptorType = ShaderReflectionDescriptorType::UniformBuffer;
+                    break;
+                }
 
                 default:
                 {

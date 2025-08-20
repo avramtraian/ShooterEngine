@@ -8,6 +8,11 @@
 namespace SE
 {
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////// GENERIC BUFFER IMPLEMENTATION. /////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
 void VulkanBuffer::Invalidate(usize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryPropertyFlags)
 {
     // Release the old buffer.
@@ -68,6 +73,10 @@ void VulkanBuffer::Unmap()
     vkUnmapMemory(g_VulkanDriver->GetDevice(), m_BufferMemory);
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// VERTEX BUFFER IMPLEMENTATION. /////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
 VulkanVertexBuffer::VulkanVertexBuffer(const VertexBufferInfo& info)
 {
     const VkMemoryPropertyFlags memoryPropertyFlags =
@@ -90,6 +99,10 @@ VulkanVertexBuffer::VulkanVertexBuffer(const VertexBufferInfo& info)
         mappedBufferData = nullptr;
     }
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// INDEX BUFFER IMPLEMENTATION. //////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
 static usize GetIndexDataTypeByteCount(IndexBufferDataType dataType)
 {
@@ -132,6 +145,34 @@ VulkanIndexBuffer::VulkanIndexBuffer(const IndexBufferInfo& info)
         // Unmap the buffer data.
         m_Buffer.Unmap();
         mappedBufferData = nullptr;
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////// UNIFORM BUFFER IMPLEMENTATION. /////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+VulkanUniformBuffer::VulkanUniformBuffer(const UniformBufferInfo& info)
+{
+    // Set the memory propery flags.
+    const VkMemoryPropertyFlags memoryPropertyFlags =
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | // Allows the buffer memory block to be mapped to CPU space.
+        VK_MEMORY_PROPERTY_HOST_COHERENT_BIT; // Automatic management of "availability and visibility on the host".
+
+    // Create the buffer.
+    m_Buffer.Invalidate(info.BufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, memoryPropertyFlags);
+
+    if (info.InitialDataSize > 0)
+    {
+        // Map the buffer data.
+        void* mappedBufferData = m_Buffer.Map(0, info.InitialDataSize);
+
+        // Copy the initial data to the mapped buffer data.
+        MemoryCopy(mappedBufferData, info.InitialData, info.InitialDataSize);
+
+        // Unmap the buffer data.
+        mappedBufferData = nullptr;
+        m_Buffer.Unmap();
     }
 }
 

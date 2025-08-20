@@ -3,6 +3,7 @@
 #pragma once
 
 #include <Runtime/Renderer/RHI/RHICore.h>
+#include <Runtime/Renderer/RHI/ShaderResource.h>
 
 namespace SE
 {
@@ -17,10 +18,10 @@ enum class VertexBufferUsage : uint8
 struct VertexBufferInfo
 {
 public:
-    VertexBufferUsage Usage { VertexBufferUsage::Normal };
-    usize BufferSize        { 0 };
-    const void* InitialData { nullptr };
-    usize InitialDataSize   { 0 };
+    VertexBufferUsage Usage           { VertexBufferUsage::Normal };
+    usize             BufferSize      { 0 };
+    const void*       InitialData     { nullptr };
+    usize             InitialDataSize { 0 };
 
 public:
     inline VertexBufferInfo& SetUsage       (VertexBufferUsage usage)                        { Usage = usage;                                                return *this; }
@@ -50,11 +51,11 @@ enum IndexBufferDataType : uint8
 struct IndexBufferInfo
 {
 public:
-    IndexBufferUsage Usage       { IndexBufferUsage::Normal };
-    IndexBufferDataType DataType { IndexBufferDataType::Unknown };
-    uint32 IndexCount            { 0 };
-    const void* InitialIndices   { nullptr };
-    uint32 InitialIndexCount     { 0 };
+    IndexBufferUsage    Usage             { IndexBufferUsage::Normal };
+    IndexBufferDataType DataType          { IndexBufferDataType::Unknown };
+    uint32              IndexCount        { 0 };
+    const void*         InitialIndices    { nullptr };
+    uint32              InitialIndexCount { 0 };
 
 public:
     inline IndexBufferInfo& SetUsage          (IndexBufferUsage usage)                 { Usage = usage;                                            return *this; }
@@ -70,6 +71,32 @@ class IndexBuffer : public RefCounted
 public:
     NODISCARD virtual IndexBufferDataType GetDataType() const = 0;
     NODISCARD virtual uint32 GetIndexCount() const = 0;
+};
+
+enum class UniformBufferUsage
+{
+    Normal,
+    Static,
+    Dynamic,
+};
+
+struct UniformBufferInfo
+{
+public:
+    UniformBufferUsage Usage           { UniformBufferUsage::Normal };
+    usize              BufferSize      { 0 };
+    const void*        InitialData     { nullptr };
+    usize              InitialDataSize { 0 };
+
+public:
+    inline UniformBufferInfo& SetUsage       (UniformBufferUsage usage)                       { Usage = usage;                                                return *this; }
+    inline UniformBufferInfo& SetBufferSize  (usize bufferSize)                               { BufferSize = bufferSize;                                      return *this; }
+    inline UniformBufferInfo& SetInitialData (const void* initialData, usize initialDataSize) { InitialData = initialData; InitialDataSize = initialDataSize; return *this; }
+};
+
+struct UniformBuffer : public ShaderResource
+{
+    SE_MAKE_RENDERER_RHI_INTERFACE(UniformBuffer);
 };
 
 }
