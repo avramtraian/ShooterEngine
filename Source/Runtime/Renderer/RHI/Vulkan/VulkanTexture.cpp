@@ -52,6 +52,7 @@ VulkanStorageTexture2D::VulkanStorageTexture2D(const Texture2DInfo& info)
 {
     CreateImageAndAllocateMemory(info);
     CreateImageView();
+    CreateSampler(info);
 
     if (info.InitialData.HasElements())
     {
