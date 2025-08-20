@@ -16,20 +16,6 @@ VulkanRenderingSurface::VulkanRenderingSurface(const RenderingSurfaceInfo& info)
     , m_CurrentFrameIndex(0)
     , m_CurrentSwapchainImageIndex(0)
 {
-    // Create synchronization objects.
-    {
-        m_ImageAvailableSemaphores.reserve(m_MaxFramesInFlight);
-        m_RenderFinishedSemaphores.reserve(m_MaxFramesInFlight);
-        m_RenderFinishedFences.reserve(m_MaxFramesInFlight);
-
-        for (uint32 frameIndex = 0; frameIndex < m_MaxFramesInFlight; ++frameIndex)
-        {
-            m_ImageAvailableSemaphores.push_back(g_VulkanDriver->AcquireSemaphore());
-            m_RenderFinishedSemaphores.push_back(g_VulkanDriver->AcquireSemaphore());
-            m_RenderFinishedFences.push_back(g_VulkanDriver->AcquireFence());
-        }
-    }
-
     // Create the window surface.
 #if SE_PLATFORM_WIN64
     VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
@@ -46,10 +32,23 @@ VulkanRenderingSurface::VulkanRenderingSurface(const RenderingSurfaceInfo& info)
 
     // Create the swapchain.
     Invalidate();
+
+    // Create synchronization objects.
+    m_RenderFinishedFences.reserve(m_MaxFramesInFlight);
+    for (uint32 frameIndex = 0; frameIndex < m_MaxFramesInFlight; ++frameIndex)
+    {
+        FenceHandle fence = g_VulkanDriver->AcquireFence();
+        m_RenderFinishedFences.push_back(fence);
+    }
 }
 
 VulkanRenderingSurface::~VulkanRenderingSurface()
 {
+    // Destroy synchronization objects.
+    for (FenceHandle fence : m_RenderFinishedFences)
+        g_VulkanDriver->RetireFence(fence);
+    m_RenderFinishedFences.clear();
+
     // Release the swapchain root references.
     m_SwapchainTextures.clear();
 
@@ -59,32 +58,17 @@ VulkanRenderingSurface::~VulkanRenderingSurface()
     // Destroy the window surface.
     vkDestroySurfaceKHR(g_VulkanDriver->GetInstance(), m_Surface, nullptr);
     m_Surface = VK_NULL_HANDLE;
-
-    // Destroy synchronization objects.
-    if (!m_ImageAvailableSemaphores.empty())
-    {
-        for (uint32 frameIndex = 0; frameIndex < m_MaxFramesInFlight; ++frameIndex)
-        {
-            g_VulkanDriver->RetireSemaphore(m_ImageAvailableSemaphores[frameIndex]);
-            g_VulkanDriver->RetireSemaphore(m_RenderFinishedSemaphores[frameIndex]);
-            g_VulkanDriver->RetireFence(m_RenderFinishedFences[frameIndex]);
-        }
-
-        m_ImageAvailableSemaphores.clear();
-        m_RenderFinishedSemaphores.clear();
-        m_RenderFinishedFences.clear();
-    }
 }
 
 bool VulkanRenderingSurface::Invalidate()
 {
     // Create the swapchain.
-    VulkanSwapchain* oldSwapchain = m_Swapchain.IsValid() ? m_Swapchain.Get() : nullptr;
-    m_Swapchain = CreateRef<VulkanSwapchain>(
-        m_Surface,
-        m_OwningWindow->GetSizeX(), m_OwningWindow->GetSizeY(),
-        m_SwapchainMinImageCount,
-        oldSwapchain
+    m_Swapchain = CreateRef<VulkanSwapchain>(VulkanSwapchainInfo()
+        .SetSurface(m_Surface)
+        .SetSize(m_OwningWindow->GetSizeX(), m_OwningWindow->GetSizeY())
+        .SetMinImageCount(m_SwapchainMinImageCount)
+        .SetMaxFramesInFlight(m_MaxFramesInFlight)
+        .SetOldSwapchain(m_Swapchain)
     );
 
     // Create the swapchain textures.
@@ -122,7 +106,7 @@ void VulkanRenderingSurface::BeginFrame()
         g_VulkanDriver->GetDevice(),
         m_Swapchain->GetHandle(),
         UINT64_MAX,
-        (VkSemaphore)m_ImageAvailableSemaphores[m_CurrentFrameIndex],
+        (VkSemaphore)m_Swapchain->GetImageAvailableSemaphore(m_CurrentFrameIndex),
         VK_NULL_HANDLE,
         &m_CurrentSwapchainImageIndex));
 }
@@ -131,7 +115,7 @@ void VulkanRenderingSurface::EndFrame()
 {
     // List of semaphores that are required to be signaled before the presentation occurs.
     VkSemaphore submitWaitSemaphores[] = {
-        (VkSemaphore)m_RenderFinishedSemaphores[m_CurrentFrameIndex]
+        (VkSemaphore)m_Swapchain->GetRenderFinishedSemaphore(m_CurrentFrameIndex)
     };
 
     // Handle of the swapchain.

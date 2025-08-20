@@ -33,8 +33,8 @@ public:
     virtual void BeginFrame() override;
     virtual void EndFrame() override;
 
-    FORCEINLINE virtual SemaphoreHandle GetImageAvailableSemaphore() override { return m_ImageAvailableSemaphores[m_CurrentFrameIndex]; }
-    FORCEINLINE virtual SemaphoreHandle GetRenderFinishedSemaphore() override { return m_RenderFinishedSemaphores[m_CurrentFrameIndex]; }
+    FORCEINLINE virtual SemaphoreHandle GetImageAvailableSemaphore() override { return m_Swapchain->GetImageAvailableSemaphore(m_CurrentFrameIndex); }
+    FORCEINLINE virtual SemaphoreHandle GetRenderFinishedSemaphore() override { return m_Swapchain->GetRenderFinishedSemaphore(m_CurrentFrameIndex); }
     FORCEINLINE virtual FenceHandle GetRenderFinishedFence() override { return m_RenderFinishedFences[m_CurrentFrameIndex]; }
 
 private:
@@ -48,8 +48,6 @@ private:
     uint32 m_CurrentFrameIndex;
     uint32 m_CurrentSwapchainImageIndex;
 
-    std::vector<SemaphoreHandle> m_ImageAvailableSemaphores;
-    std::vector<SemaphoreHandle> m_RenderFinishedSemaphores;
     std::vector<FenceHandle> m_RenderFinishedFences;
 };
 

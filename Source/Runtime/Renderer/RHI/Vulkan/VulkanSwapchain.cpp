@@ -25,27 +25,27 @@ static std::string VulkanPresentModeToString(VkPresentModeKHR presentMode)
     return "<unstringifyable>";
 }
 
-VulkanSwapchain::VulkanSwapchain(VkSurfaceKHR surface, uint32 sizeX, uint32 sizeY, uint32 imageCount, const VulkanSwapchain* oldSwapchain)
+VulkanSwapchain::VulkanSwapchain(const VulkanSwapchainInfo& info)
     : m_Handle(VK_NULL_HANDLE)
-    , m_SizeX(sizeX)
-    , m_SizeY(sizeY)
+    , m_SizeX(info.SizeX)
+    , m_SizeY(info.SizeY)
 {
-    if (oldSwapchain == nullptr)
+    if (info.OldSwapchain.IsValid())
     {
-        m_ImmutableProperties.Format = VK_FORMAT_B8G8R8A8_UNORM;
-        m_ImmutableProperties.ColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-        m_ImmutableProperties.PresentMode = FindBestPresentMode(surface);
+        // Match the immutable properties of the old swapchain.
+        m_ImmutableProperties = info.OldSwapchain->GetImmutableProperties();
     }
     else
     {
-        // Match the immutable properties of the old swapchain.
-        m_ImmutableProperties = oldSwapchain->GetImmutableProperties();
+        m_ImmutableProperties.Format = VK_FORMAT_B8G8R8A8_UNORM;
+        m_ImmutableProperties.ColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+        m_ImmutableProperties.PresentMode = FindBestPresentMode(info.Surface);
     }
 
     VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
     swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    swapchainCreateInfo.surface = surface;
-    swapchainCreateInfo.minImageCount = imageCount;
+    swapchainCreateInfo.surface = info.Surface;
+    swapchainCreateInfo.minImageCount = info.MinImageCount;
     swapchainCreateInfo.imageFormat = m_ImmutableProperties.Format;
     swapchainCreateInfo.imageColorSpace = m_ImmutableProperties.ColorSpace;
     swapchainCreateInfo.imageExtent.width = m_SizeX;
@@ -60,8 +60,8 @@ VulkanSwapchain::VulkanSwapchain(VkSurfaceKHR surface, uint32 sizeX, uint32 size
     swapchainCreateInfo.presentMode = m_ImmutableProperties.PresentMode;
     swapchainCreateInfo.clipped = VK_FALSE;
     swapchainCreateInfo.oldSwapchain =
-        (oldSwapchain != nullptr)
-            ? oldSwapchain->GetHandle()
+        (info.OldSwapchain.IsValid())
+            ? info.OldSwapchain->GetHandle()
             : VK_NULL_HANDLE;
 
     const VkResult swapchainCreateResult = vkCreateSwapchainKHR(g_VulkanDriver->GetDevice(), &swapchainCreateInfo, nullptr, &m_Handle);
@@ -110,10 +110,33 @@ VulkanSwapchain::VulkanSwapchain(VkSurfaceKHR surface, uint32 sizeX, uint32 size
     SE_LOG_TRACE("  Image count:  %d", m_Images.size())
     SE_LOG_TRACE("  Format:       %s", VulkanFormatToString(m_ImmutableProperties.Format).c_str());
     SE_LOG_TRACE("  Present mode: %s", VulkanPresentModeToString(m_ImmutableProperties.PresentMode).c_str());
+
+    // Create the synchronization objects.
+    {
+        m_ImageAvailableSemaphores.reserve(info.MaxFramesInFlight);
+        m_RenderFinishedSemaphores.reserve(info.MaxFramesInFlight);
+
+        for (uint32 frameIndex = 0; frameIndex < info.MaxFramesInFlight; ++frameIndex)
+        {
+            m_ImageAvailableSemaphores.push_back(g_VulkanDriver->AcquireSemaphore());
+            m_RenderFinishedSemaphores.push_back(g_VulkanDriver->AcquireSemaphore());
+        }
+    }
 }
 
 VulkanSwapchain::~VulkanSwapchain()
 {
+    // Destroy the synchronization objects.
+    {
+        for (SemaphoreHandle semaphore : m_ImageAvailableSemaphores)
+            g_VulkanDriver->RetireSemaphore(semaphore);
+        m_ImageAvailableSemaphores.clear();
+
+        for (SemaphoreHandle semaphore : m_RenderFinishedSemaphores)
+            g_VulkanDriver->RetireSemaphore(semaphore);
+        m_RenderFinishedSemaphores.clear();
+    }
+
     // Destroy the swapchain image views. Note that the images are created and managed by
     // the swapchain, and thus it is not the swapchain responsability to destroy them.
     for (VkImageView imageView : m_ImageViews)
