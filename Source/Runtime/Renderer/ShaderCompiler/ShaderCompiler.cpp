@@ -108,6 +108,9 @@ void ShaderCompiler::AddBaseCompilerArguments(std::vector<const wchar_t*>& outAr
     // Compile to SPIR-V bytecode format (instead of the default DXIL).
     outArguments.push_back(L"-spirv");
     outArguments.push_back(L"-fspv-target-env=vulkan1.1");
+
+    // Enforce DXC to decorate the generated SPIR-V bytecode with row-major matrix specifiers.
+    outArguments.push_back(L"-Zpr");
 }
 
 void ShaderCompiler::AddStageSpecificCompilerArguments(std::vector<const wchar_t*>& outArguments, ShaderStage stage)
