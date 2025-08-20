@@ -34,6 +34,8 @@ std::vector<VulkanDescriptorSet*> VulkanDescriptorSetManager::AcquireDescriptorS
     std::unordered_map<uint32, std::unordered_map<uint32, ShaderResource*>> resourceSets;
     for (const auto& texture : bindPack.Textures)
         resourceSets[texture.SetIndex][texture.BindingIndex] = texture.Texture.GetNonConst();
+    for (const auto& uniformBuffer : bindPack.UniformBuffers)
+        resourceSets[uniformBuffer.SetIndex][uniformBuffer.BindingIndex] = uniformBuffer.Buffer.GetNonConst();
 
     // List of descriptor sets that are required to be bound to the pipeline in order to provide access to all
     // resources specified by the given bind info structure.

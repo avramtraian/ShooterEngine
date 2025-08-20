@@ -17,14 +17,16 @@ class Window;
 struct RenderingSurfaceInfo
 {
 public:
-    Window* OwningWindow;
-    uint32 SwapchainImageCount;
-    bool EnableVSync;
+    Window* OwningWindow           { nullptr };
+    uint32  SwapchainMinImageCount { 2 };
+    uint32  MaxFramesInFlight      { 1 };
+    bool    EnableVSync            { false };
 
 public:
-    inline RenderingSurfaceInfo& SetOwningWindow        (Window* window)    { OwningWindow = window;            return *this; }
-    inline RenderingSurfaceInfo& SetSwapchainImageCount (uint32 imageCount) { SwapchainImageCount = imageCount; return *this; }
-    inline RenderingSurfaceInfo& SetEnableVSync         (bool enableVSync)  { EnableVSync = enableVSync;        return *this; }
+    inline RenderingSurfaceInfo& SetOwningWindow           (Window* window)    { OwningWindow = window;               return *this; }
+    inline RenderingSurfaceInfo& SetSwapchainMinImageCount (uint32 imageCount) { SwapchainMinImageCount = imageCount; return *this; }
+    inline RenderingSurfaceInfo& SetMaxFramesInFlight      (uint32 frameCount) { MaxFramesInFlight = frameCount;      return *this; }
+    inline RenderingSurfaceInfo& SetEnableVSync            (bool enableVSync)  { EnableVSync = enableVSync;           return *this; }
 };
 
 class RenderingSurface

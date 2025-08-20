@@ -63,7 +63,8 @@ bool GameEngine::Initialize()
 
     m_GameRenderingSurface = g_RenderingDriver->CreateSurface(RenderingSurfaceInfo()
         .SetOwningWindow(m_GameWindow.Get())
-        .SetSwapchainImageCount(3)
+        .SetSwapchainMinImageCount(3)
+        .SetMaxFramesInFlight(3)
         .SetEnableVSync(true)
     );
     if (!m_GameRenderingSurface)

@@ -666,7 +666,7 @@ RefPtr<RenderPass> VulkanRenderingDriver::CreateRenderPass(const RenderPassInfo&
 
 RefPtr<Texture2D> VulkanRenderingDriver::CreateTexture2D(const Texture2DInfo& info)
 {
-    return CreateRef<VulkanTexture2D>(info);
+    return CreateRef<VulkanStorageTexture2D>(info);
 }
 
 RefPtr<Shader> VulkanRenderingDriver::CreateShader(const ShaderInfo& info)
