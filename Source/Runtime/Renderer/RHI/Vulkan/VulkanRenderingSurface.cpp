@@ -10,13 +10,12 @@ namespace SE
 
 VulkanRenderingSurface::VulkanRenderingSurface(const RenderingSurfaceInfo& info)
     : m_OwningWindow(info.OwningWindow)
+    , m_Surface(VK_NULL_HANDLE)
     , m_SwapchainMinImageCount(info.SwapchainMinImageCount)
     , m_MaxFramesInFlight(info.MaxFramesInFlight)
     , m_CurrentFrameIndex(0)
     , m_CurrentSwapchainImageIndex(0)
 {
-    Invalidate();
-
     // Create synchronization objects.
     {
         m_ImageAvailableSemaphores.reserve(m_MaxFramesInFlight);
@@ -30,10 +29,37 @@ VulkanRenderingSurface::VulkanRenderingSurface(const RenderingSurfaceInfo& info)
             m_RenderFinishedFences.push_back(g_VulkanDriver->AcquireFence());
         }
     }
+
+    // Create the window surface.
+#if SE_PLATFORM_WIN64
+    VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
+    surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+    surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
+    surfaceCreateInfo.hwnd = (HWND)m_OwningWindow->GetNativeHandle();
+
+    if (VkResult result = vkCreateWin32SurfaceKHR(g_VulkanDriver->GetInstance(), &surfaceCreateInfo, nullptr, &m_Surface); result != VK_SUCCESS)
+    {
+        SE_LOG_ERROR("Failed to create the [Vulkan] surface! (Result: %d)", result);
+        return;
+    }
+#endif // SE_PLATFORM_WIN64
+
+    // Create the swapchain.
+    Invalidate();
 }
 
 VulkanRenderingSurface::~VulkanRenderingSurface()
 {
+    // Release the swapchain root references.
+    m_SwapchainTextures.clear();
+
+    // Release the swapchain root reference.
+    m_Swapchain.Release();
+
+    // Destroy the window surface.
+    vkDestroySurfaceKHR(g_VulkanDriver->GetInstance(), m_Surface, nullptr);
+    m_Surface = VK_NULL_HANDLE;
+
     // Destroy synchronization objects.
     if (!m_ImageAvailableSemaphores.empty())
     {
@@ -48,19 +74,18 @@ VulkanRenderingSurface::~VulkanRenderingSurface()
         m_RenderFinishedSemaphores.clear();
         m_RenderFinishedFences.clear();
     }
-
-    // Release the swapchain root references.
-    m_SwapchainTextures.clear();
-
-    // Release the swapchain root reference.
-    m_Swapchain.Release();
 }
 
 bool VulkanRenderingSurface::Invalidate()
 {
     // Create the swapchain.
     VulkanSwapchain* oldSwapchain = m_Swapchain.IsValid() ? m_Swapchain.Get() : nullptr;
-    m_Swapchain = CreateRef<VulkanSwapchain>(m_OwningWindow, m_SwapchainMinImageCount, oldSwapchain);
+    m_Swapchain = CreateRef<VulkanSwapchain>(
+        m_Surface,
+        m_OwningWindow->GetSizeX(), m_OwningWindow->GetSizeY(),
+        m_SwapchainMinImageCount,
+        oldSwapchain
+    );
 
     // Create the swapchain textures.
     m_SwapchainTextures.clear();
@@ -95,7 +120,7 @@ void VulkanRenderingSurface::BeginFrame()
     /* Acquire the swapchain image. */
     SE_VULKAN_CHECK(vkAcquireNextImageKHR(
         g_VulkanDriver->GetDevice(),
-        m_Swapchain->GetHandle().Swapchain,
+        m_Swapchain->GetHandle(),
         UINT64_MAX,
         (VkSemaphore)m_ImageAvailableSemaphores[m_CurrentFrameIndex],
         VK_NULL_HANDLE,
@@ -104,10 +129,13 @@ void VulkanRenderingSurface::BeginFrame()
 
 void VulkanRenderingSurface::EndFrame()
 {
-    /* List of semaphores that are required to be signaled before the presentation occurs. */
+    // List of semaphores that are required to be signaled before the presentation occurs.
     VkSemaphore submitWaitSemaphores[] = {
         (VkSemaphore)m_RenderFinishedSemaphores[m_CurrentFrameIndex]
     };
+
+    // Handle of the swapchain.
+    VkSwapchainKHR swapchainHandle = m_Swapchain->GetHandle();
 
     VkResult presentResult = VK_SUCCESS;
     VkPresentInfoKHR presentInfo = {};
@@ -115,14 +143,14 @@ void VulkanRenderingSurface::EndFrame()
     presentInfo.waitSemaphoreCount = (uint32)SE_ARRAY_COUNT(submitWaitSemaphores);
     presentInfo.pWaitSemaphores = submitWaitSemaphores;
     presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = &m_Swapchain->GetHandle().Swapchain;
+    presentInfo.pSwapchains = &swapchainHandle;
     presentInfo.pImageIndices = &m_CurrentSwapchainImageIndex;
     presentInfo.pResults = &presentResult;
 
-    /* Submit the presentation request to the present queue. */
+    // Submit the presentation request to the present queue.
     const VkResult queuePresentResult = vkQueuePresentKHR(g_VulkanDriver->GetPresentQueue(), &presentInfo);
 
-    /* Increment the current frame index. */
+    // Increment the current frame index.
     SE_ENSURE(m_MaxFramesInFlight > 0);
     m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % m_MaxFramesInFlight;
 }

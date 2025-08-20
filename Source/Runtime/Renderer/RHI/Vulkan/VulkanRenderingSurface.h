@@ -39,6 +39,7 @@ public:
 
 private:
     Window* m_OwningWindow;
+    VkSurfaceKHR m_Surface;
     uint32 m_SwapchainMinImageCount;
     RefPtr<VulkanSwapchain> m_Swapchain;
     std::vector<RefPtr<VulkanSwapchainTexture2D>> m_SwapchainTextures;

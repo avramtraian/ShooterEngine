@@ -12,12 +12,6 @@ namespace SE
 class VulkanSwapchain : public RefCounted
 {
 public:
-    struct Handle
-    {
-        VkSwapchainKHR Swapchain { VK_NULL_HANDLE };
-        VkSurfaceKHR   Surface   { VK_NULL_HANDLE };
-    };
-
     struct ImmutableProperties
     {
         VkFormat         Format      { VK_FORMAT_UNDEFINED };
@@ -26,10 +20,10 @@ public:
     };
 
 public:
-    VulkanSwapchain(Window* window, uint32 imageCount, const VulkanSwapchain* oldSwapchain);
+    VulkanSwapchain(VkSurfaceKHR surface, uint32 sizeX, uint32 sizeY, uint32 imageCount, const VulkanSwapchain* oldSwapchain);
     virtual ~VulkanSwapchain() override;
 
-    NODISCARD FORCEINLINE const Handle& GetHandle() const { return m_Handle; }
+    NODISCARD FORCEINLINE VkSwapchainKHR GetHandle() const { return m_Handle; }
     NODISCARD FORCEINLINE uint32 GetSizeX() const { return m_SizeX; }
     NODISCARD FORCEINLINE uint32 GetSizeY() const { return m_SizeY; }
     NODISCARD FORCEINLINE const ImmutableProperties& GetImmutableProperties() const { return m_ImmutableProperties; }
@@ -39,10 +33,10 @@ public:
     NODISCARD FORCEINLINE const std::vector<VkImageView>& GetImageViews() const { return m_ImageViews; }
 
 private:
-    VkPresentModeKHR FindBestPresentMode() const;
+    VkPresentModeKHR FindBestPresentMode(VkSurfaceKHR surface) const;
 
 private:
-    Handle m_Handle;
+    VkSwapchainKHR m_Handle;
     ImmutableProperties m_ImmutableProperties;
     uint32 m_SizeX;
     uint32 m_SizeY;

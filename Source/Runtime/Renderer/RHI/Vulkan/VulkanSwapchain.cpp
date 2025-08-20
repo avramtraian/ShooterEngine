@@ -25,32 +25,16 @@ static std::string VulkanPresentModeToString(VkPresentModeKHR presentMode)
     return "<unstringifyable>";
 }
 
-VulkanSwapchain::VulkanSwapchain(Window* window, uint32 imageCount, const VulkanSwapchain* oldSwapchain)
-    : m_SizeX(0)
-    , m_SizeY(0)
+VulkanSwapchain::VulkanSwapchain(VkSurfaceKHR surface, uint32 sizeX, uint32 sizeY, uint32 imageCount, const VulkanSwapchain* oldSwapchain)
+    : m_Handle(VK_NULL_HANDLE)
+    , m_SizeX(sizeX)
+    , m_SizeY(sizeY)
 {
-#if SE_PLATFORM_WIN64
-    VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
-    surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-    surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
-    surfaceCreateInfo.hwnd = (HWND)window->GetNativeHandle();
-
-    if (VkResult result = vkCreateWin32SurfaceKHR(g_VulkanDriver->GetInstance(), &surfaceCreateInfo, nullptr, &m_Handle.Surface); result != VK_SUCCESS)
-    {
-        SE_LOG_ERROR("Failed to create the [Vulkan] surface! (Result: %d)", result);
-        return;
-    }
-#endif // SE_PLATFORM_WIN64
-
-    // Set the swapchain dimensions.
-    m_SizeX = window->GetSizeX();
-    m_SizeY = window->GetSizeY();
-
     if (oldSwapchain == nullptr)
     {
         m_ImmutableProperties.Format = VK_FORMAT_B8G8R8A8_UNORM;
         m_ImmutableProperties.ColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-        m_ImmutableProperties.PresentMode = FindBestPresentMode();
+        m_ImmutableProperties.PresentMode = FindBestPresentMode(surface);
     }
     else
     {
@@ -60,7 +44,7 @@ VulkanSwapchain::VulkanSwapchain(Window* window, uint32 imageCount, const Vulkan
 
     VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
     swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    swapchainCreateInfo.surface = m_Handle.Surface;
+    swapchainCreateInfo.surface = surface;
     swapchainCreateInfo.minImageCount = imageCount;
     swapchainCreateInfo.imageFormat = m_ImmutableProperties.Format;
     swapchainCreateInfo.imageColorSpace = m_ImmutableProperties.ColorSpace;
@@ -77,10 +61,10 @@ VulkanSwapchain::VulkanSwapchain(Window* window, uint32 imageCount, const Vulkan
     swapchainCreateInfo.clipped = VK_FALSE;
     swapchainCreateInfo.oldSwapchain =
         (oldSwapchain != nullptr)
-            ? oldSwapchain->GetHandle().Swapchain
+            ? oldSwapchain->GetHandle()
             : VK_NULL_HANDLE;
 
-    const VkResult swapchainCreateResult = vkCreateSwapchainKHR(g_VulkanDriver->GetDevice(), &swapchainCreateInfo, nullptr, &m_Handle.Swapchain);
+    const VkResult swapchainCreateResult = vkCreateSwapchainKHR(g_VulkanDriver->GetDevice(), &swapchainCreateInfo, nullptr, &m_Handle);
     if (swapchainCreateResult != VK_SUCCESS)
     {
         SE_LOG_ERROR("Failed to create the [Vulkan] swapchain! (Result: %d)", swapchainCreateResult);
@@ -89,9 +73,9 @@ VulkanSwapchain::VulkanSwapchain(Window* window, uint32 imageCount, const Vulkan
 
     // Query the images from the swapchain object.
     uint32 swapchainImageCount = 0;
-    SE_VULKAN_CHECK(vkGetSwapchainImagesKHR(g_VulkanDriver->GetDevice(), m_Handle.Swapchain, &swapchainImageCount, nullptr));
+    SE_VULKAN_CHECK(vkGetSwapchainImagesKHR(g_VulkanDriver->GetDevice(), m_Handle, &swapchainImageCount, nullptr));
     m_Images.resize(swapchainImageCount);
-    SE_VULKAN_CHECK(vkGetSwapchainImagesKHR(g_VulkanDriver->GetDevice(), m_Handle.Swapchain, &swapchainImageCount, m_Images.data()));
+    SE_VULKAN_CHECK(vkGetSwapchainImagesKHR(g_VulkanDriver->GetDevice(), m_Handle, &swapchainImageCount, m_Images.data()));
 
     // Create views for each swapchain image.
     m_ImageViews.reserve(swapchainImageCount);
@@ -138,21 +122,17 @@ VulkanSwapchain::~VulkanSwapchain()
     m_Images.clear();
 
     // Destroy the swapchain.
-    vkDestroySwapchainKHR(g_VulkanDriver->GetDevice(), m_Handle.Swapchain, nullptr);
-    m_Handle.Swapchain = VK_NULL_HANDLE;
-
-    // Destroy the surface.
-    vkDestroySurfaceKHR(g_VulkanDriver->GetInstance(), m_Handle.Surface, nullptr);
-    m_Handle.Surface = VK_NULL_HANDLE;
+    vkDestroySwapchainKHR(g_VulkanDriver->GetDevice(), m_Handle, nullptr);
+    m_Handle = VK_NULL_HANDLE;
 }
 
-VkPresentModeKHR VulkanSwapchain::FindBestPresentMode() const
+VkPresentModeKHR VulkanSwapchain::FindBestPresentMode(VkSurfaceKHR surface) const
 {
     uint32 availablePresentModeCount = 0;
     std::vector<VkPresentModeKHR> availablePresentModes;
     const VkResult getPresentModesResult = vkGetPhysicalDeviceSurfacePresentModesKHR(
         g_VulkanDriver->GetPhysicalDevice().Handle,
-        m_Handle.Surface,
+        surface,
         &availablePresentModeCount,
         nullptr);
     if (getPresentModesResult == VK_SUCCESS)
@@ -160,7 +140,7 @@ VkPresentModeKHR VulkanSwapchain::FindBestPresentMode() const
         availablePresentModes.resize(availablePresentModeCount);
         SE_VULKAN_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(
             g_VulkanDriver->GetPhysicalDevice().Handle,
-            m_Handle.Surface,
+            surface,
             &availablePresentModeCount,
             availablePresentModes.data()));
         SE_ENSURE(availablePresentModes.size() == availablePresentModeCount);
