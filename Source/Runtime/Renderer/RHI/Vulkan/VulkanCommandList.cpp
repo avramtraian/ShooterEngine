@@ -347,12 +347,12 @@ void VulkanCommandList::BindIndexBuffer(const RefPtr<IndexBuffer>& indexBuffer)
 void VulkanCommandList::DrawIndexed(uint32 firstIndex, uint32 indexCount)
 {
     /* Validate command list state. */
-    if (!m_ActiveRenderPass.IsValid())
+    if (!m_ActiveRenderPass.IsValid() || !m_ActiveFramebuffer.IsValid())
     {
         SE_LOG_ERROR("Trying to call DrawIndexed without a render pass being active!");
         return;
     }
-    if (!m_ActivePipeline)
+    if (!m_ActivePipeline.IsValid())
     {
         SE_LOG_ERROR("Trying to call DrawIndexed without a graphics state being bound!");
         return;

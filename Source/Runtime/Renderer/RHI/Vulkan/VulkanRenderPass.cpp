@@ -94,44 +94,24 @@ VulkanRenderPass::VulkanRenderPass(const RenderPassInfo& info)
 
 VulkanRenderPass::~VulkanRenderPass()
 {
-    /* TODO(Traian): Investigate if these pipelines could be in use by the time this render pass is destroyed.
-     * As these pipelines are only used when this render pass is active, this should theoretically never be the case. */
-    m_Pipelines.clear();
-
-    /* TODO(Traian): Investigate if these framebuffers could be in use by the time this render pass is destroyed.
-     * As these framebuffers are only used when this render pass is active, this should theoretically never be the case. */
-    m_Framebuffers.clear();
+    m_CachedPipelines.clear();
+    m_CachedFramebuffers.clear();
 
     /* Destroy the render pass object. */
     vkDestroyRenderPass(g_VulkanDriver->GetDevice(), m_Handle, nullptr);
     m_Handle = VK_NULL_HANDLE;
 }
 
-VulkanPipeline* VulkanRenderPass::AcquireCompatiblePipeline(const GraphicsState& graphicsState)
+RefPtr<VulkanFramebuffer> VulkanRenderPass::AcquireCompatibleFramebuffer(const RenderPassBeginInfo& beginInfo)
 {
     /* Check if a compatible pipeline already exists. */
-    for (const auto& pipeline : m_Pipelines)
+    for (auto& cachedFramebuffer : m_CachedFramebuffers)
     {
-        if (pipeline->IsCompatibleWithGraphicsState(graphicsState))
-            return pipeline.get();
-    }
-
-    // TODO(Traian): Try to destroy/invalidate existing but unused pipelines instead of creating
-    // a new every time it is required. This can cause big memory leaks.
-    SE_ASSERT(m_Pipelines.size() < 1024);
-
-    /* Create a new pipeline that matches the provided graphics state. */
-    m_Pipelines.push_back(std::make_unique<VulkanPipeline>(graphicsState, m_Handle, GetColorAttachmentCount()));
-    return m_Pipelines.back().get();
-}
-
-VulkanFramebuffer* VulkanRenderPass::AcquireCompatibleFramebuffer(const RenderPassBeginInfo& beginInfo)
-{
-    /* Check if a compatible pipeline already exists. */
-    for (const auto& framebuffer : m_Framebuffers)
-    {
-        if (framebuffer->IsCompatibleWithRenderPassBeginInfo(beginInfo))
-            return framebuffer.get();
+        if (cachedFramebuffer.Framebuffer->IsCompatibleWithRenderPassBeginInfo(beginInfo))
+        {
+            cachedFramebuffer.NumberOfFramesSinceLastUse = 0;
+            return cachedFramebuffer.Framebuffer;
+        }
     }
 
     std::vector<RefPtr<Texture2D>> framebufferTextures;
@@ -163,11 +143,40 @@ VulkanFramebuffer* VulkanRenderPass::AcquireCompatibleFramebuffer(const RenderPa
 
     // TODO(Traian): Try to destroy/invalidate existing but unused framebuffers instead of creating
     // a new every time it is required. This can cause big memory leaks.
-    SE_ASSERT(m_Framebuffers.size() < 1024);
+    SE_ASSERT(m_CachedFramebuffers.size() < 1024);
 
-    /* Create a new framebuffer that matches the provided render pass begin info. */
-    m_Framebuffers.push_back(std::make_unique<VulkanFramebuffer>(framebufferTextures, m_Handle));
-    return m_Framebuffers.back().get();
+    // Create a new framebuffer that matches the provided render pass begin info.
+    RefPtr<VulkanFramebuffer> framebuffer = CreateRef<VulkanFramebuffer>(framebufferTextures, m_Handle);
+    CachedFramebuffer& cachedFramebuffer = m_CachedFramebuffers.emplace_back();
+    cachedFramebuffer.Framebuffer = framebuffer;
+    cachedFramebuffer.NumberOfFramesSinceLastUse = 0;
+
+    return framebuffer;
+}
+
+RefPtr<VulkanPipeline> VulkanRenderPass::AcquireCompatiblePipeline(const GraphicsState& graphicsState)
+{
+    // Check if a compatible pipeline already exists.
+    for (auto& cachedPipeline : m_CachedPipelines)
+    {
+        if (cachedPipeline.Pipeline->IsCompatibleWithGraphicsState(graphicsState))
+        {
+            cachedPipeline.NumberOfFramesSinceLastUse = 0;
+            return cachedPipeline.Pipeline;
+        }
+    }
+
+    // TODO(Traian): Try to destroy/invalidate existing but unused pipelines instead of creating
+    // a new every time it is required. This can cause big memory leaks.
+    SE_ASSERT(m_CachedPipelines.size() < 1024);
+
+    // Create a new pipeline that matches the provided graphics state.
+    RefPtr<VulkanPipeline> pipeline = CreateRef<VulkanPipeline>(graphicsState, m_Handle, GetColorAttachmentCount());
+    CachedPipeline& cachedPipeline = m_CachedPipelines.emplace_back();
+    cachedPipeline.Pipeline = pipeline;
+    cachedPipeline.NumberOfFramesSinceLastUse = 0;
+
+    return pipeline;
 }
 
 }

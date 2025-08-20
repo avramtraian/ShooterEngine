@@ -10,14 +10,11 @@
 namespace SE
 {
 
-class VulkanPipeline
+class VulkanPipeline : public RefCounted
 {
-    SE_MAKE_NONCOPYABLE(VulkanPipeline);
-    SE_MAKE_NONMOVABLE(VulkanPipeline);
-
 public:
     VulkanPipeline(const GraphicsState& graphicsState, VkRenderPass renderPassHandle, uint32 colorAttachmentCount);
-    ~VulkanPipeline();
+    virtual ~VulkanPipeline() override;
 
 public:
     NODISCARD FORCEINLINE VkPipeline GetHandle() const { return m_Handle; }

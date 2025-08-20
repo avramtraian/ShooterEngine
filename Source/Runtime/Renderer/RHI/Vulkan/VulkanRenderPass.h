@@ -38,16 +38,28 @@ public:
     }
 
 public:
-    NODISCARD VulkanPipeline* AcquireCompatiblePipeline(const GraphicsState& graphicsState);
-    NODISCARD VulkanFramebuffer* AcquireCompatibleFramebuffer(const RenderPassBeginInfo& beginInfo);
+    NODISCARD RefPtr<VulkanFramebuffer> AcquireCompatibleFramebuffer(const RenderPassBeginInfo& beginInfo);
+    NODISCARD RefPtr<VulkanPipeline> AcquireCompatiblePipeline(const GraphicsState& graphicsState);
 
 private:
     VkRenderPass m_Handle;
     std::vector<RenderPassAttachment> m_Attachments;
     bool m_HasDepthStencilAttachment;
 
-    std::vector<std::unique_ptr<VulkanFramebuffer>> m_Framebuffers;
-    std::vector<std::unique_ptr<VulkanPipeline>> m_Pipelines;
+    struct CachedFramebuffer
+    {
+        RefPtr<VulkanFramebuffer> Framebuffer;
+        uint32 NumberOfFramesSinceLastUse { 0 };
+    };
+
+    struct CachedPipeline
+    {
+        RefPtr<VulkanPipeline> Pipeline;
+        uint32 NumberOfFramesSinceLastUse { 0 };
+    };
+
+    std::vector<CachedFramebuffer> m_CachedFramebuffers;
+    std::vector<CachedPipeline> m_CachedPipelines;
 };
 
 }

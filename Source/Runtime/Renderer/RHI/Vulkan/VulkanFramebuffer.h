@@ -11,14 +11,11 @@
 namespace SE
 {
 
-class VulkanFramebuffer
+class VulkanFramebuffer : public RefCounted
 {
-    SE_MAKE_NONCOPYABLE(VulkanFramebuffer);
-    SE_MAKE_NONMOVABLE(VulkanFramebuffer);
-
 public:
     VulkanFramebuffer(const std::vector<RefPtr<Texture2D>>& textures, VkRenderPass renderPassHandle);
-    ~VulkanFramebuffer();
+    virtual ~VulkanFramebuffer() override;
 
     NODISCARD bool IsCompatibleWithRenderPassBeginInfo(const RenderPassBeginInfo& beginInfo) const;
 

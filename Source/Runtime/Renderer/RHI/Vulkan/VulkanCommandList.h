@@ -59,8 +59,8 @@ private:
 
     RefPtr<VulkanRenderPass> m_ActiveRenderPass;
     std::vector<RefPtr<VulkanRenderPass>> m_UsedRenderPasses;
-    VulkanFramebuffer* m_ActiveFramebuffer;
-    VulkanPipeline* m_ActivePipeline;
+    RefPtr<VulkanFramebuffer> m_ActiveFramebuffer;
+    RefPtr<VulkanPipeline> m_ActivePipeline;
 
     std::vector<RefPtr<VulkanVertexBuffer>> m_UsedVertexBuffers;
     std::vector<RefPtr<VulkanIndexBuffer>> m_UsedIndexBuffers;
