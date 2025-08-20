@@ -17,11 +17,14 @@ enum class TextureFormat : uint8
     R8G8B8,
     R8G8B8A8,
     B8G8R8A8,
+    D24S8,
     MaxEnumValue,
 };
 
 NODISCARD FORCEINLINE bool IsTextureDepthFormat(TextureFormat format)
 {
+    if (format == TextureFormat::D24S8) { return true; }
+
     return false;
 }
 

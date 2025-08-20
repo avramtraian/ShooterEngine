@@ -383,23 +383,6 @@ void VulkanCommandList::DrawIndexed(uint32 firstIndex, uint32 indexCount)
     }
 }
 
-inline VkImageLayout TextureLayoutToVulkan(TextureLayout layout)
-{
-    switch (layout)
-    {
-        case TextureLayout::Undefined:              return VK_IMAGE_LAYOUT_UNDEFINED;
-        case TextureLayout::PresentSource:          return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        case TextureLayout::ColorAttachmentOptimal: return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        case TextureLayout::DepthAttachmentOptimal: return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-        case TextureLayout::ShaderReadOnlyOptimal:  return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        case TextureLayout::TransferDstOptimal:     return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        case TextureLayout::TransferSrcOptimal:     return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-    }
-
-    SE_ASSERT_NOT_REACHED;
-    return VK_IMAGE_LAYOUT_UNDEFINED;
-}
-
 inline VkPipelineStageFlags PipelineStageBitsToVulkan(PipelineStageBits stages)
 {
     VkPipelineStageFlags pipelineStageFlags = 0;

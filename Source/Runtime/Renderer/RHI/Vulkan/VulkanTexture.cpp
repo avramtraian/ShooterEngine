@@ -93,10 +93,17 @@ void VulkanStorageTexture2D::CreateImageAndAllocateMemory(const Texture2DInfo& i
     {
         // Set the image usage flags.
         VkImageUsageFlags imageUsage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+
         if (m_Properties.Flags & TEXTURE_FLAG_SHADER_RESOURCE)
             imageUsage |= VK_IMAGE_USAGE_SAMPLED_BIT;
+
         if (m_Properties.Flags & TEXTURE_FLAG_RENDER_TARGET)
-            imageUsage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        {
+            if (IsTextureDepthFormat(m_Properties.Format))
+                imageUsage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+            else
+                imageUsage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        }
 
         VkImageCreateInfo imageCreateInfo = {};
         imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;

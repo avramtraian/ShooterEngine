@@ -31,6 +31,8 @@ enum class TextureLayout : uint16
     PresentSource,
     ColorAttachmentOptimal,
     DepthAttachmentOptimal,
+    StencilAttachmentOptimal,
+    DepthStencilAttachmentOptimal,
     ShaderReadOnlyOptimal,
     TransferDstOptimal,
     TransferSrcOptimal,

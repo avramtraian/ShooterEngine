@@ -44,14 +44,7 @@ VulkanRenderPass::VulkanRenderPass(const RenderPassInfo& info)
         attachmentDescription.stencilLoadOp = attachmentDescription.loadOp;
         attachmentDescription.stencilStoreOp = attachmentDescription.storeOp;
         attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-
-        switch (attachment.FinalLayout)
-        {
-            case TextureLayout::Undefined:             attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_UNDEFINED; break;
-            case TextureLayout::PresentSource:         attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR; break;
-            case TextureLayout::ShaderReadOnlyOptimal: attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; break;
-            default: SE_ASSERT_NOT_REACHED;
-        }
+        attachmentDescription.finalLayout = TextureLayoutToVulkan(attachment.FinalLayout);
     }
 
     std::vector<VkAttachmentReference> colorAttachmentReferences;

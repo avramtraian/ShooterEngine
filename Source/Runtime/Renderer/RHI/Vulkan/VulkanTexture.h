@@ -17,10 +17,11 @@ NODISCARD static inline VkFormat TextureFormatToVulkan(TextureFormat textureForm
 {
     switch (textureFormat)
     {
-        case TextureFormat::Unknown:  return VK_FORMAT_UNDEFINED;
-        case TextureFormat::R8G8B8A8: return VK_FORMAT_R8G8B8A8_UNORM;
-        case TextureFormat::R8G8B8:   return VK_FORMAT_R8G8B8_UNORM;
-        case TextureFormat::B8G8R8A8: return VK_FORMAT_B8G8R8A8_UNORM;
+        case TextureFormat::Unknown:         return VK_FORMAT_UNDEFINED;
+        case TextureFormat::R8G8B8A8:        return VK_FORMAT_R8G8B8A8_UNORM;
+        case TextureFormat::R8G8B8:          return VK_FORMAT_R8G8B8_UNORM;
+        case TextureFormat::B8G8R8A8:        return VK_FORMAT_B8G8R8A8_UNORM;
+        case TextureFormat::D24S8:           return VK_FORMAT_D24_UNORM_S8_UINT;
     }
 
     SE_ASSERT_NOT_REACHED;
@@ -31,14 +32,34 @@ NODISCARD static inline TextureFormat TextureFormatFromVulkan(VkFormat format)
 {
     switch (format)
     {
-        case VK_FORMAT_UNDEFINED:      return TextureFormat::Unknown;
-        case VK_FORMAT_R8G8B8_UNORM:   return TextureFormat::R8G8B8;
-        case VK_FORMAT_R8G8B8A8_UNORM: return TextureFormat::R8G8B8A8;
-        case VK_FORMAT_B8G8R8A8_UNORM: return TextureFormat::B8G8R8A8;
+        case VK_FORMAT_UNDEFINED:           return TextureFormat::Unknown;
+        case VK_FORMAT_R8G8B8_UNORM:        return TextureFormat::R8G8B8;
+        case VK_FORMAT_R8G8B8A8_UNORM:      return TextureFormat::R8G8B8A8;
+        case VK_FORMAT_B8G8R8A8_UNORM:      return TextureFormat::B8G8R8A8;
+        case VK_FORMAT_D24_UNORM_S8_UINT:   return TextureFormat::D24S8;
     }
 
     SE_ASSERT_NOT_REACHED;
     return TextureFormat::Unknown;
+}
+
+NODISCARD static inline VkImageLayout TextureLayoutToVulkan(TextureLayout textureLayout)
+{
+    switch (textureLayout)
+    {
+        case TextureLayout::Undefined:                     return VK_IMAGE_LAYOUT_UNDEFINED;
+        case TextureLayout::PresentSource:                 return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        case TextureLayout::ColorAttachmentOptimal:        return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        case TextureLayout::DepthAttachmentOptimal:        return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+        case TextureLayout::StencilAttachmentOptimal:      return VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL;
+        case TextureLayout::DepthStencilAttachmentOptimal: return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        case TextureLayout::ShaderReadOnlyOptimal:         return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        case TextureLayout::TransferDstOptimal:            return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        case TextureLayout::TransferSrcOptimal:            return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    }
+
+    SE_ASSERT_NOT_REACHED;
+    return VK_IMAGE_LAYOUT_UNDEFINED;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
