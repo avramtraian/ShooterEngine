@@ -503,7 +503,16 @@ public:
             refCounted->DecrementWeakReferenceCount();
             if (refCounted->GetStrongReferenceCount() == 0 && refCounted->GetWeakReferenceCount() == 0)
             {
-                refCounted->~RefCounted();
+                // NOTE(Traian): Since the strong reference count is zero, we know for sure that 'm_Instance' is actually a pointer to
+                // a plain 'RefCounted' object (not a derived class) and thus no destructor is required.
+
+                // NOTE(Traian): Another reason to not call the 'RefCounted' destructor is the following scenario: let's imagine we have
+                // one strong reference pointer and one weak reference pointer. When the strong pointer is released, the destructor of the
+                // instance (for whatever reason) also releases the weak pointer. This scenario would lead us exactly to this codepath, but
+                // the strong pointer doesn't yet replace the object stored at the 'm_Instance' address with a plain 'RefCounted' object.
+                // Because the 'RefCounted' destructor is marked as virtual, calling 'm_Instance->~RefCounted()' would invoke the object
+                // destructor AGAIN. So the bug would be that the same destructor is called twice!
+
                 ::operator delete(m_Instance);
             }
 
