@@ -387,7 +387,10 @@ void VulkanCommandList::BindShaderResources(const ShaderResourcesBindPack& bindP
             vulkanTexture->GenerateUploadDataCommands(AdoptRef(this), stagingBuffer);
         }
     }
+
     std::vector<VulkanDescriptorSet*> descriptorSets = activeShader->GetDescriptorSetManager().AcquireDescriptorSets(bindPack);
+    for (VulkanDescriptorSet* descriptorSet : descriptorSets)
+        descriptorSet->IncrementLockCount();
 
     std::vector<VkDescriptorSet> descriptorSetHandles;
     descriptorSetHandles.reserve(descriptorSets.size());

@@ -43,7 +43,7 @@ DescriptorSetCompatibility VulkanDescriptorSet::IsCompatibleWithBindings(const s
             return DescriptorSetCompatibility::Incompatible;
 
         // Check if the resources bound at the given binding are the same.
-        WeakRefPtr<ShaderResource> currentResource = (*currentBindingIt).second;
+        WeakRefPtr<ShaderResource> currentResource = (*currentBindingIt).second.Resource;
         if (resource != currentResource)
             return DescriptorSetCompatibility::Incompatible;
     }
@@ -51,7 +51,7 @@ DescriptorSetCompatibility VulkanDescriptorSet::IsCompatibleWithBindings(const s
     return DescriptorSetCompatibility::Compatible;
 }
 
-void VulkanDescriptorSet::Invalidate(const std::unordered_map<uint32, RefPtr<ShaderResource>>& bindings)
+void VulkanDescriptorSet::UpdateBindings(const std::unordered_map<uint32, RefPtr<ShaderResource>>& bindings)
 {
     if (IsLocked())
     {
@@ -62,9 +62,26 @@ void VulkanDescriptorSet::Invalidate(const std::unordered_map<uint32, RefPtr<Sha
     std::vector<VkWriteDescriptorSet> descriptorWrites;
     for (const auto& [bindingIndex, resource] : bindings)
     {
-        if (m_BindingResources.contains(bindingIndex) && m_BindingResources.at(bindingIndex) == resource)
+        // Check if the binding requires updating.
+        if (m_BindingResources.contains(bindingIndex) && m_BindingResources.at(bindingIndex).Resource == resource)
             continue;
-        m_BindingResources[bindingIndex] = resource;
+
+        m_BindingResources[bindingIndex].Resource = resource;
+        m_BindingResources[bindingIndex].PreDestroyCallback = m_BindingResources[bindingIndex].Resource->AddPreDestroyCallback(
+            [this, bindingIndex](ShaderResource& resourceToBeDestroyed)
+            {
+                // NOTE(Traian): Since the descriptor set holds strong references of the bound resources while it is locked, this
+                // assert should never fail. If however it does fail, it most likely means that the 'm_BindingResources' and
+                // 'm_LockedResources' vectors are not in sync! (which would be an internal error)
+                SE_ASSERT(!IsLocked());
+
+                // NOTE(Traian): Vulkan itself doesn't care that the binding contains handles to deleted resources, as long as that descriptor
+                // set is not used. It is up to the application to ensure that the binding is updated to reference a valid new resource before
+                // is it used by a command buffer.
+                SE_ASSERT(m_BindingResources.contains(bindingIndex));
+                m_BindingResources.erase(bindingIndex);
+            }
+        );
 
         SE_ASSERT(m_DescriptorSetLayout.BindingDescriptorTypes.contains(bindingIndex));
         const VkDescriptorType descriptorType = m_DescriptorSetLayout.BindingDescriptorTypes.at(bindingIndex);
@@ -103,6 +120,29 @@ void VulkanDescriptorSet::Invalidate(const std::unordered_map<uint32, RefPtr<Sha
     vkUpdateDescriptorSets(g_VulkanDriver->GetDevice(), (uint32)descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }
 
+std::vector<uint32> VulkanDescriptorSet::GetMissingBindingIndices() const
+{
+    std::vector<uint32> missingBindingIndices;
+    for (const auto& [bindingIndex, descriptorType] : m_DescriptorSetLayout.BindingDescriptorTypes)
+    {
+        if (!m_BindingResources.contains(bindingIndex))
+            missingBindingIndices.push_back(bindingIndex);
+    }
+
+    return missingBindingIndices;
+}
+
+bool VulkanDescriptorSet::IsComplete() const
+{
+    for (const auto& [bindingIndex, descriptorType] : m_DescriptorSetLayout.BindingDescriptorTypes)
+    {
+        if (!m_BindingResources.contains(bindingIndex))
+            return false;
+    }
+
+    return true;
+}
+
 void VulkanDescriptorSet::IncrementLockCount()
 {
     if (!IsLocked())
@@ -110,9 +150,9 @@ void VulkanDescriptorSet::IncrementLockCount()
         SE_ASSERT(m_LockedResources.empty());
         m_LockedResources.reserve(m_BindingResources.size());
 
-        for (auto [bindingIndex, resource] : m_BindingResources)
+        for (auto& [bindingIndex, resource] : m_BindingResources)
         {
-            RefPtr<ShaderResource> trackedResource = RefPtr<ShaderResource>(resource);
+            RefPtr<ShaderResource> trackedResource = RefPtr<ShaderResource>(resource.Resource);
             m_LockedResources.push_back(std::move(trackedResource));
         }
     }

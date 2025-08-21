@@ -68,15 +68,17 @@ std::vector<VulkanDescriptorSet*> VulkanDescriptorSetManager::AcquireDescriptorS
 
             VkDescriptorPool descriptorPool = g_VulkanDriver->GetDescriptorPool();
             auto set = std::make_unique<VulkanDescriptorSet>(descriptorPool, setIndex, setCache.Layout);
-            set->Invalidate(setBindings);
+            set->UpdateBindings(setBindings);
             descriptorSets.push_back(set.get());
             setCache.Sets.push_back(std::move(set));
         }
     }
 
     for (VulkanDescriptorSet* descriptorSet : descriptorSets)
-        descriptorSet->IncrementLockCount();
-
+    {
+        // NOTE(Traian): We expect the bind pack to have no missing binding indices.
+        SE_ASSERT(descriptorSet->IsComplete());
+    }
 
     return descriptorSets;
 }
