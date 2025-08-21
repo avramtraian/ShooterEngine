@@ -38,7 +38,7 @@ public:
     }
 
 public:
-    NODISCARD RefPtr<VulkanFramebuffer> AcquireCompatibleFramebuffer(const RenderPassBeginInfo& beginInfo);
+    NODISCARD VulkanFramebuffer* AcquireCompatibleFramebuffer(const RenderPassBeginInfo& beginInfo);
     NODISCARD RefPtr<VulkanPipeline> AcquireCompatiblePipeline(const GraphicsState& graphicsState);
 
 private:
@@ -48,7 +48,7 @@ private:
 
     struct CachedFramebuffer
     {
-        RefPtr<VulkanFramebuffer> Framebuffer;
+        std::unique_ptr<VulkanFramebuffer> Framebuffer;
         uint32 NumberOfFramesSinceLastUse { 0 };
     };
 

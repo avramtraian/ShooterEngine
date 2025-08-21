@@ -66,6 +66,12 @@ void VulkanCommandList::ReleaseObjectReferences()
 
     // Release the used staging buffers.
     m_StagingBuffers.clear();
+
+    // Release framebuffers that were bound.
+    for (VulkanFramebuffer* framebuffer : m_UsedFramebuffers)
+        framebuffer->DecrementLockCount();
+    m_UsedFramebuffers.clear();
+
     // Release descriptor sets that were bound.
     for (VulkanDescriptorSet* descriptorSet : m_UsedDescriptorSets)
         descriptorSet->DecrementLockCount();
@@ -201,6 +207,8 @@ void VulkanCommandList::BeginRenderPass(const RefPtr<RenderPass>& renderPass, co
     }
 
     m_ActiveFramebuffer = m_ActiveRenderPass->AcquireCompatibleFramebuffer(beginInfo);
+    m_ActiveFramebuffer->IncrementLockCount();
+    m_UsedFramebuffers.push_back(m_ActiveFramebuffer);
 
     VkRenderPassBeginInfo renderPassBeginInfo = {}; 
     renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -444,7 +452,7 @@ void VulkanCommandList::BindIndexBuffer(const RefPtr<IndexBuffer>& indexBuffer)
 void VulkanCommandList::DrawIndexed(uint32 firstIndex, uint32 indexCount)
 {
     /* Validate command list state. */
-    if (!m_ActiveRenderPass.IsValid() || !m_ActiveFramebuffer.IsValid())
+    if (!m_ActiveRenderPass.IsValid() || m_ActiveFramebuffer == nullptr)
     {
         SE_LOG_ERROR("Trying to call DrawIndexed without a render pass being active!");
         return;

@@ -11,16 +11,27 @@
 namespace SE
 {
 
-class VulkanFramebuffer : public RefCounted
+class VulkanFramebuffer
 {
 public:
-    VulkanFramebuffer(const std::vector<RefPtr<Texture2D>>& textures, VkRenderPass renderPassHandle);
-    virtual ~VulkanFramebuffer() override;
+    VulkanFramebuffer();
+    ~VulkanFramebuffer();
+
+    void Invalidate(const std::vector<RefPtr<Texture2D>>& textures, VkRenderPass renderPassHandle);
+    void Destroy();
+    NODISCARD FORCEINLINE bool IsValid() const { return (m_Handle != VK_NULL_HANDLE); }
 
     NODISCARD bool IsCompatibleWithRenderPassBeginInfo(const RenderPassBeginInfo& beginInfo) const;
 
+    void IncrementLockCount();
+    void DecrementLockCount();
+
 public:
     NODISCARD FORCEINLINE VkFramebuffer GetHandle() const { return m_Handle; }
+
+    NODISCARD FORCEINLINE uint32 GetLockCount() const { return m_LockCount; }
+    NODISCARD FORCEINLINE bool IsLocked() const { return (m_LockCount > 0); }
+    NODISCARD FORCEINLINE bool IsUnlocked() const { return (m_LockCount == 0); }
 
     NODISCARD FORCEINLINE uint32 GetSizeX() const
     {
@@ -36,7 +47,11 @@ public:
 
 private:
     VkFramebuffer m_Handle;
-    std::vector<RefPtr<VulkanTexture2D>> m_Textures;
+    uint32 m_LockCount;
+
+    std::vector<WeakRefPtr<VulkanTexture2D>> m_Textures;
+    std::vector<ShaderResourcePreDestroyCallback> m_TexturePreDestroyCallbacks;
+    std::vector<StrongRefPtr<VulkanTexture2D>> m_LockedTextures;
 };
 
 }

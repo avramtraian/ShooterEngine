@@ -95,16 +95,21 @@ VulkanRenderPass::~VulkanRenderPass()
     m_Handle = VK_NULL_HANDLE;
 }
 
-RefPtr<VulkanFramebuffer> VulkanRenderPass::AcquireCompatibleFramebuffer(const RenderPassBeginInfo& beginInfo)
+VulkanFramebuffer* VulkanRenderPass::AcquireCompatibleFramebuffer(const RenderPassBeginInfo& beginInfo)
 {
-    /* Check if a compatible pipeline already exists. */
+    VulkanFramebuffer* invalidFramebuffer = nullptr;
+
+    // Check if a compatible pipeline already exists.
     for (auto& cachedFramebuffer : m_CachedFramebuffers)
     {
         if (cachedFramebuffer.Framebuffer->IsCompatibleWithRenderPassBeginInfo(beginInfo))
         {
             cachedFramebuffer.NumberOfFramesSinceLastUse = 0;
-            return cachedFramebuffer.Framebuffer;
+            return cachedFramebuffer.Framebuffer.get();
         }
+
+        if (invalidFramebuffer == nullptr && !cachedFramebuffer.Framebuffer->IsValid())
+            invalidFramebuffer = cachedFramebuffer.Framebuffer.get();
     }
 
     std::vector<RefPtr<Texture2D>> framebufferTextures;
@@ -134,17 +139,24 @@ RefPtr<VulkanFramebuffer> VulkanRenderPass::AcquireCompatibleFramebuffer(const R
         framebufferTextures.push_back(beginInfo.DepthStencilAttachmentTexture.Texture);
     }
 
+    // Reuse the provided framebuffer instead of creating a new object instance.
+    if (invalidFramebuffer)
+    {
+        invalidFramebuffer->Invalidate(framebufferTextures, m_Handle);
+        return invalidFramebuffer;
+    }
+
     // TODO(Traian): Try to destroy/invalidate existing but unused framebuffers instead of creating
     // a new every time it is required. This can cause big memory leaks.
     SE_ASSERT(m_CachedFramebuffers.size() < 1024);
 
-    // Create a new framebuffer that matches the provided render pass begin info.
-    RefPtr<VulkanFramebuffer> framebuffer = CreateRef<VulkanFramebuffer>(framebufferTextures, m_Handle);
     CachedFramebuffer& cachedFramebuffer = m_CachedFramebuffers.emplace_back();
-    cachedFramebuffer.Framebuffer = framebuffer;
+    cachedFramebuffer.Framebuffer = std::make_unique<VulkanFramebuffer>();
     cachedFramebuffer.NumberOfFramesSinceLastUse = 0;
 
-    return framebuffer;
+    // Create a new framebuffer that matches the provided render pass begin info.
+    cachedFramebuffer.Framebuffer->Invalidate(framebufferTextures, m_Handle);
+    return cachedFramebuffer.Framebuffer.get();
 }
 
 RefPtr<VulkanPipeline> VulkanRenderPass::AcquireCompatiblePipeline(const GraphicsState& graphicsState)
