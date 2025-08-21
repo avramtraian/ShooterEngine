@@ -8,7 +8,6 @@
 namespace SE
 {
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////// GENERIC BUFFER IMPLEMENTATION. /////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -88,16 +87,26 @@ VulkanVertexBuffer::VulkanVertexBuffer(const VertexBufferInfo& info)
 
     if (info.InitialDataSize > 0)
     {
-        // Map the buffer data.
-        void* mappedBufferData = m_Buffer.Map(0, info.InitialDataSize);
-
-        // Copy the initial data to the mapped buffer data.
-        MemoryCopy(mappedBufferData, info.InitialData, info.InitialDataSize);
-
-        // Unmap the buffer data.
-        m_Buffer.Unmap();
-        mappedBufferData = nullptr;
+        UploadDataImmediately(info.InitialData, 0, info.InitialDataSize);
     }
+}
+
+void VulkanVertexBuffer::UploadDataImmediately(const void* verticesData, usize verticesDataOffset, usize verticesDataSize)
+{
+    if (verticesDataSize == 0)
+        return;
+
+    if (verticesDataOffset + verticesDataSize > m_Buffer.GetSize())
+    {
+        SE_LOG_ERROR(
+            "Buffer overflow detected when trying to upload data to a vertex buffer! (BufferSize: %d, VerticesDataOffset: %d, VerticesDataSize: %d)",
+            m_Buffer.GetSize(), verticesDataOffset, verticesDataSize);
+        return;
+    }
+
+    void* mappedBufferData = m_Buffer.Map(verticesDataOffset, verticesDataSize);
+    MemoryCopy(mappedBufferData, verticesData, verticesDataSize);
+    m_Buffer.Unmap();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -133,19 +142,29 @@ VulkanIndexBuffer::VulkanIndexBuffer(const IndexBufferInfo& info)
 
     if (info.InitialIndexCount > 0)
     {
-        // Calculate the size of the inidial data buffer.
-        const usize initialDataSize = (usize)info.InitialIndexCount * GetIndexDataTypeByteCount(m_DataType);
-
-        // Map the buffer data.
-        void* mappedBufferData = m_Buffer.Map(0, initialDataSize);
-
-        // Copy the initial data to the mapped buffer data.
-        MemoryCopy(mappedBufferData, info.InitialIndices, initialDataSize);
-
-        // Unmap the buffer data.
-        m_Buffer.Unmap();
-        mappedBufferData = nullptr;
+        UploadDataImmediately(info.InitialIndices, 0, info.InitialIndexCount);
     }
+}
+
+void VulkanIndexBuffer::UploadDataImmediately(const void* indices, uint32 indexOffset, uint32 indexCount)
+{
+    if (indexCount == 0)
+        return;
+
+    const usize indicesDataOffset = (usize)indexOffset * GetIndexDataTypeByteCount(m_DataType);
+    const usize indicesDataSize = (usize)indexCount * GetIndexDataTypeByteCount(m_DataType);
+
+    if (indicesDataOffset + indicesDataSize > m_Buffer.GetSize())
+    {
+        SE_LOG_ERROR(
+            "Buffer overflow detected when trying to upload data to a index buffer! (BufferSize: %d, VerticesDataOffset: %d, VerticesDataSize: %d)",
+            m_Buffer.GetSize(), indicesDataOffset, indicesDataSize);
+        return;
+    }
+
+    void* mappedBufferData = m_Buffer.Map(indicesDataOffset, indicesDataSize);
+    MemoryCopy(mappedBufferData, indices, indicesDataSize);
+    m_Buffer.Unmap();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -164,16 +183,35 @@ VulkanUniformBuffer::VulkanUniformBuffer(const UniformBufferInfo& info)
 
     if (info.InitialDataSize > 0)
     {
-        // Map the buffer data.
-        void* mappedBufferData = m_Buffer.Map(0, info.InitialDataSize);
-
-        // Copy the initial data to the mapped buffer data.
-        MemoryCopy(mappedBufferData, info.InitialData, info.InitialDataSize);
-
-        // Unmap the buffer data.
-        mappedBufferData = nullptr;
-        m_Buffer.Unmap();
+        UploadDataImmediately(info.InitialData, 0, info.InitialDataSize);
     }
+}
+
+VulkanUniformBuffer::~VulkanUniformBuffer()
+{
+    // Dispatch pre-destroy callbacks.
+    DispatchPreDestroyCallbacks();
+
+    // Destroy the Vulkan buffer.
+    m_Buffer.Release();
+}
+
+void VulkanUniformBuffer::UploadDataImmediately(const void* bufferData, usize bufferDataOffset, usize bufferDataSize)
+{
+    if (bufferDataSize == 0)
+        return;
+
+    if (bufferDataOffset + bufferDataSize > m_Buffer.GetSize())
+    {
+        SE_LOG_ERROR(
+            "Buffer overflow detected when trying to upload data to a uniform buffer! (BufferSize: %d, VerticesDataOffset: %d, VerticesDataSize: %d)",
+            m_Buffer.GetSize(), bufferDataOffset, bufferDataSize);
+        return;
+    }
+
+    void* mappedBufferData = m_Buffer.Map(bufferDataOffset, bufferDataSize);
+    MemoryCopy(mappedBufferData, bufferData, bufferDataSize);
+    m_Buffer.Unmap();
 }
 
 }

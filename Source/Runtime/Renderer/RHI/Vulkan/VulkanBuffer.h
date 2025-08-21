@@ -8,6 +8,11 @@
 namespace SE
 {
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// GENERIC BUFFER DECLARATION. //////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
 class VulkanBuffer
 {
     SE_MAKE_NONCOPYABLE(VulkanBuffer);
@@ -35,11 +40,17 @@ private:
     usize m_BufferSize { 0 };
 };
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// VERTEX BUFFER DECLARATION. ///////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
 class VulkanVertexBuffer : public VertexBuffer
 {
 public:
     VulkanVertexBuffer(const VertexBufferInfo& info);
     virtual ~VulkanVertexBuffer() override = default;
+
+    virtual void UploadDataImmediately(const void* verticesData, usize verticesDataOffset, usize verticesDataSize) override;
 
 public:
     NODISCARD FORCEINLINE VkBuffer GetHandle() const { return m_Buffer.GetHandle(); }
@@ -47,6 +58,10 @@ public:
 private:
     VulkanBuffer m_Buffer;
 };
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////// INDEX BUFFER DECLARATION. ///////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
 class VulkanIndexBuffer : public IndexBuffer
 {
@@ -57,6 +72,8 @@ public:
     NODISCARD FORCEINLINE virtual IndexBufferDataType GetDataType() const override { return m_DataType; }
     NODISCARD FORCEINLINE virtual uint32 GetIndexCount() const override { return m_IndexCount; }
 
+    virtual void UploadDataImmediately(const void* indices, uint32 indexOffset, uint32 indexCount) override;
+
 public:
     NODISCARD FORCEINLINE VkBuffer GetHandle() const { return m_Buffer.GetHandle(); }
 
@@ -66,11 +83,17 @@ private:
     uint32 m_IndexCount;
 };
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// UNIFORM BUFFER DECLARATION. //////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
 class VulkanUniformBuffer : public UniformBuffer
 {
 public:
     VulkanUniformBuffer(const UniformBufferInfo& info);
-    virtual ~VulkanUniformBuffer() override = default;
+    virtual ~VulkanUniformBuffer() override;
+
+    virtual void UploadDataImmediately(const void* bufferData, usize bufferDataOffset, usize bufferDataSize) override;
 
 public:
     NODISCARD FORCEINLINE VkBuffer GetHandle() const { return m_Buffer.GetHandle(); }
