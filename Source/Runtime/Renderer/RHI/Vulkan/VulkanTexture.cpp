@@ -49,20 +49,29 @@ inline VkSamplerAddressMode TextureAddressModeToVulkan(TextureAddressMode addres
 VulkanStorageTexture2D::VulkanStorageTexture2D(const Texture2DInfo& info)
     : VulkanTexture2D(GetStaticType())
     , m_TextureMemory(VK_NULL_HANDLE)
+    , m_IsPendingUploadData(false)
 {
     CreateImageAndAllocateMemory(info);
     CreateImageView();
-    CreateSampler(info);
+
+    if (m_Properties.Flags & TEXTURE_FLAG_SHADER_RESOURCE)
+    {
+        // Only create a sampler for the texture if the 'TEXTURE_FLAG_SHADER_RESOURCE' flag is set.
+        CreateSampler(info);
+    }
 
     if (info.InitialData.HasElements())
     {
         // Immediately upload data to the GPU image storage buffer.
-        SyncUploadData(info.InitialData);
+        UploadDataImmediately(info.InitialData);
     }
 }
 
 VulkanStorageTexture2D::~VulkanStorageTexture2D()
 {
+    // Dispatch the pre-destroy callbacks.
+    DispatchPreDestroyCallbacks();
+
     // Destroy the sampler.
     vkDestroySampler(g_VulkanDriver->GetDevice(), m_Sampler.Handle, nullptr);
     m_Sampler.Handle = VK_NULL_HANDLE;
@@ -200,7 +209,66 @@ void VulkanStorageTexture2D::CreateSampler(const Texture2DInfo& info)
     SE_VULKAN_CHECK(vkCreateSampler(g_VulkanDriver->GetDevice(), &samplerCreateInfo, nullptr, &m_Sampler.Handle));
 }
 
-void VulkanStorageTexture2D::SyncUploadData(ConstVectorView<uint8> textureData)
+void VulkanStorageTexture2D::UploadData(ConstVectorView<uint8> textureData, Texture2DUploadDataPolicy policy)
+{
+    if (m_Properties.Flags & TEXTURE_FLAG_RENDER_TARGET)
+    {
+        SE_LOG_ERROR("Can't upload data to a texture created with the 'TEXTURE_FLAG_RENDER_TARGET' flag!");
+        return;
+    }
+
+    if (policy == Texture2DUploadDataPolicy::Immediately)
+    {
+        UploadDataImmediately(textureData);
+    }
+
+    if (policy == Texture2DUploadDataPolicy::WaitForDeviceIdle)
+    {
+        g_VulkanDriver->WaitForDeviceIdle();
+        UploadDataImmediately(textureData);
+    }
+
+    if (policy == Texture2DUploadDataPolicy::OnNextCommandListUse)
+    {
+        m_IsPendingUploadData = true;
+        m_PendingTextureData.SetByteCountWithoutCopy(textureData.ByteCount());
+        MemoryCopy(m_PendingTextureData.Data(), textureData.Bytes(), textureData.ByteCount());
+    }
+}
+
+void VulkanStorageTexture2D::GenerateUploadDataCommands(RefPtr<VulkanCommandList> commandList, const VulkanBuffer& stagingBuffer)
+{
+    // Transition the texture into transfer destination optimal layout.
+    commandList->TransitionTexture(TransitionTextureInfo()
+        .SetTexture(AdoptRef(this))
+        /////////// Source. ///////////
+        .SetOldLayout(TextureLayout::Undefined)
+        .SetSrcPipelineStages(PIPELINE_STAGE_TOP_OF_PIPE_BIT)
+        .SetSrcAccessFlags(ACCESS_FLAG_NONE_BIT)
+        /////////// Destination. ///////////
+        .SetNewLayout(TextureLayout::TransferDstOptimal)
+        .SetDstPipelineStages(PIPELINE_STAGE_TRANSFER_BIT)
+        .SetDstAccessFlags(ACCESS_FLAG_TRANSFER_WRITE_BIT)
+    );
+
+    // Copy the data to the image storage.
+    commandList->CopyBufferToImage(AdoptRef(this), stagingBuffer.GetHandle());
+    
+    // Transition the texture into shader read-only optimal layout.
+    commandList->TransitionTexture(TransitionTextureInfo()
+        .SetTexture(AdoptRef(this))
+        /////////// Source. ///////////
+        .SetOldLayout(TextureLayout::TransferDstOptimal)
+        .SetSrcPipelineStages(PIPELINE_STAGE_TRANSFER_BIT)
+        .SetSrcAccessFlags(ACCESS_FLAG_TRANSFER_WRITE_BIT)
+        /////////// Destination. ///////////
+        .SetNewLayout(TextureLayout::ShaderReadOnlyOptimal)
+        .SetDstPipelineStages(PIPELINE_STAGE_FRAGMENT_SHADER_BIT)
+        .SetDstAccessFlags(ACCESS_FLAG_SHADER_READ_BIT)
+    );
+}
+
+void VulkanStorageTexture2D::UploadDataImmediately(ConstVectorView<uint8> textureData)
 {
     // Create the staging buffer.
     VulkanBuffer stagingBuffer;
@@ -214,38 +282,17 @@ void VulkanStorageTexture2D::SyncUploadData(ConstVectorView<uint8> textureData)
     MemoryCopy(stagingBufferMappedData, textureData.Bytes(), textureData.ByteCount());
     stagingBuffer.Unmap();
 
+    // Create the command list.
     auto commandList = g_VulkanDriver->CreateCommandList(CommandListInfo()
         .SetFamily(CommandListFamily::Graphics)
     ).As<VulkanCommandList>();
 
-    // Copy the buffer to the image storage.
+    // Record the texture transitions and copy commands.
     commandList->Begin();
-    commandList->TransitionTexture(TransitionTextureInfo()
-        .SetTexture(AdoptRef(this))
-        /////////// Source. ///////////
-        .SetOldLayout(TextureLayout::Undefined)
-        .SetSrcPipelineStages(PIPELINE_STAGE_TOP_OF_PIPE_BIT)
-        .SetSrcAccessFlags(ACCESS_FLAG_NONE_BIT)
-        /////////// Destination. ///////////
-        .SetNewLayout(TextureLayout::TransferDstOptimal)
-        .SetDstPipelineStages(PIPELINE_STAGE_TRANSFER_BIT)
-        .SetDstAccessFlags(ACCESS_FLAG_TRANSFER_WRITE_BIT)
-    );
-    commandList->CopyBufferToImage(AdoptRef(this), stagingBuffer.GetHandle());
-    commandList->TransitionTexture(TransitionTextureInfo()
-        .SetTexture(AdoptRef(this))
-        /////////// Source. ///////////
-        .SetOldLayout(TextureLayout::TransferDstOptimal)
-        .SetSrcPipelineStages(PIPELINE_STAGE_TRANSFER_BIT)
-        .SetSrcAccessFlags(ACCESS_FLAG_TRANSFER_WRITE_BIT)
-        /////////// Destination. ///////////
-        .SetNewLayout(TextureLayout::ShaderReadOnlyOptimal)
-        .SetDstPipelineStages(PIPELINE_STAGE_FRAGMENT_SHADER_BIT)
-        .SetDstAccessFlags(ACCESS_FLAG_SHADER_READ_BIT)
-    );
-
-    // End the command list, submit it and wait for the execution to finish.
+    GenerateUploadDataCommands(commandList, stagingBuffer);
     commandList->End();
+
+    // Execute the command list and wait for it to finish.
     g_VulkanDriver->ExecuteCommandListAndWait(commandList, CommandListExecuteInfo());
 }
 
@@ -270,8 +317,17 @@ VulkanSwapchainTexture2D::VulkanSwapchainTexture2D(const RefPtr<VulkanSwapchain>
 
 VulkanSwapchainTexture2D::~VulkanSwapchainTexture2D()
 {
+    // Dispatch the pre-destroy callbacks.
+    DispatchPreDestroyCallbacks();
+
     m_Swapchain.Release();
     m_ImageIndex = 0;
+}
+
+void VulkanSwapchainTexture2D::UploadData(ConstVectorView<uint8> textureData, Texture2DUploadDataPolicy policy)
+{
+    SE_ASSERT(m_Properties.Flags & TEXTURE_FLAG_RENDER_TARGET);
+    SE_LOG_ERROR("Can't upload data to a texture created with the 'TEXTURE_FLAG_RENDER_TARGET' flag!");
 }
 
 }

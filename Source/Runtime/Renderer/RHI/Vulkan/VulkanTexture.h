@@ -2,8 +2,10 @@
 
 #pragma once
 
+#include <Runtime/Core/Memory/Buffer.h>
 #include <Runtime/Renderer/RHI/Texture.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanBuffer.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanSwapchain.h>
 
 namespace SE
@@ -133,15 +135,26 @@ public:
     NODISCARD FORCEINLINE VkDeviceMemory GetTextureMemory() const { return m_TextureMemory; }
     NODISCARD FORCEINLINE const Sampler& GetSampler() const { return m_Sampler; }
 
+    virtual void UploadData(ConstVectorView<uint8> textureData, Texture2DUploadDataPolicy policy) override;
+
+    NODISCARD FORCEINLINE bool IsPendingUploadData() const { return m_IsPendingUploadData; }
+    NODISCARD FORCEINLINE ConstVectorView<uint8> GetPendingTextureData() const { return m_PendingTextureData.ToVectorView(); }
+    void ReleasePendingTextureData();
+
+    void GenerateUploadDataCommands(RefPtr<VulkanCommandList> commandList, const VulkanBuffer& stagingBuffer);
+    void UploadDataImmediately(ConstVectorView<uint8> textureData);
+
 private:
     void CreateImageAndAllocateMemory(const Texture2DInfo& info);
     void CreateImageView();
     void CreateSampler(const Texture2DInfo& info);
-    void SyncUploadData(ConstVectorView<uint8> textureData);
 
 private:
     VkDeviceMemory m_TextureMemory;
     Sampler m_Sampler;
+
+    bool m_IsPendingUploadData;
+    Buffer m_PendingTextureData;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -154,6 +167,8 @@ public:
     VulkanSwapchainTexture2D(const RefPtr<VulkanSwapchain>& swapchain, uint32 imageIndex);
     virtual ~VulkanSwapchainTexture2D() override;
     NODISCARD FORCEINLINE static VulkanTexture2DType GetStaticType() { return VulkanTexture2DType::Swapchain; }
+
+    virtual void UploadData(ConstVectorView<uint8> textureData, Texture2DUploadDataPolicy policy) override;
 
 private:
     RefPtr<VulkanSwapchain> m_Swapchain;

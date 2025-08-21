@@ -92,6 +92,24 @@ public:
     }
 };
 
+enum class Texture2DUploadDataPolicy : uint8
+{
+    // Updates the contents of the texture immediately. Assumes that the application has ensured that
+    // the resource is not in use by the time it called 'UploadData'. Offers the best performance due
+    // to not needing to cache the texture data (unlike 'OnNextCommandListUse').
+    Immediately,
+
+    // Waits for all command lists submitted until calling 'UploadData' to finish execution. This ensures
+    // that the resource is not in use by the time the data is uploaded. Offers the worst performance.
+    WaitForDeviceIdle,
+
+    // Upload the data when the texture is first bound by a command list. Assumes that the application ensures
+    // that the resource will only be used by that first command list until the upload is complete. Offers good
+    // performance, as the device is not waiting for anything, but requires the texture upload data to be internally
+    // cached until it is uploaded (unlike 'OnNextCommandListUse').
+    OnNextCommandListUse,
+};
+
 class Texture2D : public ShaderResource
 {
     SE_MAKE_RENDERER_RHI_INTERFACE(Texture2D);
@@ -101,6 +119,11 @@ public:
     NODISCARD virtual TextureFlags GetFlags() const = 0;
     NODISCARD virtual uint32 GetSizeX() const = 0;
     NODISCARD virtual uint32 GetSizeY() const = 0;
+
+    // Can only be called when the texture hasn't been created with the 'TEXTURE_FLAG_RENDER_TARGET' flag.
+    // Textures that represent render targets can't be updated, and the single time you can upload data to
+    // it is during the initialization process (by using the 'Texture2DInfo::InitialData' field).
+    virtual void UploadData(ConstVectorView<uint8> textureData, Texture2DUploadDataPolicy policy) = 0;
 };
 
 }

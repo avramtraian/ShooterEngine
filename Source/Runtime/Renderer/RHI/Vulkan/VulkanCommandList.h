@@ -52,6 +52,8 @@ private:
     NODISCARD bool ValidateRenderPass(const RefPtr<VulkanRenderPass>& renderPass, const RenderPassBeginInfo& beginInfo) const;
     NODISCARD bool ValidateShaderResourcesBindPack(const RefPtr<VulkanShader>& shader, const ShaderResourcesBindPack& bindPack) const;
     
+    NODISCARD VulkanBuffer& CreateStagingBuffer(usize bufferSize);
+
 private:
     VkCommandBuffer m_CommandBuffer;
     RefPtr<VulkanCommandPool> m_ParentCommandPool;
@@ -69,6 +71,7 @@ private:
     bool m_IsIndexBufferBound;
 
     std::vector<RefPtr<VulkanTexture2D>> m_TransitionedTextures;
+    std::vector<std::unique_ptr<VulkanBuffer>> m_StagingBuffers;
 
     DrawStatistics m_DrawStatistics;
     AccumultateStatisticsPolicy m_AccumulateStatisticsPolicy;

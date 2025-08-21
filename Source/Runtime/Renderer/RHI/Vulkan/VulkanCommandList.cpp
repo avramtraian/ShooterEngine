@@ -64,6 +64,8 @@ void VulkanCommandList::ReleaseObjectReferences()
     // Release textures that were transitioned.
     m_TransitionedTextures.clear();
 
+    // Release the used staging buffers.
+    m_StagingBuffers.clear();
     // Release descriptor sets that were bound.
     for (VulkanDescriptorSet* descriptorSet : m_UsedDescriptorSets)
         descriptorSet->DecrementLockCount();
@@ -293,6 +295,21 @@ void VulkanCommandList::BindShaderResources(const ShaderResourcesBindPack& bindP
     if (!ValidateShaderResourcesBindPack(activeShader, bindPack))
         return;
 
+    for (const ShaderResourceTexture& shaderResourceTexture : bindPack.Textures)
+    {
+        RefPtr<VulkanStorageTexture2D> vulkanTexture = shaderResourceTexture.Texture.As<VulkanStorageTexture2D>();
+        if (vulkanTexture->IsPendingUploadData())
+        {
+            // Create and fill the staging buffer.
+            VulkanBuffer& stagingBuffer = CreateStagingBuffer(vulkanTexture->GetPendingTextureData().ByteCount());
+            void* mappedStagingBufferData = stagingBuffer.Map(0, vulkanTexture->GetPendingTextureData().ByteCount());
+            MemoryCopy(mappedStagingBufferData, vulkanTexture->GetPendingTextureData().Bytes(), vulkanTexture->GetPendingTextureData().ByteCount());
+            stagingBuffer.Unmap();
+
+            // Record the texture transisions and copy commands.
+            vulkanTexture->GenerateUploadDataCommands(AdoptRef(this), stagingBuffer);
+        }
+    }
     std::vector<VulkanDescriptorSet*> descriptorSets = activeShader->GetDescriptorSetManager().AcquireDescriptorSets(bindPack);
 
     std::vector<VkDescriptorSet> descriptorSetHandles;
@@ -478,6 +495,18 @@ void VulkanCommandList::CopyBufferToImage(const RefPtr<VulkanTexture2D>& dstText
         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
         1, &imageCopyRegion
     );
+}
+
+VulkanBuffer& VulkanCommandList::CreateStagingBuffer(usize bufferSize)
+{
+    auto stagingBuffer = std::make_unique<VulkanBuffer>();
+    stagingBuffer->Invalidate(
+        bufferSize,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+    m_StagingBuffers.push_back(std::move(stagingBuffer));
+    return *m_StagingBuffers.back().get();
 }
 
 void VulkanCommandList::ResetDrawStatistics()
