@@ -74,6 +74,22 @@ void Buffer::EnsureByteCount(usize byteCount)
     SetByteCount(byteCount);
 }
 
+void Buffer::SetByteCountWithoutCopy(usize byteCount)
+{
+    if (byteCount == m_ByteCount)
+        return;
+
+    Release();
+    SetByteCount(byteCount);
+}
+
+void Buffer::EnsureByteCountWithoutCopy(usize byteCount)
+{
+    if (byteCount <= m_ByteCount)
+        return;
+    SetByteCountWithoutCopy(byteCount);
+}
+
 void Buffer::Release()
 {
     ::operator delete(m_Data);

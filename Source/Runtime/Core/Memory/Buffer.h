@@ -49,6 +49,9 @@ public:
     SHOOTER_API void SetByteCount(usize byteCount);
     SHOOTER_API void EnsureByteCount(usize byteCount);
 
+    SHOOTER_API void SetByteCountWithoutCopy(usize byteCount);
+    SHOOTER_API void EnsureByteCountWithoutCopy(usize byteCount);
+
     SHOOTER_API void Release();
 
 private:
