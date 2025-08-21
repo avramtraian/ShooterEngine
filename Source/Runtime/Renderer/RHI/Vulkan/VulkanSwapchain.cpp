@@ -40,6 +40,12 @@ VulkanSwapchain::VulkanSwapchain(const VulkanSwapchainInfo& info)
         m_ImmutableProperties.Format = VK_FORMAT_B8G8R8A8_UNORM;
         m_ImmutableProperties.ColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
         m_ImmutableProperties.PresentMode = FindBestPresentMode(info.Surface);
+
+        // Submit information about the swapchain creation to the logger.
+        SE_LOG_TRACE("The [Vulkan] swapchain will be created with the following parameters:");
+        SE_LOG_TRACE("  Min Image count: %d", info.MinImageCount)
+        SE_LOG_TRACE("  Format:          %s", VulkanFormatToString(m_ImmutableProperties.Format).c_str());
+        SE_LOG_TRACE("  Present mode:    %s", VulkanPresentModeToString(m_ImmutableProperties.PresentMode).c_str());
     }
 
     VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
@@ -104,12 +110,6 @@ VulkanSwapchain::VulkanSwapchain(const VulkanSwapchainInfo& info)
         }
         m_ImageViews.push_back(imageViewHandle);
     }
-
-    /* Submit information about the swapchain creation to the logger. */
-    SE_LOG_TRACE("The [Vulkan] swapchain was created with the following parameters:");
-    SE_LOG_TRACE("  Image count:  %d", m_Images.size())
-    SE_LOG_TRACE("  Format:       %s", VulkanFormatToString(m_ImmutableProperties.Format).c_str());
-    SE_LOG_TRACE("  Present mode: %s", VulkanPresentModeToString(m_ImmutableProperties.PresentMode).c_str());
 
     // Create the synchronization objects.
     {
