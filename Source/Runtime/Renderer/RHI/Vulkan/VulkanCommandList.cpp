@@ -252,6 +252,18 @@ bool VulkanCommandList::ValidateShaderResourcesBindPack(const RefPtr<VulkanShade
 {
     const auto& descriptorSetLayouts = shader->GetDescriptorSetLayouts();
 
+    std::unordered_map<uint32, std::unordered_set<uint32>> missingBindingIndices;
+    missingBindingIndices.reserve(descriptorSetLayouts.size());
+
+    for (const auto& [setIndex, setLayout] : descriptorSetLayouts)
+    {
+        std::unordered_set<uint32>& missingBindings = missingBindingIndices[setIndex];
+        missingBindings.reserve(setLayout.BindingDescriptorTypes.size());
+
+        for (const auto& [bindingIndex, descriptorType] : setLayout.BindingDescriptorTypes)
+            missingBindings.insert(bindingIndex);
+    }
+
     for (const ShaderResourceTexture& resourceTexture : bindPack.Textures)
     {
         // Check if set exists.
@@ -284,8 +296,73 @@ bool VulkanCommandList::ValidateShaderResourcesBindPack(const RefPtr<VulkanShade
                 resourceTexture.SetIndex, resourceTexture.BindingIndex);
             return false;
         }
+        
+        // Check that the provided Vulkan texture object has the 'TEXTURE_FLAG_SHADER_RESOURCE' flag.
+        if (!(resourceTexture.Texture->GetFlags() & TEXTURE_FLAG_SHADER_RESOURCE))
+        {
+            SE_LOG_ERROR(
+                "Trying to bind a texture that doesn't have the 'TEXTURE_FLAG_SHADER_RESOURCE' flag! (Set: %d, Binding: %d)",
+                resourceTexture.SetIndex, resourceTexture.BindingIndex);
+            return false;
+        }
+
+        // Remove the binding index from the missing list.
+        missingBindingIndices.at(resourceTexture.SetIndex).erase(resourceTexture.BindingIndex);
     }
 
+    for (const ShaderResourceUniformBuffer& resourceUniformBuffer : bindPack.UniformBuffers)
+    {
+        // Check if set exists.
+        auto setLayoutIt = descriptorSetLayouts.find(resourceUniformBuffer.SetIndex);
+        if (setLayoutIt == descriptorSetLayouts.end())
+        {
+            SE_LOG_ERROR(
+                "Trying to bind a uniform buffer at a set index that doesn't exist! (Set: %d, Binding: %d)",
+                resourceUniformBuffer.SetIndex, resourceUniformBuffer.BindingIndex);
+            return false;
+        }
+        const VulkanDescriptorSetLayout& setLayout = (*setLayoutIt).second;
+
+        // Check if binding exists.
+        auto bindingIt = setLayout.BindingDescriptorTypes.find(resourceUniformBuffer.BindingIndex);
+        if (bindingIt == setLayout.BindingDescriptorTypes.end())
+        {
+            SE_LOG_ERROR(
+                "Trying to bind a uniform buffer at a binding index that doesn't exist! (Set: %d, Binding: %d)",
+                resourceUniformBuffer.SetIndex, resourceUniformBuffer.BindingIndex);
+            return false;
+        }
+        const VkDescriptorType descriptorType = (*bindingIt).second;
+
+        // Check that the descriptor type matches the expected shader resource type.
+        if (descriptorType != VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+        {
+            SE_LOG_ERROR(
+                "Trying to bind a uniform buffer at a location that represents a descriptor of another type! (Set: %d, Binding: %d)",
+                resourceUniformBuffer.SetIndex, resourceUniformBuffer.BindingIndex);
+            return false;
+        }
+
+        // Remove the binding index from the missing list.
+        missingBindingIndices.at(resourceUniformBuffer.SetIndex).erase(resourceUniformBuffer.BindingIndex);
+    }
+
+    // Check if there are any missing binding indices.
+    for (const auto& [setIndex, missingBindings] : missingBindingIndices)
+    {
+        if (!missingBindings.empty())
+        {
+            SE_LOG_ERROR("The set with index '%d' has the following missing binding indices:", setIndex);
+            for (uint32 bindingIndex : missingBindings)
+            {
+                SE_LOG_ERROR(
+                    "  - [%d] (DescriptorType: %d)",
+                    bindingIndex, descriptorSetLayouts.at(setIndex).BindingDescriptorTypes.at(bindingIndex));
+            }
+            return false;
+        }
+    }
+    
     return true;
 }
 
