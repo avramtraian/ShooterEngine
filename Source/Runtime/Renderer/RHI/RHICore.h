@@ -17,6 +17,7 @@ class RenderPass;
 class RenderingDriver;
 class RenderingSurface;
 class Shader;
+class ShaderResource;
 class Texture2D;
 class VertexBuffer;
 
