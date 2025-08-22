@@ -3,88 +3,16 @@
 #pragma once
 
 #include <Runtime/Renderer/RHI/RHICore.h>
-
-#include <functional>
-#include <unordered_map>
-#include <unordered_set>
+#include <Runtime/Renderer/RHI/RHIObject.h>
 
 namespace SE
 {
 
-using ShaderResourceCallbackID = uint32;
-constexpr ShaderResourceCallbackID INVALID_SHADER_RESOURCE_CALLBACK_ID = 0;
-using PFN_ShaderResourcePreDestroyCallback = std::function<void(ShaderResource&)>;
-
-class ShaderResourcePreDestroyCallback
-{
-    SE_MAKE_NONCOPYABLE(ShaderResourcePreDestroyCallback);
-
-public:
-    ShaderResourcePreDestroyCallback() = default;
-    FORCEINLINE ~ShaderResourcePreDestroyCallback() { Release(); }
-
-    SHOOTER_API ShaderResourcePreDestroyCallback(const RefPtr<ShaderResource>& resource, PFN_ShaderResourcePreDestroyCallback callback);
-    SHOOTER_API ShaderResourcePreDestroyCallback(const RefPtr<ShaderResource>& resource, ShaderResourceCallbackID callbackID);
-
-    SHOOTER_API void Set(const RefPtr<ShaderResource>& resource, PFN_ShaderResourcePreDestroyCallback callback);
-    SHOOTER_API void Set(const RefPtr<ShaderResource>& resource, ShaderResourceCallbackID callbackID);
-
-    SHOOTER_API void Release();
-
-public:
-    FORCEINLINE ShaderResourcePreDestroyCallback(ShaderResourcePreDestroyCallback&& other) noexcept
-        : m_Resource(other.m_Resource)
-        , m_CallbackID(other.m_CallbackID)
-    {
-        other.m_Resource.Release();
-        other.m_CallbackID = INVALID_SHADER_RESOURCE_CALLBACK_ID;
-    }
-
-    FORCEINLINE ShaderResourcePreDestroyCallback& operator=(ShaderResourcePreDestroyCallback&& other) noexcept
-    {
-        // Handle self-assignment case.
-        if (this == &other)
-            return *this;
-
-        Release();
-
-        m_Resource = other.m_Resource;
-        m_CallbackID = other.m_CallbackID;
-        other.m_Resource.Release();
-        other.m_CallbackID = INVALID_SHADER_RESOURCE_CALLBACK_ID;
-
-        return *this;
-    }
-
-private:
-    WeakRefPtr<ShaderResource> m_Resource;
-    ShaderResourceCallbackID m_CallbackID { INVALID_SHADER_RESOURCE_CALLBACK_ID };
-};
-
-class ShaderResource : public RefCounted
+class ShaderResource : public RHIObject
 {
 public:
     ShaderResource() = default;
     virtual ~ShaderResource() override = default;
-
-    NODISCARD SHOOTER_API ShaderResourceCallbackID AddPreDestroyCallbackID(PFN_ShaderResourcePreDestroyCallback callback);
-    SHOOTER_API void RemovePreDestroyCallbackID(ShaderResourceCallbackID callbackID);
-
-    NODISCARD FORCEINLINE ShaderResourcePreDestroyCallback AddPreDestroyCallback(PFN_ShaderResourcePreDestroyCallback callback)
-    {
-        ShaderResourcePreDestroyCallback scopedCallback;
-        const ShaderResourceCallbackID callbackID = AddPreDestroyCallbackID(std::move(callback));
-        scopedCallback.Set(AdoptRef(this), callbackID);
-        return scopedCallback;
-    }
-
-protected:
-    SHOOTER_API void DispatchPreDestroyCallbacks();
-
-private:
-    std::unordered_map<ShaderResourceCallbackID, PFN_ShaderResourcePreDestroyCallback> m_PreDestroyCallbacks;
-    ShaderResourceCallbackID m_LastUsedCallbackID { INVALID_SHADER_RESOURCE_CALLBACK_ID };
-    std::unordered_set<ShaderResourceCallbackID> m_CallbacksToDispatch;
 };
 
 enum PipelineStageBitsEnum : uint64

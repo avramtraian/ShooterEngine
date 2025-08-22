@@ -190,7 +190,7 @@ VulkanUniformBuffer::VulkanUniformBuffer(const UniformBufferInfo& info)
 VulkanUniformBuffer::~VulkanUniformBuffer()
 {
     // Dispatch pre-destroy callbacks.
-    DispatchPreDestroyCallbacks();
+    DispatchCallbacksOfType(RHIObjectCallbackType::PreDestroy);
 
     // Destroy the Vulkan buffer.
     m_Buffer.Release();

@@ -54,8 +54,8 @@ void VulkanFramebuffer::Invalidate(const std::vector<RefPtr<Texture2D>>& texture
         framebufferAttachments.push_back(vulkanTexture->GetHandle().View);
 
         // Set the pre-destroy callbacks for textures.
-        m_TexturePreDestroyCallbacks.push_back(vulkanTexture->AddPreDestroyCallback(
-            [this](ShaderResource& resource)
+        m_TexturePreDestroyCallbacks.push_back(vulkanTexture->AddCallback(RHIObjectCallbackType::PreDestroy,
+            [this](RHIObject& resource)
             {
                 // NOTE(Traian): This should never happen because as long as the framebuffer is locked it holds strong references to the
                 // used textures, and thus the pre-destroy callback should never be dispatched. If this assert is triggered, it means that

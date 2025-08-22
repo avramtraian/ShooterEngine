@@ -67,7 +67,7 @@ private:
     struct BindingResource
     {
         WeakRefPtr<ShaderResource> Resource;
-        ShaderResourcePreDestroyCallback PreDestroyCallback;
+        RHIObjectCallback PreDestroyCallback;
     };
 
     // NOTE(Traian): The following container maps binding indices to the resoures that are actually bound at that location.

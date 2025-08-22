@@ -70,7 +70,7 @@ VulkanStorageTexture2D::VulkanStorageTexture2D(const Texture2DInfo& info)
 VulkanStorageTexture2D::~VulkanStorageTexture2D()
 {
     // Dispatch the pre-destroy callbacks.
-    DispatchPreDestroyCallbacks();
+    DispatchCallbacksOfType(RHIObjectCallbackType::PreDestroy);
 
     // Destroy the sampler.
     vkDestroySampler(g_VulkanDriver->GetDevice(), m_Sampler.Handle, nullptr);
@@ -318,7 +318,7 @@ VulkanSwapchainTexture2D::VulkanSwapchainTexture2D(const RefPtr<VulkanSwapchain>
 VulkanSwapchainTexture2D::~VulkanSwapchainTexture2D()
 {
     // Dispatch the pre-destroy callbacks.
-    DispatchPreDestroyCallbacks();
+    DispatchCallbacksOfType(RHIObjectCallbackType::PreDestroy);
 
     m_Swapchain.Release();
     m_ImageIndex = 0;

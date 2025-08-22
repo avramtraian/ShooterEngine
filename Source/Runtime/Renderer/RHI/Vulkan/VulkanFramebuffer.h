@@ -50,7 +50,7 @@ private:
     StrongRefPtr<VulkanRenderPass> m_LockedParentRenderPass;
 
     std::vector<WeakRefPtr<VulkanTexture2D>> m_Textures;
-    std::vector<ShaderResourcePreDestroyCallback> m_TexturePreDestroyCallbacks;
+    std::vector<RHIObjectCallback> m_TexturePreDestroyCallbacks;
     std::vector<StrongRefPtr<VulkanTexture2D>> m_LockedTextures;
 };
 

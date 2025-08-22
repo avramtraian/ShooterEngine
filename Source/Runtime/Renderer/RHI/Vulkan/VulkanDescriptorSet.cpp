@@ -67,8 +67,8 @@ void VulkanDescriptorSet::UpdateBindings(const std::unordered_map<uint32, RefPtr
             continue;
 
         m_BindingResources[bindingIndex].Resource = resource;
-        m_BindingResources[bindingIndex].PreDestroyCallback = m_BindingResources[bindingIndex].Resource->AddPreDestroyCallback(
-            [this, bindingIndex](ShaderResource& resourceToBeDestroyed)
+        m_BindingResources[bindingIndex].PreDestroyCallback = m_BindingResources[bindingIndex].Resource->AddCallback(RHIObjectCallbackType::PreDestroy,
+            [this, bindingIndex](RHIObject& resourceToBeDestroyed)
             {
                 // NOTE(Traian): Since the descriptor set holds strong references of the bound resources while it is locked, this
                 // assert should never fail. If however it does fail, it most likely means that the 'm_BindingResources' and
