@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/LockPtr.h>
 #include <Runtime/Renderer/RHI/CommandList.h>
 #include <Runtime/Renderer/RHI/ShaderResource.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
@@ -25,7 +26,7 @@ enum class DescriptorSetCompatibility : uint8
     // WorthUpdating,
 };
 
-class VulkanDescriptorSet
+class VulkanDescriptorSet : public LockCounted
 {
 public:
     VulkanDescriptorSet(VkDescriptorPool descriptorPool, uint32 setIndex, const VulkanDescriptorSetLayout& setLayout, const WeakRefPtr<VulkanShader>& parentShader);
@@ -35,8 +36,6 @@ public:
     NODISCARD FORCEINLINE VkDescriptorSet GetHandle() const { return m_DescriptorSet; }
     NODISCARD FORCEINLINE VkDescriptorSetLayout GetLayout() const { return m_DescriptorSetLayout.Handle; }
     NODISCARD FORCEINLINE uint32 GetSetIndex() const { return m_SetIndex; }
-    NODISCARD FORCEINLINE bool IsLocked() const { return (m_LockCount > 0); }
-    NODISCARD FORCEINLINE bool IsUnlocked() const { return (m_LockCount == 0); }
 
     NODISCARD DescriptorSetCompatibility IsCompatibleWithBindings(const std::unordered_map<uint32, RefPtr<ShaderResource>>& bindings) const;
     void UpdateBindings(const std::unordered_map<uint32, RefPtr<ShaderResource>>& bindings);
@@ -44,14 +43,14 @@ public:
     NODISCARD std::vector<uint32> GetMissingBindingIndices() const;
     NODISCARD bool IsComplete() const;
 
-    void IncrementLockCount();
-    void DecrementLockCount();
+protected:
+    virtual void OnLock() override;
+    virtual void OnUnlock() override;
 
 private:
     VkDescriptorSet m_DescriptorSet;
     uint32 m_SetIndex;
     VkDescriptorPool m_DescriptorPool;
-    uint32 m_LockCount;
 
     // NOTE(Traian): Since descriptor sets are owned by a descriptor set manager which in turn is owned by the parent shader, we can
     // be certain that as long as this descriptor set is alive (the instance hasn't been deleted) the shader is also alive. We use

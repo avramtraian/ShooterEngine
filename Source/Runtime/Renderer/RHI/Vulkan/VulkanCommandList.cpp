@@ -57,24 +57,13 @@ VulkanCommandList::~VulkanCommandList()
 
 void VulkanCommandList::ReleaseObjectReferences()
 {
-    // Release framebuffers that were bound.
-    for (VulkanFramebuffer* framebuffer : m_UsedFramebuffers)
-        framebuffer->DecrementLockCount();
-    m_UsedFramebuffers.clear();
-
-    // Release pipelines that were bound.
-    for (VulkanPipeline* pipeline : m_UsedPipelines)
-        pipeline->DecrementLockCount();
-    m_UsedPipelines.clear();
-
-    // Release descriptor sets that were bound.
-    for (VulkanDescriptorSet* descriptorSet : m_UsedDescriptorSets)
-        descriptorSet->DecrementLockCount();
-    m_UsedDescriptorSets.clear();
-
     m_UsedRenderPasses.clear();
     m_UsedVertexBuffers.clear();
     m_UsedIndexBuffers.clear();
+
+    m_UsedFramebuffers.clear();
+    m_UsedPipelines.clear();
+    m_UsedDescriptorSets.clear();
 
     // Release textures that were transitioned.
     m_TransitionedTextures.clear();
@@ -212,7 +201,6 @@ void VulkanCommandList::BeginRenderPass(const RefPtr<RenderPass>& renderPass, co
     }
 
     m_ActiveFramebuffer = m_ActiveRenderPass->AcquireCompatibleFramebuffer(beginInfo);
-    m_ActiveFramebuffer->IncrementLockCount();
     m_UsedFramebuffers.push_back(m_ActiveFramebuffer);
 
     VkRenderPassBeginInfo renderPassBeginInfo = {}; 
@@ -241,7 +229,6 @@ void VulkanCommandList::EndRenderPass()
 void VulkanCommandList::BindGraphicsState(const GraphicsState& graphicsState, const RefPtr<Shader>& shader)
 {
     m_ActivePipeline = m_ActiveRenderPass->AcquireCompatiblePipeline(graphicsState, shader);
-    m_ActivePipeline->IncrementLockCount();
     m_UsedPipelines.push_back(m_ActivePipeline);
 
     vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_ActivePipeline->GetHandle());
@@ -405,8 +392,6 @@ void VulkanCommandList::BindShaderResources(const ShaderResourcesBindPack& bindP
     }
 
     std::vector<VulkanDescriptorSet*> descriptorSets = activeShader->GetDescriptorSetManager().AcquireDescriptorSets(bindPack);
-    for (VulkanDescriptorSet* descriptorSet : descriptorSets)
-        descriptorSet->IncrementLockCount();
 
     std::vector<VkDescriptorSet> descriptorSetHandles;
     descriptorSetHandles.reserve(descriptorSets.size());
@@ -460,12 +445,12 @@ void VulkanCommandList::BindIndexBuffer(const RefPtr<IndexBuffer>& indexBuffer)
 void VulkanCommandList::DrawIndexed(uint32 firstIndex, uint32 indexCount)
 {
     /* Validate command list state. */
-    if (!m_ActiveRenderPass.IsValid() || m_ActiveFramebuffer == nullptr)
+    if (!m_ActiveRenderPass.IsValid() || !m_ActiveFramebuffer.IsValid())
     {
         SE_LOG_ERROR("Trying to call DrawIndexed without a render pass being active!");
         return;
     }
-    if (!m_ActivePipeline)
+    if (!m_ActivePipeline.IsValid())
     {
         SE_LOG_ERROR("Trying to call DrawIndexed without a graphics state being bound!");
         return;

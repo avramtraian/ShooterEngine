@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/LockPtr.h>
 #include <Runtime/Renderer/RHI/CommandList.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanDescriptorSet.h>
@@ -60,17 +61,17 @@ private:
     CommandListFamily m_Family;
 
     RefPtr<VulkanRenderPass> m_ActiveRenderPass;
+    LockPtr<VulkanFramebuffer> m_ActiveFramebuffer;
+    LockPtr<VulkanPipeline> m_ActivePipeline;
+
     std::vector<RefPtr<VulkanRenderPass>> m_UsedRenderPasses;
-
-    VulkanFramebuffer* m_ActiveFramebuffer;
-    std::vector<VulkanFramebuffer*> m_UsedFramebuffers;
-    
-    VulkanPipeline* m_ActivePipeline;
-    std::vector<VulkanPipeline*> m_UsedPipelines;
-
     std::vector<RefPtr<VulkanVertexBuffer>> m_UsedVertexBuffers;
     std::vector<RefPtr<VulkanIndexBuffer>> m_UsedIndexBuffers;
-    std::vector<VulkanDescriptorSet*> m_UsedDescriptorSets;
+
+    std::vector<LockPtr<VulkanFramebuffer>> m_UsedFramebuffers;
+    std::vector<LockPtr<VulkanPipeline>> m_UsedPipelines;
+    std::vector<LockPtr<VulkanDescriptorSet>> m_UsedDescriptorSets;
+
     bool m_IsVertexBufferBound;
     bool m_IsIndexBufferBound;
 

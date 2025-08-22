@@ -8,7 +8,6 @@ namespace SE
 
 VulkanFramebuffer::VulkanFramebuffer(const WeakRefPtr<VulkanRenderPass>& parentRenderPass)
     : m_Handle(VK_NULL_HANDLE)
-    , m_LockCount(0)
     , m_ParentRenderPass(parentRenderPass)
 {}
 
@@ -125,44 +124,33 @@ bool VulkanFramebuffer::IsCompatibleWithRenderPassBeginInfo(const RenderPassBegi
     return true;
 }
 
-void VulkanFramebuffer::IncrementLockCount()
+void VulkanFramebuffer::OnLock()
 {
-    if (!IsLocked())
+    // Acquire strong reference for the parent render pass.
+    SE_ASSERT(m_ParentRenderPass.IsValid());
+    m_LockedParentRenderPass = m_ParentRenderPass;
+
+    // Acquire strong references for the textures.
+    SE_ASSERT(m_LockedTextures.empty());
+    m_LockedTextures.reserve(m_Textures.size());
+
+    for (const auto& texture : m_Textures)
     {
-        // Acquire strong reference for the parent render pass.
-        SE_ASSERT(m_ParentRenderPass.IsValid());
-        m_LockedParentRenderPass = m_ParentRenderPass;
-
-        // Acquire strong references for the textures.
-        SE_ASSERT(m_LockedTextures.empty());
-        m_LockedTextures.reserve(m_Textures.size());
-
-        for (const auto& texture : m_Textures)
-        {
-            // NOTE(Traian): Since the framebuffer can only be locked by a command list when the owning render pass
-            // is bound the texture is _always_ strong referenced by the 'RenderPassBeginInfo' structure (otherwise
-            // this framebuffer wouldn't be selected).
-            SE_ASSERT(texture.IsValid());
-            m_LockedTextures.push_back(texture);
-        }
+        // NOTE(Traian): Since the framebuffer can only be locked by a command list when the owning render pass
+        // is bound the texture is _always_ strong referenced by the 'RenderPassBeginInfo' structure (otherwise
+        // this framebuffer wouldn't be selected).
+        SE_ASSERT(texture.IsValid());
+        m_LockedTextures.push_back(texture);
     }
-
-    ++m_LockCount;
 }
 
-void VulkanFramebuffer::DecrementLockCount()
+void VulkanFramebuffer::OnUnlock()
 {
-    SE_ASSERT(m_LockCount > 0);
-    --m_LockCount;
+    // Release the strong references for the textures.
+    m_LockedTextures.clear();
 
-    if (!IsLocked())
-    {
-        // Release the strong references for the textures.
-        m_LockedTextures.clear();
-
-        // Release the strong reference for the parent render pass.
-        m_LockedParentRenderPass.Release();
-    }
+    // Release the strong reference for the parent render pass.
+    m_LockedParentRenderPass.Release();
 }
 
 }

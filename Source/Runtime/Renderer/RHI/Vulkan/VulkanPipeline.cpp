@@ -57,7 +57,6 @@ static VkFormat GetVertexInputAttributeFormat(GraphicsVertexInputAttributeType t
 
 VulkanPipeline::VulkanPipeline(const WeakRefPtr<VulkanRenderPass>& parentRenderPass)
     : m_Handle(VK_NULL_HANDLE)
-    , m_LockCount(0)
     , m_ParentRenderPass(parentRenderPass)
 {}
 
@@ -325,37 +324,6 @@ void VulkanPipeline::Destroy()
     m_GraphicsState = {};
 }
 
-void VulkanPipeline::IncrementLockCount()
-{
-    if (IsUnlocked())
-    {
-        // Acquire strong reference for the parent render pass.
-        SE_ASSERT(m_ParentRenderPass.IsValid());
-        m_LockedParentRenderPass = m_ParentRenderPass;
-
-        // Acquire strong reference for the used shader.
-        SE_ASSERT(m_Shader.IsValid());
-        m_LockedShader = m_Shader;
-    } 
-
-    ++m_LockCount;
-}
-
-void VulkanPipeline::DecrementLockCount()
-{
-    SE_ASSERT(IsLocked());
-    --m_LockCount;
-
-    if (IsUnlocked())
-    {
-        // Release the strong reference for the used shader.
-        m_LockedShader.Release();
-
-        // Release the strong reference for the parent render pass.
-        m_LockedParentRenderPass.Release();
-    }
-}
-
 bool VulkanPipeline::IsCompatibleWithGraphicsStateAndShader(const GraphicsState& graphicsState, const RefPtr<Shader>& shader) const
 {
     // Check if the shaders are the same.
@@ -387,6 +355,26 @@ bool VulkanPipeline::IsCompatibleWithGraphicsStateAndShader(const GraphicsState&
     if (m_GraphicsState.EnableBlending       != graphicsState.EnableBlending)       { return false; }
 
     return true;
+}
+
+void VulkanPipeline::OnLock()
+{
+    // Acquire strong reference for the parent render pass.
+    SE_ASSERT(m_ParentRenderPass.IsValid());
+    m_LockedParentRenderPass = m_ParentRenderPass;
+
+    // Acquire strong reference for the used shader.
+    SE_ASSERT(m_Shader.IsValid());
+    m_LockedShader = m_Shader;
+}
+
+void VulkanPipeline::OnUnlock()
+{
+    // Release the strong reference for the used shader.
+    m_LockedShader.Release();
+
+    // Release the strong reference for the parent render pass.
+    m_LockedParentRenderPass.Release();
 }
 
 }

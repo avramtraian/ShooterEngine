@@ -12,7 +12,6 @@ VulkanDescriptorSet::VulkanDescriptorSet(VkDescriptorPool descriptorPool, uint32
     : m_DescriptorSet(VK_NULL_HANDLE)
     , m_SetIndex(setIndex)
     , m_DescriptorPool(descriptorPool)
-    , m_LockCount(0)
     , m_ParentShader(parentShader)
     , m_DescriptorSetLayout(setLayout)
 {
@@ -144,39 +143,31 @@ bool VulkanDescriptorSet::IsComplete() const
     return true;
 }
 
-void VulkanDescriptorSet::IncrementLockCount()
+void VulkanDescriptorSet::OnLock()
 {
-    if (IsUnlocked())
+    // Acquire strong reference for the parent shader (that owns the parent descriptor set managed and, in turn, this descriptor set).
+    SE_ASSERT(!m_LockedParentShader.IsValid());
+    SE_ASSERT(m_ParentShader.IsValid());
+    m_LockedParentShader = m_ParentShader;
+
+    // Acquire strong references for the resources used by the descriptor set.
+    SE_ASSERT(m_LockedResources.empty());
+    m_LockedResources.reserve(m_BindingResources.size());
+
+    for (auto& [bindingIndex, resource] : m_BindingResources)
     {
-        // Lock the resources used by the descriptor set.
-        SE_ASSERT(m_LockedResources.empty());
-        m_LockedResources.reserve(m_BindingResources.size());
-
-        for (auto& [bindingIndex, resource] : m_BindingResources)
-        {
-            RefPtr<ShaderResource> trackedResource = RefPtr<ShaderResource>(resource.Resource);
-            m_LockedResources.push_back(std::move(trackedResource));
-        }
-
-        // Lock the parent shader (that owns the parent descriptor set managed and, in turn, this descriptor set).
-        SE_ASSERT(!m_LockedParentShader.IsValid());
-        SE_ASSERT(m_ParentShader.IsValid());
-        m_LockedParentShader = m_ParentShader;
+        RefPtr<ShaderResource> trackedResource = RefPtr<ShaderResource>(resource.Resource);
+        m_LockedResources.push_back(std::move(trackedResource));
     }
-
-    ++m_LockCount;
 }
 
-void VulkanDescriptorSet::DecrementLockCount()
+void VulkanDescriptorSet::OnUnlock()
 {
-    SE_ASSERT(IsLocked());
-    --m_LockCount;
+    // Release the strong references for the resources.
+    m_LockedResources.clear();
 
-    if (IsUnlocked())
-    {
-        m_LockedResources.clear();
-        m_LockedParentShader.Release();
-    }
+    // Release the strong reference for the parent shader.
+    m_LockedParentShader.Release();
 }
 
 }

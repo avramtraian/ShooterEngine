@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/LockPtr.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanTexture.h>
 
@@ -11,7 +12,7 @@
 namespace SE
 {
 
-class VulkanFramebuffer
+class VulkanFramebuffer : public LockCounted
 {
 public:
     VulkanFramebuffer(const WeakRefPtr<VulkanRenderPass>& parentRenderPass);
@@ -23,15 +24,8 @@ public:
 
     NODISCARD bool IsCompatibleWithRenderPassBeginInfo(const RenderPassBeginInfo& beginInfo) const;
 
-    void IncrementLockCount();
-    void DecrementLockCount();
-
 public:
     NODISCARD FORCEINLINE VkFramebuffer GetHandle() const { return m_Handle; }
-
-    NODISCARD FORCEINLINE uint32 GetLockCount() const { return m_LockCount; }
-    NODISCARD FORCEINLINE bool IsLocked() const { return (m_LockCount > 0); }
-    NODISCARD FORCEINLINE bool IsUnlocked() const { return (m_LockCount == 0); }
 
     NODISCARD FORCEINLINE uint32 GetSizeX() const
     {
@@ -45,9 +39,12 @@ public:
         return m_Textures.front()->GetSizeY();
     }
 
+protected:
+    virtual void OnLock() override;
+    virtual void OnUnlock() override;
+
 private:
     VkFramebuffer m_Handle;
-    uint32 m_LockCount;
 
     WeakRefPtr<VulkanRenderPass> m_ParentRenderPass;
     StrongRefPtr<VulkanRenderPass> m_LockedParentRenderPass;
