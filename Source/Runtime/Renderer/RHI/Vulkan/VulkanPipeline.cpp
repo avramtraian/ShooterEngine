@@ -55,33 +55,81 @@ static VkFormat GetVertexInputAttributeFormat(GraphicsVertexInputAttributeType t
     return VK_FORMAT_UNDEFINED;
 }
 
-VulkanPipeline::VulkanPipeline(const GraphicsState& graphicsState, VkRenderPass renderPassHandle, uint32 colorAttachmentCount)
+VulkanPipeline::VulkanPipeline()
     : m_Handle(VK_NULL_HANDLE)
-    , m_GraphicsState(graphicsState)
-{
-    InvalidatePipeline(renderPassHandle, colorAttachmentCount);
-}
+    , m_LockCount(0)
+{}
 
 VulkanPipeline::~VulkanPipeline()
 {
-    /* Destroy the graphics pipeline object. */
-    vkDestroyPipeline(g_VulkanDriver->GetDevice(), m_Handle, nullptr);
-    m_Handle = VK_NULL_HANDLE;
-
-    /* Invalidate the graphics state. */
-    m_GraphicsState = {};
+    Destroy();
 }
 
-void VulkanPipeline::InvalidatePipeline(VkRenderPass renderPassHandle, uint32 colorAttachmentCount)
+VkPipeline VulkanPipeline::GetHandle() const
 {
-    RefPtr<VulkanShader> shader = m_GraphicsState.Shader.As<VulkanShader>();
+    if (!IsLocked())
+    {
+        SE_LOG_ERROR("Trying to get the handle of a Vulkan pipeline that is not locked!");
+        SE_ASSERT_NOT_REACHED;
+        return VK_NULL_HANDLE;
+    }
+
+    return m_Handle;
+}
+
+const GraphicsState& VulkanPipeline::GetGraphicsState() const
+{
+    if (!IsLocked())
+    {
+        SE_LOG_ERROR("Trying to get the graphics state of a Vulkan pipeline that is not locked!");
+        SE_ASSERT_NOT_REACHED;
+    }
+
+    return m_GraphicsState;
+}
+
+RefPtr<VulkanShader> VulkanPipeline::GetShader() const
+{
+    if (!IsLocked())
+    {
+        SE_LOG_ERROR("Trying to get the shader of a Vulkan pipeline that is not locked!");
+        SE_ASSERT_NOT_REACHED;
+        return {};
+    }
+
+    return m_LockedShader;
+}
+
+void VulkanPipeline::Invalidate(const GraphicsState& graphicsState, const RefPtr<Shader>& shader, VkRenderPass renderPassHandle, uint32 colorAttachmentCount)
+{
+    if (IsLocked())
+    {
+        SE_LOG_ERROR("Trying to invalidate a Vulkan pipeline that is locked!");
+        SE_ASSERT_NOT_REACHED;
+        return;
+    }
+
+    // Destroy the old pipeline.
+    Destroy();
+
+    // Set the new graphics state.
+    m_GraphicsState = graphicsState;
+
+    // Set the new shader.
     SE_ASSERT(shader.IsValid());
-    VkPipelineLayout pipelineLayout = shader->GetPipelineLayout();
+    m_Shader = shader.As<VulkanShader>();
+    m_ShaderPreDestroyCallback = m_Shader->AddCallback(RHIObjectCallbackType::PreDestroy,
+        [this](RHIObject& object)
+        {
+            SE_ASSERT(IsUnlocked());
+            Destroy();
+        }
+    );
 
     std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-    shaderStages.reserve(shader->GetModuleCount());
+    shaderStages.reserve(m_Shader->GetModuleCount());
 
-    for (const VulkanShader::Module& module : shader->GetModules())
+    for (const VulkanShader::Module& module : m_Shader->GetModules())
     {
         VkPipelineShaderStageCreateInfo& stageCreateInfo = shaderStages.emplace_back();
         stageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -157,8 +205,8 @@ void VulkanPipeline::InvalidatePipeline(VkRenderPass renderPassHandle, uint32 co
     defaultScissor.extent.width = 0;
     defaultScissor.extent.height = 0;
 
-    /* NOTE(Traian): The viewport state is created as dynamic and thus it is correctly set when the render pass begins,
-     * as the target framebuffer is known and its dimensions are available. */
+    // NOTE(Traian): The viewport state is created as dynamic and thus it is correctly set when the render pass begins,
+    // as the target framebuffer is known and its dimensions are available.
     VkPipelineViewportStateCreateInfo viewportState = {};
     viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     viewportState.viewportCount = 1;
@@ -246,19 +294,62 @@ void VulkanPipeline::InvalidatePipeline(VkRenderPass renderPassHandle, uint32 co
     graphicsPipelineCreateInfo.pDepthStencilState = &depthStencilState;
     graphicsPipelineCreateInfo.pColorBlendState = &colorBlendState;
     graphicsPipelineCreateInfo.pDynamicState = &dynamicState;
-    graphicsPipelineCreateInfo.layout = pipelineLayout;
+    graphicsPipelineCreateInfo.layout = m_Shader->GetPipelineLayout();
     graphicsPipelineCreateInfo.renderPass = renderPassHandle;
     graphicsPipelineCreateInfo.subpass = 0;
     graphicsPipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-    /* Create the graphics pipeline object. */
+    // Create the graphics pipeline object.
     SE_VULKAN_CHECK(vkCreateGraphicsPipelines(g_VulkanDriver->GetDevice(), VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, nullptr, &m_Handle));
 }
 
-bool VulkanPipeline::IsCompatibleWithGraphicsState(const GraphicsState& graphicsState) const
+void VulkanPipeline::Destroy()
+{
+    if (IsLocked())
+    {
+        SE_LOG_ERROR("Trying to destroy a Vulkan pipeline that is locked!");
+        SE_ASSERT_NOT_REACHED;
+        return;
+    }
+
+    // Release the held weak-reference of the shader.
+    m_Shader.Release();
+    m_ShaderPreDestroyCallback.Release();
+
+    // Destroy the graphics pipeline object.
+    vkDestroyPipeline(g_VulkanDriver->GetDevice(), m_Handle, nullptr);
+    m_Handle = VK_NULL_HANDLE;
+
+    // Invalidate the graphics state.
+    m_GraphicsState = {};
+}
+
+void VulkanPipeline::IncrementLockCount()
+{
+    if (IsUnlocked())
+    {
+        SE_ASSERT(m_Shader.IsValid());
+        m_LockedShader = m_Shader;
+    } 
+
+    ++m_LockCount;
+}
+
+void VulkanPipeline::DecrementLockCount()
+{
+    SE_ASSERT(IsLocked());
+    --m_LockCount;
+
+    if (IsUnlocked())
+    {
+        m_LockedShader.Release();
+    }
+}
+
+bool VulkanPipeline::IsCompatibleWithGraphicsStateAndShader(const GraphicsState& graphicsState, const RefPtr<Shader>& shader) const
 {
     // Check if the shaders are the same.
-    if (m_GraphicsState.Shader.Get() != graphicsState.Shader.Get())
+    if (m_Shader != shader)
         return false;
     
     // Check if the vertex input layouts are the same.

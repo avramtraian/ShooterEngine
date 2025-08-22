@@ -4,6 +4,7 @@
 
 #include <Runtime/Core/Containers/VectorView.h>
 #include <Runtime/Renderer/RHI/RHICore.h>
+#include <Runtime/Renderer/RHI/RHIObject.h>
 #include <Runtime/Renderer/ShaderCompiler/ShaderReflectionData.h>
 #include <Runtime/Renderer/ShaderCompiler/ShaderStage.h>
 
@@ -35,7 +36,7 @@ public:
     inline ShaderInfo& AddStage (ShaderStageInfo stage) { Stages.push_back(std::move(stage)); return *this; }
 };
 
-class Shader : public RefCounted
+class Shader : public RHIObject
 {
     SE_MAKE_RENDERER_RHI_INTERFACE(Shader);
 };

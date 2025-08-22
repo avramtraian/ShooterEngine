@@ -3,7 +3,9 @@
 #pragma once
 
 #include <Runtime/Renderer/RHI/RHICore.h>
-#include <Runtime/Renderer/RHI/Shader.h>
+
+#include <string>
+#include <vector>
 
 namespace SE
 {
@@ -68,7 +70,6 @@ enum class GraphicsFrontFace : uint8
 class GraphicsState
 {
 public:
-    RefPtr<Shader>            Shader;
     GraphicsVertexInputLayout VertexInputLayout;
     GraphicsTopology          Topology             { GraphicsTopology::Unknown };
     GraphicsCullMode          CullMode             { GraphicsCullMode::Disabled };
@@ -78,7 +79,6 @@ public:
     bool                      EnableBlending       { true };
 
 public:
-    inline GraphicsState& SetShader                    (RefPtr<class Shader> shader)      { Shader = std::move(shader);                                       return *this; }
     inline GraphicsState& SetVertexInputLayout         (GraphicsVertexInputLayout layout) { VertexInputLayout = std::move(layout);                            return *this; }
     inline GraphicsState& SetTopology                  (GraphicsTopology topology)        { Topology = topology;                                              return *this; }
     inline GraphicsState& SetCullMode                  (GraphicsCullMode cullMode)        { CullMode = cullMode;                                              return *this; }

@@ -39,7 +39,7 @@ public:
 
 public:
     NODISCARD VulkanFramebuffer* AcquireCompatibleFramebuffer(const RenderPassBeginInfo& beginInfo);
-    NODISCARD RefPtr<VulkanPipeline> AcquireCompatiblePipeline(const GraphicsState& graphicsState);
+    NODISCARD VulkanPipeline* AcquireCompatiblePipeline(const GraphicsState& graphicsState, const RefPtr<Shader>& shader);
 
 private:
     VkRenderPass m_Handle;
@@ -54,7 +54,7 @@ private:
 
     struct CachedPipeline
     {
-        RefPtr<VulkanPipeline> Pipeline;
+        std::unique_ptr<VulkanPipeline> Pipeline;
         uint32 NumberOfFramesSinceLastUse { 0 };
     };
 

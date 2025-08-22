@@ -57,6 +57,21 @@ VulkanCommandList::~VulkanCommandList()
 
 void VulkanCommandList::ReleaseObjectReferences()
 {
+    // Release framebuffers that were bound.
+    for (VulkanFramebuffer* framebuffer : m_UsedFramebuffers)
+        framebuffer->DecrementLockCount();
+    m_UsedFramebuffers.clear();
+
+    // Release pipelines that were bound.
+    for (VulkanPipeline* pipeline : m_UsedPipelines)
+        pipeline->DecrementLockCount();
+    m_UsedPipelines.clear();
+
+    // Release descriptor sets that were bound.
+    for (VulkanDescriptorSet* descriptorSet : m_UsedDescriptorSets)
+        descriptorSet->DecrementLockCount();
+    m_UsedDescriptorSets.clear();
+
     m_UsedRenderPasses.clear();
     m_UsedVertexBuffers.clear();
     m_UsedIndexBuffers.clear();
@@ -66,16 +81,6 @@ void VulkanCommandList::ReleaseObjectReferences()
 
     // Release the used staging buffers.
     m_StagingBuffers.clear();
-
-    // Release framebuffers that were bound.
-    for (VulkanFramebuffer* framebuffer : m_UsedFramebuffers)
-        framebuffer->DecrementLockCount();
-    m_UsedFramebuffers.clear();
-
-    // Release descriptor sets that were bound.
-    for (VulkanDescriptorSet* descriptorSet : m_UsedDescriptorSets)
-        descriptorSet->DecrementLockCount();
-    m_UsedDescriptorSets.clear();
 }
 
 void VulkanCommandList::Begin()
@@ -233,9 +238,12 @@ void VulkanCommandList::EndRenderPass()
     m_ActivePipeline = nullptr;
 }
 
-void VulkanCommandList::BindGraphicsState(const GraphicsState& graphicsState)
+void VulkanCommandList::BindGraphicsState(const GraphicsState& graphicsState, const RefPtr<Shader>& shader)
 {
-    m_ActivePipeline = m_ActiveRenderPass->AcquireCompatiblePipeline(graphicsState);
+    m_ActivePipeline = m_ActiveRenderPass->AcquireCompatiblePipeline(graphicsState, shader);
+    m_ActivePipeline->IncrementLockCount();
+    m_UsedPipelines.push_back(m_ActivePipeline);
+
     vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_ActivePipeline->GetHandle());
 
     VkViewport viewport = {};
@@ -376,7 +384,7 @@ bool VulkanCommandList::ValidateShaderResourcesBindPack(const RefPtr<VulkanShade
 
 void VulkanCommandList::BindShaderResources(const ShaderResourcesBindPack& bindPack)
 {
-    RefPtr<VulkanShader> activeShader = m_ActivePipeline->GetGraphicsState().Shader.As<VulkanShader>();
+    RefPtr<VulkanShader> activeShader = m_ActivePipeline->GetShader();
     if (!ValidateShaderResourcesBindPack(activeShader, bindPack))
         return;
 
@@ -457,7 +465,7 @@ void VulkanCommandList::DrawIndexed(uint32 firstIndex, uint32 indexCount)
         SE_LOG_ERROR("Trying to call DrawIndexed without a render pass being active!");
         return;
     }
-    if (!m_ActivePipeline.IsValid())
+    if (!m_ActivePipeline)
     {
         SE_LOG_ERROR("Trying to call DrawIndexed without a graphics state being bound!");
         return;

@@ -141,6 +141,9 @@ VulkanShader::VulkanShader(const ShaderInfo& info)
 
 VulkanShader::~VulkanShader()
 {
+    // Dispatch the pre-destroy callbacks.
+    DispatchCallbacksOfType(RHIObjectCallbackType::PreDestroy);
+
     // Destroy the descriptor set manager.
     m_DescriptorSetManager = nullptr;
 

@@ -4,30 +4,45 @@
 
 #include <Runtime/Renderer/RHI/GraphicsState.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanShader.h>
 
 #include <memory>
 
 namespace SE
 {
 
-class VulkanPipeline : public RefCounted
+class VulkanPipeline
 {
 public:
-    VulkanPipeline(const GraphicsState& graphicsState, VkRenderPass renderPassHandle, uint32 colorAttachmentCount);
-    virtual ~VulkanPipeline() override;
+    VulkanPipeline();
+    ~VulkanPipeline();
 
 public:
-    NODISCARD FORCEINLINE VkPipeline GetHandle() const { return m_Handle; }
-    NODISCARD FORCEINLINE const GraphicsState& GetGraphicsState() const { return m_GraphicsState; }
+    NODISCARD VkPipeline GetHandle() const;
+    NODISCARD const GraphicsState& GetGraphicsState() const;
+    NODISCARD RefPtr<VulkanShader> GetShader() const;
 
-    NODISCARD bool IsCompatibleWithGraphicsState(const GraphicsState& graphicsState) const;
+    NODISCARD FORCEINLINE uint32 GetLockCount() const { return m_LockCount; }
+    NODISCARD FORCEINLINE bool IsLocked() const { return (m_LockCount > 0); }
+    NODISCARD FORCEINLINE bool IsUnlocked() const { return (m_LockCount == 0); }
 
-private:
-    void InvalidatePipeline(VkRenderPass renderPassHandle, uint32 colorAttachmentCount);
+    void Invalidate(const GraphicsState& graphicsState, const RefPtr<Shader>& shader, VkRenderPass renderPassHandle, uint32 colorAttachmentCount);
+    void Destroy();
+    NODISCARD FORCEINLINE bool IsValid() const { return (m_Handle != VK_NULL_HANDLE); }
+
+    void IncrementLockCount();
+    void DecrementLockCount();
+
+    NODISCARD bool IsCompatibleWithGraphicsStateAndShader(const GraphicsState& graphicsState, const RefPtr<Shader>& shader) const;
 
 private:
     VkPipeline m_Handle;
+    uint32 m_LockCount;
     GraphicsState m_GraphicsState;
+
+    WeakRefPtr<VulkanShader> m_Shader;
+    StrongRefPtr<VulkanShader> m_LockedShader;
+    RHIObjectCallback m_ShaderPreDestroyCallback;
 };
 
 }

@@ -5,6 +5,7 @@
 #include <Runtime/Renderer/RHI/RenderPass.h>
 #include <Runtime/Renderer/RHI/Buffer.h>
 #include <Runtime/Renderer/RHI/Synchronization.h>
+#include <Runtime/Renderer/RHI/Shader.h>
 #include <Runtime/Renderer/RHI/Texture.h>
 
 namespace SE
@@ -157,7 +158,7 @@ public:
     virtual void BeginRenderPass(const RefPtr<RenderPass>& renderPass, const RenderPassBeginInfo& beginInfo) = 0;
     virtual void EndRenderPass() = 0;
 
-    virtual void BindGraphicsState(const GraphicsState& graphicsState) = 0;
+    virtual void BindGraphicsState(const GraphicsState& graphicsState, const RefPtr<Shader>& shader) = 0;
 
     virtual void BindShaderResources(const ShaderResourcesBindPack& bindInfo) = 0;
 

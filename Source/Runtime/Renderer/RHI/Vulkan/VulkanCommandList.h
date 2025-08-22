@@ -25,7 +25,7 @@ public:
     virtual void BeginRenderPass(const RefPtr<RenderPass>& renderPass, const RenderPassBeginInfo& beginInfo) override;
     virtual void EndRenderPass() override;
 
-    virtual void BindGraphicsState(const GraphicsState& graphicsState) override;
+    virtual void BindGraphicsState(const GraphicsState& graphicsState, const RefPtr<Shader>& shader) override;
 
     virtual void BindShaderResources(const ShaderResourcesBindPack& bindPack) override;
 
@@ -65,7 +65,8 @@ private:
     VulkanFramebuffer* m_ActiveFramebuffer;
     std::vector<VulkanFramebuffer*> m_UsedFramebuffers;
     
-    RefPtr<VulkanPipeline> m_ActivePipeline;
+    VulkanPipeline* m_ActivePipeline;
+    std::vector<VulkanPipeline*> m_UsedPipelines;
 
     std::vector<RefPtr<VulkanVertexBuffer>> m_UsedVertexBuffers;
     std::vector<RefPtr<VulkanIndexBuffer>> m_UsedIndexBuffers;
