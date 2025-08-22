@@ -161,6 +161,8 @@ VulkanFramebuffer* VulkanRenderPass::AcquireCompatibleFramebuffer(const RenderPa
 
 VulkanPipeline* VulkanRenderPass::AcquireCompatiblePipeline(const GraphicsState& graphicsState, const RefPtr<Shader>& shader)
 {
+    VulkanPipeline* invalidPipeline = nullptr;
+
     // Check if a compatible pipeline already exists.
     for (auto& cachedPipeline : m_CachedPipelines)
     {
@@ -169,6 +171,16 @@ VulkanPipeline* VulkanRenderPass::AcquireCompatiblePipeline(const GraphicsState&
             cachedPipeline.NumberOfFramesSinceLastUse = 0;
             return cachedPipeline.Pipeline.get();
         }
+
+        if (invalidPipeline == nullptr && !cachedPipeline.Pipeline->IsValid())
+            invalidPipeline = cachedPipeline.Pipeline.get();
+    }
+
+    // Reuse the provided pipeline instead of creating a new object instance.
+    if (invalidPipeline)
+    {
+        invalidPipeline->Invalidate(graphicsState, shader, m_Handle, GetColorAttachmentCount());
+        return invalidPipeline;
     }
 
     // TODO(Traian): Try to destroy/invalidate existing but unused pipelines instead of creating
