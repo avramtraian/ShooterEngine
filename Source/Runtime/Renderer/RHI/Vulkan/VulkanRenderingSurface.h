@@ -31,11 +31,11 @@ public:
     virtual RefPtr<Texture2D> GetCurrentSurfaceTexture2D() override { return GetSurfaceTexture2D(m_CurrentSwapchainImageIndex); }
 
     virtual void BeginFrame() override;
-    virtual void EndFrame() override;
+    virtual void EndFrame(bool waitForRenderFinishedSemaphore) override;
 
-    FORCEINLINE virtual SemaphoreHandle GetImageAvailableSemaphore() override { return m_Swapchain->GetImageAvailableSemaphore(m_CurrentFrameIndex); }
-    FORCEINLINE virtual SemaphoreHandle GetRenderFinishedSemaphore() override { return m_Swapchain->GetRenderFinishedSemaphore(m_CurrentFrameIndex); }
-    FORCEINLINE virtual FenceHandle GetRenderFinishedFence() override { return m_RenderFinishedFences[m_CurrentFrameIndex]; }
+    virtual SemaphoreHandle GetImageAvailableSemaphore() override;
+    virtual SemaphoreHandle GetRenderFinishedSemaphore() override;
+    virtual FenceHandle GetRenderFinishedFence() override;
 
 private:
     Window* m_OwningWindow;

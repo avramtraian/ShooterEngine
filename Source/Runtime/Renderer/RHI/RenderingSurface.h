@@ -53,7 +53,7 @@ public:
     virtual RefPtr<Texture2D> GetCurrentSurfaceTexture2D() = 0;
 
     virtual void BeginFrame() = 0;
-    virtual void EndFrame() = 0;
+    virtual void EndFrame(bool waitForRenderFinishedSemaphore) = 0;
 
     virtual SemaphoreHandle GetImageAvailableSemaphore() = 0;
     virtual SemaphoreHandle GetRenderFinishedSemaphore() = 0;
