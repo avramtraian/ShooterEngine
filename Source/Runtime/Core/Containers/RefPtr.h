@@ -203,11 +203,11 @@ public:
     }
 
     template<typename Q>
-    requires(std::is_base_of_v<T, Q>)
+    requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
     NODISCARD FORCEINLINE bool operator==(const WeakRefPtr<Q>& weakRefPtr) const;
 
     template<typename Q>
-    requires(std::is_base_of_v<T, Q>)
+    requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
     NODISCARD FORCEINLINE bool operator!=(const WeakRefPtr<Q>& weakRefPtr) const;
 
 public:
@@ -285,14 +285,14 @@ public:
     }
 
     template<typename Q>
-    requires(std::is_base_of_v<T, Q>)
+    requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
     NODISCARD FORCEINLINE bool operator==(const StrongRefPtr<Q>& other) const
     {
         return (m_Instance == other.m_Instance);
     }
 
     template<typename Q>
-    requires(std::is_base_of_v<T, Q>)
+    requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
     NODISCARD FORCEINLINE bool operator!=(const StrongRefPtr<Q>& other) const
     {
         const bool areEqual = ((*this) == other);
@@ -453,11 +453,11 @@ public:
     }
 
     template<typename Q>
-    requires(std::is_base_of_v<T, Q>)
+    requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
     NODISCARD FORCEINLINE bool operator==(const StrongRefPtr<Q>& strongRefPtr) const;
 
     template<typename Q>
-    requires(std::is_base_of_v<T, Q>)
+    requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
     NODISCARD FORCEINLINE bool operator!=(const StrongRefPtr<Q>& strongRefPtr) const;
 
 public:
@@ -534,7 +534,7 @@ public:
     }
 
     template<typename Q>
-    requires(std::is_base_of_v<T, Q>)
+    requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
     NODISCARD FORCEINLINE bool operator==(const WeakRefPtr<Q>& other) const
     {
         const bool thisIsValid = IsValid();
@@ -552,7 +552,7 @@ public:
     }
 
     template<typename Q>
-    requires(std::is_base_of_v<T, Q>)
+    requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
     NODISCARD FORCEINLINE bool operator!=(const WeakRefPtr<Q>& other) const
     {
         const bool areEqual = ((*this) == other);
@@ -603,7 +603,7 @@ StrongRefPtr<T>& StrongRefPtr<T>::operator=(const WeakRefPtr<Q>& weakRefPtr)
 
 template<typename T>
 template<typename Q>
-requires(std::is_base_of_v<T, Q>)
+requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
 bool StrongRefPtr<T>::operator==(const WeakRefPtr<Q>& weakRefPtr) const
 {
     // NOTE(Traian): Just comparing raw pointers is not enough, because a weak reference pointer can be invalid even
@@ -617,7 +617,7 @@ bool StrongRefPtr<T>::operator==(const WeakRefPtr<Q>& weakRefPtr) const
 
 template<typename T>
 template<typename Q>
-requires(std::is_base_of_v<T, Q>)
+requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
 bool StrongRefPtr<T>::operator!=(const WeakRefPtr<Q>& weakRefPtr) const
 {
     const bool areEqual = ((*this) == weakRefPtr);
@@ -664,7 +664,7 @@ WeakRefPtr<T>& WeakRefPtr<T>::operator=(const StrongRefPtr<Q>& strongRefPtr)
 
 template<typename T>
 template<typename Q>
-requires(std::is_base_of_v<T, Q>)
+requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
 bool WeakRefPtr<T>::operator==(const StrongRefPtr<Q>& strongRefPtr) const
 {
     // NOTE(Traian): Just comparing raw pointers is not enough, because a weak reference pointer can be invalid even
@@ -678,7 +678,7 @@ bool WeakRefPtr<T>::operator==(const StrongRefPtr<Q>& strongRefPtr) const
 
 template<typename T>
 template<typename Q>
-requires(std::is_base_of_v<T, Q>)
+requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
 bool WeakRefPtr<T>::operator!=(const StrongRefPtr<Q>& strongRefPtr) const
 {
     const bool areEqual = ((*this) == strongRefPtr);
