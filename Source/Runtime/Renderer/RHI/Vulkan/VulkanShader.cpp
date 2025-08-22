@@ -136,7 +136,7 @@ VulkanShader::VulkanShader(const ShaderInfo& info)
     SE_VULKAN_CHECK(vkCreatePipelineLayout(g_VulkanDriver->GetDevice(), &pipelineLayoutCreateInfo, nullptr, &m_PipelineLayout));
 
     // Create the descriptor set manager.
-    m_DescriptorSetManager = std::make_unique<VulkanDescriptorSetManager>(m_DescriptorSetLayouts);
+    m_DescriptorSetManager = std::make_unique<VulkanDescriptorSetManager>(AdoptWeakRef(this), m_DescriptorSetLayouts);
 }
 
 VulkanShader::~VulkanShader()

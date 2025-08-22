@@ -6,7 +6,8 @@
 namespace SE
 {
 
-VulkanDescriptorSetManager::VulkanDescriptorSetManager(const std::unordered_map<uint32, VulkanDescriptorSetLayout>& setLayouts)
+VulkanDescriptorSetManager::VulkanDescriptorSetManager(const WeakRefPtr<VulkanShader>& parentShader, const std::unordered_map<uint32, VulkanDescriptorSetLayout>& setLayouts)
+    : m_ParentShader(parentShader)
 {
     for (const auto& [setIndex, setLayout] : setLayouts)
         m_SetCaches[setIndex].Layout = setLayout;
@@ -67,7 +68,7 @@ std::vector<VulkanDescriptorSet*> VulkanDescriptorSetManager::AcquireDescriptorS
             SE_ASSERT(setCache.Sets.size() < 1024);
 
             VkDescriptorPool descriptorPool = g_VulkanDriver->GetDescriptorPool();
-            auto set = std::make_unique<VulkanDescriptorSet>(descriptorPool, setIndex, setCache.Layout);
+            auto set = std::make_unique<VulkanDescriptorSet>(descriptorPool, setIndex, setCache.Layout, m_ParentShader);
             set->UpdateBindings(setBindings);
             descriptorSets.push_back(set.get());
             setCache.Sets.push_back(std::move(set));

@@ -18,12 +18,13 @@ public:
     };
 
 public:
-    VulkanDescriptorSetManager(const std::unordered_map<uint32, VulkanDescriptorSetLayout>& setLayouts);
+    VulkanDescriptorSetManager(const WeakRefPtr<VulkanShader>& parentShader, const std::unordered_map<uint32, VulkanDescriptorSetLayout>& setLayouts);
     ~VulkanDescriptorSetManager();
 
     NODISCARD std::vector<VulkanDescriptorSet*> AcquireDescriptorSets(const ShaderResourcesBindPack& bindPack);
 
 private:
+    WeakRefPtr<VulkanShader> m_ParentShader;
     std::unordered_map<uint32, DescriptorSetCache> m_SetCaches;
 };
 

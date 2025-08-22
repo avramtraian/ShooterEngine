@@ -28,7 +28,7 @@ enum class DescriptorSetCompatibility : uint8
 class VulkanDescriptorSet
 {
 public:
-    VulkanDescriptorSet(VkDescriptorPool descriptorPool, uint32 setIndex, const VulkanDescriptorSetLayout& setLayout);
+    VulkanDescriptorSet(VkDescriptorPool descriptorPool, uint32 setIndex, const VulkanDescriptorSetLayout& setLayout, const WeakRefPtr<VulkanShader>& parentShader);
     ~VulkanDescriptorSet();
 
 public:
@@ -36,6 +36,7 @@ public:
     NODISCARD FORCEINLINE VkDescriptorSetLayout GetLayout() const { return m_DescriptorSetLayout.Handle; }
     NODISCARD FORCEINLINE uint32 GetSetIndex() const { return m_SetIndex; }
     NODISCARD FORCEINLINE bool IsLocked() const { return (m_LockCount > 0); }
+    NODISCARD FORCEINLINE bool IsUnlocked() const { return (m_LockCount == 0); }
 
     NODISCARD DescriptorSetCompatibility IsCompatibleWithBindings(const std::unordered_map<uint32, RefPtr<ShaderResource>>& bindings) const;
     void UpdateBindings(const std::unordered_map<uint32, RefPtr<ShaderResource>>& bindings);
@@ -51,6 +52,13 @@ private:
     uint32 m_SetIndex;
     VkDescriptorPool m_DescriptorPool;
     uint32 m_LockCount;
+
+    // NOTE(Traian): Since descriptor sets are owned by a descriptor set manager which in turn is owned by the parent shader, we can
+    // be certain that as long as this descriptor set is alive (the instance hasn't been deleted) the shader is also alive. We use
+    // this weak-strong reference holding mechanism to ensure that as long as this descriptor set is locked, the shader will not
+    // be destroyed.
+    WeakRefPtr<VulkanShader> m_ParentShader;
+    StrongRefPtr<VulkanShader> m_LockedParentShader;
 
     // NOTE(Traian): The descriptor set layout is provided by the shader when creating the descriptor set. As the shader is the
     // one that manages all descriptor sets (and caches them accordingly) this handle will never be destroyed as long as a descriptor

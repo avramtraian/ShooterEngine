@@ -8,11 +8,12 @@
 namespace SE
 {
 
-VulkanDescriptorSet::VulkanDescriptorSet(VkDescriptorPool descriptorPool, uint32 setIndex, const VulkanDescriptorSetLayout& setLayout)
+VulkanDescriptorSet::VulkanDescriptorSet(VkDescriptorPool descriptorPool, uint32 setIndex, const VulkanDescriptorSetLayout& setLayout, const WeakRefPtr<VulkanShader>& parentShader)
     : m_DescriptorSet(VK_NULL_HANDLE)
     , m_SetIndex(setIndex)
     , m_DescriptorPool(descriptorPool)
     , m_LockCount(0)
+    , m_ParentShader(parentShader)
     , m_DescriptorSetLayout(setLayout)
 {
     VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
@@ -145,8 +146,9 @@ bool VulkanDescriptorSet::IsComplete() const
 
 void VulkanDescriptorSet::IncrementLockCount()
 {
-    if (!IsLocked())
+    if (IsUnlocked())
     {
+        // Lock the resources used by the descriptor set.
         SE_ASSERT(m_LockedResources.empty());
         m_LockedResources.reserve(m_BindingResources.size());
 
@@ -155,6 +157,11 @@ void VulkanDescriptorSet::IncrementLockCount()
             RefPtr<ShaderResource> trackedResource = RefPtr<ShaderResource>(resource.Resource);
             m_LockedResources.push_back(std::move(trackedResource));
         }
+
+        // Lock the parent shader (that owns the parent descriptor set managed and, in turn, this descriptor set).
+        SE_ASSERT(!m_LockedParentShader.IsValid());
+        SE_ASSERT(m_ParentShader.IsValid());
+        m_LockedParentShader = m_ParentShader;
     }
 
     ++m_LockCount;
@@ -165,8 +172,11 @@ void VulkanDescriptorSet::DecrementLockCount()
     SE_ASSERT(IsLocked());
     --m_LockCount;
 
-    if (m_LockCount == 0)
+    if (IsUnlocked())
+    {
         m_LockedResources.clear();
+        m_LockedParentShader.Release();
+    }
 }
 
 }
