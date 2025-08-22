@@ -14,7 +14,7 @@ namespace SE
 class VulkanPipeline
 {
 public:
-    VulkanPipeline();
+    VulkanPipeline(const WeakRefPtr<VulkanRenderPass>& parentRenderPass);
     ~VulkanPipeline();
 
 public:
@@ -39,6 +39,9 @@ private:
     VkPipeline m_Handle;
     uint32 m_LockCount;
     GraphicsState m_GraphicsState;
+
+    WeakRefPtr<VulkanRenderPass> m_ParentRenderPass;
+    StrongRefPtr<VulkanRenderPass> m_LockedParentRenderPass;
 
     WeakRefPtr<VulkanShader> m_Shader;
     StrongRefPtr<VulkanShader> m_LockedShader;

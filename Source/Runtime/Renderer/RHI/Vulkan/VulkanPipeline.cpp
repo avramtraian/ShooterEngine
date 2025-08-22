@@ -55,9 +55,10 @@ static VkFormat GetVertexInputAttributeFormat(GraphicsVertexInputAttributeType t
     return VK_FORMAT_UNDEFINED;
 }
 
-VulkanPipeline::VulkanPipeline()
+VulkanPipeline::VulkanPipeline(const WeakRefPtr<VulkanRenderPass>& parentRenderPass)
     : m_Handle(VK_NULL_HANDLE)
     , m_LockCount(0)
+    , m_ParentRenderPass(parentRenderPass)
 {}
 
 VulkanPipeline::~VulkanPipeline()
@@ -328,6 +329,11 @@ void VulkanPipeline::IncrementLockCount()
 {
     if (IsUnlocked())
     {
+        // Acquire strong reference for the parent render pass.
+        SE_ASSERT(m_ParentRenderPass.IsValid());
+        m_LockedParentRenderPass = m_ParentRenderPass;
+
+        // Acquire strong reference for the used shader.
         SE_ASSERT(m_Shader.IsValid());
         m_LockedShader = m_Shader;
     } 
@@ -342,7 +348,11 @@ void VulkanPipeline::DecrementLockCount()
 
     if (IsUnlocked())
     {
+        // Release the strong reference for the used shader.
         m_LockedShader.Release();
+
+        // Release the strong reference for the parent render pass.
+        m_LockedParentRenderPass.Release();
     }
 }
 

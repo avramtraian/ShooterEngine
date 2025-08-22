@@ -179,7 +179,7 @@ VulkanPipeline* VulkanRenderPass::AcquireCompatiblePipeline(const GraphicsState&
     cachedPipeline.NumberOfFramesSinceLastUse = 0;
 
     // Create a new pipeline that matches the provided graphics state.
-    cachedPipeline.Pipeline = std::make_unique<VulkanPipeline>();
+    cachedPipeline.Pipeline = std::make_unique<VulkanPipeline>(AdoptWeakRef(this));
     cachedPipeline.Pipeline->Invalidate(graphicsState, shader, m_Handle, GetColorAttachmentCount());
 
     return cachedPipeline.Pipeline.get();
