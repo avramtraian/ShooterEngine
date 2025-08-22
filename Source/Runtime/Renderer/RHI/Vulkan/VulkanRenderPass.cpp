@@ -151,7 +151,7 @@ VulkanFramebuffer* VulkanRenderPass::AcquireCompatibleFramebuffer(const RenderPa
     SE_ASSERT(m_CachedFramebuffers.size() < 1024);
 
     CachedFramebuffer& cachedFramebuffer = m_CachedFramebuffers.emplace_back();
-    cachedFramebuffer.Framebuffer = std::make_unique<VulkanFramebuffer>();
+    cachedFramebuffer.Framebuffer = std::make_unique<VulkanFramebuffer>(AdoptWeakRef(this));
     cachedFramebuffer.NumberOfFramesSinceLastUse = 0;
 
     // Create a new framebuffer that matches the provided render pass begin info.

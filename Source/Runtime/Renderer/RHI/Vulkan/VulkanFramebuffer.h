@@ -14,7 +14,7 @@ namespace SE
 class VulkanFramebuffer
 {
 public:
-    VulkanFramebuffer();
+    VulkanFramebuffer(const WeakRefPtr<VulkanRenderPass>& parentRenderPass);
     ~VulkanFramebuffer();
 
     void Invalidate(const std::vector<RefPtr<Texture2D>>& textures, VkRenderPass renderPassHandle);
@@ -48,6 +48,9 @@ public:
 private:
     VkFramebuffer m_Handle;
     uint32 m_LockCount;
+
+    WeakRefPtr<VulkanRenderPass> m_ParentRenderPass;
+    StrongRefPtr<VulkanRenderPass> m_LockedParentRenderPass;
 
     std::vector<WeakRefPtr<VulkanTexture2D>> m_Textures;
     std::vector<ShaderResourcePreDestroyCallback> m_TexturePreDestroyCallbacks;

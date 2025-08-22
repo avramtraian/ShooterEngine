@@ -6,9 +6,10 @@
 namespace SE
 {
 
-VulkanFramebuffer::VulkanFramebuffer()
+VulkanFramebuffer::VulkanFramebuffer(const WeakRefPtr<VulkanRenderPass>& parentRenderPass)
     : m_Handle(VK_NULL_HANDLE)
     , m_LockCount(0)
+    , m_ParentRenderPass(parentRenderPass)
 {}
 
 VulkanFramebuffer::~VulkanFramebuffer()
@@ -128,10 +129,14 @@ void VulkanFramebuffer::IncrementLockCount()
 {
     if (!IsLocked())
     {
+        // Acquire strong reference for the parent render pass.
+        SE_ASSERT(m_ParentRenderPass.IsValid());
+        m_LockedParentRenderPass = m_ParentRenderPass;
+
+        // Acquire strong references for the textures.
         SE_ASSERT(m_LockedTextures.empty());
         m_LockedTextures.reserve(m_Textures.size());
 
-        // Acquire strong references for the textures.
         for (const auto& texture : m_Textures)
         {
             // NOTE(Traian): Since the framebuffer can only be locked by a command list when the owning render pass
@@ -152,8 +157,11 @@ void VulkanFramebuffer::DecrementLockCount()
 
     if (!IsLocked())
     {
-        // Release the strong references.
+        // Release the strong references for the textures.
         m_LockedTextures.clear();
+
+        // Release the strong reference for the parent render pass.
+        m_LockedParentRenderPass.Release();
     }
 }
 
