@@ -7,6 +7,10 @@
 namespace SE
 {
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////// TWO-COMPONENT VECTOR STRUCTURES. ////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 struct Vector2
 {
 public:
@@ -56,8 +60,8 @@ public:
 struct Vector2u
 {
 public:
-    uint32_t X;
-    uint32_t Y;
+    uint32 X;
+    uint32 Y;
 
 public:
     FORCEINLINE Vector2u()
@@ -74,6 +78,91 @@ public:
         : X(x)
         , Y(y)
     {}
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////// THREE-COMPONENT VECTOR STRUCTURES. ///////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+struct Vector3
+{
+public:
+    float X;
+    float Y;
+    float Z;
+
+public:
+    FORCEINLINE Vector3()
+        : X(0.0F)
+        , Y(0.0F)
+        , Z(0.0F)
+    {}
+
+    FORCEINLINE Vector3(const Vector3& other)
+        : X(other.X)
+        , Y(other.Y)
+        , Z(other.Z)
+    {}
+
+    FORCEINLINE Vector3(float x, float y, float z)
+        : X(x)
+        , Y(y)
+        , Z(z)
+    {}
+
+public:
+    FORCEINLINE Vector3& operator=(const Vector3& other)
+    {
+        X = other.X;
+        Y = other.Y;
+        Z = other.Z;
+        return *this;
+    }
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////// FOUR-COMPONENT VECTOR STRUCTURES. ////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+struct Vector4
+{
+public:
+    float X;
+    float Y;
+    float Z;
+    float W;
+
+public:
+    FORCEINLINE Vector4()
+        : X(0.0F)
+        , Y(0.0F)
+        , Z(0.0F)
+        , W(0.0F)
+    {}
+
+    FORCEINLINE Vector4(const Vector4& other)
+        : X(other.X)
+        , Y(other.Y)
+        , Z(other.Z)
+        , W(other.W)
+    {}
+
+    FORCEINLINE Vector4(float x, float y, float z, float w)
+        : X(x)
+        , Y(y)
+        , Z(z)
+        , W(w)
+    {}
+
+public:
+    FORCEINLINE Vector4& operator=(const Vector4& other)
+    {
+        X = other.X;
+        Y = other.Y;
+        Z = other.Z;
+        W = other.W;
+        return *this;
+    }
 };
 
 }
