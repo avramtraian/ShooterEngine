@@ -228,6 +228,12 @@ void VulkanCommandList::EndRenderPass()
 
 void VulkanCommandList::BindGraphicsState(const GraphicsState& graphicsState, const RefPtr<Shader>& shader)
 {
+    if (!shader.IsValid())
+    {
+        SE_LOG_ERROR("Trying to bind a graphics state with an invalid shader!");
+        return;
+    }
+
     m_ActivePipeline = m_ActiveRenderPass->AcquireCompatiblePipeline(graphicsState, shader);
     m_UsedPipelines.push_back(m_ActivePipeline);
 
