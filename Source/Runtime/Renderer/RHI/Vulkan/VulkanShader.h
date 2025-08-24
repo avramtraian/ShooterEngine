@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/OwnPtr.h>
 #include <Runtime/Renderer/RHI/CommandList.h>
 #include <Runtime/Renderer/RHI/Shader.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
@@ -45,7 +46,7 @@ private:
 
     VkPipelineLayout m_PipelineLayout;
     std::unordered_map<uint32, VulkanDescriptorSetLayout> m_DescriptorSetLayouts;
-    std::unique_ptr<VulkanDescriptorSetManager> m_DescriptorSetManager;
+    OwnPtr<VulkanDescriptorSetManager> m_DescriptorSetManager;
 };
 
 }

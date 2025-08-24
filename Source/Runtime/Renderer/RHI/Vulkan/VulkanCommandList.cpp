@@ -592,14 +592,14 @@ void VulkanCommandList::CopyBufferToImage(const RefPtr<VulkanTexture2D>& dstText
 
 VulkanBuffer& VulkanCommandList::CreateStagingBuffer(usize bufferSize)
 {
-    auto stagingBuffer = std::make_unique<VulkanBuffer>();
+    auto stagingBuffer = CreateOwn<VulkanBuffer>();
     stagingBuffer->Invalidate(
         bufferSize,
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     m_StagingBuffers.push_back(std::move(stagingBuffer));
-    return *m_StagingBuffers.back().get();
+    return *m_StagingBuffers.back().Get();
 }
 
 void VulkanCommandList::ResetDrawStatistics()

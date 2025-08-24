@@ -7,8 +7,6 @@
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanShader.h>
 
-#include <memory>
-
 namespace SE
 {
 

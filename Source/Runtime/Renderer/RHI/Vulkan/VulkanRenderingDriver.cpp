@@ -643,10 +643,9 @@ void VulkanRenderingDriver::ShutdownBackend()
     g_VulkanDriver = nullptr;
 }
 
-std::unique_ptr<RenderingSurface> VulkanRenderingDriver::CreateSurface(const RenderingSurfaceInfo& info)
+OwnPtr<RenderingSurface> VulkanRenderingDriver::CreateSurface(const RenderingSurfaceInfo& info)
 {
-    VulkanRenderingSurface* vulkanSurfaceInstance = new VulkanRenderingSurface(info);
-    return std::unique_ptr<RenderingSurface>(vulkanSurfaceInstance);
+    return CreateOwn<VulkanRenderingSurface>(info);
 }
 
 RefPtr<CommandList> VulkanRenderingDriver::CreateCommandList(const CommandListInfo& info)

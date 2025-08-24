@@ -6,8 +6,6 @@
 #include <Runtime/Renderer/RHI/Synchronization.h>
 #include <Runtime/Renderer/RHI/Texture.h>
 
-#include <memory>
-
 namespace SE
 {
 

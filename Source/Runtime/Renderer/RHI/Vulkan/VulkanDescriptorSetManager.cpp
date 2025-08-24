@@ -51,11 +51,11 @@ std::vector<VulkanDescriptorSet*> VulkanDescriptorSetManager::AcquireDescriptorS
         // TODO(Traian): Use a "smarter" method to determine if a cached set is compatible with the current bind pack. Checking each
         // cached descriptor set every time 'AcquireDescriptorSets' is invoked can have serious performance costs when a lot of shader
         // resources are available. Use some sort of hashing instead.
-        for (std::unique_ptr<VulkanDescriptorSet>& cachedSet : setCache.Sets)
+        for (OwnPtr<VulkanDescriptorSet>& cachedSet : setCache.Sets)
         {
             if (cachedSet->IsCompatibleWithBindings(setBindings) == DescriptorSetCompatibility::Compatible)
             {
-                descriptorSets.push_back(cachedSet.get());
+                descriptorSets.push_back(cachedSet.Get());
                 wasCachedSetFound = true;
                 break;
             }
@@ -68,9 +68,9 @@ std::vector<VulkanDescriptorSet*> VulkanDescriptorSetManager::AcquireDescriptorS
             SE_ASSERT(setCache.Sets.size() < 1024);
 
             VkDescriptorPool descriptorPool = g_VulkanDriver->GetDescriptorPool();
-            auto set = std::make_unique<VulkanDescriptorSet>(descriptorPool, setIndex, setCache.Layout, m_ParentShader);
+            auto set = CreateOwn<VulkanDescriptorSet>(descriptorPool, setIndex, setCache.Layout, m_ParentShader);
             set->UpdateBindings(setBindings);
-            descriptorSets.push_back(set.get());
+            descriptorSets.push_back(set.Get());
             setCache.Sets.push_back(std::move(set));
         }
     }

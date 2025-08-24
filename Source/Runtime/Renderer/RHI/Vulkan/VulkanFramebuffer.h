@@ -6,7 +6,6 @@
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanTexture.h>
 
-#include <memory>
 #include <vector>
 
 namespace SE

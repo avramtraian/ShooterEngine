@@ -3,6 +3,7 @@
 #pragma once
 
 #include <Runtime/Core/Containers/LockPtr.h>
+#include <Runtime/Core/Containers/OwnPtr.h>
 #include <Runtime/Renderer/RHI/CommandList.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanDescriptorSet.h>
@@ -76,7 +77,7 @@ private:
     bool m_IsIndexBufferBound;
 
     std::vector<RefPtr<VulkanTexture2D>> m_TransitionedTextures;
-    std::vector<std::unique_ptr<VulkanBuffer>> m_StagingBuffers;
+    std::vector<OwnPtr<VulkanBuffer>> m_StagingBuffers;
 
     DrawStatistics m_DrawStatistics;
     AccumultateStatisticsPolicy m_AccumulateStatisticsPolicy;

@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/OwnPtr.h>
 #include <Runtime/Renderer/RHI/CommandList.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanDescriptorSet.h>
 
@@ -14,7 +15,7 @@ public:
     struct DescriptorSetCache
     {
         VulkanDescriptorSetLayout Layout;
-        std::vector<std::unique_ptr<VulkanDescriptorSet>> Sets;
+        std::vector<OwnPtr<VulkanDescriptorSet>> Sets;
     };
 
 public:

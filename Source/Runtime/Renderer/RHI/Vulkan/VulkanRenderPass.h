@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/OwnPtr.h>
 #include <Runtime/Renderer/RHI/RenderPass.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanFramebuffer.h>
@@ -48,13 +49,13 @@ private:
 
     struct CachedFramebuffer
     {
-        std::unique_ptr<VulkanFramebuffer> Framebuffer;
+        OwnPtr<VulkanFramebuffer> Framebuffer;
         uint32 NumberOfFramesSinceLastUse { 0 };
     };
 
     struct CachedPipeline
     {
-        std::unique_ptr<VulkanPipeline> Pipeline;
+        OwnPtr<VulkanPipeline> Pipeline;
         uint32 NumberOfFramesSinceLastUse { 0 };
     };
 

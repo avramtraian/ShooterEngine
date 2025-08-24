@@ -105,11 +105,11 @@ VulkanFramebuffer* VulkanRenderPass::AcquireCompatibleFramebuffer(const RenderPa
         if (cachedFramebuffer.Framebuffer->IsCompatibleWithRenderPassBeginInfo(beginInfo))
         {
             cachedFramebuffer.NumberOfFramesSinceLastUse = 0;
-            return cachedFramebuffer.Framebuffer.get();
+            return cachedFramebuffer.Framebuffer.Get();
         }
 
         if (invalidFramebuffer == nullptr && !cachedFramebuffer.Framebuffer->IsValid())
-            invalidFramebuffer = cachedFramebuffer.Framebuffer.get();
+            invalidFramebuffer = cachedFramebuffer.Framebuffer.Get();
     }
 
     std::vector<RefPtr<Texture2D>> framebufferTextures;
@@ -151,12 +151,12 @@ VulkanFramebuffer* VulkanRenderPass::AcquireCompatibleFramebuffer(const RenderPa
     SE_ASSERT(m_CachedFramebuffers.size() < 1024);
 
     CachedFramebuffer& cachedFramebuffer = m_CachedFramebuffers.emplace_back();
-    cachedFramebuffer.Framebuffer = std::make_unique<VulkanFramebuffer>(AdoptWeakRef(this));
+    cachedFramebuffer.Framebuffer = CreateOwn<VulkanFramebuffer>(AdoptWeakRef(this));
     cachedFramebuffer.NumberOfFramesSinceLastUse = 0;
 
     // Create a new framebuffer that matches the provided render pass begin info.
     cachedFramebuffer.Framebuffer->Invalidate(framebufferTextures, m_Handle);
-    return cachedFramebuffer.Framebuffer.get();
+    return cachedFramebuffer.Framebuffer.Get();
 }
 
 VulkanPipeline* VulkanRenderPass::AcquireCompatiblePipeline(const GraphicsState& graphicsState, const RefPtr<Shader>& shader)
@@ -169,11 +169,11 @@ VulkanPipeline* VulkanRenderPass::AcquireCompatiblePipeline(const GraphicsState&
         if (cachedPipeline.Pipeline->IsCompatibleWithGraphicsStateAndShader(graphicsState, shader))
         {
             cachedPipeline.NumberOfFramesSinceLastUse = 0;
-            return cachedPipeline.Pipeline.get();
+            return cachedPipeline.Pipeline.Get();
         }
 
         if (invalidPipeline == nullptr && !cachedPipeline.Pipeline->IsValid())
-            invalidPipeline = cachedPipeline.Pipeline.get();
+            invalidPipeline = cachedPipeline.Pipeline.Get();
     }
 
     // Reuse the provided pipeline instead of creating a new object instance.
@@ -191,10 +191,10 @@ VulkanPipeline* VulkanRenderPass::AcquireCompatiblePipeline(const GraphicsState&
     cachedPipeline.NumberOfFramesSinceLastUse = 0;
 
     // Create a new pipeline that matches the provided graphics state.
-    cachedPipeline.Pipeline = std::make_unique<VulkanPipeline>(AdoptWeakRef(this));
+    cachedPipeline.Pipeline = CreateOwn<VulkanPipeline>(AdoptWeakRef(this));
     cachedPipeline.Pipeline->Invalidate(graphicsState, shader, m_Handle, GetColorAttachmentCount());
 
-    return cachedPipeline.Pipeline.get();
+    return cachedPipeline.Pipeline.Get();
 }
 
 }

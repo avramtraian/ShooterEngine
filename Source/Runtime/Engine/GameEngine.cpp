@@ -67,7 +67,7 @@ bool GameEngine::Initialize()
         .SetMaxFramesInFlight(3)
         .SetEnableVSync(true)
     );
-    if (!m_GameRenderingSurface)
+    if (!m_GameRenderingSurface.IsValid())
     {
         /* Failed to create the rendering surface. As the user can't see anything on the screen without
          * it, there is no point in trying to continue the engine initialization. */
@@ -91,10 +91,15 @@ void GameEngine::Shutdown()
 {
     SE_LOG_INFO("Shutting down the engine systems...");
 
-    // Shutdown rendering subsystems and driver.
+    // NOTE(Traian): In order to safely destruct command lists we must ensure that they have finished execution.
+    // Since currently we have no mechanism to track if a command list is still executing on a queue or not, and
+    // it is the responsability of the appliction to ensure that a command list is not deleted until it finished
+    // execution, we simmply block the current (main) thread until all operations on the GPU have finished.
     g_RenderingDriver->WaitForDeviceIdle();
+
+    // Shutdown rendering subsystems and driver.
     ShaderLibrary::Shutdown();
-    m_GameRenderingSurface.reset();
+    m_GameRenderingSurface.Release();
     RenderingDriver::Shutdown();
     
     // Shutdown the input system.
@@ -126,13 +131,13 @@ void GameEngine::OnGameWindowResized(const WindowResizedEvent& resizedEvent)
 {
     if (resizedEvent.GetNewSizeX() > 0 && resizedEvent.GetNewSizeY() > 0)
     {
-        /* NOTE(Traian): Invalidating a rendering surface that targets a zero-sized window might
-         * cause undefined behaviour and trigger the validation layers. */
+        // NOTE(Traian): Invalidating a rendering surface that targets a zero-sized window might
+        // cause undefined behaviour and trigger the validation layers.
         
         if (m_GameRenderingSurface->GetSurfaceSizeX() != resizedEvent.GetNewSizeX() || m_GameRenderingSurface->GetSurfaceSizeY() != resizedEvent.GetNewSizeY())
         {
-            /* NOTE(Traian): Only recreate the rendering surface if the new window size doesn't match
-             * the size of the existing rendering surface. */
+            // NOTE(Traian): Only recreate the rendering surface if the new window size doesn't match
+            // the size of the existing rendering surface.
             m_GameRenderingSurface->Invalidate();
         }
     }

@@ -5,7 +5,6 @@
 #include <Runtime/Renderer/RHI/RHICore.h>
 #include <Runtime/Renderer/RHI/Texture.h>
 
-#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>

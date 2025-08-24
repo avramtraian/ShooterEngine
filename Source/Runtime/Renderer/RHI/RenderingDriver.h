@@ -41,7 +41,7 @@ public:
     static void Shutdown();
 
 public:
-    virtual std::unique_ptr<RenderingSurface>   CreateSurface                       (const RenderingSurfaceInfo& info)          = 0;
+    virtual OwnPtr<RenderingSurface>            CreateSurface                       (const RenderingSurfaceInfo& info)          = 0;
     
     virtual RefPtr<CommandList>                 CreateCommandList                   (const CommandListInfo& info)               = 0;
     virtual RefPtr<IndexBuffer>                 CreateIndexBuffer                   (const IndexBufferInfo& info)               = 0;
