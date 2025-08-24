@@ -377,6 +377,12 @@ bool VulkanCommandList::ValidateShaderResourcesBindPack(const RefPtr<VulkanShade
 
 void VulkanCommandList::BindShaderResources(const ShaderResourcesBindPack& bindPack)
 {
+    if (!m_ActivePipeline.IsValid())
+    {
+        SE_LOG_ERROR("Trying to bind a shader resources pack without binding a graphics state first!");
+        return;
+    }
+
     RefPtr<VulkanShader> activeShader = m_ActivePipeline->GetShader();
     if (!ValidateShaderResourcesBindPack(activeShader, bindPack))
         return;
