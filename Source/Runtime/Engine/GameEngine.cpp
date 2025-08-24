@@ -3,6 +3,7 @@
 #include <Runtime/Application/Input.h>
 #include <Runtime/Core/Containers/StringView.h>
 #include <Runtime/Core/Log.h>
+#include <Runtime/Core/Time.h>
 #include <Runtime/Engine/GameEngine.h>
 #include <Runtime/Renderer/RHI/RenderingDriver.h>
 #include <Runtime/Renderer/RHI/RenderingSurface.h>
@@ -114,16 +115,31 @@ void GameEngine::Shutdown()
 
 void GameEngine::Execute()
 {
+    // Assume the first frame runs at 60FPS.
+    float lastFrameDeltaTime = TimeDuration::FromMilliseconds(16).ToSeconds();
+
     while (!m_GameWindow->IsRequestedToClose())
     {
+        Timer currentFrameTimer;
+        currentFrameTimer.Start();
+
         m_GameWindow->PumpMessages();
-        OnUpdate();
+        OnUpdate(lastFrameDeltaTime);
+
+        currentFrameTimer.Stop();
+        const TimeDuration frameDeltaTime = currentFrameTimer.GetElapsed();
+        lastFrameDeltaTime = frameDeltaTime.ToSeconds();
     }
 }
 
-void GameEngine::OnUpdate()
+void GameEngine::OnUpdate(float deltaTime)
 {
-    Input::OnUpdate();
+    // Run pre-update events for engine systems.
+
+    // Run main update events for engine systems.
+    Input::OnUpdate(deltaTime);
+
+    // Run post-update events for engine systems.
     Input::OnPostUpdate();
 }
 

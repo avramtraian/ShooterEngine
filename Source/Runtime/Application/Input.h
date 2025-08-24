@@ -60,8 +60,8 @@ class Input
 public:
     static bool Initialize(const InputInfo& inputInfo);
     static void Shutdown();
-    static void OnUpdate();
     static void OnPostUpdate();
+    SHOOTER_API static void OnUpdate(float deltaTime);
 
 public:
     static bool IsKeyDown(KeyCode keyCode);

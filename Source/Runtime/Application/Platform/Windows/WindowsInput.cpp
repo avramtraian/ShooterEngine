@@ -170,7 +170,7 @@ static bool CheckIfMouseButtonIsDown(MouseButton mouseButton)
     return ((keyState & (1 << 15)) != 0);
 }
 
-void Input::OnUpdate()
+void Input::OnUpdate(float deltaTime)
 {
     if (!s_InputData)
         return;

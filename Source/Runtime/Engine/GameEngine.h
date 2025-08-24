@@ -21,7 +21,7 @@ public:
     SHOOTER_API virtual void Execute() override;
 
 private:
-    void OnUpdate();
+    void OnUpdate(float deltaTime);
 
     void OnGameWindowResized(const WindowResizedEvent& resizedEvent);
 
