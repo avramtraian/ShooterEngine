@@ -10,6 +10,13 @@ namespace SE
 VulkanShader::VulkanShader(const ShaderInfo& info)
     : m_PipelineLayout(VK_NULL_HANDLE)
 {
+    if (info.Stages.empty())
+    {
+        SE_LOG_ERROR("Trying to create a [Vulkan] shader that has no stages!");
+        SE_ASSERT_NOT_REACHED;
+        return;
+    }
+
     int32 maxSetIndex = -1;
 
     // Create the shaders module.
