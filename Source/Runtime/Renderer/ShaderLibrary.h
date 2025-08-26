@@ -16,8 +16,8 @@ class ShaderLibrary
     SE_MAKE_NAMESPACE_CLASS(ShaderLibrary);
 
 public:
-    static bool Initialize();
-    static void Shutdown();
+    SHOOTER_API static bool Initialize();
+    SHOOTER_API static void Shutdown();
 
     /* Reads the shader source code from the provided file, compiles it, and creates an RHI shader object.
      * This object can later be retrieved using the 'Get' API. */

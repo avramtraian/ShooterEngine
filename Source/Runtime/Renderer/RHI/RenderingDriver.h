@@ -36,8 +36,8 @@ class RenderingDriver
     SE_MAKE_SINGLETON_CLASS(RenderingDriver);
 
 public:
-    static bool Initialize(const RenderingDriverInfo& info);
-    static void Shutdown();
+    SHOOTER_API static bool Initialize(const RenderingDriverInfo& info);
+    SHOOTER_API static void Shutdown();
 
 public:
     virtual RefPtr<RenderingSurface>            CreateSurface                       (const RenderingSurfaceInfo& info)          = 0;
