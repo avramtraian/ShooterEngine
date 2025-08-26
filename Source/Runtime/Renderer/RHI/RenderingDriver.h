@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/OwnPtr.h>
 #include <Runtime/Renderer/RHI/Buffer.h>
 #include <Runtime/Renderer/RHI/CommandList.h>
 #include <Runtime/Renderer/RHI/RenderPass.h>
@@ -9,8 +10,6 @@
 #include <Runtime/Renderer/RHI/Shader.h>
 #include <Runtime/Renderer/RHI/Synchronization.h>
 #include <Runtime/Renderer/RHI/Texture.h>
-
-#include <memory>
 
 namespace SE
 {

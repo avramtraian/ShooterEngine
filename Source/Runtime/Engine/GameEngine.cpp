@@ -18,8 +18,8 @@ bool GameEngine::Initialize()
 {
     if (!InitializeCoreSystems())
     {
-        /* There is no point of trying to continue the initialization process if critical
-         * systems were not able to be initialized. */
+        // There is no point of trying to continue the initialization process if critical
+        // systems were not able to be initialized.
         return false;
     }
     SE_LOG_INFO("All core systems were initialized successfully.");
@@ -30,24 +30,22 @@ bool GameEngine::Initialize()
     );
     if (!m_GameWindow.IsValid())
     {
-        /* Failed to initialize the game window. As we don't have a window there is no point
-         * in trying to continue the engine initialization process. */
+        // Failed to initialize the game window. As we don't have a window there is no point
+        // in trying to continue the engine initialization process.
         SE_LOG_ERROR("Failed to initialize the primary game window! Aborting the initialization process.");
         return false;
     }
-    m_GameWindow->AddEventCallback(EventType::WindowResized, [](const Window&, const Event& event) { g_GameEngine->OnGameWindowResized((const WindowResizedEvent&)event); });
     SE_LOG_INFO("The primary game window was created successfully.");
 
-    const bool inputInitializeResult = Input::Initialize(InputInfo()
-        .AddSourceWindow(m_GameWindow.Get())
-    );
+    const bool inputInitializeResult = Input::Initialize();
     if (!inputInitializeResult)
     {
-        /* Failed to initialize the input system. As the user can't input any commands into the game,
-         * there is no point in trying to continue the engine initialization. */
+        // Failed to initialize the input system. As the user can't input any commands into the game,
+        // there is no point in trying to continue the engine initialization.
         SE_LOG_ERROR("Failed to initialize the input system! Aborting the initialization process.");
         return false;
     }
+    Input::AddSourceWindow(m_GameWindow);
     SE_LOG_INFO("The input system was initialized successfully.");
     
     const bool renderingDriverInitializeResult = RenderingDriver::Initialize(RenderingDriverInfo()
@@ -55,33 +53,18 @@ bool GameEngine::Initialize()
     );
     if (!renderingDriverInitializeResult)
     {
-        /* Failed to initialize the rendering driver. As nothing can be rendered to the screen, there
-         * is no point in trying to continue the engine initialization. */
+        // Failed to initialize the rendering driver. As nothing can be rendered to the screen, there
+        // is no point in trying to continue the engine initialization.
         SE_LOG_ERROR("Failed to initialize the rendering driver! Aborting the initialization process.");
         return false;
     }
     SE_LOG_INFO("The rendering driver was initialized successfully.");
 
-    m_GameRenderingSurface = g_RenderingDriver->CreateSurface(RenderingSurfaceInfo()
-        .SetOwningWindow(m_GameWindow.Get())
-        .SetSwapchainMinImageCount(3)
-        .SetMaxFramesInFlight(3)
-        .SetEnableVSync(true)
-    );
-    if (!m_GameRenderingSurface.IsValid())
-    {
-        /* Failed to create the rendering surface. As the user can't see anything on the screen without
-         * it, there is no point in trying to continue the engine initialization. */
-        SE_LOG_ERROR("Failed to create the primary game rendering surface. Aborting the initialization process.");
-        return false;
-    }
-    SE_LOG_INFO("The primary game rendering surface was created successfully.");
-
     const bool shaderLibraryInitializeResult = ShaderLibrary::Initialize();
     if (!shaderLibraryInitializeResult)
     {
-        /* The engine might not require to access any shaders, so this is not a critical error.
-         * Don't exit the engine initialization process yet. */
+        // The engine might not require to access any shaders, so this is not a critical error.
+        // Don't exit the engine initialization process yet.
         SE_LOG_ERROR("Failed to initilize the shader library!");
     }
 
@@ -100,7 +83,6 @@ void GameEngine::Shutdown()
 
     // Shutdown rendering subsystems and driver.
     ShaderLibrary::Shutdown();
-    m_GameRenderingSurface.Release();
     RenderingDriver::Shutdown();
     
     // Shutdown the input system.
@@ -123,7 +105,7 @@ void GameEngine::Execute()
         Timer currentFrameTimer;
         currentFrameTimer.Start();
 
-        m_GameWindow->PumpMessages();
+        m_GameWindow->ProcessEventQueue();
         OnUpdate(lastFrameDeltaTime);
 
         currentFrameTimer.Stop();
@@ -135,28 +117,13 @@ void GameEngine::Execute()
 void GameEngine::OnUpdate(float deltaTime)
 {
     // Run pre-update events for engine systems.
+    Input::OnPreUpdate(deltaTime);
 
     // Run main update events for engine systems.
     Input::OnUpdate(deltaTime);
 
     // Run post-update events for engine systems.
-    Input::OnPostUpdate();
-}
-
-void GameEngine::OnGameWindowResized(const WindowResizedEvent& resizedEvent)
-{
-    if (resizedEvent.GetNewSizeX() > 0 && resizedEvent.GetNewSizeY() > 0)
-    {
-        // NOTE(Traian): Invalidating a rendering surface that targets a zero-sized window might
-        // cause undefined behaviour and trigger the validation layers.
-        
-        if (m_GameRenderingSurface->GetSurfaceSizeX() != resizedEvent.GetNewSizeX() || m_GameRenderingSurface->GetSurfaceSizeY() != resizedEvent.GetNewSizeY())
-        {
-            // NOTE(Traian): Only recreate the rendering surface if the new window size doesn't match
-            // the size of the existing rendering surface.
-            m_GameRenderingSurface->Invalidate();
-        }
-    }
+    Input::OnPostUpdate(deltaTime);
 }
 
 }

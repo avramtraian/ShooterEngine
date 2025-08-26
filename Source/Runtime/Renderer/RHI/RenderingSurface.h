@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <Runtime/Application/Window.h>
 #include <Runtime/Renderer/RHI/RHICore.h>
 #include <Runtime/Renderer/RHI/Synchronization.h>
 #include <Runtime/Renderer/RHI/Texture.h>
@@ -9,22 +10,17 @@
 namespace SE
 {
 
-/* Forward declarations. */
-class Window;
-
 struct RenderingSurfaceInfo
 {
 public:
-    Window* OwningWindow           { nullptr };
-    uint32  SwapchainMinImageCount { 2 };
-    uint32  MaxFramesInFlight      { 1 };
-    bool    EnableVSync            { false };
+    RefPtr<Window> OwningWindow           { nullptr };
+    uint32         SwapchainMinImageCount { 2 };
+    uint32         MaxFramesInFlight      { 1 };
 
 public:
-    inline RenderingSurfaceInfo& SetOwningWindow           (Window* window)    { OwningWindow = window;               return *this; }
-    inline RenderingSurfaceInfo& SetSwapchainMinImageCount (uint32 imageCount) { SwapchainMinImageCount = imageCount; return *this; }
-    inline RenderingSurfaceInfo& SetMaxFramesInFlight      (uint32 frameCount) { MaxFramesInFlight = frameCount;      return *this; }
-    inline RenderingSurfaceInfo& SetEnableVSync            (bool enableVSync)  { EnableVSync = enableVSync;           return *this; }
+    inline RenderingSurfaceInfo& SetOwningWindow           (RefPtr<Window> window) { OwningWindow = Move(window);         return *this; }
+    inline RenderingSurfaceInfo& SetSwapchainMinImageCount (uint32 imageCount)     { SwapchainMinImageCount = imageCount; return *this; }
+    inline RenderingSurfaceInfo& SetMaxFramesInFlight      (uint32 frameCount)     { MaxFramesInFlight = frameCount;      return *this; }
 };
 
 class RenderingSurface

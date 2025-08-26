@@ -11,7 +11,7 @@
 namespace SE
 {
 
-enum KeyState : uint8_t
+enum SwitchState : uint8_t
 {
     Up,
     Down,
@@ -19,46 +19,23 @@ enum KeyState : uint8_t
     ReleasedThisFrame,
 };
 
-struct SourceWindow
-{
-    Window* Window { nullptr };
-    Vector<WindowEventCallbackID> CallbackIDs;
-};
-
 struct WindowsInputData
 {
-    std::unordered_map<KeyCode, KeyState> KeyStates;
-    std::unordered_map<MouseButton, KeyState> MouseButtonStates;
-    Vector<SourceWindow> SourceWindows;
+    std::unordered_map<KeyCode, SwitchState> KeyStates;
+    std::unordered_map<MouseButton, SwitchState> MouseButtonStates;
 
-    Vector2i LastFrameMousePosition;
-    Vector2i CurrentFrameMousePosition;
+    Optional<Vector2i> LastFrameMousePosition;
+    Optional<Vector2i> CurrentFrameMousePosition;
     float MouseWheelScrollOffset = 0.0F;
 };
 
 static WindowsInputData* s_InputData;
 
-bool Input::Initialize(const InputInfo& info)
+bool Input::Initialize()
 {
     if (s_InputData)
         return false;
     s_InputData = new WindowsInputData();
-
-    for (Window* window : info.SourceWindows)
-    {
-        const WindowEventCallbackID callbackID = window->AddEventCallback(EventType::MouseWheelScrolled,
-            [](const Window&, const Event& opaqueEvent)
-            {
-                const MouseWheelScrolledEvent& event = (const MouseWheelScrolledEvent&)opaqueEvent;
-                s_InputData->MouseWheelScrollOffset = event.GetScrollOffset();
-            }
-        );
-
-        SourceWindow sourceWindow = {};
-        sourceWindow.Window = window;
-        sourceWindow.CallbackIDs.Add(callbackID);
-        s_InputData->SourceWindows.Add(Move(sourceWindow));
-    }
 
     // NOTE(Traian): While it is more efficient to query the key-state when the value is actually requested by the
     // user (by calling 'IsKeyDown' for example), to ensure that for the duration of the entire frame the input system
@@ -67,12 +44,12 @@ bool Input::Initialize(const InputInfo& info)
     for (uint16_t keyCodeValue = 1; keyCodeValue < (uint16_t)KeyCode::MaxEnumValue; ++keyCodeValue)
     {
         const KeyCode keyCode = (KeyCode)keyCodeValue;
-        s_InputData->KeyStates.insert({ keyCode, KeyState::Up });
+        s_InputData->KeyStates.insert({ keyCode, SwitchState::Up });
     }
     for (uint16_t mouseButtonValue = 1; mouseButtonValue < (uint8_t)MouseButton::MaxEnumValue; mouseButtonValue++)
     {
         const MouseButton mouseButton = (MouseButton)mouseButtonValue;
-        s_InputData->MouseButtonStates.insert({ mouseButton, KeyState::Up });
+        s_InputData->MouseButtonStates.insert({ mouseButton, SwitchState::Up });
     }
 
     return true;
@@ -83,19 +60,19 @@ void Input::Shutdown()
     if (!s_InputData)
         return;
 
-    /* Remove callbacks from the source windows. */
-    for (const SourceWindow& sourceWindow : s_InputData->SourceWindows)
-    {
-        for (WindowEventCallbackID callbackID : sourceWindow.CallbackIDs)
-            sourceWindow.Window->RemoveEventCallback(callbackID);
-    }
-
-    s_InputData->SourceWindows.Clear();
     s_InputData->KeyStates.clear();
     s_InputData->MouseButtonStates.clear();
 
     delete s_InputData;
     s_InputData = nullptr;
+}
+
+void Input::AddSourceWindow(RefPtr<Window> window)
+{
+    if (window.IsValid())
+    {
+        window->GetOnMouseWheelScrolledDelegate().AddRaw(Input::HandleOnMouseWheelScrolled);
+    }
 }
 
 static int TranslateKeyCodeToVirtualKey(KeyCode keyCode)
@@ -170,37 +147,42 @@ static bool CheckIfMouseButtonIsDown(MouseButton mouseButton)
     return ((keyState & (1 << 15)) != 0);
 }
 
+void Input::OnPreUpdate(float deltaTime)
+{}
+
 void Input::OnUpdate(float deltaTime)
 {
     if (!s_InputData)
         return;
 
-    // Update key states for key-codes and mouse-buttons.
+    // Update the key states.
     for (uint16_t keyCodeValue = 1; keyCodeValue < (uint16_t)KeyCode::MaxEnumValue; ++keyCodeValue)
     {
         const KeyCode keyCode = (KeyCode)keyCodeValue;
         SE_ASSERT(s_InputData->KeyStates.contains(keyCode));
         const bool isDown = CheckIfKeyIsDown(keyCode);
 
-        if (s_InputData->KeyStates[keyCode] == KeyState::Up && isDown)
-            s_InputData->KeyStates[keyCode] = KeyState::PressedThisFrame;
-        else if (s_InputData->KeyStates[keyCode] == KeyState::Down && !isDown)
-            s_InputData->KeyStates[keyCode] = KeyState::ReleasedThisFrame;
+        if (s_InputData->KeyStates[keyCode] == SwitchState::Up && isDown)
+            s_InputData->KeyStates[keyCode] = SwitchState::PressedThisFrame;
+        else if (s_InputData->KeyStates[keyCode] == SwitchState::Down && !isDown)
+            s_InputData->KeyStates[keyCode] = SwitchState::ReleasedThisFrame;
         else
-            s_InputData->KeyStates[keyCode] = isDown ? KeyState::Down : KeyState::Up;
+            s_InputData->KeyStates[keyCode] = isDown ? SwitchState::Down : SwitchState::Up;
     }
+
+    // Update the mouse button states.
     for (uint16_t mouseButtonValue = 1; mouseButtonValue < (uint8_t)MouseButton::MaxEnumValue; mouseButtonValue++)
     {
         const MouseButton mouseButton = (MouseButton)mouseButtonValue;
         SE_ASSERT(s_InputData->MouseButtonStates.contains(mouseButton));
         const bool isDown = CheckIfMouseButtonIsDown(mouseButton);
 
-        if (s_InputData->MouseButtonStates[mouseButton] == KeyState::Up && isDown)
-            s_InputData->MouseButtonStates[mouseButton] = KeyState::PressedThisFrame;
-        else if (s_InputData->MouseButtonStates[mouseButton] == KeyState::Down && !isDown)
-            s_InputData->MouseButtonStates[mouseButton] = KeyState::ReleasedThisFrame;
+        if (s_InputData->MouseButtonStates[mouseButton] == SwitchState::Up && isDown)
+            s_InputData->MouseButtonStates[mouseButton] = SwitchState::PressedThisFrame;
+        else if (s_InputData->MouseButtonStates[mouseButton] == SwitchState::Down && !isDown)
+            s_InputData->MouseButtonStates[mouseButton] = SwitchState::ReleasedThisFrame;
         else
-            s_InputData->MouseButtonStates[mouseButton] = isDown ? KeyState::Down : KeyState::Up;
+            s_InputData->MouseButtonStates[mouseButton] = isDown ? SwitchState::Down : SwitchState::Up;
     }
 
     // Update the mouse position.
@@ -210,106 +192,126 @@ void Input::OnUpdate(float deltaTime)
         s_InputData->CurrentFrameMousePosition = Vector2i(mousePosition.x, mousePosition.y);
 }
 
-void Input::OnPostUpdate()
+void Input::OnPostUpdate(float deltaTime)
 {
+    // Check that the input system has been initialized.
     if (!s_InputData)
         return;
+
     s_InputData->MouseWheelScrollOffset = 0.0F;
 }
 
 bool Input::IsKeyDown(KeyCode keyCode)
 {
+    // Check that the input system has been initialized.
     if (!s_InputData)
         return false;
 
     SE_ASSERT(s_InputData->KeyStates.contains(keyCode));
-    const KeyState keyState = s_InputData->KeyStates.at(keyCode);
-    return keyState == KeyState::Down || keyState == KeyState::PressedThisFrame;
+    const SwitchState switchState = s_InputData->KeyStates.at(keyCode);
+    return switchState == SwitchState::Down || switchState == SwitchState::PressedThisFrame;
 }
 
 bool Input::IsMouseButtonDown(MouseButton mouseButton)
 {
+    // Check that the input system has been initialized.
     if (!s_InputData)
         return false;
 
     SE_ASSERT(s_InputData->MouseButtonStates.contains(mouseButton));
-    const KeyState keyState = s_InputData->MouseButtonStates.at(mouseButton);
-    return keyState == KeyState::Down || keyState == KeyState::PressedThisFrame;
+    const SwitchState switchState = s_InputData->MouseButtonStates.at(mouseButton);
+    return switchState == SwitchState::Down || switchState == SwitchState::PressedThisFrame;
 }
 
 bool Input::WasKeyPressedThisFrame(KeyCode keyCode)
 {
+    // Check that the input system has been initialized.
     if (!s_InputData)
         return false;
 
     SE_ASSERT(s_InputData->KeyStates.contains(keyCode));
-    const KeyState keyState = s_InputData->KeyStates.at(keyCode);
-    return keyState == KeyState::PressedThisFrame;
+    const SwitchState switchState = s_InputData->KeyStates.at(keyCode);
+    return switchState == SwitchState::PressedThisFrame;
 }
 
 bool Input::WasKeyReleasedThisFrame(KeyCode keyCode)
 {
+    // Check that the input system has been initialized.
     if (!s_InputData)
         return false;
 
     SE_ASSERT(s_InputData->KeyStates.contains(keyCode));
-    const KeyState keyState = s_InputData->KeyStates.at(keyCode);
-    return keyState == KeyState::ReleasedThisFrame;
+    const SwitchState switchState = s_InputData->KeyStates.at(keyCode);
+    return switchState == SwitchState::ReleasedThisFrame;
 }
 
 bool Input::WasMouseButtonPressedThisFrame(MouseButton mouseButton)
 {
+    // Check that the input system has been initialized.
     if (!s_InputData)
         return false;
 
     SE_ASSERT(s_InputData->MouseButtonStates.contains(mouseButton));
-    const KeyState keyState = s_InputData->MouseButtonStates.at(mouseButton);
-    return keyState == KeyState::PressedThisFrame;
+    const SwitchState switchState = s_InputData->MouseButtonStates.at(mouseButton);
+    return switchState == SwitchState::PressedThisFrame;
 }
 
 bool Input::WasMouseButtonReleasedThisFrame(MouseButton mouseButton)
 {
+    // Check that the input system has been initialized.
     if (!s_InputData)
         return false;
 
     SE_ASSERT(s_InputData->MouseButtonStates.contains(mouseButton));
-    const KeyState keyState = s_InputData->MouseButtonStates.at(mouseButton);
-    return keyState == KeyState::ReleasedThisFrame;
-}
-
-int32_t Input::GetMousePositionX()
-{
-    if (!s_InputData)
-        return 0;
-    return s_InputData->CurrentFrameMousePosition.X;
-}
-
-int32_t Input::GetMousePositionY()
-{
-    if (!s_InputData)
-        return 0;
-    return s_InputData->CurrentFrameMousePosition.Y;
+    const SwitchState switchState = s_InputData->MouseButtonStates.at(mouseButton);
+    return switchState == SwitchState::ReleasedThisFrame;
 }
 
 int32_t Input::GetMouseDeltaX()
 {
+    // Check that the input system has been initialized.
     if (!s_InputData)
         return 0;
-    return s_InputData->CurrentFrameMousePosition.X - s_InputData->LastFrameMousePosition.X;
+
+    // Check that the current mouse position and last mouse position optionals have values.
+    if (!s_InputData->CurrentFrameMousePosition.HasValue() || !s_InputData->LastFrameMousePosition.HasValue())
+        return 0;
+
+    // Calculate the mouse delta position on the X-axis.
+    return s_InputData->CurrentFrameMousePosition->X - s_InputData->LastFrameMousePosition->X;
 }
 
 int32_t Input::GetMouseDeltaY()
 {
+    // Check that the input system has been initialized.
     if (!s_InputData)
         return 0;
-    return s_InputData->CurrentFrameMousePosition.Y - s_InputData->LastFrameMousePosition.Y;
+
+    // Check that the current mouse position and last mouse position optionals have values.
+    if (!s_InputData->CurrentFrameMousePosition.HasValue() || !s_InputData->LastFrameMousePosition.HasValue())
+        return 0;
+
+    // Calculate the mouse delta position on the X-axis.
+    return s_InputData->CurrentFrameMousePosition->Y - s_InputData->LastFrameMousePosition->Y;
 }
 
 float Input::GetMouseWheelScrollOffset()
 {
+    // Check that the input system has been initialized.
     if (!s_InputData)
         return 0.0F;
+
     return s_InputData->MouseWheelScrollOffset;
+}
+
+void Input::HandleOnMouseWheelScrolled(RefPtr<Window> sourceWindow, float scrollOffset)
+{
+    // Check that the input system has been initialized and if the source window is valid.
+    if (!s_InputData || !sourceWindow.IsValid())
+        return;
+
+    // Accumulate the scroll offset.
+    s_InputData->MouseWheelScrollOffset += scrollOffset;
 }
 
 }

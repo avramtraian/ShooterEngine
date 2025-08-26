@@ -3,9 +3,7 @@
 #pragma once
 
 #include <Runtime/Application/Window.h>
-#include <Runtime/Core/Containers/OwnPtr.h>
 #include <Runtime/Engine/Engine.h>
-#include <Runtime/Renderer/RHI/RenderingSurface.h>
 
 namespace SE
 {
@@ -23,11 +21,8 @@ public:
 private:
     void OnUpdate(float deltaTime);
 
-    void OnGameWindowResized(const WindowResizedEvent& resizedEvent);
-
 private:
-    OwnPtr<Window> m_GameWindow;
-    OwnPtr<RenderingSurface> m_GameRenderingSurface;
+    RefPtr<Window> m_GameWindow;
 };
 
 SHOOTER_API extern GameEngine* g_GameEngine;

@@ -1,253 +1,291 @@
 // Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
-#include <Runtime/Application/Window.h>
-#include <Runtime/Core/Platform/PlatformCoreInclude.h>
-
-#include <unordered_map>
+#include <Runtime/Application/Platform/Windows/WindowsWindow.h>
+#include <Runtime/Core/Log.h>
 
 namespace SE
 {
 
-struct EventCallbackInfo
-{
-    EventType               Type     { EventType::Unknown };
-    WindowEventCallbackID   ID       { INVALID_WINDOW_EVENT_CALLBACK_ID };
-    PFN_WindowEventCallback Callback;
-};
+static std::vector<WindowsWindow*> s_ActiveWindows;
 
-struct WindowPlatformData
+NODISCARD static RefPtr<WindowsWindow> GetWindowFromNativeHandle(HWND nativeHandle)
 {
-    HWND Handle { nullptr };
-    std::unordered_map<WindowEventCallbackID, EventCallbackInfo> EventCallbacks;
-    WindowEventCallbackID LastUsedEventCallbackID { 0 };
-};
-
-OwnPtr<Window> Window::Create(const WindowInfo& info)
-{
-    Window* windowInstance = new Window(info);
-    if (windowInstance->m_IsInitialized)
-        return AdoptOwn<Window>(windowInstance);
-
-    delete windowInstance;
+    for (WindowsWindow* window : s_ActiveWindows)
+    {
+        if (window != nullptr && window->GetNativeHandle() == nativeHandle)
+            return AdoptRef<WindowsWindow>(window);
+    }
     return {};
 }
 
-static std::unordered_map<HWND, Window*> s_ActiveWindowTable;
-
-static LRESULT Win32WindowProcedure(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
+static LRESULT WindowsWindowProcedure(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    RefPtr<Window> window = GetWindowFromNativeHandle(windowHandle);
+    if (!window.IsValid())
+        return DefWindowProcA(windowHandle, message, wParam, lParam);
+
     switch (message)
     {
         case WM_CLOSE:
         {
-            if (s_ActiveWindowTable.contains(windowHandle))
-            {
-                Window& window = *s_ActiveWindowTable.at(windowHandle);
-                window.SubmitCloseRequest();
-                return 0;
-            }
-
-            /* Forward the message handling to the default Win32 layer. */
-            break;
+            window->Close();
+            return 0;
         }
 
         case WM_SIZE:
         {
-            if (s_ActiveWindowTable.contains(windowHandle))
-            {
-                Window& window = *s_ActiveWindowTable.at(windowHandle);
-                const uint32 newSizeX = LOWORD(lParam);
-                const uint32 newSizeY = HIWORD(lParam);
-                window.DispatchEvent(WindowResizedEvent::GetStaticType(), WindowResizedEvent(newSizeX, newSizeY));
-                return 0;
-            }
-
-            /* Forward the message handling to the default Win32 layer. */
-            break;
+            const uint32 newSizeX = LOWORD(lParam);
+            const uint32 newSizeY = HIWORD(lParam);
+            window->GetOnWindowResizedDelegate().Broadcast(window, newSizeX, newSizeY);
+            return 0;
         }
 
         case WM_MOUSEWHEEL:
         {
-            if (s_ActiveWindowTable.contains(windowHandle))
-            {
-                Window& window = *s_ActiveWindowTable.at(windowHandle);
-                const float scrollOffset = (float)GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA;
-                window.DispatchEvent(MouseWheelScrolledEvent::GetStaticType(), MouseWheelScrolledEvent(scrollOffset));
-                return 0;
-            }
-
-            /* Forward the message handling to the default Win32 layer. */
-            break;
+            const int64 delta = GET_WHEEL_DELTA_WPARAM(wParam);
+            window->GetOnMouseWheelScrolledDelegate().Broadcast(window, (float)delta / (float)WHEEL_DELTA);
+            return 0;
         }
     }
 
     return DefWindowProcA(windowHandle, message, wParam, lParam);
 }
 
-Window::Window(const WindowInfo& info)
-    : m_PlatformData(nullptr)
-    , m_IsInitialized(false)
+WindowsWindow::WindowsWindow(const WindowInfo& info)
+    : m_WindowHandle(nullptr)
     , m_IsRequestedToClose(false)
 {
+    // Register the window class.
     static bool s_IsWindowClassRegistered = false;
     if (!s_IsWindowClassRegistered)
     {
         WNDCLASSA windowClass = {};
+        windowClass.lpfnWndProc = WindowsWindowProcedure;
         windowClass.hInstance = GetModuleHandle(nullptr);
         windowClass.lpszClassName = "ShooterWindowClass";
-        windowClass.lpfnWndProc = Win32WindowProcedure;
 
         RegisterClassA(&windowClass);
         s_IsWindowClassRegistered = true;
     }
 
-    DWORD windowStyleFlags = WS_OVERLAPPEDWINDOW;
-    int showCommand = 0;
+    // Determine the window position and size.
+    int windowSizeX = info.SizeX.ValueOr(CW_USEDEFAULT);
+    int windowSizeY = info.SizeY.ValueOr(CW_USEDEFAULT);
+    int windowPositionX = info.PositionX.ValueOr(CW_USEDEFAULT);
+    int windowPositionY = info.PositionY.ValueOr(CW_USEDEFAULT);
 
-    switch (info.StartMode)
+    // Determine the window creation flags.
+    DWORD windowStyleFlags = WS_OVERLAPPEDWINDOW;
+    DWORD windowShowMode = SW_SHOW;
+
+    if (info.StartMode == WindowMode::Maximized)
     {
-        case WindowMode::Windowed:  windowStyleFlags |= 0;           showCommand = SW_NORMAL;   break;
-        case WindowMode::Maximized: windowStyleFlags |= WS_MAXIMIZE; showCommand = SW_MAXIMIZE; break;
-        case WindowMode::Minimized: windowStyleFlags |= WS_MINIMIZE; showCommand = SW_MINIMIZE; break;
+        windowStyleFlags |= WS_MAXIMIZE;
+        windowShowMode = SW_MAXIMIZE;
+    }
+    if (info.StartMode == WindowMode::Minimized)
+    {
+        windowStyleFlags |= WS_MAXIMIZE;
+        windowShowMode = SW_MINIMIZE;
     }
 
-    const int windowPositionX = info.PositionX.ValueOr(CW_USEDEFAULT);
-    const int windowPositionY = info.PositionY.ValueOr(CW_USEDEFAULT);
-    const int windowSizeX = info.SizeX.ValueOr(CW_USEDEFAULT);
-    const int windowSizeY = info.SizeY.ValueOr(CW_USEDEFAULT);
-
-    /* Create the window. */
-    const HWND windowHandle = CreateWindowA(
+    // Create the window.
+    m_WindowHandle = CreateWindowA(
         "ShooterWindowClass", info.Title.Characters(), windowStyleFlags,
         windowPositionX, windowPositionY, windowSizeX, windowSizeY,
-        nullptr, nullptr, GetModuleHandle(nullptr), nullptr
-    );
-    if (windowHandle == nullptr)
+        nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
+    if (m_WindowHandle == nullptr)
+    {
+        SE_LOG_ERROR("Failed to create window with title '%s'!", info.Title.Characters());
+        SE_ASSERT_NOT_REACHED;
         return;
+    }
+    ShowWindow(m_WindowHandle, windowShowMode);
 
-    /* Show the window. */
-    ShowWindow(windowHandle, showCommand);
+    if (info.StartMode == WindowMode::Fullscreen)
+    {
+        EnterFullscreen(WindowMode::Windowed);
+    }
 
-    m_IsInitialized = true;
-    m_PlatformData = new WindowPlatformData();
-    m_PlatformData->Handle = windowHandle;
-
-    /* Add this window to the active windows table. */
-    s_ActiveWindowTable.insert({ windowHandle, this });
+    // Add the window to the active window list.
+    s_ActiveWindows.push_back(this);
 }
 
-Window::~Window()
+WindowsWindow::~WindowsWindow()
 {
-    if (!m_IsInitialized)
-        return;
+    // Remove the window from the active window list.
+    Optional<usize> windowIndex;
+    for (usize index = 0; index < s_ActiveWindows.size(); ++index)
+    {
+        if (s_ActiveWindows[index] == this)
+        {
+            windowIndex = index;
+            break;
+        }
+    }
+    if (windowIndex.HasValue())
+    {
+        // NOTE(Traian): Replace the window pointer stored at the given index with the
+        // last element in the array and pop the container. While this operation doesn't
+        // preserve elements order, it is more performant.
+        s_ActiveWindows[*windowIndex] = s_ActiveWindows.back();
+        s_ActiveWindows.pop_back();
+    }
 
-    /* Destroy the native window object. */
-    DestroyWindow(m_PlatformData->Handle);
-    m_PlatformData->Handle = nullptr;
-
-    delete m_PlatformData;
-    m_PlatformData = nullptr;
+    DestroyWindow(m_WindowHandle);
+    m_WindowHandle = nullptr;
+    m_FullscreenState.Clear();
 }
 
-void Window::SubmitCloseRequest()
+uint32 WindowsWindow::GetSizeX() const
 {
-    if (!m_IsInitialized)
-        return;
+    RECT windowClientRect = {};
+    if (GetClientRect(m_WindowHandle, &windowClientRect))
+    {
+        const uint32 windowSizeX = windowClientRect.right - windowClientRect.left;
+        return windowSizeX;
+    }
 
-    /* Mark the window was waiting to be closed. */
-    m_IsRequestedToClose = true;
+    return 0;
 }
 
-void Window::PumpMessages()
+uint32 WindowsWindow::GetSizeY() const
 {
-    if (!m_IsInitialized)
+    RECT windowClientRect = {};
+    if (GetClientRect(m_WindowHandle, &windowClientRect))
+    {
+        const uint32 windowSizeY = windowClientRect.bottom - windowClientRect.top;
+        return windowSizeY;
+    }
+
+    return 0;
+}
+
+WindowMode WindowsWindow::GetCurrentMode() const
+{
+    if (m_FullscreenState.HasValue())
+        return WindowMode::Fullscreen;
+
+    if (IsZoomed(m_WindowHandle))
+        return WindowMode::Maximized;
+    
+    if (IsIconic(m_WindowHandle))
+        return WindowMode::Minimized;
+
+    return WindowMode::Windowed;
+}
+
+void WindowsWindow::SetSize(Optional<uint32> sizeX, Optional<uint32> sizeY)
+{
+    RECT currentWindowClientRect = {};
+    GetClientRect(m_WindowHandle, &currentWindowClientRect);
+
+    // Get the new size of the window client area.
+    const uint32 newClientSizeX = sizeX.ValueOr((uint32)(currentWindowClientRect.right - currentWindowClientRect.left));
+    const uint32 newClientSizeY = sizeY.ValueOr((uint32)(currentWindowClientRect.bottom - currentWindowClientRect.top));
+
+    // Get current window style & ex-style.
+    const DWORD currentStyle = GetWindowLong(m_WindowHandle, GWL_STYLE);
+    const DWORD currentExStyle = GetWindowLong(m_WindowHandle, GWL_EXSTYLE);
+
+    // Adjust the window rectangle.
+    RECT windowRect = { 0, 0, (LONG)newClientSizeX, (LONG)newClientSizeY };
+    AdjustWindowRectEx(&windowRect, currentStyle, FALSE, currentExStyle);
+
+    // Resize the window to that rectangle.
+    SetWindowPos(
+        m_WindowHandle, nullptr,
+        0, 0,
+        windowRect.right - windowRect.left,
+        windowRect.bottom - windowRect.top,
+        SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+}
+
+void WindowsWindow::SetCurrentMode(WindowMode mode)
+{
+    const WindowMode previousMode = GetCurrentMode();
+    if (mode == previousMode)
         return;
 
+    // Handle fullscreen state.
+    if (mode == WindowMode::Fullscreen)
+    {
+        EnterFullscreen(previousMode);
+    }
+    if (previousMode == WindowMode::Fullscreen)
+    {
+        ExitFullscreen(mode);
+    }
+
+    // Handle non-fullscreen state.
+    if (mode == WindowMode::Windowed)
+        ShowWindow(m_WindowHandle, SW_RESTORE);
+    
+    if (mode == WindowMode::Minimized)
+        ShowWindow(m_WindowHandle, SW_MINIMIZE);
+    
+    if (mode == WindowMode::Maximized)
+        ShowWindow(m_WindowHandle, SW_MAXIMIZE);
+}
+
+void WindowsWindow::ProcessEventQueue()
+{
     MSG message = {};
-    while (PeekMessageA(&message, m_PlatformData->Handle, 0, 0, PM_REMOVE))
+    while (PeekMessageA(&message, m_WindowHandle, 0, 0, PM_REMOVE))
     {
         TranslateMessage(&message);
         DispatchMessageA(&message);
     }
 }
 
-WindowEventCallbackID Window::AddEventCallback(EventType eventType, PFN_WindowEventCallback pfnCallback)
+void WindowsWindow::Close()
 {
-    if (!m_PlatformData)
-        return INVALID_WINDOW_EVENT_CALLBACK_ID;
-    const WindowEventCallbackID callbackID = m_PlatformData->LastUsedEventCallbackID++;
-
-    EventCallbackInfo callbackInfo = {};
-    callbackInfo.Type = eventType;
-    callbackInfo.ID = callbackID;
-    callbackInfo.Callback = pfnCallback;
-    m_PlatformData->EventCallbacks.insert({ callbackID, callbackInfo });
-
-    return callbackID;
+    m_IsRequestedToClose = true;
 }
 
-void Window::RemoveEventCallback(WindowEventCallbackID callbackID)
+void WindowsWindow::EnterFullscreen(WindowMode previousMode)
 {
-    if (!m_PlatformData)
-        return;
-    if (!m_PlatformData->EventCallbacks.contains(callbackID))
-        return;
-    
-    /* Remove the callback from the dispatch table. */
-    m_PlatformData->EventCallbacks.erase(callbackID);
-}
+    SE_ASSERT(previousMode != WindowMode::Fullscreen);
 
-Vector2u Window::GetSize() const
-{
-    Vector2u windowSize = { 0, 0 };
+    // Get the previous window placement. It will be used to restore the window when exiting fullscreen mode.
+    WINDOWPLACEMENT windowPlacement = {};
+    GetWindowPlacement(m_WindowHandle, &windowPlacement);
+    m_FullscreenState = FullscreenState();
+    m_FullscreenState->PreviousMode = previousMode;
+    m_FullscreenState->PreviousWindowPlacement = windowPlacement;
 
-    if (!m_IsInitialized)
-        return windowSize;
+    // Remove window decorations.
+    SetWindowLong(m_WindowHandle, GWL_STYLE, WS_POPUP | WS_VISIBLE);
 
-    RECT windowRect = {};
-    if (GetClientRect(m_PlatformData->Handle, &windowRect))
+    // Make the window fill the entire screen.
+    MONITORINFO monitorInfo = { sizeof(MONITORINFO) };
+    if (GetMonitorInfo(MonitorFromWindow(m_WindowHandle, MONITOR_DEFAULTTOPRIMARY), &monitorInfo))
     {
-        windowSize.X = (uint32)(windowRect.right - windowRect.left);
-        windowSize.Y = (uint32)(windowRect.bottom - windowRect.top);
+        SetWindowPos(
+            m_WindowHandle, HWND_TOP,
+            monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top,
+            monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
+            monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
+            SWP_FRAMECHANGED | SWP_NOOWNERZORDER);
     }
-
-    return windowSize;
 }
 
-Vector2i Window::GetPosition() const
+void WindowsWindow::ExitFullscreen(WindowMode newMode)
 {
-    Vector2i windowPosition = { 0, 0 };
+    SE_ASSERT(GetCurrentMode() == WindowMode::Fullscreen);
+    SE_ASSERT(newMode != WindowMode::Fullscreen);
 
-    if (!m_IsInitialized)
-        return windowPosition;
+    // Restore previous window style
+    SetWindowLong(m_WindowHandle, GWL_STYLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE);
 
-    RECT windowRect = {};
-    if (GetClientRect(m_PlatformData->Handle, &windowRect))
-    {
-        windowPosition.X = windowRect.left;
-        windowPosition.Y = windowRect.top;
-    }
+    SetWindowPlacement(m_WindowHandle, &m_FullscreenState->PreviousWindowPlacement);
+    SetWindowPos(
+        m_WindowHandle, nullptr,
+        0, 0, 0, 0,
+        SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+        SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
 
-    return windowPosition;
-}
-
-void* Window::GetNativeHandle() const
-{
-    if (!m_IsInitialized)
-        return nullptr;
-    return m_PlatformData->Handle;
-}
-
-void Window::DispatchEvent(EventType eventType, const Event& event)
-{
-    if (!m_IsInitialized)
-        return;
-
-    for (const auto& [callbackID, callbackInfo] : m_PlatformData->EventCallbacks)
-    {
-        if (callbackInfo.Type == eventType)
-            callbackInfo.Callback(*this, event);
-    }
+    m_FullscreenState.Clear();
 }
 
 }
