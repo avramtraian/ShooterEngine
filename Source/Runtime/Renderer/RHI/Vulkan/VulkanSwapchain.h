@@ -10,27 +10,23 @@
 namespace SE
 {
 
-// Forward declaration.
+// Forward declarations.
 class VulkanSwapchain;
+class VulkanSurface;
 
 struct VulkanSwapchainInfo
 {
 public:
-    VkSurfaceKHR            Surface           { VK_NULL_HANDLE };
-    uint32                  SizeX             { 0 };
-    uint32                  SizeY             { 0 };
     uint32                  MinImageCount     { 0 };
     uint32                  MaxFramesInFlight { 0 };
-    RefPtr<VulkanSwapchain> OldSwapchain      { nullptr };
+    RefPtr<VulkanSurface>   Surface;
+    RefPtr<VulkanSwapchain> OldSwapchain;
 
 public:
-    inline VulkanSwapchainInfo& SetSurface           (VkSurfaceKHR surface)                 { Surface = surface;                      return *this; }
-    inline VulkanSwapchainInfo& SetSizeX             (uint32 sizeX)                         { SizeX = sizeX;                          return *this; }
-    inline VulkanSwapchainInfo& SetSizeY             (uint32 sizeY)                         { SizeY = sizeY;                          return *this; }
-    inline VulkanSwapchainInfo& SetSize              (uint32 sizeX, uint32 sizeY)           { SizeX = sizeX; SizeY = sizeY;           return *this; }
-    inline VulkanSwapchainInfo& SetMinImageCount     (uint32 minImageCount)                 { MinImageCount = minImageCount;          return *this; }
-    inline VulkanSwapchainInfo& SetMaxFramesInFlight (uint32 maxFramesInFlight)             { MaxFramesInFlight = maxFramesInFlight;  return *this; }
-    inline VulkanSwapchainInfo& SetOldSwapchain      (RefPtr<VulkanSwapchain> oldSwapchain) { OldSwapchain = std::move(oldSwapchain); return *this; }
+    inline VulkanSwapchainInfo& SetMinImageCount     (uint32 minImageCount)                 { MinImageCount = minImageCount;         return *this; }
+    inline VulkanSwapchainInfo& SetMaxFramesInFlight (uint32 maxFramesInFlight)             { MaxFramesInFlight = maxFramesInFlight; return *this; }
+    inline VulkanSwapchainInfo& SetSurface           (RefPtr<VulkanSurface> surface)        { Surface = Move(surface);               return *this; }
+    inline VulkanSwapchainInfo& SetOldSwapchain      (RefPtr<VulkanSwapchain> oldSwapchain) { OldSwapchain = Move(oldSwapchain);     return *this; }
 };
 
 class VulkanSwapchain : public RefCounted
@@ -75,6 +71,7 @@ private:
 
 private:
     VkSwapchainKHR m_Handle;
+    RefPtr<VulkanSurface> m_Surface;
     
     ImmutableProperties m_ImmutableProperties;
     uint32 m_SizeX;

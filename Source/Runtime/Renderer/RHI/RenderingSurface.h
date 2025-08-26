@@ -3,6 +3,7 @@
 #pragma once
 
 #include <Runtime/Application/Window.h>
+#include <Runtime/Core/Containers/RefPtr.h>
 #include <Runtime/Renderer/RHI/RHICore.h>
 #include <Runtime/Renderer/RHI/Synchronization.h>
 #include <Runtime/Renderer/RHI/Texture.h>
@@ -13,24 +14,24 @@ namespace SE
 struct RenderingSurfaceInfo
 {
 public:
-    RefPtr<Window> OwningWindow           { nullptr };
+    RefPtr<Window> TargetWindow;
     uint32         SwapchainMinImageCount { 2 };
     uint32         MaxFramesInFlight      { 1 };
 
 public:
-    inline RenderingSurfaceInfo& SetOwningWindow           (RefPtr<Window> window) { OwningWindow = Move(window);         return *this; }
+    inline RenderingSurfaceInfo& SetTargetWindow           (RefPtr<Window> window) { TargetWindow = Move(window);         return *this; }
     inline RenderingSurfaceInfo& SetSwapchainMinImageCount (uint32 imageCount)     { SwapchainMinImageCount = imageCount; return *this; }
     inline RenderingSurfaceInfo& SetMaxFramesInFlight      (uint32 frameCount)     { MaxFramesInFlight = frameCount;      return *this; }
 };
 
-class RenderingSurface
+class RenderingSurface : public RefCounted
 {
     SE_MAKE_NONCOPYABLE(RenderingSurface);
     SE_MAKE_NONMOVABLE(RenderingSurface);
 
 public:
     RenderingSurface() = default;
-    virtual ~RenderingSurface() = default;
+    virtual ~RenderingSurface() override = default;
 
 public:
     virtual bool Invalidate() = 0;

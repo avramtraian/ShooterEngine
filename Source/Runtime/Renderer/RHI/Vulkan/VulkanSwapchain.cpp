@@ -2,6 +2,7 @@
 
 #include <Runtime/Renderer/RHI/Vulkan/VulkanSwapchain.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderingDriver.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanRenderingSurface.h>
 
 namespace SE
 {
@@ -27,8 +28,9 @@ static std::string VulkanPresentModeToString(VkPresentModeKHR presentMode)
 
 VulkanSwapchain::VulkanSwapchain(const VulkanSwapchainInfo& info)
     : m_Handle(VK_NULL_HANDLE)
-    , m_SizeX(info.SizeX)
-    , m_SizeY(info.SizeY)
+    , m_Surface(info.Surface)
+    , m_SizeX(info.Surface->GetSizeX())
+    , m_SizeY(info.Surface->GetSizeY())
 {
     if (info.OldSwapchain.IsValid())
     {
@@ -39,7 +41,7 @@ VulkanSwapchain::VulkanSwapchain(const VulkanSwapchainInfo& info)
     {
         m_ImmutableProperties.Format = VK_FORMAT_B8G8R8A8_UNORM;
         m_ImmutableProperties.ColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-        m_ImmutableProperties.PresentMode = FindBestPresentMode(info.Surface);
+        m_ImmutableProperties.PresentMode = FindBestPresentMode(info.Surface->GetHandle());
 
         // Submit information about the swapchain creation to the logger.
         SE_LOG_TRACE("The [Vulkan] swapchain will be created with the following parameters:");
@@ -50,7 +52,7 @@ VulkanSwapchain::VulkanSwapchain(const VulkanSwapchainInfo& info)
 
     VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
     swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    swapchainCreateInfo.surface = info.Surface;
+    swapchainCreateInfo.surface = info.Surface->GetHandle();
     swapchainCreateInfo.minImageCount = info.MinImageCount;
     swapchainCreateInfo.imageFormat = m_ImmutableProperties.Format;
     swapchainCreateInfo.imageColorSpace = m_ImmutableProperties.ColorSpace;

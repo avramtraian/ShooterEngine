@@ -643,9 +643,9 @@ void VulkanRenderingDriver::ShutdownBackend()
     g_VulkanDriver = nullptr;
 }
 
-OwnPtr<RenderingSurface> VulkanRenderingDriver::CreateSurface(const RenderingSurfaceInfo& info)
+RefPtr<RenderingSurface> VulkanRenderingDriver::CreateSurface(const RenderingSurfaceInfo& info)
 {
-    return CreateOwn<VulkanRenderingSurface>(info);
+    return CreateRef<VulkanRenderingSurface>(info);
 }
 
 RefPtr<CommandList> VulkanRenderingDriver::CreateCommandList(const CommandListInfo& info)

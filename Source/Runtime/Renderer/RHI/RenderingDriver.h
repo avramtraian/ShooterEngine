@@ -40,7 +40,7 @@ public:
     static void Shutdown();
 
 public:
-    virtual OwnPtr<RenderingSurface>            CreateSurface                       (const RenderingSurfaceInfo& info)          = 0;
+    virtual RefPtr<RenderingSurface>            CreateSurface                       (const RenderingSurfaceInfo& info)          = 0;
     
     virtual RefPtr<CommandList>                 CreateCommandList                   (const CommandListInfo& info)               = 0;
     virtual RefPtr<IndexBuffer>                 CreateIndexBuffer                   (const IndexBufferInfo& info)               = 0;

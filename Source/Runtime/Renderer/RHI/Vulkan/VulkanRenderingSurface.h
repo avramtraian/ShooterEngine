@@ -10,6 +10,29 @@
 namespace SE
 {
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// VULKAN SURFACE DECLARATION. //////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+class VulkanSurface : public RefCounted
+{
+public:
+    VulkanSurface(const RefPtr<Window>& targetWindow);
+    virtual ~VulkanSurface() override;
+
+    NODISCARD FORCEINLINE VkSurfaceKHR GetHandle() const { return m_Handle; }
+    NODISCARD FORCEINLINE uint32 GetSizeX() const { return m_TargetWindow->GetSizeX(); }
+    NODISCARD FORCEINLINE uint32 GetSizeY() const { return m_TargetWindow->GetSizeY(); }
+
+private:
+    VkSurfaceKHR m_Handle;
+    RefPtr<Window> m_TargetWindow;
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////// VULKAN RENDERING SURFACE DECLARATION. /////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
 class VulkanRenderingSurface : public RenderingSurface
 {
 public:
@@ -38,8 +61,7 @@ public:
     virtual FenceHandle GetRenderFinishedFence() override;
 
 private:
-    RefPtr<Window> m_OwningWindow;
-    VkSurfaceKHR m_Surface;
+    RefPtr<VulkanSurface> m_Surface;
     uint32 m_SwapchainMinImageCount;
     RefPtr<VulkanSwapchain> m_Swapchain;
     std::vector<RefPtr<VulkanSwapchainTexture2D>> m_SwapchainTextures;

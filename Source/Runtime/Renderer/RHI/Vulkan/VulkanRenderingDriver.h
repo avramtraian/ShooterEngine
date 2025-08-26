@@ -58,7 +58,7 @@ public:
     NODISCARD FORCEINLINE VkDescriptorPool GetDescriptorPool() const { return m_DescriptorPool; }
 
 public:
-    virtual OwnPtr<RenderingSurface> CreateSurface(const RenderingSurfaceInfo& info) override;
+    virtual RefPtr<RenderingSurface> CreateSurface(const RenderingSurfaceInfo& info) override;
     
     virtual RefPtr<CommandList> CreateCommandList(const CommandListInfo& info) override;
     virtual RefPtr<IndexBuffer> CreateIndexBuffer(const IndexBufferInfo& info) override;
