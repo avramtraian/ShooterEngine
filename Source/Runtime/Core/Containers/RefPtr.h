@@ -251,7 +251,7 @@ public:
             if (refCounted->GetStrongReferenceCount() == 0)
             {
                 const uint32 weakReferenceCount = refCounted->GetWeakReferenceCount();
-                m_Instance->~T();
+                refCounted->~RefCounted();
 
                 if (weakReferenceCount > 0)
                 {
