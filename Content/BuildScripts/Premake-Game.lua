@@ -20,7 +20,10 @@ project "SE-Game"
 
     files {
         "%{wks.location}/Source/Game/**.cpp",
+        "%{wks.location}/Source/Game/**.cc",
+        "%{wks.location}/Source/Game/**.cxx",
         "%{wks.location}/Source/Game/**.h",
+        "%{wks.location}/Source/Game/**.hpp",
         "%{wks.location}/Source/Game/**.inl"
     }
 

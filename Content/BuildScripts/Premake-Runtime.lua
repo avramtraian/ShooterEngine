@@ -21,7 +21,10 @@ project "SE-Runtime"
 
     files {
         "%{wks.location}/Source/Runtime/**.cpp",
+        "%{wks.location}/Source/Runtime/**.cc",
+        "%{wks.location}/Source/Runtime/**.cxx",
         "%{wks.location}/Source/Runtime/**.h",
+        "%{wks.location}/Source/Runtime/**.hpp",
         "%{wks.location}/Source/Runtime/**.inl"
     }
 

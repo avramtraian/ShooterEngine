@@ -18,7 +18,10 @@ project "SE-Editor"
 
     files {
         "%{wks.location}/Source/Editor/**.cpp",
+        "%{wks.location}/Source/Editor/**.cc",
+        "%{wks.location}/Source/Editor/**.cxx",
         "%{wks.location}/Source/Editor/**.h",
+        "%{wks.location}/Source/Editor/**.hpp",
         "%{wks.location}/Source/Editor/**.inl"
     }
 
