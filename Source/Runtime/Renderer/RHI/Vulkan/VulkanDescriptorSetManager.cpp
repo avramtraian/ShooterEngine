@@ -6,7 +6,7 @@
 namespace SE
 {
 
-VulkanDescriptorSetManager::VulkanDescriptorSetManager(const WeakRefPtr<VulkanShader>& parentShader, const std::unordered_map<uint32, VulkanDescriptorSetLayout>& setLayouts)
+VulkanDescriptorSetManager::VulkanDescriptorSetManager(const WeakRefPtr<VulkanShader>& parentShader, const HashMap<uint32, VulkanDescriptorSetLayout>& setLayouts)
     : m_ParentShader(parentShader)
 {
     for (const auto& [setIndex, setLayout] : setLayouts)
@@ -27,12 +27,12 @@ VulkanDescriptorSetManager::~VulkanDescriptorSetManager()
         }
     }
 
-    m_SetCaches.clear();
+    m_SetCaches.ClearAndShrink();
 }
 
-std::vector<VulkanDescriptorSet*> VulkanDescriptorSetManager::AcquireDescriptorSets(const ShaderResourcesBindPack& bindPack)
+Vector<VulkanDescriptorSet*> VulkanDescriptorSetManager::AcquireDescriptorSets(const ShaderResourcesBindPack& bindPack)
 {
-    std::unordered_map<uint32, std::unordered_map<uint32, RefPtr<ShaderResource>>> resourceSets;
+    HashMap<uint32, HashMap<uint32, RefPtr<ShaderResource>>> resourceSets;
     for (const auto& texture : bindPack.Textures)
         resourceSets[texture.SetIndex][texture.BindingIndex] = texture.Texture;
     for (const auto& uniformBuffer : bindPack.UniformBuffers)
@@ -40,12 +40,12 @@ std::vector<VulkanDescriptorSet*> VulkanDescriptorSetManager::AcquireDescriptorS
 
     // List of descriptor sets that are required to be bound to the pipeline in order to provide access to all
     // resources specified by the given bind info structure.
-    std::vector<VulkanDescriptorSet*> descriptorSets;
+    Vector<VulkanDescriptorSet*> descriptorSets;
 
     for (const auto& [setIndex, setBindings] : resourceSets)
     {
-        SE_ASSERT(m_SetCaches.contains(setIndex));
-        DescriptorSetCache& setCache = m_SetCaches.at(setIndex);
+        SE_ASSERT(m_SetCaches.Contains(setIndex));
+        DescriptorSetCache& setCache = m_SetCaches.At(setIndex);
         bool wasCachedSetFound = false;
     
         // TODO(Traian): Use a "smarter" method to determine if a cached set is compatible with the current bind pack. Checking each
@@ -55,7 +55,7 @@ std::vector<VulkanDescriptorSet*> VulkanDescriptorSetManager::AcquireDescriptorS
         {
             if (cachedSet->IsCompatibleWithBindings(setBindings) == DescriptorSetCompatibility::Compatible)
             {
-                descriptorSets.push_back(cachedSet.Get());
+                descriptorSets.Add(cachedSet.Get());
                 wasCachedSetFound = true;
                 break;
             }
@@ -65,13 +65,13 @@ std::vector<VulkanDescriptorSet*> VulkanDescriptorSetManager::AcquireDescriptorS
         {
             // TODO(Traian): Depending on the number of cached descriptor sets and usage patterns, try update or invalidate
             // an existing descriptor set instead of creating a new one.
-            SE_ASSERT(setCache.Sets.size() < 1024);
+            SE_ASSERT(setCache.Sets.Count() < 1024);
 
             VkDescriptorPool descriptorPool = g_VulkanDriver->GetDescriptorPool();
             auto set = CreateOwn<VulkanDescriptorSet>(descriptorPool, setIndex, setCache.Layout, m_ParentShader);
             set->UpdateBindings(setBindings);
-            descriptorSets.push_back(set.Get());
-            setCache.Sets.push_back(std::move(set));
+            descriptorSets.Add(set.Get());
+            setCache.Sets.Add(std::move(set));
         }
     }
 

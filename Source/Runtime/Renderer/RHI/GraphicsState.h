@@ -2,10 +2,9 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/String/String.h>
+#include <Runtime/Core/Containers/Vector.h>
 #include <Runtime/Renderer/RHI/RHICore.h>
-
-#include <string>
-#include <vector>
 
 namespace SE
 {
@@ -20,19 +19,19 @@ enum class GraphicsVertexInputAttributeType : uint8
 
 struct GraphicsVertexInputAttribute
 {
-    std::string Name;
+    String Name;
     GraphicsVertexInputAttributeType Type { GraphicsVertexInputAttributeType::Unknown };
 };
 
 struct GraphicsVertexInputLayout
 {
 public:
-    std::vector<GraphicsVertexInputAttribute> Attributes;
+    Vector<GraphicsVertexInputAttribute> Attributes;
 
 public:
-    inline GraphicsVertexInputLayout& AddAttribute(std::string_view name, GraphicsVertexInputAttributeType type)
+    inline GraphicsVertexInputLayout& AddAttribute(StringView name, GraphicsVertexInputAttributeType type)
     {
-        GraphicsVertexInputAttribute& attribute = Attributes.emplace_back();
+        GraphicsVertexInputAttribute& attribute = Attributes.Emplace();
         attribute.Name = name;
         attribute.Type = type;
         return *this;

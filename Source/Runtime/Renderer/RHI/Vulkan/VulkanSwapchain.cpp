@@ -7,11 +7,11 @@
 namespace SE
 {
 
-static std::string VulkanPresentModeToString(VkPresentModeKHR presentMode)
+static String VulkanPresentModeToString(VkPresentModeKHR presentMode)
 {
     switch (presentMode)
     {
-#define _SE_CASE(presentModeName) case presentModeName: return #presentModeName;
+#define _SE_CASE(presentModeName) case presentModeName: return VIEW(#presentModeName);
         _SE_CASE(VK_PRESENT_MODE_IMMEDIATE_KHR);
         _SE_CASE(VK_PRESENT_MODE_MAILBOX_KHR);
         _SE_CASE(VK_PRESENT_MODE_FIFO_KHR);
@@ -23,7 +23,7 @@ static std::string VulkanPresentModeToString(VkPresentModeKHR presentMode)
     }
 
     SE_ASSERT_NOT_REACHED;
-    return "<unstringifyable>";
+    return VIEW("<unstringifyable>");
 }
 
 VulkanSwapchain::VulkanSwapchain(const VulkanSwapchainInfo& info)
@@ -46,8 +46,8 @@ VulkanSwapchain::VulkanSwapchain(const VulkanSwapchainInfo& info)
         // Submit information about the swapchain creation to the logger.
         SE_LOG_TRACE("The [Vulkan] swapchain will be created with the following parameters:");
         SE_LOG_TRACE("  Min Image count: %d", info.MinImageCount)
-        SE_LOG_TRACE("  Format:          %s", VulkanFormatToString(m_ImmutableProperties.Format).c_str());
-        SE_LOG_TRACE("  Present mode:    %s", VulkanPresentModeToString(m_ImmutableProperties.PresentMode).c_str());
+        SE_LOG_TRACE("  Format:          %s", VulkanFormatToString(m_ImmutableProperties.Format).Characters());
+        SE_LOG_TRACE("  Present mode:    %s", VulkanPresentModeToString(m_ImmutableProperties.PresentMode).Characters());
     }
 
     VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
@@ -82,11 +82,11 @@ VulkanSwapchain::VulkanSwapchain(const VulkanSwapchainInfo& info)
     // Query the images from the swapchain object.
     uint32 swapchainImageCount = 0;
     SE_VULKAN_CHECK(vkGetSwapchainImagesKHR(g_VulkanDriver->GetDevice(), m_Handle, &swapchainImageCount, nullptr));
-    m_Images.resize(swapchainImageCount);
-    SE_VULKAN_CHECK(vkGetSwapchainImagesKHR(g_VulkanDriver->GetDevice(), m_Handle, &swapchainImageCount, m_Images.data()));
+    m_Images.SetCountDefaulted(swapchainImageCount);
+    SE_VULKAN_CHECK(vkGetSwapchainImagesKHR(g_VulkanDriver->GetDevice(), m_Handle, &swapchainImageCount, m_Images.Elements()));
 
     // Create views for each swapchain image.
-    m_ImageViews.reserve(swapchainImageCount);
+    m_ImageViews.EnsureCapacity(swapchainImageCount);
     for (VkImage image : m_Images)
     {
         VkImageViewCreateInfo imageViewCreateInfo = {};
@@ -110,18 +110,18 @@ VulkanSwapchain::VulkanSwapchain(const VulkanSwapchainInfo& info)
             SE_LOG_ERROR("Failed to create [Vulkan] image view for swapchain image! (Result: %d)", result);
             return;
         }
-        m_ImageViews.push_back(imageViewHandle);
+        m_ImageViews.Add(imageViewHandle);
     }
 
     // Create the synchronization objects.
     {
-        m_ImageAvailableSemaphores.reserve(info.MaxFramesInFlight);
-        m_RenderFinishedSemaphores.reserve(info.MaxFramesInFlight);
+        m_ImageAvailableSemaphores.EnsureCapacity(info.MaxFramesInFlight);
+        m_RenderFinishedSemaphores.EnsureCapacity(info.MaxFramesInFlight);
 
         for (uint32 frameIndex = 0; frameIndex < info.MaxFramesInFlight; ++frameIndex)
         {
-            m_ImageAvailableSemaphores.push_back(g_VulkanDriver->AcquireSemaphore());
-            m_RenderFinishedSemaphores.push_back(g_VulkanDriver->AcquireSemaphore());
+            m_ImageAvailableSemaphores.Add(g_VulkanDriver->AcquireSemaphore());
+            m_RenderFinishedSemaphores.Add(g_VulkanDriver->AcquireSemaphore());
         }
     }
 }
@@ -132,19 +132,19 @@ VulkanSwapchain::~VulkanSwapchain()
     {
         for (SemaphoreHandle semaphore : m_ImageAvailableSemaphores)
             g_VulkanDriver->RetireSemaphore(semaphore);
-        m_ImageAvailableSemaphores.clear();
+        m_ImageAvailableSemaphores.ClearAndShrink();
 
         for (SemaphoreHandle semaphore : m_RenderFinishedSemaphores)
             g_VulkanDriver->RetireSemaphore(semaphore);
-        m_RenderFinishedSemaphores.clear();
+        m_RenderFinishedSemaphores.ClearAndShrink();
     }
 
     // Destroy the swapchain image views. Note that the images are created and managed by
     // the swapchain, and thus it is not the swapchain responsability to destroy them.
     for (VkImageView imageView : m_ImageViews)
         vkDestroyImageView(g_VulkanDriver->GetDevice(), imageView, nullptr);
-    m_ImageViews.clear();
-    m_Images.clear();
+    m_ImageViews.ClearAndShrink();
+    m_Images.ClearAndShrink();
 
     // Destroy the swapchain.
     vkDestroySwapchainKHR(g_VulkanDriver->GetDevice(), m_Handle, nullptr);
@@ -154,7 +154,7 @@ VulkanSwapchain::~VulkanSwapchain()
 VkPresentModeKHR VulkanSwapchain::FindBestPresentMode(VkSurfaceKHR surface) const
 {
     uint32 availablePresentModeCount = 0;
-    std::vector<VkPresentModeKHR> availablePresentModes;
+    Vector<VkPresentModeKHR> availablePresentModes;
     const VkResult getPresentModesResult = vkGetPhysicalDeviceSurfacePresentModesKHR(
         g_VulkanDriver->GetPhysicalDevice().Handle,
         surface,
@@ -162,18 +162,18 @@ VkPresentModeKHR VulkanSwapchain::FindBestPresentMode(VkSurfaceKHR surface) cons
         nullptr);
     if (getPresentModesResult == VK_SUCCESS)
     {
-        availablePresentModes.resize(availablePresentModeCount);
+        availablePresentModes.SetCountDefaulted(availablePresentModeCount);
         SE_VULKAN_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(
             g_VulkanDriver->GetPhysicalDevice().Handle,
             surface,
             &availablePresentModeCount,
-            availablePresentModes.data()));
-        SE_ENSURE(availablePresentModes.size() == availablePresentModeCount);
+            availablePresentModes.Elements()));
+        SE_ENSURE(availablePresentModes.Count() == availablePresentModeCount);
     }
 
     // List of desirable present modes. The first element in this list that is
     // available on the current platform and device will be picked.
-    const std::vector<VkPresentModeKHR> desiredPresentModes =
+    const Vector<VkPresentModeKHR> desiredPresentModes =
     {
         VK_PRESENT_MODE_MAILBOX_KHR,
         VK_PRESENT_MODE_FIFO_KHR,

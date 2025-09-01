@@ -57,19 +57,19 @@ VulkanCommandList::~VulkanCommandList()
 
 void VulkanCommandList::ReleaseObjectReferences()
 {
-    m_UsedRenderPasses.clear();
-    m_UsedVertexBuffers.clear();
-    m_UsedIndexBuffers.clear();
+    m_UsedRenderPasses.Clear();
+    m_UsedVertexBuffers.Clear();
+    m_UsedIndexBuffers.Clear();
 
-    m_UsedFramebuffers.clear();
-    m_UsedPipelines.clear();
-    m_UsedDescriptorSets.clear();
+    m_UsedFramebuffers.Clear();
+    m_UsedPipelines.Clear();
+    m_UsedDescriptorSets.Clear();
 
     // Release textures that were transitioned.
-    m_TransitionedTextures.clear();
+    m_TransitionedTextures.Clear();
 
     // Release the used staging buffers.
-    m_StagingBuffers.clear();
+    m_StagingBuffers.Clear();
 }
 
 void VulkanCommandList::Begin()
@@ -107,11 +107,11 @@ bool VulkanCommandList::ValidateRenderPass(const RefPtr<VulkanRenderPass>& rende
         return false;
     }
 
-    if (beginInfo.ColorAttachmentTextures.size() != renderPass->GetColorAttachmentCount())
+    if (beginInfo.ColorAttachmentTextures.Count() != renderPass->GetColorAttachmentCount())
     {
         SE_LOG_ERROR(
             "The number of color attachments specified in the 'RenderPassBeginInfo' structure doesn't match the render pass specification! (%d vs %s)",
-            beginInfo.ColorAttachmentTextures.size(), renderPass->GetColorAttachmentCount());
+            beginInfo.ColorAttachmentTextures.Count(), renderPass->GetColorAttachmentCount());
         return false;
     }
 
@@ -137,17 +137,16 @@ bool VulkanCommandList::ValidateRenderPass(const RefPtr<VulkanRenderPass>& rende
     }
     else
     {
-        framebufferWidth = (*beginInfo.ColorAttachmentTextures.begin()).second.Texture->GetSizeX();
-        framebufferHeight = (*beginInfo.ColorAttachmentTextures.begin()).second.Texture->GetSizeY();
+        framebufferWidth = (*beginInfo.ColorAttachmentTextures.begin()).Value.Texture->GetSizeX();
+        framebufferHeight = (*beginInfo.ColorAttachmentTextures.begin()).Value.Texture->GetSizeY();
     }
 
     int32 maxColorAttachmentIndex = -1;
-    for (const auto& colorAttachmentTextureIt : beginInfo.ColorAttachmentTextures)
+    for (const auto& [colorAttachmentIndex, colorAttachmentTexture] : beginInfo.ColorAttachmentTextures)
     {
-        const uint32 colorAttachmentIndex = colorAttachmentTextureIt.first;
         if ((int32)colorAttachmentIndex > maxColorAttachmentIndex)
             maxColorAttachmentIndex = colorAttachmentIndex;
-        const auto& texture = colorAttachmentTextureIt.second.Texture;
+        const auto& texture = colorAttachmentTexture.Texture;
 
         if (!(texture->GetFlags() & TEXTURE_FLAG_RENDER_TARGET))
         {
@@ -177,20 +176,20 @@ void VulkanCommandList::BeginRenderPass(const RefPtr<RenderPass>& renderPass, co
         return;
 
     m_ActiveRenderPass = vulkanRenderPass;
-    m_UsedRenderPasses.push_back(m_ActiveRenderPass);
+    m_UsedRenderPasses.Add(m_ActiveRenderPass);
 
-    std::vector<VkClearValue> clearValues;
-    clearValues.reserve(m_ActiveRenderPass->GetAttachmentCount());
+    Vector<VkClearValue> clearValues;
+    clearValues.EnsureCapacity(m_ActiveRenderPass->GetAttachmentCount());
     for (uint32 attachmentIndex = 0; attachmentIndex < m_ActiveRenderPass->GetAttachmentCount(); ++attachmentIndex)
     {
         const RenderPassAttachment& attachment = m_ActiveRenderPass->GetAttachment(attachmentIndex);
         const RenderPassAttachmentTexture& attachmentTexture =
             (attachmentIndex < m_ActiveRenderPass->GetColorAttachmentCount())
-                ? beginInfo.ColorAttachmentTextures.at(attachmentIndex)
+                ? beginInfo.ColorAttachmentTextures.At(attachmentIndex)
                 : beginInfo.DepthStencilAttachmentTexture;
         SE_ASSERT(attachmentTexture.Texture.IsValid());
 
-        VkClearValue& clearValue = clearValues.emplace_back();
+        VkClearValue& clearValue = clearValues.Emplace();
 
         /* NOTE(Traian): Since both our clear value 'RenderPassAttachmentClearValue' structure and the Vulkan 'VkClearValue' structure
          * have the same memory layout this "assignment" is sufficient to copy all data. */
@@ -201,7 +200,7 @@ void VulkanCommandList::BeginRenderPass(const RefPtr<RenderPass>& renderPass, co
     }
 
     m_ActiveFramebuffer = m_ActiveRenderPass->AcquireCompatibleFramebuffer(beginInfo);
-    m_UsedFramebuffers.push_back(m_ActiveFramebuffer);
+    m_UsedFramebuffers.Add(m_ActiveFramebuffer);
 
     VkRenderPassBeginInfo renderPassBeginInfo = {}; 
     renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -211,8 +210,8 @@ void VulkanCommandList::BeginRenderPass(const RefPtr<RenderPass>& renderPass, co
     renderPassBeginInfo.renderArea.offset.y = 0;
     renderPassBeginInfo.renderArea.extent.width = m_ActiveFramebuffer->GetSizeX();
     renderPassBeginInfo.renderArea.extent.height = m_ActiveFramebuffer->GetSizeY();
-    renderPassBeginInfo.clearValueCount = (uint32)clearValues.size();
-    renderPassBeginInfo.pClearValues = clearValues.data();
+    renderPassBeginInfo.clearValueCount = (uint32)clearValues.Count();
+    renderPassBeginInfo.pClearValues = clearValues.Elements();
 
     vkCmdBeginRenderPass(m_CommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
@@ -235,7 +234,7 @@ void VulkanCommandList::BindGraphicsState(const GraphicsState& graphicsState, co
     }
 
     m_ActivePipeline = m_ActiveRenderPass->AcquireCompatiblePipeline(graphicsState, shader);
-    m_UsedPipelines.push_back(m_ActivePipeline);
+    m_UsedPipelines.Add(m_ActivePipeline);
 
     vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_ActivePipeline->GetHandle());
 
@@ -261,47 +260,45 @@ bool VulkanCommandList::ValidateShaderResourcesBindPack(const RefPtr<VulkanShade
 {
     const auto& descriptorSetLayouts = shader->GetDescriptorSetLayouts();
 
-    std::unordered_map<uint32, std::unordered_set<uint32>> missingBindingIndices;
-    missingBindingIndices.reserve(descriptorSetLayouts.size());
+    HashMap<uint32, HashSet<uint32>> missingBindingIndices;
+    missingBindingIndices.EnsureCapacity(descriptorSetLayouts.Count());
 
     for (const auto& [setIndex, setLayout] : descriptorSetLayouts)
     {
-        std::unordered_set<uint32>& missingBindings = missingBindingIndices[setIndex];
-        missingBindings.reserve(setLayout.BindingDescriptorTypes.size());
+        HashSet<uint32>& missingBindings = missingBindingIndices[setIndex];
+        missingBindings.EnsureCapacity(setLayout.BindingDescriptorTypes.Count());
 
         for (const auto& [bindingIndex, descriptorType] : setLayout.BindingDescriptorTypes)
-            missingBindings.insert(bindingIndex);
+            missingBindings.Add(bindingIndex);
     }
 
     for (const ShaderResourceTexture& resourceTexture : bindPack.Textures)
     {
         // Check if set exists.
-        auto setLayoutIt = descriptorSetLayouts.find(resourceTexture.SetIndex);
-        if (setLayoutIt == descriptorSetLayouts.end())
+        if (!descriptorSetLayouts.Contains(resourceTexture.SetIndex))
         {
             SE_LOG_ERROR(
-                "Trying to bind a texture at a set index that doesn't exist! (Set: %d, Binding: %d)",
+                "Trying to bind a texture At a set index that doesn't exist! (Set: %d, Binding: %d)",
                 resourceTexture.SetIndex, resourceTexture.BindingIndex);
             return false;
         }
-        const VulkanDescriptorSetLayout& setLayout = (*setLayoutIt).second;
+        const VulkanDescriptorSetLayout& setLayout = descriptorSetLayouts.At(resourceTexture.SetIndex);
 
         // Check if binding exists.
-        auto bindingIt = setLayout.BindingDescriptorTypes.find(resourceTexture.BindingIndex);
-        if (bindingIt == setLayout.BindingDescriptorTypes.end())
+        if (!setLayout.BindingDescriptorTypes.Contains(resourceTexture.BindingIndex))
         {
             SE_LOG_ERROR(
-                "Trying to bind a texture at a binding index that doesn't exist! (Set: %d, Binding: %d)",
+                "Trying to bind a texture At a binding index that doesn't exist! (Set: %d, Binding: %d)",
                 resourceTexture.SetIndex, resourceTexture.BindingIndex);
             return false;
         }
-        const VkDescriptorType descriptorType = (*bindingIt).second;
+        const VkDescriptorType descriptorType = setLayout.BindingDescriptorTypes.At(resourceTexture.BindingIndex);
 
         // Check that the descriptor type matches the expected shader resource type.
         if (descriptorType != VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
         {
             SE_LOG_ERROR(
-                "Trying to bind a texture at a location that represents a descriptor of another type! (Set: %d, Binding: %d)",
+                "Trying to bind a texture At a location that represents a descriptor of another type! (Set: %d, Binding: %d)",
                 resourceTexture.SetIndex, resourceTexture.BindingIndex);
             return false;
         }
@@ -316,57 +313,55 @@ bool VulkanCommandList::ValidateShaderResourcesBindPack(const RefPtr<VulkanShade
         }
 
         // Remove the binding index from the missing list.
-        missingBindingIndices.at(resourceTexture.SetIndex).erase(resourceTexture.BindingIndex);
+        missingBindingIndices.At(resourceTexture.SetIndex).RemoveUnchecked(resourceTexture.BindingIndex);
     }
 
     for (const ShaderResourceUniformBuffer& resourceUniformBuffer : bindPack.UniformBuffers)
     {
         // Check if set exists.
-        auto setLayoutIt = descriptorSetLayouts.find(resourceUniformBuffer.SetIndex);
-        if (setLayoutIt == descriptorSetLayouts.end())
+        if (!descriptorSetLayouts.Contains(resourceUniformBuffer.SetIndex))
         {
             SE_LOG_ERROR(
-                "Trying to bind a uniform buffer at a set index that doesn't exist! (Set: %d, Binding: %d)",
+                "Trying to bind a uniform buffer At a set index that doesn't exist! (Set: %d, Binding: %d)",
                 resourceUniformBuffer.SetIndex, resourceUniformBuffer.BindingIndex);
             return false;
         }
-        const VulkanDescriptorSetLayout& setLayout = (*setLayoutIt).second;
+        const VulkanDescriptorSetLayout& setLayout = descriptorSetLayouts.At(resourceUniformBuffer.SetIndex);
 
         // Check if binding exists.
-        auto bindingIt = setLayout.BindingDescriptorTypes.find(resourceUniformBuffer.BindingIndex);
-        if (bindingIt == setLayout.BindingDescriptorTypes.end())
+        if (!setLayout.BindingDescriptorTypes.Contains(resourceUniformBuffer.BindingIndex))
         {
             SE_LOG_ERROR(
-                "Trying to bind a uniform buffer at a binding index that doesn't exist! (Set: %d, Binding: %d)",
+                "Trying to bind a uniform buffer At a binding index that doesn't exist! (Set: %d, Binding: %d)",
                 resourceUniformBuffer.SetIndex, resourceUniformBuffer.BindingIndex);
             return false;
         }
-        const VkDescriptorType descriptorType = (*bindingIt).second;
+        const VkDescriptorType descriptorType = setLayout.BindingDescriptorTypes.At(resourceUniformBuffer.BindingIndex);
 
         // Check that the descriptor type matches the expected shader resource type.
         if (descriptorType != VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
         {
             SE_LOG_ERROR(
-                "Trying to bind a uniform buffer at a location that represents a descriptor of another type! (Set: %d, Binding: %d)",
+                "Trying to bind a uniform buffer At a location that represents a descriptor of another type! (Set: %d, Binding: %d)",
                 resourceUniformBuffer.SetIndex, resourceUniformBuffer.BindingIndex);
             return false;
         }
 
         // Remove the binding index from the missing list.
-        missingBindingIndices.at(resourceUniformBuffer.SetIndex).erase(resourceUniformBuffer.BindingIndex);
+        missingBindingIndices.At(resourceUniformBuffer.SetIndex).RemoveIfExists(resourceUniformBuffer.BindingIndex);
     }
 
     // Check if there are any missing binding indices.
     for (const auto& [setIndex, missingBindings] : missingBindingIndices)
     {
-        if (!missingBindings.empty())
+        if (!missingBindings.IsEmpty())
         {
             SE_LOG_ERROR("The set with index '%d' has the following missing binding indices:", setIndex);
             for (uint32 bindingIndex : missingBindings)
             {
                 SE_LOG_ERROR(
                     "  - [%d] (DescriptorType: %d)",
-                    bindingIndex, descriptorSetLayouts.at(setIndex).BindingDescriptorTypes.at(bindingIndex));
+                    bindingIndex, descriptorSetLayouts.At(setIndex).BindingDescriptorTypes.At(bindingIndex));
             }
             return false;
         }
@@ -403,23 +398,23 @@ void VulkanCommandList::BindShaderResources(const ShaderResourcesBindPack& bindP
         }
     }
 
-    std::vector<VulkanDescriptorSet*> descriptorSets = activeShader->GetDescriptorSetManager().AcquireDescriptorSets(bindPack);
+    Vector<VulkanDescriptorSet*> descriptorSets = activeShader->GetDescriptorSetManager().AcquireDescriptorSets(bindPack);
 
-    std::vector<VkDescriptorSet> descriptorSetHandles;
-    descriptorSetHandles.reserve(descriptorSets.size());
-    m_UsedDescriptorSets.reserve(m_UsedDescriptorSets.size() + descriptorSets.size());
+    Vector<VkDescriptorSet> descriptorSetHandles;
+    descriptorSetHandles.EnsureCapacity(descriptorSets.Count());
+    m_UsedDescriptorSets.EnsureCapacity(m_UsedDescriptorSets.Count() + descriptorSets.Count());
 
     for (VulkanDescriptorSet* descriptorSet : descriptorSets)
     {
-        m_UsedDescriptorSets.push_back(descriptorSet);
-        descriptorSetHandles.push_back(descriptorSet->GetHandle());
+        m_UsedDescriptorSets.Add(descriptorSet);
+        descriptorSetHandles.Add(descriptorSet->GetHandle());
     }
 
     vkCmdBindDescriptorSets(
         m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
         activeShader->GetPipelineLayout(), 0,
-        (uint32)descriptorSetHandles.size(), descriptorSetHandles.data(), // Descriptor sets.
-        0, nullptr                                                        // Dynamic offses.
+        (uint32)descriptorSetHandles.Count(), descriptorSetHandles.Elements(), // Descriptor sets.
+        0, nullptr                                                             // Dynamic offses.
     );
 }
 
@@ -431,7 +426,7 @@ void VulkanCommandList::BindVertexBuffer(const RefPtr<VertexBuffer>& vertexBuffe
 
     /* Submit command to the command buffer. */
     vkCmdBindVertexBuffers(m_CommandBuffer, 0, 1, &bufferHandle, &bufferOffset);
-    m_UsedVertexBuffers.push_back(vulkanVertexBuffer);
+    m_UsedVertexBuffers.Add(vulkanVertexBuffer);
     m_IsVertexBufferBound = true;
 }
 
@@ -450,7 +445,7 @@ void VulkanCommandList::BindIndexBuffer(const RefPtr<IndexBuffer>& indexBuffer)
 
     /* Submit command to the command buffer. */
     vkCmdBindIndexBuffer(m_CommandBuffer, vulkanIndexBuffer->GetHandle(), 0, indexType);
-    m_UsedIndexBuffers.push_back(vulkanIndexBuffer);
+    m_UsedIndexBuffers.Add(vulkanIndexBuffer);
     m_IsIndexBufferBound = true;
 }
 
@@ -527,7 +522,7 @@ inline VkAccessFlags AccessFlagsBitsToVulkan(AccessFlagsBits accessFlags)
 void VulkanCommandList::TransitionTexture(const TransitionTextureInfo& info)
 {
     auto vulkanTexture = info.Texture.As<VulkanTexture2D>();
-    m_TransitionedTextures.push_back(vulkanTexture);
+    m_TransitionedTextures.Add(vulkanTexture);
 
     const VkImageAspectFlags imageAspect = IsTextureDepthFormat(vulkanTexture->GetFormat())
         ? VK_IMAGE_ASPECT_DEPTH_BIT
@@ -598,8 +593,8 @@ VulkanBuffer& VulkanCommandList::CreateStagingBuffer(usize bufferSize)
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-    m_StagingBuffers.push_back(std::move(stagingBuffer));
-    return *m_StagingBuffers.back().Get();
+    m_StagingBuffers.Add(std::move(stagingBuffer));
+    return *m_StagingBuffers.Last().Get();
 }
 
 void VulkanCommandList::ResetDrawStatistics()

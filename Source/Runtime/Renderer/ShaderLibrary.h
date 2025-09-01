@@ -6,7 +6,6 @@
 #include <Runtime/Renderer/RHI/Shader.h>
 
 #include <filesystem>
-#include <string_view>
 
 namespace SE
 {
@@ -21,11 +20,11 @@ public:
 
     /* Reads the shader source code from the provided file, compiles it, and creates an RHI shader object.
      * This object can later be retrieved using the 'Get' API. */
-    SHOOTER_API static bool LoadFromFile(std::string shaderName, const std::filesystem::path& sourceFilepath);
+    SHOOTER_API static bool LoadFromFile(String shaderName, const std::filesystem::path& sourceFilepath);
     
     /* Returns the RHI shader object associated with the given name. If no shader in the library is associated
      * with the provided name, an invalid shared pointer (nullptr) will be returned. */
-    SHOOTER_API static RefPtr<Shader> Get(const std::string& shaderName);
+    SHOOTER_API static RefPtr<Shader> Get(const String& shaderName);
 };
 
 }

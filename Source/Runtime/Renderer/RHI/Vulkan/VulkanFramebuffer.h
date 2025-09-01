@@ -3,10 +3,9 @@
 #pragma once
 
 #include <Runtime/Core/Containers/LockPtr.h>
+#include <Runtime/Core/Containers/Vector.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanTexture.h>
-
-#include <vector>
 
 namespace SE
 {
@@ -17,7 +16,7 @@ public:
     VulkanFramebuffer(const WeakRefPtr<VulkanRenderPass>& parentRenderPass);
     ~VulkanFramebuffer();
 
-    void Invalidate(const std::vector<RefPtr<Texture2D>>& textures, VkRenderPass renderPassHandle);
+    void Invalidate(const Vector<RefPtr<Texture2D>>& textures, VkRenderPass renderPassHandle);
     void Destroy();
     NODISCARD FORCEINLINE bool IsValid() const { return (m_Handle != VK_NULL_HANDLE); }
 
@@ -28,14 +27,14 @@ public:
 
     NODISCARD FORCEINLINE uint32 GetSizeX() const
     {
-        SE_ENSURE(!m_Textures.empty());
-        return m_Textures.front()->GetSizeX();
+        SE_ENSURE(m_Textures.HasElements());
+        return m_Textures.First()->GetSizeX();
     }
 
     NODISCARD FORCEINLINE uint32 GetSizeY() const
     {
-        SE_ENSURE(!m_Textures.empty());
-        return m_Textures.front()->GetSizeY();
+        SE_ENSURE(m_Textures.HasElements());
+        return m_Textures.First()->GetSizeY();
     }
 
 protected:
@@ -48,9 +47,9 @@ private:
     WeakRefPtr<VulkanRenderPass> m_ParentRenderPass;
     StrongRefPtr<VulkanRenderPass> m_LockedParentRenderPass;
 
-    std::vector<WeakRefPtr<VulkanTexture2D>> m_Textures;
-    std::vector<RHIObjectCallback> m_TexturePreDestroyCallbacks;
-    std::vector<StrongRefPtr<VulkanTexture2D>> m_LockedTextures;
+    Vector<WeakRefPtr<VulkanTexture2D>> m_Textures;
+    Vector<RHIObjectCallback> m_TexturePreDestroyCallbacks;
+    Vector<StrongRefPtr<VulkanTexture2D>> m_LockedTextures;
 };
 
 }

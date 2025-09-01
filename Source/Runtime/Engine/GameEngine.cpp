@@ -1,7 +1,6 @@
 // Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
 #include <Runtime/Application/Input.h>
-#include <Runtime/Core/Containers/StringView.h>
 #include <Runtime/Core/Log.h>
 #include <Runtime/Core/Time.h>
 #include <Runtime/Engine/GameEngine.h>

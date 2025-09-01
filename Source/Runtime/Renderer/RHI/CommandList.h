@@ -14,19 +14,19 @@ namespace SE
 struct CommandListExecuteInfo
 {
 public:
-    std::vector<SemaphoreHandle> WaitSemaphores;
-    std::vector<PipelineStageBits> WaitStageBits;
-    std::vector<SemaphoreHandle> SignalSemaphores;
+    Vector<SemaphoreHandle> WaitSemaphores;
+    Vector<PipelineStageBits> WaitStageBits;
+    Vector<SemaphoreHandle> SignalSemaphores;
     FenceHandle SignalFence { nullptr };
 
 public:
-    inline CommandListExecuteInfo& AddSignalSemaphore (SemaphoreHandle semaphore) { SignalSemaphores.push_back(semaphore); return *this; }
-    inline CommandListExecuteInfo& SetSignalFence     (FenceHandle fence)         { SignalFence = fence;                   return *this; }
+    inline CommandListExecuteInfo& AddSignalSemaphore (SemaphoreHandle semaphore) { SignalSemaphores.Add(semaphore); return *this; }
+    inline CommandListExecuteInfo& SetSignalFence     (FenceHandle fence)         { SignalFence = fence;             return *this; }
     
     inline CommandListExecuteInfo& AddWaitSemaphore   (SemaphoreHandle semaphore, PipelineStageBits stageBits)
     {
-        WaitSemaphores.push_back(semaphore);
-        WaitStageBits.push_back(stageBits);
+        WaitSemaphores.Add(semaphore);
+        WaitStageBits.Add(stageBits);
         return *this;
     }
 };
@@ -114,12 +114,12 @@ public:
 struct ShaderResourcesBindPack
 {
 public:
-    std::vector<ShaderResourceTexture> Textures;
-    std::vector<ShaderResourceUniformBuffer> UniformBuffers;
+    Vector<ShaderResourceTexture> Textures;
+    Vector<ShaderResourceUniformBuffer> UniformBuffers;
 
 public:
-    inline ShaderResourcesBindPack& AddTexture       (ShaderResourceTexture texture)             { Textures.push_back(std::move(texture));             return *this; }
-    inline ShaderResourcesBindPack& AddUniformBuffer (ShaderResourceUniformBuffer uniformBuffer) { UniformBuffers.push_back(std::move(uniformBuffer)); return *this; }
+    inline ShaderResourcesBindPack& AddTexture       (ShaderResourceTexture texture)             { Textures.Add(std::move(texture));             return *this; }
+    inline ShaderResourcesBindPack& AddUniformBuffer (ShaderResourceUniformBuffer uniformBuffer) { UniformBuffers.Add(std::move(uniformBuffer)); return *this; }
 };
 
 struct CommandListInfo

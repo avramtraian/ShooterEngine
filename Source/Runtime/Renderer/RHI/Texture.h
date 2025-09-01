@@ -6,8 +6,6 @@
 #include <Runtime/Renderer/RHI/RHICore.h>
 #include <Runtime/Renderer/RHI/ShaderResource.h>
 
-#include <string>
-
 namespace SE
 {
 

@@ -2,14 +2,11 @@
 
 #pragma once
 
-#include <Runtime/Core/CoreAssertions.h>
-#include <Runtime/Core/CoreTypes.h>
+#include <Runtime/Core/Containers/HashSet.h>
+#include <Runtime/Core/Containers/String/String.h>
+#include <Runtime/Core/Containers/Vector.h>
 #include <Runtime/Core/Log.h>
 #include <Runtime/Core/Platform/PlatformCoreInclude.h>
-
-#include <string>
-#include <unordered_set>
-#include <vector>
 
 #include <vulkan/vulkan.h>
 
@@ -29,12 +26,12 @@
 namespace SE
 {
 
-NODISCARD FORCEINLINE static std::string VulkanFormatToString(VkFormat format)
+NODISCARD FORCEINLINE static String VulkanFormatToString(VkFormat format)
 {
 
     switch (format)
     {
-#define _SE_CASE(formatName) case formatName: return #formatName;
+#define _SE_CASE(formatName) case formatName: return VIEW(#formatName);
         _SE_CASE(VK_FORMAT_B8G8R8A8_UNORM);
         _SE_CASE(VK_FORMAT_B8G8R8A8_SNORM);
         _SE_CASE(VK_FORMAT_B8G8R8A8_UINT);
@@ -45,7 +42,7 @@ NODISCARD FORCEINLINE static std::string VulkanFormatToString(VkFormat format)
 
     /* TODO(Traian): Extend the switch statement above to include more image
      * formats such this return case is never reached! */
-    return "<unstringifyable>";
+    return VIEW("<unstringifyable>");
 }
 
 /* Forward declarations of RHI interfaces. */
@@ -70,44 +67,44 @@ template<typename VulkanHandleType>
 struct VulkanObjectPool
 {
 public:
-    NODISCARD FORCEINLINE uint32 GetNumberOfUnusedObjects() const { return (uint32)Unused.size(); }
-    NODISCARD FORCEINLINE uint32 GetNumberOfInUseObjects() const { return (uint32)InUse.size(); }
+    NODISCARD FORCEINLINE uint32 GetNumberOfUnusedObjects() const { return (uint32)Unused.Count(); }
+    NODISCARD FORCEINLINE uint32 GetNumberOfInUseObjects() const { return (uint32)InUse.Count(); }
     NODISCARD FORCEINLINE bool HasUnusedObjects() const { return (GetNumberOfUnusedObjects() > 0); }
 
 public:
     NODISCARD FORCEINLINE VulkanHandleType Acquire()
     {
-        if (Unused.empty())
+        if (Unused.IsEmpty())
             return VK_NULL_HANDLE;
 
-        VulkanHandleType handle = Unused.back();
-        Unused.pop_back();
-        InUse.insert(handle);
+        VulkanHandleType handle = Unused.Last();
+        Unused.PopBack();
+        InUse.Add(handle);
 
         return handle;
     }
 
     FORCEINLINE void Retire(VulkanHandleType handle)
     {
-        SE_ENSURE(InUse.contains(handle));
-        InUse.erase(handle);
-        Unused.push_back(handle);
+        SE_ENSURE(InUse.Contains(handle));
+        InUse.RemoveUnchecked(handle);
+        Unused.Add(handle);
     }
 
 public:
     NODISCARD void AddUnusedObject(VulkanHandleType handle)
     {
-        Unused.push_back(handle);
+        Unused.Add(handle);
     }
 
     NODISCARD void AddInUseObject(VulkanHandleType handle)
     {
-        InUse.insert(handle);
+        InUse.Add(handle);
     }
 
 public:
-    std::vector<VulkanHandleType> Unused;
-    std::unordered_set<VulkanHandleType> InUse;
+    Vector<VulkanHandleType> Unused;
+    HashSet<VulkanHandleType> InUse;
 };
 
 }

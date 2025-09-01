@@ -2,11 +2,11 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/String/String.h>
+#include <Runtime/Core/Containers/String/StringView.h>
 #include <Runtime/Core/CoreAssertions.h>
 #include <Runtime/Core/CoreTypes.h>
 
-#include <string>
-#include <string_view>
 #include <cstring>
 
 namespace SE
@@ -37,11 +37,11 @@ NODISCARD FORCEINLINE const char* ShaderStageToRawString(ShaderStage stage)
     return nullptr;
 }
 
-NODISCARD FORCEINLINE std::string_view ShaderStageToStringView(ShaderStage stage)
+NODISCARD FORCEINLINE StringView ShaderStageToStringView(ShaderStage stage)
 {
     switch (stage)
     {
-#define _SE_SWITCH_CASE(x) case ShaderStage::x: return #x;
+#define _SE_SWITCH_CASE(x) case ShaderStage::x: return VIEW(#x);
         SE_ENUMERATE_SHADER_STAGES(_SE_SWITCH_CASE)
 #undef _SE_SWITCH_CASE
     }
@@ -50,11 +50,11 @@ NODISCARD FORCEINLINE std::string_view ShaderStageToStringView(ShaderStage stage
     return {};
 }
 
-NODISCARD FORCEINLINE std::string ShaderStageToString(ShaderStage stage)
+NODISCARD FORCEINLINE String ShaderStageToString(ShaderStage stage)
 {
     switch (stage)
     {
-#define _SE_SWITCH_CASE(x) case ShaderStage::x: return #x;
+#define _SE_SWITCH_CASE(x) case ShaderStage::x: return VIEW(#x);
         SE_ENUMERATE_SHADER_STAGES(_SE_SWITCH_CASE)
 #undef _SE_SWITCH_CASE
     }
@@ -70,16 +70,16 @@ NODISCARD FORCEINLINE ShaderStage ShaderStageFromRawString(const char* stageStri
 #undef _SE_IF_CASE
 }
 
-NODISCARD FORCEINLINE ShaderStage ShaderStageFromStringView(std::string_view stageString)
+NODISCARD FORCEINLINE ShaderStage ShaderStageFromStringView(StringView stageString)
 {
-#define _SE_IF_CASE(x) if (stageString == #x) { return ShaderStage::x; }
+#define _SE_IF_CASE(x) if (stageString == VIEW(#x)) { return ShaderStage::x; }
     SE_ENUMERATE_SHADER_STAGES(_SE_IF_CASE)
 #undef _SE_IF_CASE
 }
 
-NODISCARD FORCEINLINE ShaderStage ShaderStageFromString(const std::string& stageString)
+NODISCARD FORCEINLINE ShaderStage ShaderStageFromString(const String& stageString)
 {
-#define _SE_IF_CASE(x) if (stageString == #x) { return ShaderStage::x; }
+#define _SE_IF_CASE(x) if (stageString == VIEW(#x)) { return ShaderStage::x; }
     SE_ENUMERATE_SHADER_STAGES(_SE_IF_CASE)
 #undef _SE_IF_CASE
 }

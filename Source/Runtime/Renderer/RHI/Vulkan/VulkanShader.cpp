@@ -10,7 +10,7 @@ namespace SE
 VulkanShader::VulkanShader(const ShaderInfo& info)
     : m_PipelineLayout(VK_NULL_HANDLE)
 {
-    if (info.Stages.empty())
+    if (info.Stages.IsEmpty())
     {
         SE_LOG_ERROR("Trying to create a [Vulkan] shader that has no stages!");
         SE_ASSERT_NOT_REACHED;
@@ -37,7 +37,7 @@ VulkanShader::VulkanShader(const ShaderInfo& info)
         VkShaderModule shaderModule = VK_NULL_HANDLE;
         SE_VULKAN_CHECK(vkCreateShaderModule(g_VulkanDriver->GetDevice(), &shaderModuleCreateInfo, nullptr, &shaderModule));
 
-        Module& module = m_Modules.emplace_back();
+        Module& module = m_Modules.Emplace();
         module.Handle = shaderModule;
         module.EntryPoint = ShaderCompiler::GetEntryPointNameForStage(shaderStage.Stage);
 
@@ -49,8 +49,8 @@ VulkanShader::VulkanShader(const ShaderInfo& info)
         }
     }
 
-    std::vector<std::unordered_map<uint32, VkDescriptorSetLayoutBinding>> bindingsPerSet;
-    bindingsPerSet.resize(maxSetIndex + 1);
+    Vector<HashMap<uint32, VkDescriptorSetLayoutBinding>> bindingsPerSet;
+    bindingsPerSet.SetCountDefaulted(maxSetIndex + 1);
 
     for (const ShaderStageInfo& shaderStage : info.Stages)
     {
@@ -58,7 +58,7 @@ VulkanShader::VulkanShader(const ShaderInfo& info)
         {
             for (const auto& [bindingIndex, descriptorBinding] : descriptorSet.Bindings)
             {
-                const bool bindingAlreadyExists = bindingsPerSet[setIndex].contains(bindingIndex);
+                const bool bindingAlreadyExists = bindingsPerSet[setIndex].Contains(bindingIndex);
                 VkDescriptorSetLayoutBinding& descriptorSetLayoutBinding = bindingsPerSet[setIndex][bindingIndex];
                 descriptorSetLayoutBinding.binding = bindingIndex;
                 descriptorSetLayoutBinding.descriptorCount = descriptorBinding.ArrayCount;
@@ -96,13 +96,13 @@ VulkanShader::VulkanShader(const ShaderInfo& info)
         }
     }
 
-    std::vector<VkDescriptorSetLayout> descriptorSetLayoutHandles;
-    descriptorSetLayoutHandles.resize(maxSetIndex + 1, VK_NULL_HANDLE);
+    Vector<VkDescriptorSetLayout> descriptorSetLayoutHandles;
+    descriptorSetLayoutHandles.SetCountFromTemplate(maxSetIndex + 1, VK_NULL_HANDLE);
 
-    std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings;
+    Vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings;
     for (int32 setIndex = 0; setIndex <= maxSetIndex; ++setIndex)
     {
-        if (bindingsPerSet[setIndex].empty())
+        if (bindingsPerSet[setIndex].IsEmpty())
         {
             // The indices corresponding to each descriptor set layout are implicitly determined by the order in which elements
             // appear in the 'VkPipelineLayoutCreateInfo::pSetLayouts' array. If a descriptor set index is not used by the shader,
@@ -116,19 +116,19 @@ VulkanShader::VulkanShader(const ShaderInfo& info)
 
         VulkanDescriptorSetLayout& descriptorSetLayout = m_DescriptorSetLayouts[setIndex];
 
-        descriptorSetLayoutBindings.clear();
-        descriptorSetLayoutBindings.reserve(bindingsPerSet[setIndex].size());
+        descriptorSetLayoutBindings.Clear();
+        descriptorSetLayoutBindings.EnsureCapacity(bindingsPerSet[setIndex].Count());
         for (const auto& [bindingIndex, binding] : bindingsPerSet[setIndex])
         {
-            SE_ASSERT(!descriptorSetLayout.BindingDescriptorTypes.contains(bindingIndex));
-            descriptorSetLayout.BindingDescriptorTypes.insert({ bindingIndex, binding.descriptorType });
-            descriptorSetLayoutBindings.push_back(binding);
+            SE_ASSERT(!descriptorSetLayout.BindingDescriptorTypes.Contains(bindingIndex));
+            descriptorSetLayout.BindingDescriptorTypes.Add(bindingIndex, binding.descriptorType);
+            descriptorSetLayoutBindings.Add(binding);
         }
 
         VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {};
         descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        descriptorSetLayoutCreateInfo.bindingCount = (uint32)descriptorSetLayoutBindings.size();
-        descriptorSetLayoutCreateInfo.pBindings = descriptorSetLayoutBindings.data();
+        descriptorSetLayoutCreateInfo.bindingCount = (uint32)descriptorSetLayoutBindings.Count();
+        descriptorSetLayoutCreateInfo.pBindings = descriptorSetLayoutBindings.Elements();
 
         SE_VULKAN_CHECK(vkCreateDescriptorSetLayout(g_VulkanDriver->GetDevice(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout.Handle));
         descriptorSetLayoutHandles[setIndex] = descriptorSetLayout.Handle;
@@ -137,8 +137,8 @@ VulkanShader::VulkanShader(const ShaderInfo& info)
     // Create the pipeline layout.
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
     pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutCreateInfo.setLayoutCount = (uint32)descriptorSetLayoutHandles.size();
-    pipelineLayoutCreateInfo.pSetLayouts = descriptorSetLayoutHandles.data();
+    pipelineLayoutCreateInfo.setLayoutCount = (uint32)descriptorSetLayoutHandles.Count();
+    pipelineLayoutCreateInfo.pSetLayouts = descriptorSetLayoutHandles.Elements();
 
     SE_VULKAN_CHECK(vkCreatePipelineLayout(g_VulkanDriver->GetDevice(), &pipelineLayoutCreateInfo, nullptr, &m_PipelineLayout));
 
@@ -157,7 +157,7 @@ VulkanShader::~VulkanShader()
     // Destroy the descriptor set layouts.
     for (const auto& [setIndex, setLayout] : m_DescriptorSetLayouts)
         vkDestroyDescriptorSetLayout(g_VulkanDriver->GetDevice(), setLayout.Handle, nullptr);
-    m_DescriptorSetLayouts.clear();
+    m_DescriptorSetLayouts.ClearAndShrink();
 
     // Destroy the pipeline layout.
     vkDestroyPipelineLayout(g_VulkanDriver->GetDevice(), m_PipelineLayout, nullptr);
@@ -166,7 +166,7 @@ VulkanShader::~VulkanShader()
     // Destroy the shader modules.
     for (Module& module : m_Modules)
         vkDestroyShaderModule(g_VulkanDriver->GetDevice(), module.Handle, nullptr);
-    m_Modules.clear();
+    m_Modules.ClearAndShrink();
 }
 
 }

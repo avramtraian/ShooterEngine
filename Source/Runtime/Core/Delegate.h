@@ -2,9 +2,9 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/HashMap.h>
 #include <Runtime/Core/Containers/RefPtr.h>
-
-#include <unordered_map>
+#include <Runtime/Core/Containers/Vector.h>
 
 namespace SE
 {
@@ -286,43 +286,29 @@ public:
     GenericMulticastDelegate() = default;
     ~GenericMulticastDelegate() = default;
 
-    FORCEINLINE GenericMulticastDelegate(const GenericMulticastDelegate& other)
-        : m_Delegates(other.m_Delegates)
-    {}
+    GenericMulticastDelegate(const GenericMulticastDelegate& other) = default;
+    GenericMulticastDelegate(GenericMulticastDelegate&& other) noexcept = default;
 
-    FORCEINLINE GenericMulticastDelegate(GenericMulticastDelegate&& other) noexcept
-        : m_Delegates(Move(other.m_Delegates))
-    {}
-
-    FORCEINLINE GenericMulticastDelegate& operator=(const GenericMulticastDelegate& other)
-    {
-        m_Delegates = other.m_Delegates;
-        return *this;
-    }
-
-    FORCEINLINE GenericMulticastDelegate& operator=(GenericMulticastDelegate&& other) noexcept
-    {
-        m_Delegates = Move(other.m_Delegates);
-        return *this;
-    }
+    GenericMulticastDelegate& operator=(const GenericMulticastDelegate& other) = default;
+    GenericMulticastDelegate& operator=(GenericMulticastDelegate&& other) noexcept = default;
 
 public:
     FORCEINLINE void Broadcast(ParameterTypes... parameters)
     {
         // List of delegates that are no longer bound.
-        std::vector<DelegateHandle> handlesToRemove;
+        Vector<DelegateHandle> handlesToRemove;
 
         for (auto& [delegateHandle, delegate] : m_Delegates)
         {
             if (delegate.IsBound())
                 delegate.Execute(Forward<ParameterTypes>(parameters)...);
             else
-                handlesToRemove.push_back(delegateHandle);
+                handlesToRemove.Add(delegateHandle);
         }
 
         // Remove the delegates that are no longer bound.
         for (DelegateHandle handle : handlesToRemove)
-            m_Delegates.erase(handle);
+            m_Delegates.RemoveUnchecked(handle);
     }
 
 public:
@@ -331,7 +317,7 @@ public:
         Delegate delegate;
         delegate.BindRaw(function);
         const DelegateHandle handle = delegate.GetBoundHandle();
-        m_Delegates.insert({ handle, Move(delegate) });
+        m_Delegates.Add(handle, Move(delegate));
         return handle;
     }
 
@@ -341,7 +327,7 @@ public:
         Delegate delegate;
         delegate.BindLambda<LambdaType>(Move(lambda));
         const DelegateHandle handle = delegate.GetBoundHandle();
-        m_Delegates.insert({ handle, Move(delegate) });
+        m_Delegates.Add(handle, Move(delegate));
         return handle;
     }
 
@@ -351,7 +337,7 @@ public:
         Delegate delegate;
         delegate.BindRefCounted<UserClass>(userObject, classMethod);
         const DelegateHandle handle = delegate.GetBoundHandle();
-        m_Delegates.insert({ handle, Move(delegate) });
+        m_Delegates.Add(handle, Move(delegate));
         return handle;
     }
 
@@ -360,12 +346,11 @@ public:
         if (handle == INVALID_DELEGATE_HANDLE)
             return;
         
-        if (m_Delegates.contains(handle))
-           m_Delegates.erase(handle);
+        m_Delegates.RemoveIfExist(handle);
     }
 
 private:
-    std::unordered_map<DelegateHandle, Delegate> m_Delegates;
+    HashMap<DelegateHandle, Delegate> m_Delegates;
 };
 
 #pragma endregion

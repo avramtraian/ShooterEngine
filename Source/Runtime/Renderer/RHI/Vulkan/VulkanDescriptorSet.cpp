@@ -33,17 +33,16 @@ VulkanDescriptorSet::~VulkanDescriptorSet()
     m_DescriptorPool = VK_NULL_HANDLE;
 }
 
-DescriptorSetCompatibility VulkanDescriptorSet::IsCompatibleWithBindings(const std::unordered_map<uint32, RefPtr<ShaderResource>>& bindings) const
+DescriptorSetCompatibility VulkanDescriptorSet::IsCompatibleWithBindings(const HashMap<uint32, RefPtr<ShaderResource>>& bindings) const
 {
     for (const auto& [bindingIndex, resource] : bindings)
     {
         // Check if the binding exists.
-        auto currentBindingIt = m_BindingResources.find(bindingIndex);
-        if (currentBindingIt == m_BindingResources.end())
+        if (!m_BindingResources.Contains(bindingIndex))
             return DescriptorSetCompatibility::Incompatible;
 
-        // Check if the resources bound at the given binding are the same.
-        WeakRefPtr<ShaderResource> currentResource = (*currentBindingIt).second.Resource;
+        // Check if the resources bound At the given binding are the same.
+        WeakRefPtr<ShaderResource> currentResource = m_BindingResources.At(bindingIndex).Resource;
         if (resource != currentResource)
             return DescriptorSetCompatibility::Incompatible;
     }
@@ -51,7 +50,7 @@ DescriptorSetCompatibility VulkanDescriptorSet::IsCompatibleWithBindings(const s
     return DescriptorSetCompatibility::Compatible;
 }
 
-void VulkanDescriptorSet::UpdateBindings(const std::unordered_map<uint32, RefPtr<ShaderResource>>& bindings)
+void VulkanDescriptorSet::UpdateBindings(const HashMap<uint32, RefPtr<ShaderResource>>& bindings)
 {
     if (IsLocked())
     {
@@ -59,11 +58,11 @@ void VulkanDescriptorSet::UpdateBindings(const std::unordered_map<uint32, RefPtr
         SE_ASSERT_NOT_REACHED;
     }
 
-    std::vector<VkWriteDescriptorSet> descriptorWrites;
+    Vector<VkWriteDescriptorSet> descriptorWrites;
     for (const auto& [bindingIndex, resource] : bindings)
     {
         // Check if the binding requires updating.
-        if (m_BindingResources.contains(bindingIndex) && m_BindingResources.at(bindingIndex).Resource == resource)
+        if (m_BindingResources.Contains(bindingIndex) && m_BindingResources.At(bindingIndex).Resource == resource)
             continue;
 
         m_BindingResources[bindingIndex].Resource = resource;
@@ -75,18 +74,18 @@ void VulkanDescriptorSet::UpdateBindings(const std::unordered_map<uint32, RefPtr
                 // 'm_LockedResources' vectors are not in sync! (which would be an internal error)
                 SE_ASSERT(!IsLocked());
 
-                // NOTE(Traian): Vulkan itself doesn't care that the binding contains handles to deleted resources, as long as that descriptor
+                // NOTE(Traian): Vulkan itself doesn't care that the binding Contains handles to deleted resources, as long as that descriptor
                 // set is not used. It is up to the application to ensure that the binding is updated to reference a valid new resource before
                 // is it used by a command buffer.
-                SE_ASSERT(m_BindingResources.contains(bindingIndex));
-                m_BindingResources.erase(bindingIndex);
+                SE_ASSERT(m_BindingResources.Contains(bindingIndex));
+                m_BindingResources.RemoveUnchecked(bindingIndex);
             }
         );
 
-        SE_ASSERT(m_DescriptorSetLayout.BindingDescriptorTypes.contains(bindingIndex));
-        const VkDescriptorType descriptorType = m_DescriptorSetLayout.BindingDescriptorTypes.at(bindingIndex);
+        SE_ASSERT(m_DescriptorSetLayout.BindingDescriptorTypes.Contains(bindingIndex));
+        const VkDescriptorType descriptorType = m_DescriptorSetLayout.BindingDescriptorTypes.At(bindingIndex);
 
-        VkWriteDescriptorSet& descriptorWrite = descriptorWrites.emplace_back();
+        VkWriteDescriptorSet& descriptorWrite = descriptorWrites.Emplace();
         descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrite.dstSet = m_DescriptorSet;
         descriptorWrite.dstBinding = bindingIndex;
@@ -117,16 +116,16 @@ void VulkanDescriptorSet::UpdateBindings(const std::unordered_map<uint32, RefPtr
         }
     }
 
-    vkUpdateDescriptorSets(g_VulkanDriver->GetDevice(), (uint32)descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+    vkUpdateDescriptorSets(g_VulkanDriver->GetDevice(), (uint32)descriptorWrites.Count(), descriptorWrites.Elements(), 0, nullptr);
 }
 
-std::vector<uint32> VulkanDescriptorSet::GetMissingBindingIndices() const
+Vector<uint32> VulkanDescriptorSet::GetMissingBindingIndices() const
 {
-    std::vector<uint32> missingBindingIndices;
+    Vector<uint32> missingBindingIndices;
     for (const auto& [bindingIndex, descriptorType] : m_DescriptorSetLayout.BindingDescriptorTypes)
     {
-        if (!m_BindingResources.contains(bindingIndex))
-            missingBindingIndices.push_back(bindingIndex);
+        if (!m_BindingResources.Contains(bindingIndex))
+            missingBindingIndices.Add(bindingIndex);
     }
 
     return missingBindingIndices;
@@ -136,7 +135,7 @@ bool VulkanDescriptorSet::IsComplete() const
 {
     for (const auto& [bindingIndex, descriptorType] : m_DescriptorSetLayout.BindingDescriptorTypes)
     {
-        if (!m_BindingResources.contains(bindingIndex))
+        if (!m_BindingResources.Contains(bindingIndex))
             return false;
     }
 
@@ -151,20 +150,20 @@ void VulkanDescriptorSet::OnLock()
     m_LockedParentShader = m_ParentShader;
 
     // Acquire strong references for the resources used by the descriptor set.
-    SE_ASSERT(m_LockedResources.empty());
-    m_LockedResources.reserve(m_BindingResources.size());
+    SE_ASSERT(m_LockedResources.IsEmpty());
+    m_LockedResources.EnsureCapacity(m_BindingResources.Count());
 
     for (auto& [bindingIndex, resource] : m_BindingResources)
     {
         RefPtr<ShaderResource> trackedResource = RefPtr<ShaderResource>(resource.Resource);
-        m_LockedResources.push_back(std::move(trackedResource));
+        m_LockedResources.Add(std::move(trackedResource));
     }
 }
 
 void VulkanDescriptorSet::OnUnlock()
 {
     // Release the strong references for the resources.
-    m_LockedResources.clear();
+    m_LockedResources.Clear();
 
     // Release the strong reference for the parent shader.
     m_LockedParentShader.Release();

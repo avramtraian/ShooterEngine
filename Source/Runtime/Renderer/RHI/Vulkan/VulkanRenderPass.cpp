@@ -15,14 +15,14 @@ VulkanRenderPass::VulkanRenderPass(const RenderPassInfo& info)
     m_HasDepthStencilAttachment = info.HasDepthStencilAttachment;
     m_Attachments = info.ColorAttachments;
     if (m_HasDepthStencilAttachment)
-        m_Attachments.push_back(info.DepthStencilAttachment);
+        m_Attachments.Add(info.DepthStencilAttachment);
 
-    std::vector<VkAttachmentDescription> attachmentDescriptions;
-    attachmentDescriptions.reserve(m_Attachments.size());
+    Vector<VkAttachmentDescription> attachmentDescriptions;
+    attachmentDescriptions.EnsureCapacity(m_Attachments.Count());
 
     for (const RenderPassAttachment& attachment : m_Attachments)
     {
-        VkAttachmentDescription& attachmentDescription = attachmentDescriptions.emplace_back();
+        VkAttachmentDescription& attachmentDescription = attachmentDescriptions.Emplace();
         attachmentDescription.format = TextureFormatToVulkan(attachment.Format);
         attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
 
@@ -47,12 +47,12 @@ VulkanRenderPass::VulkanRenderPass(const RenderPassInfo& info)
         attachmentDescription.finalLayout = TextureLayoutToVulkan(attachment.FinalLayout);
     }
 
-    std::vector<VkAttachmentReference> colorAttachmentReferences;
-    colorAttachmentReferences.reserve(info.ColorAttachments.size());
+    Vector<VkAttachmentReference> colorAttachmentReferences;
+    colorAttachmentReferences.EnsureCapacity(info.ColorAttachments.Count());
 
-    for (uint32 colorAttachmentIndex = 0; colorAttachmentIndex < (uint32)info.ColorAttachments.size(); ++colorAttachmentIndex)
+    for (uint32 colorAttachmentIndex = 0; colorAttachmentIndex < (uint32)info.ColorAttachments.Count(); ++colorAttachmentIndex)
     {
-        VkAttachmentReference& attachmentReference = colorAttachmentReferences.emplace_back();
+        VkAttachmentReference& attachmentReference = colorAttachmentReferences.Emplace();
         attachmentReference.attachment = colorAttachmentIndex;
         attachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     }
@@ -61,23 +61,23 @@ VulkanRenderPass::VulkanRenderPass(const RenderPassInfo& info)
     if (m_HasDepthStencilAttachment)
     {
         /* NOTE(Traian): The depth-stencil attachment is *always* the last attachment, which means that all color attachments come before it. */
-        depthStencilAttachmentReference.attachment = (uint32)info.ColorAttachments.size();
+        depthStencilAttachmentReference.attachment = (uint32)info.ColorAttachments.Count();
 
         /* TODO(Traian): Use 'VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL' or 'VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL'
-         * when possible instead of assuming the texture format contains both depth and stencil components. */
+         * when possible instead of assuming the texture format Contains both depth and stencil components. */
         depthStencilAttachmentReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
     }
 
     VkSubpassDescription subpassDescription = {};
     subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpassDescription.colorAttachmentCount = (uint32)colorAttachmentReferences.size();
-    subpassDescription.pColorAttachments = colorAttachmentReferences.data();
+    subpassDescription.colorAttachmentCount = (uint32)colorAttachmentReferences.Count();
+    subpassDescription.pColorAttachments = colorAttachmentReferences.Elements();
     subpassDescription.pDepthStencilAttachment = m_HasDepthStencilAttachment ? &depthStencilAttachmentReference : nullptr;
 
     VkRenderPassCreateInfo renderPassCreateInfo = {};
     renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    renderPassCreateInfo.attachmentCount = (uint32)attachmentDescriptions.size();
-    renderPassCreateInfo.pAttachments = attachmentDescriptions.data();
+    renderPassCreateInfo.attachmentCount = (uint32)attachmentDescriptions.Count();
+    renderPassCreateInfo.pAttachments = attachmentDescriptions.Elements();
     renderPassCreateInfo.subpassCount = 1;
     renderPassCreateInfo.pSubpasses = &subpassDescription;
 
@@ -87,8 +87,8 @@ VulkanRenderPass::VulkanRenderPass(const RenderPassInfo& info)
 
 VulkanRenderPass::~VulkanRenderPass()
 {
-    m_CachedPipelines.clear();
-    m_CachedFramebuffers.clear();
+    m_CachedPipelines.ClearAndShrink();
+    m_CachedFramebuffers.ClearAndShrink();
 
     /* Destroy the render pass object. */
     vkDestroyRenderPass(g_VulkanDriver->GetDevice(), m_Handle, nullptr);
@@ -112,20 +112,20 @@ VulkanFramebuffer* VulkanRenderPass::AcquireCompatibleFramebuffer(const RenderPa
             invalidFramebuffer = cachedFramebuffer.Framebuffer.Get();
     }
 
-    std::vector<RefPtr<Texture2D>> framebufferTextures;
-    framebufferTextures.resize(beginInfo.ColorAttachmentTextures.size());
-    for (const auto& colorAttachmentTextureIt : beginInfo.ColorAttachmentTextures)
+    Vector<RefPtr<Texture2D>> framebufferTextures;
+    framebufferTextures.EnsureCapacity(beginInfo.ColorAttachmentTextures.Count());
+    for (const auto& [colorAttachmentIndex, colorAttachmentTexture] : beginInfo.ColorAttachmentTextures)
     {
-        if (colorAttachmentTextureIt.first >= framebufferTextures.size())
+        if (colorAttachmentIndex >= framebufferTextures.Count())
         {
             SE_LOG_ERROR(
                 "The begin info structure specifies a color attachment index that is not in the render pass specification! (AttachmetIndex: %d)",
-                colorAttachmentTextureIt.first
+                colorAttachmentIndex
             );
             return nullptr;
         }
 
-        framebufferTextures[colorAttachmentTextureIt.first] = colorAttachmentTextureIt.second.Texture;
+        framebufferTextures[colorAttachmentIndex] = colorAttachmentTexture.Texture;
     }
 
     if (m_HasDepthStencilAttachment)
@@ -136,7 +136,7 @@ VulkanFramebuffer* VulkanRenderPass::AcquireCompatibleFramebuffer(const RenderPa
             return nullptr;
         }
 
-        framebufferTextures.push_back(beginInfo.DepthStencilAttachmentTexture.Texture);
+        framebufferTextures.Add(beginInfo.DepthStencilAttachmentTexture.Texture);
     }
 
     // Reuse the provided framebuffer instead of creating a new object instance.
@@ -148,9 +148,9 @@ VulkanFramebuffer* VulkanRenderPass::AcquireCompatibleFramebuffer(const RenderPa
 
     // TODO(Traian): Try to destroy/invalidate existing but unused framebuffers instead of creating
     // a new every time it is required. This can cause big memory leaks.
-    SE_ASSERT(m_CachedFramebuffers.size() < 1024);
+    SE_ASSERT(m_CachedFramebuffers.Count() < 1024);
 
-    CachedFramebuffer& cachedFramebuffer = m_CachedFramebuffers.emplace_back();
+    CachedFramebuffer& cachedFramebuffer = m_CachedFramebuffers.Emplace();
     cachedFramebuffer.Framebuffer = CreateOwn<VulkanFramebuffer>(AdoptWeakRef(this));
     cachedFramebuffer.NumberOfFramesSinceLastUse = 0;
 
@@ -185,9 +185,9 @@ VulkanPipeline* VulkanRenderPass::AcquireCompatiblePipeline(const GraphicsState&
 
     // TODO(Traian): Try to destroy/invalidate existing but unused pipelines instead of creating
     // a new every time it is required. This can cause big memory leaks.
-    SE_ASSERT(m_CachedPipelines.size() < 1024);
+    SE_ASSERT(m_CachedPipelines.Count() < 1024);
 
-    CachedPipeline& cachedPipeline = m_CachedPipelines.emplace_back();
+    CachedPipeline& cachedPipeline = m_CachedPipelines.Emplace();
     cachedPipeline.NumberOfFramesSinceLastUse = 0;
 
     // Create a new pipeline that matches the provided graphics state.

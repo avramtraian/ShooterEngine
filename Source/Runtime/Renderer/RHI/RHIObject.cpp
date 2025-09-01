@@ -59,7 +59,7 @@ RHIObjectCallbackID RHIObject::AddCallbackAndGetID(RHIObjectCallbackType callbac
 {
     const RHIObjectCallbackID callbackID = ++m_LastUsedCallbackID;
     SE_ASSERT(callbackType != RHIObjectCallbackType::Unknown);
-    m_Callbacks[callbackType].Functions.insert({ callbackID, std::move(callback) });
+    m_Callbacks[callbackType].Functions.Add(callbackID, Move(callback));
     return callbackID;
 }
 
@@ -70,8 +70,8 @@ void RHIObject::RemoveCallbackID(RHIObjectCallbackType callbackType, RHIObjectCa
 
     SE_ASSERT(callbackType != RHIObjectCallbackType::Unknown);
     auto& callbacks = m_Callbacks[callbackType];
-    SE_ASSERT(callbacks.Functions.contains(callbackID));
-    callbacks.Functions.erase(callbackID);
+    SE_ASSERT(callbacks.Functions.Contains(callbackID));
+    callbacks.Functions.RemoveUnchecked(callbackID);
 }
 
 void RHIObject::DispatchCallbacksOfType(RHIObjectCallbackType callbackType)
@@ -84,22 +84,21 @@ void RHIObject::DispatchCallbacksOfType(RHIObjectCallbackType callbackType)
         return;
     callbacks.IsInDispatch = true;
 
-    SE_ASSERT(callbacks.ToDispatch.empty());
-    callbacks.ToDispatch.reserve(callbacks.Functions.size());
+    SE_ASSERT(callbacks.ToDispatch.IsEmpty());
+    callbacks.ToDispatch.EnsureCapacity(callbacks.Functions.Count());
     for (const auto& [callbackID, function] : callbacks.Functions)
-        callbacks.ToDispatch.insert(callbackID);
+        callbacks.ToDispatch.Add(callbackID);
 
     for (RHIObjectCallbackID callbackID : callbacks.ToDispatch)
     {
-        auto functionIt = callbacks.Functions.find(callbackID);
-        if (functionIt == callbacks.Functions.end())
+        auto function = callbacks.Functions.GetIfExists(callbackID);
+        if (!function.HasValue())
             continue;
 
-        auto& function = (*functionIt).second;
-        function(*this);
+        (function.Value())(*this);
     }
 
-    callbacks.ToDispatch.clear();
+    callbacks.ToDispatch.Clear();
     callbacks.IsInDispatch = false;
 }
 

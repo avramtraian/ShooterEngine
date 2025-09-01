@@ -65,19 +65,19 @@ private:
     LockPtr<VulkanFramebuffer> m_ActiveFramebuffer;
     LockPtr<VulkanPipeline> m_ActivePipeline;
 
-    std::vector<RefPtr<VulkanRenderPass>> m_UsedRenderPasses;
-    std::vector<RefPtr<VulkanVertexBuffer>> m_UsedVertexBuffers;
-    std::vector<RefPtr<VulkanIndexBuffer>> m_UsedIndexBuffers;
+    Vector<RefPtr<VulkanRenderPass>> m_UsedRenderPasses;
+    Vector<RefPtr<VulkanVertexBuffer>> m_UsedVertexBuffers;
+    Vector<RefPtr<VulkanIndexBuffer>> m_UsedIndexBuffers;
 
-    std::vector<LockPtr<VulkanFramebuffer>> m_UsedFramebuffers;
-    std::vector<LockPtr<VulkanPipeline>> m_UsedPipelines;
-    std::vector<LockPtr<VulkanDescriptorSet>> m_UsedDescriptorSets;
+    Vector<LockPtr<VulkanFramebuffer>> m_UsedFramebuffers;
+    Vector<LockPtr<VulkanPipeline>> m_UsedPipelines;
+    Vector<LockPtr<VulkanDescriptorSet>> m_UsedDescriptorSets;
 
     bool m_IsVertexBufferBound;
     bool m_IsIndexBufferBound;
 
-    std::vector<RefPtr<VulkanTexture2D>> m_TransitionedTextures;
-    std::vector<OwnPtr<VulkanBuffer>> m_StagingBuffers;
+    Vector<RefPtr<VulkanTexture2D>> m_TransitionedTextures;
+    Vector<OwnPtr<VulkanBuffer>> m_StagingBuffers;
 
     DrawStatistics m_DrawStatistics;
     AccumultateStatisticsPolicy m_AccumulateStatisticsPolicy;

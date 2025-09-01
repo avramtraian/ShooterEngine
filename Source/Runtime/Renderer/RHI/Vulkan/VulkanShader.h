@@ -18,34 +18,34 @@ public:
     {
         VkShaderModule Handle { VK_NULL_HANDLE };
         VkShaderStageFlagBits Stage;
-        std::string EntryPoint;
+        String EntryPoint;
     };
 
 public:
     VulkanShader(const ShaderInfo& info);
     virtual ~VulkanShader() override;
 
-    NODISCARD FORCEINLINE uint32 GetModuleCount() const { return (uint32)m_Modules.size(); }
-    NODISCARD FORCEINLINE const std::vector<Module>& GetModules() const { return m_Modules; }
+    NODISCARD FORCEINLINE uint32 GetModuleCount() const { return (uint32)m_Modules.Count(); }
+    NODISCARD FORCEINLINE const Vector<Module>& GetModules() const { return m_Modules; }
 
     NODISCARD FORCEINLINE VkPipelineLayout GetPipelineLayout() const { return m_PipelineLayout; }
 
 public:
-    NODISCARD FORCEINLINE const std::unordered_map<uint32, VulkanDescriptorSetLayout>& GetDescriptorSetLayouts() const { return m_DescriptorSetLayouts; }
+    NODISCARD FORCEINLINE const HashMap<uint32, VulkanDescriptorSetLayout>& GetDescriptorSetLayouts() const { return m_DescriptorSetLayouts; }
     NODISCARD FORCEINLINE VulkanDescriptorSetManager& GetDescriptorSetManager() { return *m_DescriptorSetManager; }
     NODISCARD FORCEINLINE const VulkanDescriptorSetManager& GetDescriptorSetManager() const { return *m_DescriptorSetManager; }
 
     NODISCARD FORCEINLINE const VulkanDescriptorSetLayout& GetDescriptorSetLayout(uint32 setIndex) const
     {
-        SE_ASSERT(m_DescriptorSetLayouts.contains(setIndex));
-        return m_DescriptorSetLayouts.at(setIndex);
+        SE_ASSERT(m_DescriptorSetLayouts.Contains(setIndex));
+        return m_DescriptorSetLayouts.At(setIndex);
     }
 
 private:
-    std::vector<Module> m_Modules;
+    Vector<Module> m_Modules;
 
     VkPipelineLayout m_PipelineLayout;
-    std::unordered_map<uint32, VulkanDescriptorSetLayout> m_DescriptorSetLayouts;
+    HashMap<uint32, VulkanDescriptorSetLayout> m_DescriptorSetLayouts;
     OwnPtr<VulkanDescriptorSetManager> m_DescriptorSetManager;
 };
 

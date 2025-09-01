@@ -2,12 +2,12 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/HashMap.h>
+#include <Runtime/Core/Containers/String/String.h>
+#include <Runtime/Core/Containers/String/StringView.h>
+#include <Runtime/Core/Containers/Vector.h>
 #include <Runtime/Renderer/RHI/RHICore.h>
 #include <Runtime/Renderer/RHI/Texture.h>
-
-#include <string>
-#include <unordered_map>
-#include <vector>
 
 namespace SE
 {
@@ -43,14 +43,14 @@ public:
 struct RenderPassInfo
 {
 public:
-    std::string DebugName;
-    std::vector<RenderPassAttachment> ColorAttachments;
+    String DebugName;
+    Vector<RenderPassAttachment> ColorAttachments;
     bool HasDepthStencilAttachment { false };
     RenderPassAttachment DepthStencilAttachment;
 
 public:
-    inline RenderPassInfo& SetDebugName              (std::string_view debugName)      { DebugName = debugName;                                                 return *this; }
-    inline RenderPassInfo& AddColorAttachment        (RenderPassAttachment attachment) { ColorAttachments.push_back(std::move(attachment));                     return *this; }
+    inline RenderPassInfo& SetDebugName              (StringView debugName)      { DebugName = debugName;                                                 return *this; }
+    inline RenderPassInfo& AddColorAttachment        (RenderPassAttachment attachment) { ColorAttachments.Add(std::move(attachment));                           return *this; }
     inline RenderPassInfo& SetDepthStencilAttachment (RenderPassAttachment attachment) { DepthStencilAttachment = attachment; HasDepthStencilAttachment = true; return *this; }
 };
 
@@ -109,14 +109,14 @@ public:
 struct RenderPassBeginInfo
 {
 public:
-    std::unordered_map<uint32, RenderPassAttachmentTexture> ColorAttachmentTextures;
+    HashMap<uint32, RenderPassAttachmentTexture> ColorAttachmentTextures;
     RenderPassAttachmentTexture DepthStencilAttachmentTexture;
 
 public:
     inline RenderPassBeginInfo& AddColorAttachmentTexture(uint32 attachmentIndex, const RenderPassAttachmentTexture& attachmentTexture)
     {
-        SE_ASSERT(!ColorAttachmentTextures.contains(attachmentIndex));
-        ColorAttachmentTextures.insert({ attachmentIndex, attachmentTexture });
+        SE_ASSERT(!ColorAttachmentTextures.Contains(attachmentIndex));
+        ColorAttachmentTextures.Add(attachmentIndex, attachmentTexture);
         return *this;
     }
 

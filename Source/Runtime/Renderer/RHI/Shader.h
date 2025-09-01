@@ -2,14 +2,12 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/Vector.h>
 #include <Runtime/Core/Containers/VectorView.h>
 #include <Runtime/Renderer/RHI/RHICore.h>
 #include <Runtime/Renderer/RHI/RHIObject.h>
 #include <Runtime/Renderer/ShaderCompiler/ShaderReflectionData.h>
 #include <Runtime/Renderer/ShaderCompiler/ShaderStage.h>
-
-#include <string>
-#include <vector>
 
 namespace SE
 {
@@ -17,9 +15,9 @@ namespace SE
 struct ShaderStageInfo
 {
 public:
-    ShaderStage Stage { ShaderStage::Unknown };
+    ShaderStage             Stage { ShaderStage::Unknown };
     VectorView<const uint8> Bytecode;
-    ShaderReflectionData ReflectionData;
+    ShaderReflectionData    ReflectionData;
 
 public:
     inline ShaderStageInfo& SetStage          (ShaderStage stage)                   { Stage = stage;                              return *this; }
@@ -30,10 +28,10 @@ public:
 struct ShaderInfo
 {
 public:
-    std::vector<ShaderStageInfo> Stages;
+    Vector<ShaderStageInfo> Stages;
 
 public:
-    inline ShaderInfo& AddStage (ShaderStageInfo stage) { Stages.push_back(std::move(stage)); return *this; }
+    inline ShaderInfo& AddStage (ShaderStageInfo stage) { Stages.Add(std::move(stage)); return *this; }
 };
 
 class Shader : public RHIObject

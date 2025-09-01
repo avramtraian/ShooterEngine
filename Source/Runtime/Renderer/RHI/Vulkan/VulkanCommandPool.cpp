@@ -22,23 +22,23 @@ VulkanCommandPool::VulkanCommandPool(const VulkanCommandPoolInfo& info)
     allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocateInfo.commandBufferCount = info.CommandBufferCount;
 
-    m_UnusedCommandBuffers.resize(info.CommandBufferCount);
-    SE_VULKAN_CHECK(vkAllocateCommandBuffers(g_VulkanDriver->GetDevice(), &allocateInfo, m_UnusedCommandBuffers.data()));
+    m_UnusedCommandBuffers.SetCountDefaulted(info.CommandBufferCount);
+    SE_VULKAN_CHECK(vkAllocateCommandBuffers(g_VulkanDriver->GetDevice(), &allocateInfo, m_UnusedCommandBuffers.Elements()));
 
     /* Avoid possible memory allocations during 'AcquireCommandBuffer' and 'RetireCommandBuffer'. */
-    m_UnusedCommandBuffers.reserve(info.CommandBufferCount);
+    m_UnusedCommandBuffers.EnsureCapacity(info.CommandBufferCount);
 }
 
 VulkanCommandPool::~VulkanCommandPool()
 {
-    if (!m_InUseCommandBuffers.empty())
+    if (m_InUseCommandBuffers.HasElements())
     {
         SE_LOG_ERROR("[Vulkan] command pool is destroyed (unreferenced) but still has in-use command buffers!");
         SE_ASSERT_NOT_REACHED;
     }
 
     /* Free command buffers allocted from this pool. */
-    vkFreeCommandBuffers(g_VulkanDriver->GetDevice(), m_Handle, (uint32)m_UnusedCommandBuffers.size(), m_UnusedCommandBuffers.data());
+    vkFreeCommandBuffers(g_VulkanDriver->GetDevice(), m_Handle, (uint32)m_UnusedCommandBuffers.Count(), m_UnusedCommandBuffers.Elements());
     
     /* Destroy the command pool. */
     vkDestroyCommandPool(g_VulkanDriver->GetDevice(), m_Handle, nullptr);
@@ -47,18 +47,18 @@ VulkanCommandPool::~VulkanCommandPool()
 
 VkCommandBuffer VulkanCommandPool::AcquireCommandBuffer()
 {
-    SE_ENSURE(!m_UnusedCommandBuffers.empty());
-    const VkCommandBuffer commandBufferHandle = m_UnusedCommandBuffers.back();
-    m_UnusedCommandBuffers.pop_back();
-    m_InUseCommandBuffers.insert(commandBufferHandle);
+    SE_ENSURE(m_UnusedCommandBuffers.HasElements());
+    const VkCommandBuffer commandBufferHandle = m_UnusedCommandBuffers.Last();
+    m_UnusedCommandBuffers.PopBack();
+    m_InUseCommandBuffers.Add(commandBufferHandle);
     return commandBufferHandle;
 }
 
 void VulkanCommandPool::RetireCommandBuffer(VkCommandBuffer commandBufferHandle)
 {
-    SE_ENSURE(m_InUseCommandBuffers.contains(commandBufferHandle));
-    m_InUseCommandBuffers.erase(commandBufferHandle);
-    m_UnusedCommandBuffers.push_back(commandBufferHandle);
+    SE_ENSURE(m_InUseCommandBuffers.Contains(commandBufferHandle));
+    m_InUseCommandBuffers.RemoveUnchecked(commandBufferHandle);
+    m_UnusedCommandBuffers.Add(commandBufferHandle);
 }
 
 }

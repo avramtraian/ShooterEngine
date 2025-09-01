@@ -55,11 +55,11 @@ VulkanRenderingSurface::VulkanRenderingSurface(const RenderingSurfaceInfo& info)
     Invalidate();
 
     // Create synchronization objects.
-    m_RenderFinishedFences.reserve(m_MaxFramesInFlight);
+    m_RenderFinishedFences.EnsureCapacity(m_MaxFramesInFlight);
     for (uint32 frameIndex = 0; frameIndex < m_MaxFramesInFlight; ++frameIndex)
     {
         FenceHandle fence = g_VulkanDriver->AcquireFence();
-        m_RenderFinishedFences.push_back(fence);
+        m_RenderFinishedFences.Add(fence);
     }
 }
 
@@ -68,10 +68,10 @@ VulkanRenderingSurface::~VulkanRenderingSurface()
     // Destroy synchronization objects.
     for (FenceHandle fence : m_RenderFinishedFences)
         g_VulkanDriver->RetireFence(fence);
-    m_RenderFinishedFences.clear();
+    m_RenderFinishedFences.ClearAndShrink();
 
     // Release the swapchain root references.
-    m_SwapchainTextures.clear();
+    m_SwapchainTextures.ClearAndShrink();
 
     // Release the swapchain root reference.
     m_Swapchain.Release();
@@ -88,12 +88,12 @@ bool VulkanRenderingSurface::Invalidate()
     );
 
     // Create the swapchain textures.
-    m_SwapchainTextures.clear();
-    m_SwapchainTextures.reserve(m_Swapchain->GetImageCount());
+    m_SwapchainTextures.Clear();
+    m_SwapchainTextures.EnsureCapacity(m_Swapchain->GetImageCount());
     for (uint32 imageIndex = 0; imageIndex < m_Swapchain->GetImageCount(); ++imageIndex)
     {
         auto swapchainTexture = CreateRef<VulkanSwapchainTexture2D>(m_Swapchain, imageIndex);
-        m_SwapchainTextures.push_back(std::move(swapchainTexture));
+        m_SwapchainTextures.Add(std::move(swapchainTexture));
     }
 
     return true;
@@ -101,7 +101,7 @@ bool VulkanRenderingSurface::Invalidate()
 
 RefPtr<Texture2D> VulkanRenderingSurface::GetSurfaceTexture2D(uint32 imageIndex)
 {
-    SE_ENSURE(imageIndex < m_SwapchainTextures.size());
+    SE_ENSURE(imageIndex < m_SwapchainTextures.Count());
     return m_SwapchainTextures[imageIndex];
 }
 
@@ -171,7 +171,7 @@ void VulkanRenderingSurface::EndFrame(bool waitForRenderFinishedSemaphore)
 // The render-finished semaphore is a bit more special because it is used (waiting for) by 'vkQueuePresentKHR'. Depending on many factors,
 // such as the present mode, the presentation might happens many frames later, and thus the semaphore is locked by the 'vkQueuePresentKHR'
 // by a number of frames potentially greater than the max frames in-flight. If we index by the image index, since the image was just acquired,
-// we can be certain that it was already presented (at some point) and thus the corresponding semaphore is unused (since it must have been signaled,
+// we can be certain that it was already presented (At some point) and thus the corresponding semaphore is unused (since it must have been signaled,
 // as no presentation would have happen otherwise). This makes indexing by the image index _always_ safe.
 //
 

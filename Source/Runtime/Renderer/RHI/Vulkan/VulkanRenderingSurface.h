@@ -64,13 +64,13 @@ private:
     RefPtr<VulkanSurface> m_Surface;
     uint32 m_SwapchainMinImageCount;
     RefPtr<VulkanSwapchain> m_Swapchain;
-    std::vector<RefPtr<VulkanSwapchainTexture2D>> m_SwapchainTextures;
+    Vector<RefPtr<VulkanSwapchainTexture2D>> m_SwapchainTextures;
 
     uint32 m_MaxFramesInFlight;
     uint32 m_CurrentFrameIndex;
     uint32 m_CurrentSwapchainImageIndex;
 
-    std::vector<FenceHandle> m_RenderFinishedFences;
+    Vector<FenceHandle> m_RenderFinishedFences;
 };
 
 }

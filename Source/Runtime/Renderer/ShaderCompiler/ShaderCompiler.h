@@ -2,13 +2,13 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/Optional.h>
+#include <Runtime/Core/Containers/String/String.h>
+#include <Runtime/Core/Containers/String/StringView.h>
+#include <Runtime/Core/Containers/Vector.h>
 #include <Runtime/Core/Memory/Buffer.h>
 #include <Runtime/Renderer/ShaderCompiler/ShaderReflectionData.h>
 #include <Runtime/Renderer/ShaderCompiler/ShaderStage.h>
-
-#include <optional>
-#include <string>
-#include <vector>
 
 namespace SE
 {
@@ -27,31 +27,31 @@ class ShaderCompiler
     SE_MAKE_NONMOVABLE(ShaderCompiler);
 
 public:
-    SHOOTER_API ShaderCompiler(std::string shaderSourceCode);
+    SHOOTER_API ShaderCompiler(String shaderSourceCode);
     SHOOTER_API ~ShaderCompiler() = default;
 
-    SHOOTER_API NODISCARD static std::string_view GetEntryPointNameForStage(ShaderStage stage);
+    SHOOTER_API NODISCARD static StringView GetEntryPointNameForStage(ShaderStage stage);
     SHOOTER_API bool Compile();
 
 public:
-    NODISCARD FORCEINLINE bool HasErrorMessages() const { return !m_ErrorMessages.empty(); }
-    NODISCARD FORCEINLINE const std::vector<std::string>& GetErrorMessages() const { return m_ErrorMessages; }
-    NODISCARD FORCEINLINE const std::vector<CompiledShaderStage>& GetCompiledStages() const { return m_CompiledStages; }
+    NODISCARD FORCEINLINE bool HasErrorMessages() const { return m_ErrorMessages.HasElements(); }
+    NODISCARD FORCEINLINE const Vector<String>& GetErrorMessages() const { return m_ErrorMessages; }
+    NODISCARD FORCEINLINE const Vector<CompiledShaderStage>& GetCompiledStages() const { return m_CompiledStages; }
 
     SHOOTER_API NODISCARD bool IsStageCompiled(ShaderStage stage) const;
     SHOOTER_API NODISCARD const CompiledShaderStage& GetCompiledStage(ShaderStage stage) const;
 
 private:
-    void AddBaseCompilerArguments(std::vector<const wchar_t*>& outArguments);
-    void AddStageSpecificCompilerArguments(std::vector<const wchar_t*>& outArguments, ShaderStage stage);
+    void AddBaseCompilerArguments(Vector<const wchar_t*>& outArguments);
+    void AddStageSpecificCompilerArguments(Vector<const wchar_t*>& outArguments, ShaderStage stage);
 
     Buffer GenerateBytecodeForStage(ShaderStage stage, VectorView<const wchar_t*> compilerArguments);
-    std::optional<ShaderReflectionData> GenerateReflectionData(ShaderStage stage, ReadonlyBufferView bytecode);
+    Optional<ShaderReflectionData> GenerateReflectionData(ShaderStage stage, ReadonlyBufferView bytecode);
 
 private:
-    std::string m_SourceCode;
-    std::vector<std::string> m_ErrorMessages;
-    std::vector<CompiledShaderStage> m_CompiledStages;
+    String m_SourceCode;
+    Vector<String> m_ErrorMessages;
+    Vector<CompiledShaderStage> m_CompiledStages;
 };
 
 }

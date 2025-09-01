@@ -2,10 +2,9 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/HashMap.h>
+#include <Runtime/Core/Containers/String/String.h>
 #include <Runtime/Core/CoreTypes.h>
-
-#include <map>
-#include <string>
 
 namespace SE
 {
@@ -21,20 +20,20 @@ enum class ShaderReflectionDescriptorType : uint16
 
 struct ShaderReflectionDescriptorBinding
 {
-    std::string Name;
+    String Name;
     ShaderReflectionDescriptorType DescriptorType { ShaderReflectionDescriptorType::Unknown };
     uint32 ArrayCount { 0 };
 };
 
 struct ShaderReflectionDescriptorSet
 {
-    std::map<uint32, ShaderReflectionDescriptorBinding> Bindings;
+    HashMap<uint32, ShaderReflectionDescriptorBinding> Bindings;
     NODISCARD FORCEINLINE ShaderReflectionDescriptorBinding& operator[](uint32 bindingIndex) { return Bindings[bindingIndex]; }
 };
 
 struct ShaderReflectionData
 {
-    std::map<uint32, ShaderReflectionDescriptorSet> DescriptorSets;
+    HashMap<uint32, ShaderReflectionDescriptorSet> DescriptorSets;
 };
 
 }

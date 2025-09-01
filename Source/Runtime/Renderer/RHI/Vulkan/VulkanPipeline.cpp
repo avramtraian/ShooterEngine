@@ -126,28 +126,28 @@ void VulkanPipeline::Invalidate(const GraphicsState& graphicsState, const RefPtr
         }
     );
 
-    std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-    shaderStages.reserve(m_Shader->GetModuleCount());
+    Vector<VkPipelineShaderStageCreateInfo> shaderStages;
+    shaderStages.EnsureCapacity(m_Shader->GetModuleCount());
 
     for (const VulkanShader::Module& module : m_Shader->GetModules())
     {
-        VkPipelineShaderStageCreateInfo& stageCreateInfo = shaderStages.emplace_back();
+        VkPipelineShaderStageCreateInfo& stageCreateInfo = shaderStages.Emplace();
         stageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         stageCreateInfo.stage = module.Stage;
         stageCreateInfo.module = module.Handle;
-        stageCreateInfo.pName = module.EntryPoint.c_str();
+        stageCreateInfo.pName = module.EntryPoint.Characters();
         stageCreateInfo.pSpecializationInfo = nullptr;
     }
 
-    std::vector<VkVertexInputAttributeDescription> vertexAttributes;
-    vertexAttributes.reserve(m_GraphicsState.VertexInputLayout.Attributes.size());
+    Vector<VkVertexInputAttributeDescription> vertexAttributes;
+    vertexAttributes.EnsureCapacity(m_GraphicsState.VertexInputLayout.Attributes.Count());
 
     uint32 vertexInputStride = 0;
     uint32 attributeLocation = 0;
 
     for (const auto& attribute : m_GraphicsState.VertexInputLayout.Attributes)
     {
-        VkVertexInputAttributeDescription& attributeDescription = vertexAttributes.emplace_back();
+        VkVertexInputAttributeDescription& attributeDescription = vertexAttributes.Emplace();
         attributeDescription.location = attributeLocation;
         attributeDescription.binding = 0;
         attributeDescription.format = GetVertexInputAttributeFormat(attribute.Type);
@@ -158,8 +158,8 @@ void VulkanPipeline::Invalidate(const GraphicsState& graphicsState, const RefPtr
         attributeLocation++;
     }
 
-    std::vector<VkVertexInputBindingDescription> vertexBindings;
-    vertexBindings.resize(1);
+    Vector<VkVertexInputBindingDescription> vertexBindings;
+    vertexBindings.SetCountDefaulted(1);
 
     vertexBindings[0].binding = 0;
     vertexBindings[0].stride = vertexInputStride;
@@ -167,10 +167,10 @@ void VulkanPipeline::Invalidate(const GraphicsState& graphicsState, const RefPtr
 
     VkPipelineVertexInputStateCreateInfo vertexInputState = {};
     vertexInputState.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputState.vertexBindingDescriptionCount = (uint32)vertexBindings.size();
-    vertexInputState.pVertexBindingDescriptions = vertexBindings.data();
-    vertexInputState.vertexAttributeDescriptionCount = (uint32)vertexAttributes.size();
-    vertexInputState.pVertexAttributeDescriptions = vertexAttributes.data();
+    vertexInputState.vertexBindingDescriptionCount = (uint32)vertexBindings.Count();
+    vertexInputState.pVertexBindingDescriptions = vertexBindings.Elements();
+    vertexInputState.vertexAttributeDescriptionCount = (uint32)vertexAttributes.Count();
+    vertexInputState.pVertexAttributeDescriptions = vertexAttributes.Elements();
 
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = {};
     inputAssemblyState.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -245,12 +245,12 @@ void VulkanPipeline::Invalidate(const GraphicsState& graphicsState, const RefPtr
     depthStencilState.depthWriteEnable = m_GraphicsState.HasDepthAttachment ? VK_TRUE : VK_FALSE;
     depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS;
 
-    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments;
-    colorBlendAttachments.reserve(colorAttachmentCount);
+    Vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments;
+    colorBlendAttachments.EnsureCapacity(colorAttachmentCount);
 
     for (uint32 colorAttachmentIndex = 0; colorAttachmentIndex < colorAttachmentCount; ++colorAttachmentIndex)
     {
-        VkPipelineColorBlendAttachmentState& colorBlendAttachment = colorBlendAttachments.emplace_back();
+        VkPipelineColorBlendAttachmentState& colorBlendAttachment = colorBlendAttachments.Emplace();
         colorBlendAttachment.blendEnable = VK_TRUE;
         colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
         colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
@@ -268,23 +268,23 @@ void VulkanPipeline::Invalidate(const GraphicsState& graphicsState, const RefPtr
     VkPipelineColorBlendStateCreateInfo colorBlendState = {};
     colorBlendState.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     colorBlendState.logicOpEnable = VK_FALSE;
-    colorBlendState.attachmentCount = (uint32)colorBlendAttachments.size();
-    colorBlendState.pAttachments = colorBlendAttachments.data();
+    colorBlendState.attachmentCount = (uint32)colorBlendAttachments.Count();
+    colorBlendState.pAttachments = colorBlendAttachments.Elements();
 
-    std::vector<VkDynamicState> dynamicStates;
-    dynamicStates.push_back(VK_DYNAMIC_STATE_VIEWPORT);
-    dynamicStates.push_back(VK_DYNAMIC_STATE_SCISSOR);
-    dynamicStates.push_back(VK_DYNAMIC_STATE_LINE_WIDTH);
+    Vector<VkDynamicState> dynamicStates;
+    dynamicStates.Add(VK_DYNAMIC_STATE_VIEWPORT);
+    dynamicStates.Add(VK_DYNAMIC_STATE_SCISSOR);
+    dynamicStates.Add(VK_DYNAMIC_STATE_LINE_WIDTH);
 
     VkPipelineDynamicStateCreateInfo dynamicState = {};
     dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-    dynamicState.dynamicStateCount = (uint32)dynamicStates.size();
-    dynamicState.pDynamicStates = dynamicStates.data();
+    dynamicState.dynamicStateCount = (uint32)dynamicStates.Count();
+    dynamicState.pDynamicStates = dynamicStates.Elements();
 
     VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = {};
     graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    graphicsPipelineCreateInfo.stageCount = (uint32)shaderStages.size();
-    graphicsPipelineCreateInfo.pStages = shaderStages.data();
+    graphicsPipelineCreateInfo.stageCount = (uint32)shaderStages.Count();
+    graphicsPipelineCreateInfo.pStages = shaderStages.Elements();
     graphicsPipelineCreateInfo.pVertexInputState = &vertexInputState;
     graphicsPipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
     graphicsPipelineCreateInfo.pTessellationState = &tessellationState;
@@ -334,9 +334,9 @@ bool VulkanPipeline::IsCompatibleWithGraphicsStateAndShader(const GraphicsState&
     {
         const auto& thisVertexAttributes = m_GraphicsState.VertexInputLayout.Attributes;
         const auto& otherVertexAttributes = graphicsState.VertexInputLayout.Attributes;
-        if (thisVertexAttributes.size() != otherVertexAttributes.size())
+        if (thisVertexAttributes.Count() != otherVertexAttributes.Count())
             return false;
-        for (uint32 attributeIndex = 0; attributeIndex < thisVertexAttributes.size(); ++attributeIndex)
+        for (uint32 attributeIndex = 0; attributeIndex < thisVertexAttributes.Count(); ++attributeIndex)
         {
             const GraphicsVertexInputAttribute& thisAttribute = thisVertexAttributes[attributeIndex];
             const GraphicsVertexInputAttribute& otherAttribute = otherVertexAttributes[attributeIndex];

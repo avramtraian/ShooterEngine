@@ -48,22 +48,22 @@ public:
     NODISCARD FORCEINLINE uint32 GetSizeY() const { return m_SizeY; }
     NODISCARD FORCEINLINE const ImmutableProperties& GetImmutableProperties() const { return m_ImmutableProperties; }
     
-    NODISCARD FORCEINLINE uint32 GetImageCount() const { return (uint32)m_Images.size(); }
-    NODISCARD FORCEINLINE const std::vector<VkImage>& GetImages() const { return m_Images; }
-    NODISCARD FORCEINLINE const std::vector<VkImageView>& GetImageViews() const { return m_ImageViews; }
+    NODISCARD FORCEINLINE uint32 GetImageCount() const { return (uint32)m_Images.Count(); }
+    NODISCARD FORCEINLINE const Vector<VkImage>& GetImages() const { return m_Images; }
+    NODISCARD FORCEINLINE const Vector<VkImageView>& GetImageViews() const { return m_ImageViews; }
 
-    NODISCARD FORCEINLINE const std::vector<SemaphoreHandle>& GetImageAvailableSemaphores() const { return m_ImageAvailableSemaphores; }
+    NODISCARD FORCEINLINE const Vector<SemaphoreHandle>& GetImageAvailableSemaphores() const { return m_ImageAvailableSemaphores; }
     NODISCARD FORCEINLINE SemaphoreHandle GetImageAvailableSemaphore(uint32 frameIndex) const
     {
-        SE_ASSERT(frameIndex < m_ImageAvailableSemaphores.size());
-        return m_ImageAvailableSemaphores.at(frameIndex);
+        SE_ASSERT(frameIndex < m_ImageAvailableSemaphores.Count());
+        return m_ImageAvailableSemaphores.At(frameIndex);
     }
 
-    NODISCARD FORCEINLINE const std::vector<SemaphoreHandle>& GetRenderFinishedSemaphores() const { return m_RenderFinishedSemaphores; }
+    NODISCARD FORCEINLINE const Vector<SemaphoreHandle>& GetRenderFinishedSemaphores() const { return m_RenderFinishedSemaphores; }
     NODISCARD FORCEINLINE SemaphoreHandle GetRenderFinishedSemaphore(uint32 frameIndex) const
     {
-        SE_ASSERT(frameIndex < m_RenderFinishedSemaphores.size());
-        return m_RenderFinishedSemaphores.at(frameIndex);
+        SE_ASSERT(frameIndex < m_RenderFinishedSemaphores.Count());
+        return m_RenderFinishedSemaphores.At(frameIndex);
     }
 
 private:
@@ -77,11 +77,11 @@ private:
     uint32 m_SizeX;
     uint32 m_SizeY;
 
-    std::vector<VkImage> m_Images;
-    std::vector<VkImageView> m_ImageViews;
+    Vector<VkImage> m_Images;
+    Vector<VkImageView> m_ImageViews;
 
-    std::vector<SemaphoreHandle> m_ImageAvailableSemaphores;
-    std::vector<SemaphoreHandle> m_RenderFinishedSemaphores;
+    Vector<SemaphoreHandle> m_ImageAvailableSemaphores;
+    Vector<SemaphoreHandle> m_RenderFinishedSemaphores;
 };
 
 }

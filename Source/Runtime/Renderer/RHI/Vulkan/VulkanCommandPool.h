@@ -2,11 +2,10 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/HashSet.h>
 #include <Runtime/Core/Containers/RefPtr.h>
+#include <Runtime/Core/Containers/Vector.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
-
-#include <unordered_set>
-#include <vector>
 
 namespace SE
 {
@@ -28,8 +27,8 @@ public:
     VulkanCommandPool(const VulkanCommandPoolInfo& info);
     virtual ~VulkanCommandPool() override;
 
-    NODISCARD FORCEINLINE uint32 GetInUseCommandBufferCount() const { return (uint32)m_InUseCommandBuffers.size(); }
-    NODISCARD FORCEINLINE uint32 GetUnusedCommandBufferCount() const { return (uint32)m_UnusedCommandBuffers.size(); }
+    NODISCARD FORCEINLINE uint32 GetInUseCommandBufferCount() const { return (uint32)m_InUseCommandBuffers.Count(); }
+    NODISCARD FORCEINLINE uint32 GetUnusedCommandBufferCount() const { return (uint32)m_UnusedCommandBuffers.Count(); }
     NODISCARD FORCEINLINE uint32 GetTotalCommandBufferCount() const { return GetInUseCommandBufferCount() + GetUnusedCommandBufferCount(); }
 
     NODISCARD VkCommandBuffer AcquireCommandBuffer();
@@ -37,8 +36,8 @@ public:
 
 private:
     VkCommandPool m_Handle;
-    std::unordered_set<VkCommandBuffer> m_InUseCommandBuffers;
-    std::vector<VkCommandBuffer> m_UnusedCommandBuffers;
+    HashSet<VkCommandBuffer> m_InUseCommandBuffers;
+    Vector<VkCommandBuffer> m_UnusedCommandBuffers;
 };
 
 }

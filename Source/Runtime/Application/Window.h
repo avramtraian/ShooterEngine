@@ -4,7 +4,7 @@
 
 #include <Runtime/Core/Containers/Optional.h>
 #include <Runtime/Core/Containers/RefPtr.h>
-#include <Runtime/Core/Containers/String.h>
+#include <Runtime/Core/Containers/String/String.h>
 #include <Runtime/Core/Delegate.h>
 
 namespace SE

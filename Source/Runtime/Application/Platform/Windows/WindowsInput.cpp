@@ -1,12 +1,11 @@
 // Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
 #include <Runtime/Application/Input.h>
+#include <Runtime/Core/Containers/HashMap.h>
 #include <Runtime/Core/Containers/Vector.h>
 #include <Runtime/Core/CoreAssertions.h>
 #include <Runtime/Core/Math/Vector.h>
 #include <Runtime/Core/Platform/PlatformCoreInclude.h>
-
-#include <unordered_map>
 
 namespace SE
 {
@@ -21,8 +20,8 @@ enum SwitchState : uint8_t
 
 struct WindowsInputData
 {
-    std::unordered_map<KeyCode, SwitchState> KeyStates;
-    std::unordered_map<MouseButton, SwitchState> MouseButtonStates;
+    HashMap<KeyCode, SwitchState> KeyStates;
+    HashMap<MouseButton, SwitchState> MouseButtonStates;
 
     Optional<Vector2i> LastFrameMousePosition;
     Optional<Vector2i> CurrentFrameMousePosition;
@@ -44,12 +43,12 @@ bool Input::Initialize()
     for (uint16_t keyCodeValue = 1; keyCodeValue < (uint16_t)KeyCode::MaxEnumValue; ++keyCodeValue)
     {
         const KeyCode keyCode = (KeyCode)keyCodeValue;
-        s_InputData->KeyStates.insert({ keyCode, SwitchState::Up });
+        s_InputData->KeyStates.Add(keyCode, SwitchState::Up);
     }
     for (uint16_t mouseButtonValue = 1; mouseButtonValue < (uint8_t)MouseButton::MaxEnumValue; mouseButtonValue++)
     {
         const MouseButton mouseButton = (MouseButton)mouseButtonValue;
-        s_InputData->MouseButtonStates.insert({ mouseButton, SwitchState::Up });
+        s_InputData->MouseButtonStates.Add(mouseButton, SwitchState::Up);
     }
 
     return true;
@@ -60,8 +59,8 @@ void Input::Shutdown()
     if (!s_InputData)
         return;
 
-    s_InputData->KeyStates.clear();
-    s_InputData->MouseButtonStates.clear();
+    s_InputData->KeyStates.ClearAndShrink();
+    s_InputData->MouseButtonStates.ClearAndShrink();
 
     delete s_InputData;
     s_InputData = nullptr;
@@ -159,7 +158,7 @@ void Input::OnUpdate(float deltaTime)
     for (uint16_t keyCodeValue = 1; keyCodeValue < (uint16_t)KeyCode::MaxEnumValue; ++keyCodeValue)
     {
         const KeyCode keyCode = (KeyCode)keyCodeValue;
-        SE_ASSERT(s_InputData->KeyStates.contains(keyCode));
+        SE_ASSERT(s_InputData->KeyStates.Contains(keyCode));
         const bool isDown = CheckIfKeyIsDown(keyCode);
 
         if (s_InputData->KeyStates[keyCode] == SwitchState::Up && isDown)
@@ -174,7 +173,7 @@ void Input::OnUpdate(float deltaTime)
     for (uint16_t mouseButtonValue = 1; mouseButtonValue < (uint8_t)MouseButton::MaxEnumValue; mouseButtonValue++)
     {
         const MouseButton mouseButton = (MouseButton)mouseButtonValue;
-        SE_ASSERT(s_InputData->MouseButtonStates.contains(mouseButton));
+        SE_ASSERT(s_InputData->MouseButtonStates.Contains(mouseButton));
         const bool isDown = CheckIfMouseButtonIsDown(mouseButton);
 
         if (s_InputData->MouseButtonStates[mouseButton] == SwitchState::Up && isDown)
@@ -207,8 +206,8 @@ bool Input::IsKeyDown(KeyCode keyCode)
     if (!s_InputData)
         return false;
 
-    SE_ASSERT(s_InputData->KeyStates.contains(keyCode));
-    const SwitchState switchState = s_InputData->KeyStates.at(keyCode);
+    SE_ASSERT(s_InputData->KeyStates.Contains(keyCode));
+    const SwitchState switchState = s_InputData->KeyStates.At(keyCode);
     return switchState == SwitchState::Down || switchState == SwitchState::PressedThisFrame;
 }
 
@@ -218,8 +217,8 @@ bool Input::IsMouseButtonDown(MouseButton mouseButton)
     if (!s_InputData)
         return false;
 
-    SE_ASSERT(s_InputData->MouseButtonStates.contains(mouseButton));
-    const SwitchState switchState = s_InputData->MouseButtonStates.at(mouseButton);
+    SE_ASSERT(s_InputData->MouseButtonStates.Contains(mouseButton));
+    const SwitchState switchState = s_InputData->MouseButtonStates.At(mouseButton);
     return switchState == SwitchState::Down || switchState == SwitchState::PressedThisFrame;
 }
 
@@ -229,8 +228,8 @@ bool Input::WasKeyPressedThisFrame(KeyCode keyCode)
     if (!s_InputData)
         return false;
 
-    SE_ASSERT(s_InputData->KeyStates.contains(keyCode));
-    const SwitchState switchState = s_InputData->KeyStates.at(keyCode);
+    SE_ASSERT(s_InputData->KeyStates.Contains(keyCode));
+    const SwitchState switchState = s_InputData->KeyStates.At(keyCode);
     return switchState == SwitchState::PressedThisFrame;
 }
 
@@ -240,8 +239,8 @@ bool Input::WasKeyReleasedThisFrame(KeyCode keyCode)
     if (!s_InputData)
         return false;
 
-    SE_ASSERT(s_InputData->KeyStates.contains(keyCode));
-    const SwitchState switchState = s_InputData->KeyStates.at(keyCode);
+    SE_ASSERT(s_InputData->KeyStates.Contains(keyCode));
+    const SwitchState switchState = s_InputData->KeyStates.At(keyCode);
     return switchState == SwitchState::ReleasedThisFrame;
 }
 
@@ -251,8 +250,8 @@ bool Input::WasMouseButtonPressedThisFrame(MouseButton mouseButton)
     if (!s_InputData)
         return false;
 
-    SE_ASSERT(s_InputData->MouseButtonStates.contains(mouseButton));
-    const SwitchState switchState = s_InputData->MouseButtonStates.at(mouseButton);
+    SE_ASSERT(s_InputData->MouseButtonStates.Contains(mouseButton));
+    const SwitchState switchState = s_InputData->MouseButtonStates.At(mouseButton);
     return switchState == SwitchState::PressedThisFrame;
 }
 
@@ -262,8 +261,8 @@ bool Input::WasMouseButtonReleasedThisFrame(MouseButton mouseButton)
     if (!s_InputData)
         return false;
 
-    SE_ASSERT(s_InputData->MouseButtonStates.contains(mouseButton));
-    const SwitchState switchState = s_InputData->MouseButtonStates.at(mouseButton);
+    SE_ASSERT(s_InputData->MouseButtonStates.Contains(mouseButton));
+    const SwitchState switchState = s_InputData->MouseButtonStates.At(mouseButton);
     return switchState == SwitchState::ReleasedThisFrame;
 }
 

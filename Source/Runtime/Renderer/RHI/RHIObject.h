@@ -2,11 +2,11 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/HashMap.h>
+#include <Runtime/Core/Containers/HashSet.h>
 #include <Runtime/Core/Containers/RefPtr.h>
 
 #include <functional>
-#include <unordered_map>
-#include <unordered_set>
 
 namespace SE
 {
@@ -100,13 +100,13 @@ protected:
 private:
     struct Callbacks
     {
-        std::unordered_map<RHIObjectCallbackID, PFN_RHIObjectCallback> Functions;
-        std::unordered_set<RHIObjectCallbackID> ToDispatch;
+        HashMap<RHIObjectCallbackID, PFN_RHIObjectCallback> Functions;
+        HashSet<RHIObjectCallbackID> ToDispatch;
         bool IsInDispatch { false };
     };
 
     RHIObjectCallbackID m_LastUsedCallbackID { INVALID_RHI_OBJECT_CALLBACK_ID };
-    std::unordered_map<RHIObjectCallbackType, Callbacks> m_Callbacks;
+    HashMap<RHIObjectCallbackType, Callbacks> m_Callbacks;
 };
 
 }

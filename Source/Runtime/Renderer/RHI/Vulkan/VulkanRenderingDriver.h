@@ -2,14 +2,13 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/HashMap.h>
+#include <Runtime/Core/Containers/Vector.h>
 #include <Runtime/Renderer/RHI/RenderingDriver.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCommandPool.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanPipeline.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderPass.h>
-
-#include <unordered_map>
-#include <vector>
 
 namespace SE
 {
@@ -22,8 +21,8 @@ public:
         VkPhysicalDevice Handle { VK_NULL_HANDLE };
         VkPhysicalDeviceProperties Properties;
         VkPhysicalDeviceFeatures Features;
-        std::vector<VkQueueFamilyProperties> QueueFamilyProperties;
-        std::vector<VkExtensionProperties> AvailableExtensions;
+        Vector<VkQueueFamilyProperties> QueueFamilyProperties;
+        Vector<VkExtensionProperties> AvailableExtensions;
         VkPhysicalDeviceMemoryProperties MemoryProperties;
     };
 
@@ -51,8 +50,8 @@ public:
 
     NODISCARD FORCEINLINE RefPtr<VulkanCommandPool> GetCommandPool(uint32 queueFamilyIndex) const
     {
-        SE_ENSURE(m_CommandPoolForQueueFamilyIndex.contains(queueFamilyIndex));
-        return m_CommandPoolForQueueFamilyIndex.at(queueFamilyIndex);
+        SE_ENSURE(m_CommandPoolForQueueFamilyIndex.Contains(queueFamilyIndex));
+        return m_CommandPoolForQueueFamilyIndex.At(queueFamilyIndex);
     }
 
     NODISCARD FORCEINLINE VkDescriptorPool GetDescriptorPool() const { return m_DescriptorPool; }
@@ -112,7 +111,7 @@ private:
      * Once we will start extending the renderer to be multi-threaded, this architecture must
      * be expanded to allow for multiple command pools per queue family index (one for each
      * active thread for example). */
-    std::unordered_map<uint32, RefPtr<VulkanCommandPool>> m_CommandPoolForQueueFamilyIndex;
+    HashMap<uint32, RefPtr<VulkanCommandPool>> m_CommandPoolForQueueFamilyIndex;
 
     VulkanObjectPool<VkFence> m_FencePool;
     VulkanObjectPool<VkSemaphore> m_SemaphorePool;

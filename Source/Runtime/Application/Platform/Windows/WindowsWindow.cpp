@@ -1,12 +1,13 @@
 // Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
 #include <Runtime/Application/Platform/Windows/WindowsWindow.h>
+#include <Runtime/Core/Containers/Vector.h>
 #include <Runtime/Core/Log.h>
 
 namespace SE
 {
 
-static std::vector<WindowsWindow*> s_ActiveWindows;
+static Vector<WindowsWindow*> s_ActiveWindows;
 
 NODISCARD static RefPtr<WindowsWindow> GetWindowFromNativeHandle(HWND nativeHandle)
 {
@@ -108,14 +109,14 @@ WindowsWindow::WindowsWindow(const WindowInfo& info)
     }
 
     // Add the window to the active window list.
-    s_ActiveWindows.push_back(this);
+    s_ActiveWindows.Add(this);
 }
 
 WindowsWindow::~WindowsWindow()
 {
     // Remove the window from the active window list.
     Optional<usize> windowIndex;
-    for (usize index = 0; index < s_ActiveWindows.size(); ++index)
+    for (usize index = 0; index < s_ActiveWindows.Count(); ++index)
     {
         if (s_ActiveWindows[index] == this)
         {
@@ -128,8 +129,12 @@ WindowsWindow::~WindowsWindow()
         // NOTE(Traian): Replace the window pointer stored at the given index with the
         // last element in the array and pop the container. While this operation doesn't
         // preserve elements order, it is more performant.
-        s_ActiveWindows[*windowIndex] = s_ActiveWindows.back();
-        s_ActiveWindows.pop_back();
+        s_ActiveWindows[*windowIndex] = s_ActiveWindows.Last();
+        s_ActiveWindows.PopBack();
+
+        // NOTE(Traian): When no windows are active, no memory is allocated by this container. Since the engine memory management
+        // system outlives the windowing manager, all memory will be released before the memory system shutdown.
+        s_ActiveWindows.ShrinkToFit();
     }
 
     DestroyWindow(m_WindowHandle);

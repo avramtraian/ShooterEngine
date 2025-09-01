@@ -1,5 +1,7 @@
 // Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
+#include <Runtime/Core/Containers/HashSet.h>
+#include <Runtime/Core/Containers/String/String.h>
 #include <Runtime/Core/Log.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanBuffer.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCommandList.h>
@@ -8,10 +10,6 @@
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderPass.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanShader.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanTexture.h>
-
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
 
 namespace SE
 {
@@ -61,42 +59,47 @@ enum class InstanceComponentType
 
 struct InstanceComponent
 {
+    FORCEINLINE InstanceComponent(InstanceComponentType type, String name)
+        : Type(type)
+        , Name(Move(name))
+    {}
+
     InstanceComponentType Type;
-    std::string Name;
+    String Name;
 };
 
 // Returns whether or not all required extensions and layers are available.
 // The out parameters contain all available extensions/layers that were requested - if the return value is
 // not false, these vectors are guaranteed to contain the extensions/layers in the required lists.
-static bool CheckInstanceComponents(const std::vector<InstanceComponent>& components, std::vector<const char*>& outExtensions, std::vector<const char*>& outLayers)
+static bool CheckInstanceComponents(const Vector<InstanceComponent>& components, Vector<const char*>& outExtensions, Vector<const char*>& outLayers)
 {
     /* Query available instance extensions. */
     uint32 availableExtensionCount = 0;
-    std::vector<VkExtensionProperties> availableExtensions;
+    Vector<VkExtensionProperties> availableExtensions;
     if (vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, nullptr) == VK_SUCCESS)
     {
-        availableExtensions.resize(availableExtensionCount);
-        SE_VULKAN_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, availableExtensions.data()));
-        SE_ENSURE(availableExtensions.size() == availableExtensionCount);
+        availableExtensions.SetCountDefaulted(availableExtensionCount);
+        SE_VULKAN_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, availableExtensions.Elements()));
+        SE_ENSURE(availableExtensions.Count() == availableExtensionCount);
     }
 
     /* Query available instance layers. */
     uint32 availableLayerCount = 0;
-    std::vector<VkLayerProperties> availableLayers;
+    Vector<VkLayerProperties> availableLayers;
     if (vkEnumerateInstanceLayerProperties(&availableLayerCount, nullptr) == VK_SUCCESS)
     {
-        availableLayers.resize(availableLayerCount);
-        SE_VULKAN_CHECK(vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayers.data()));
-        SE_ENSURE(availableLayers.size() == availableLayerCount);
+        availableLayers.SetCountDefaulted(availableLayerCount);
+        SE_VULKAN_CHECK(vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayers.Elements()));
+        SE_ENSURE(availableLayers.Count() == availableLayerCount);
     }
 
-    outExtensions.clear();
-    outLayers.clear();
+    outExtensions.Clear();
+    outLayers.Clear();
 
-    std::vector<std::string> missingExtensionsRequired;
-    std::vector<std::string> missingExtensionsOptional;
-    std::vector<std::string> missingLayersRequired;
-    std::vector<std::string> missingLayersOptional;
+    Vector<String> missingExtensionsRequired;
+    Vector<String> missingExtensionsOptional;
+    Vector<String> missingLayersRequired;
+    Vector<String> missingLayersOptional;
 
     for (const InstanceComponent& component : components)
     {
@@ -105,7 +108,7 @@ static bool CheckInstanceComponents(const std::vector<InstanceComponent>& compon
             bool extensionIsAvailable = false;
             for (const VkExtensionProperties& availableExtension : availableExtensions)
             {
-                if (strcmp(availableExtension.extensionName, component.Name.c_str()) == 0)
+                if (strcmp(availableExtension.extensionName, component.Name.Characters()) == 0)
                 {
                     extensionIsAvailable = true;
                     break;
@@ -114,14 +117,14 @@ static bool CheckInstanceComponents(const std::vector<InstanceComponent>& compon
 
             if (extensionIsAvailable)
             {
-                outExtensions.push_back(component.Name.c_str());
+                outExtensions.Add(component.Name.Characters());
             }
             else
             {
                 if (component.Type == InstanceComponentType::ExtensionRequired)
-                    missingExtensionsRequired.push_back(component.Name);
+                    missingExtensionsRequired.Add(component.Name);
                 if (component.Type == InstanceComponentType::ExtensionOptional)
-                    missingExtensionsOptional.push_back(component.Name);
+                    missingExtensionsOptional.Add(component.Name);
             }
         }
         if (component.Type == InstanceComponentType::LayerRequired || component.Type == InstanceComponentType::LayerOptional)
@@ -129,7 +132,7 @@ static bool CheckInstanceComponents(const std::vector<InstanceComponent>& compon
             bool layerIsAvailable = false;
             for (const VkLayerProperties& availableLayer : availableLayers)
             {
-                if (strcmp(availableLayer.layerName, component.Name.c_str()) == 0)
+                if (strcmp(availableLayer.layerName, component.Name.Characters()) == 0)
                 {
                     layerIsAvailable = true;
                     break;
@@ -138,53 +141,53 @@ static bool CheckInstanceComponents(const std::vector<InstanceComponent>& compon
 
             if (layerIsAvailable)
             {
-                outLayers.push_back(component.Name.c_str());
+                outLayers.Add(component.Name.Characters());
             }
             else
             {
                 if (component.Type == InstanceComponentType::LayerRequired)
-                    missingLayersRequired.push_back(component.Name);
+                    missingLayersRequired.Add(component.Name);
                 if (component.Type == InstanceComponentType::LayerOptional)
-                    missingLayersOptional.push_back(component.Name);
+                    missingLayersOptional.Add(component.Name);
             }
         }
     }
 
-    if (!missingExtensionsRequired.empty())
+    if (missingExtensionsRequired.HasElements())
     {
         SE_LOG_ERROR("The following required instance extensions are missing:");
-        for (const std::string& extensionName : missingExtensionsRequired)
+        for (const String& extensionName : missingExtensionsRequired)
         {
-            SE_LOG_ERROR("  %s", extensionName.c_str());
+            SE_LOG_ERROR("  %s", extensionName.Characters());
         }
     }
-    if (!missingExtensionsOptional.empty())
+    if (missingExtensionsOptional.HasElements())
     {
         SE_LOG_WARN("The following optional instance extensions are missing:");
-        for (const std::string& extensionName : missingExtensionsOptional)
+        for (const String& extensionName : missingExtensionsOptional)
         {
-            SE_LOG_WARN("  %s", extensionName.c_str());
+            SE_LOG_WARN("  %s", extensionName.Characters());
         }
     }
-    if (!missingLayersRequired.empty())
+    if (missingLayersRequired.HasElements())
     {
         SE_LOG_ERROR("The following required instance layers are missing:");
-        for (const std::string& layerName : missingLayersRequired)
+        for (const String& layerName : missingLayersRequired)
         {
-            SE_LOG_ERROR("  %s", layerName.c_str());
+            SE_LOG_ERROR("  %s", layerName.Characters());
         }
     }
-    if (!missingLayersOptional.empty())
+    if (missingLayersOptional.HasElements())
     {
         SE_LOG_WARN("The following optional instance layers are missing:");
-        for (const std::string& layerName : missingLayersOptional)
+        for (const String& layerName : missingLayersOptional)
         {
-            SE_LOG_WARN("  %s", layerName.c_str());
+            SE_LOG_WARN("  %s", layerName.Characters());
         }
     }
 
     /* Check if there are no required extensions or layers missing. */
-    const bool allRequiredComponentsAreAvailable = missingExtensionsRequired.empty() && missingLayersRequired.empty();
+    const bool allRequiredComponentsAreAvailable = missingExtensionsRequired.IsEmpty() && missingLayersRequired.IsEmpty();
     return allRequiredComponentsAreAvailable;
 }
 
@@ -203,19 +206,19 @@ bool VulkanRenderingDriver::CreateInstance()
         VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
     debugMessengerCreateInfo.pfnUserCallback = VulkanDebugMessengerCallback;
 
-    std::vector<InstanceComponent> instanceComponents;
+    Vector<InstanceComponent> instanceComponents;
 
-    instanceComponents.push_back({ InstanceComponentType::ExtensionRequired, VK_KHR_SURFACE_EXTENSION_NAME });
-    instanceComponents.push_back({ InstanceComponentType::ExtensionRequired, "VK_KHR_win32_surface" });
+    instanceComponents.Emplace(InstanceComponentType::ExtensionRequired, VIEW(VK_KHR_SURFACE_EXTENSION_NAME));
+    instanceComponents.Emplace(InstanceComponentType::ExtensionRequired, VIEW("VK_KHR_win32_surface"));
 
 #define SE_ENABLE_VULKAN_VALIDATION 1
 #if SE_ENABLE_VULKAN_VALIDATION
-    instanceComponents.push_back({ InstanceComponentType::ExtensionOptional, "VK_EXT_debug_utils" });
-    instanceComponents.push_back({ InstanceComponentType::LayerOptional,     "VK_LAYER_KHRONOS_validation" });
+    instanceComponents.Emplace(InstanceComponentType::ExtensionOptional, VIEW("VK_EXT_debug_utils"));
+    instanceComponents.Emplace(InstanceComponentType::LayerOptional,     VIEW("VK_LAYER_KHRONOS_validation"));
 #endif // FG_ENABLE_VULKAN_VALIDATION
 
-    std::vector<const char*> enabledExtensions;
-    std::vector<const char*> enabledLayers;
+    Vector<const char*> enabledExtensions;
+    Vector<const char*> enabledLayers;
     if (!CheckInstanceComponents(instanceComponents, enabledExtensions, enabledLayers))
     {
         /* NOTE(Traian): Not all required extensions/layers were available. */
@@ -225,10 +228,10 @@ bool VulkanRenderingDriver::CreateInstance()
     VkInstanceCreateInfo instanceCreateInfo = {};
     instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     instanceCreateInfo.pNext = &debugMessengerCreateInfo;
-    instanceCreateInfo.enabledExtensionCount = (uint32)enabledExtensions.size();
-    instanceCreateInfo.ppEnabledExtensionNames = enabledExtensions.data();
-    instanceCreateInfo.enabledLayerCount = (uint32)enabledLayers.size();
-    instanceCreateInfo.ppEnabledLayerNames = enabledLayers.data();
+    instanceCreateInfo.enabledExtensionCount = (uint32)enabledExtensions.Count();
+    instanceCreateInfo.ppEnabledExtensionNames = enabledExtensions.Elements();
+    instanceCreateInfo.enabledLayerCount = (uint32)enabledLayers.Count();
+    instanceCreateInfo.ppEnabledLayerNames = enabledLayers.Elements();
     
     if (VkResult result = vkCreateInstance(&instanceCreateInfo, nullptr, &m_Instance); result != VK_SUCCESS)
     {
@@ -236,7 +239,7 @@ bool VulkanRenderingDriver::CreateInstance()
         return false;
     }
 
-    if (!enabledExtensions.empty() || !enabledLayers.empty())
+    if (enabledExtensions.HasElements() || enabledLayers.HasElements())
     {
         SE_LOG_INFO("The [Vulkan] instance was created with the following extensions and layers:");
         for (const char* extensionName : enabledExtensions)
@@ -264,16 +267,16 @@ bool VulkanRenderingDriver::CreateInstance()
 bool VulkanRenderingDriver::PickPhysicalDevice()
 {
     uint32 physicalDeviceCount = 0;
-    std::vector<VkPhysicalDevice> physicalDeviceHandles;
+    Vector<VkPhysicalDevice> physicalDeviceHandles;
     if (vkEnumeratePhysicalDevices(m_Instance, &physicalDeviceCount, nullptr) == VK_SUCCESS)
     {
-        physicalDeviceHandles.resize(physicalDeviceCount);
-        SE_VULKAN_CHECK(vkEnumeratePhysicalDevices(m_Instance, &physicalDeviceCount, physicalDeviceHandles.data()));
-        SE_ENSURE(physicalDeviceCount == physicalDeviceHandles.size());
+        physicalDeviceHandles.SetCountDefaulted(physicalDeviceCount);
+        SE_VULKAN_CHECK(vkEnumeratePhysicalDevices(m_Instance, &physicalDeviceCount, physicalDeviceHandles.Elements()));
+        SE_ENSURE(physicalDeviceCount == physicalDeviceHandles.Count());
     }
 
-    std::vector<PhysicalDevice> physicalDevices;
-    physicalDevices.reserve(physicalDeviceHandles.size());
+    Vector<PhysicalDevice> physicalDevices;
+    physicalDevices.EnsureCapacity(physicalDeviceHandles.Count());
 
     for (VkPhysicalDevice physicalDeviceHandle : physicalDeviceHandles)
     {
@@ -289,26 +292,26 @@ bool VulkanRenderingDriver::PickPhysicalDevice()
         /* Get physical device queue family properties. */
         uint32 queueFamilyPropertyCount;
         vkGetPhysicalDeviceQueueFamilyProperties(physicalDeviceHandle, &queueFamilyPropertyCount, nullptr);
-        physicalDevice.QueueFamilyProperties.resize(queueFamilyPropertyCount);
-        vkGetPhysicalDeviceQueueFamilyProperties(physicalDeviceHandle, &queueFamilyPropertyCount, physicalDevice.QueueFamilyProperties.data());
-        SE_ENSURE(queueFamilyPropertyCount == physicalDevice.QueueFamilyProperties.size());
+        physicalDevice.QueueFamilyProperties.SetCountDefaulted(queueFamilyPropertyCount);
+        vkGetPhysicalDeviceQueueFamilyProperties(physicalDeviceHandle, &queueFamilyPropertyCount, physicalDevice.QueueFamilyProperties.Elements());
+        SE_ENSURE(queueFamilyPropertyCount == physicalDevice.QueueFamilyProperties.Count());
 
         /* Get physical device available extensions. */
         uint32 extensionCount = 0;
         if (vkEnumerateDeviceExtensionProperties(physicalDevice.Handle, nullptr, &extensionCount, nullptr) == VK_SUCCESS)
         {
-            physicalDevice.AvailableExtensions.resize(extensionCount);
-            vkEnumerateDeviceExtensionProperties(physicalDevice.Handle, nullptr, &extensionCount, physicalDevice.AvailableExtensions.data());
-            SE_ENSURE(physicalDevice.AvailableExtensions.size() == extensionCount);
+            physicalDevice.AvailableExtensions.SetCountDefaulted(extensionCount);
+            vkEnumerateDeviceExtensionProperties(physicalDevice.Handle, nullptr, &extensionCount, physicalDevice.AvailableExtensions.Elements());
+            SE_ENSURE(physicalDevice.AvailableExtensions.Count() == extensionCount);
         }
 
         /* Get memory properties. */
         vkGetPhysicalDeviceMemoryProperties(physicalDevice.Handle, &physicalDevice.MemoryProperties);
 
-        physicalDevices.push_back(physicalDevice);
+        physicalDevices.Add(physicalDevice);
     }
 
-    if (physicalDevices.empty())
+    if (physicalDevices.IsEmpty())
     {
         SE_LOG_ERROR("There are no [Vulkan] physical devices available!");
         return false;
@@ -325,7 +328,7 @@ bool VulkanRenderingDriver::PickPhysicalDevice()
 bool VulkanRenderingDriver::FindQueueFamilyIndices()
 {
     /* NOTE(Traian): Because device creation happens before creating the main window and 
-     * other windows can be created dynamically at runtime, there is no other way to test if
+     * other windows can be created dynamically At runtime, there is no other way to test if
      * a queue family supports presentation functionality other than to create a dummy window,
      * a dummy surface and to test against them. */
     VkSurfaceKHR dummySurface = VK_NULL_HANDLE;
@@ -364,8 +367,8 @@ bool VulkanRenderingDriver::FindQueueFamilyIndices()
         uint32 SupportedTypeCount;
     };
 
-    std::unordered_map<QueueFamilyType, std::vector<QueueFamily>> queueFamilyMap;
-    for (uint32 familyIndex = 0; familyIndex < m_PhysicalDevice.QueueFamilyProperties.size(); ++familyIndex)
+    HashMap<QueueFamilyType, Vector<QueueFamily>> queueFamilyMap;
+    for (uint32 familyIndex = 0; familyIndex < m_PhysicalDevice.QueueFamilyProperties.Count(); ++familyIndex)
     {
         const VkQueueFamilyProperties& properties = m_PhysicalDevice.QueueFamilyProperties[familyIndex];
         QueueFamily queueFamily = {};
@@ -380,10 +383,10 @@ bool VulkanRenderingDriver::FindQueueFamilyIndices()
         if (properties.queueFlags & VK_QUEUE_COMPUTE_BIT)  { queueFamily.SupportedTypeCount++; }
         if (presentSupport)                                { queueFamily.SupportedTypeCount++; }
 
-        if (properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) { queueFamilyMap[QueueFamilyType::Graphics].push_back(queueFamily); }
-        if (properties.queueFlags & VK_QUEUE_TRANSFER_BIT) { queueFamilyMap[QueueFamilyType::Transfer].push_back(queueFamily); }
-        if (properties.queueFlags & VK_QUEUE_COMPUTE_BIT)  { queueFamilyMap[QueueFamilyType::Compute].push_back(queueFamily); }
-        if (presentSupport)                                { queueFamilyMap[QueueFamilyType::Present].push_back(queueFamily); }
+        if (properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) { queueFamilyMap[QueueFamilyType::Graphics].Add(queueFamily); }
+        if (properties.queueFlags & VK_QUEUE_TRANSFER_BIT) { queueFamilyMap[QueueFamilyType::Transfer].Add(queueFamily); }
+        if (properties.queueFlags & VK_QUEUE_COMPUTE_BIT)  { queueFamilyMap[QueueFamilyType::Compute].Add(queueFamily); }
+        if (presentSupport)                                { queueFamilyMap[QueueFamilyType::Present].Add(queueFamily); }
     }
 
     /* Destroy the dummy surface. */
@@ -395,8 +398,8 @@ bool VulkanRenderingDriver::FindQueueFamilyIndices()
             uint32 lowestCount = UINT32_MAX;
             uint32 lowestCountEntryIndex = 0;
 
-            const std::vector<QueueFamily>& queueFamilies = queueFamilyMap[type];
-            for (uint32 index = 0; index < queueFamilies.size(); ++index)
+            const Vector<QueueFamily>& queueFamilies = queueFamilyMap[type];
+            for (uint32 index = 0; index < queueFamilies.Count(); ++index)
             {
                 if (queueFamilies[index].SupportedTypeCount < lowestCount)
                 {
@@ -408,19 +411,19 @@ bool VulkanRenderingDriver::FindQueueFamilyIndices()
             return queueFamilies[lowestCountEntryIndex].Index;
         };
 
-    if (queueFamilyMap[QueueFamilyType::Graphics].empty())
+    if (queueFamilyMap[QueueFamilyType::Graphics].IsEmpty())
         return false;
     m_QueueFamilyIndices.Graphics = getLowestSupportedTypeCountFamilyIndex(QueueFamilyType::Graphics);
 
-    if (queueFamilyMap[QueueFamilyType::Transfer].empty())
+    if (queueFamilyMap[QueueFamilyType::Transfer].IsEmpty())
         return false;
     m_QueueFamilyIndices.Transfer = getLowestSupportedTypeCountFamilyIndex(QueueFamilyType::Transfer);
 
-    if (queueFamilyMap[QueueFamilyType::Compute].empty())
+    if (queueFamilyMap[QueueFamilyType::Compute].IsEmpty())
         return false;
     m_QueueFamilyIndices.Compute = getLowestSupportedTypeCountFamilyIndex(QueueFamilyType::Compute);
 
-    if (queueFamilyMap[QueueFamilyType::Present].empty())
+    if (queueFamilyMap[QueueFamilyType::Present].IsEmpty())
         return false;
     m_QueueFamilyIndices.Present = getLowestSupportedTypeCountFamilyIndex(QueueFamilyType::Present);
 
@@ -429,10 +432,10 @@ bool VulkanRenderingDriver::FindQueueFamilyIndices()
 
 bool VulkanRenderingDriver::CreateLogicalDevice()
 {
-    std::vector<const char*> enabledExtensions;
-    enabledExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+    Vector<const char*> enabledExtensions;
+    enabledExtensions.Add(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
-    std::vector<const char*> missingExtensions;
+    Vector<const char*> missingExtensions;
     for (const char* extension : enabledExtensions)
     {
         bool found = false;
@@ -446,10 +449,10 @@ bool VulkanRenderingDriver::CreateLogicalDevice()
         }
 
         if (!found)
-            missingExtensions.push_back(extension);
+            missingExtensions.Add(extension);
     }
 
-    if (!missingExtensions.empty())
+    if (!missingExtensions.IsEmpty())
     {
         SE_LOG_ERROR("The following [Vulkan] logical device extensions are missing:");
         for (const char* missingExtension : missingExtensions)
@@ -461,16 +464,16 @@ bool VulkanRenderingDriver::CreateLogicalDevice()
         return false;
     }
 
-    std::unordered_set<uint32> uniqueQueueFamilyIndices;
-    uniqueQueueFamilyIndices.insert({
+    HashSet<uint32> uniqueQueueFamilyIndices;
+    uniqueQueueFamilyIndices.Add({
         (uint32)m_QueueFamilyIndices.Graphics,
         (uint32)m_QueueFamilyIndices.Transfer,
         (uint32)m_QueueFamilyIndices.Compute,
         (uint32)m_QueueFamilyIndices.Present,
     });
 
-    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    queueCreateInfos.reserve(uniqueQueueFamilyIndices.size());
+    Vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+    queueCreateInfos.EnsureCapacity(uniqueQueueFamilyIndices.Count());
 
     const float queuePriorities[] = { 1.0F };
     for (uint32 queueFamilyIndex : uniqueQueueFamilyIndices)
@@ -480,15 +483,15 @@ bool VulkanRenderingDriver::CreateLogicalDevice()
         queueCreateInfo.queueFamilyIndex = queueFamilyIndex;
         queueCreateInfo.queueCount = SE_ARRAY_COUNT(queuePriorities);
         queueCreateInfo.pQueuePriorities = queuePriorities;
-        queueCreateInfos.push_back(queueCreateInfo);
+        queueCreateInfos.Add(queueCreateInfo);
     }
 
     VkDeviceCreateInfo deviceCreateInfo = {};
     deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    deviceCreateInfo.enabledExtensionCount = (uint32)enabledExtensions.size();
-    deviceCreateInfo.ppEnabledExtensionNames = enabledExtensions.data();
-    deviceCreateInfo.queueCreateInfoCount = (uint32)queueCreateInfos.size();
-    deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
+    deviceCreateInfo.enabledExtensionCount = (uint32)enabledExtensions.Count();
+    deviceCreateInfo.ppEnabledExtensionNames = enabledExtensions.Elements();
+    deviceCreateInfo.queueCreateInfoCount = (uint32)queueCreateInfos.Count();
+    deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.Elements();
     deviceCreateInfo.pEnabledFeatures = nullptr; /* NOTE(Traian): Don't enable any features that aren't absolutely mandatory/necessary. */
 
     if (VkResult result = vkCreateDevice(m_PhysicalDevice.Handle, &deviceCreateInfo, nullptr, &m_LogicalDevice); result != VK_SUCCESS)
@@ -497,7 +500,7 @@ bool VulkanRenderingDriver::CreateLogicalDevice()
         return false;
     }
 
-    if (!enabledExtensions.empty())
+    if (!enabledExtensions.IsEmpty())
     {
         SE_LOG_INFO("The [Vulkan] logical device was created with the following extensions:");
         for (const char* extension : enabledExtensions)
@@ -522,21 +525,21 @@ bool VulkanRenderingDriver::CreateQueues()
 bool VulkanRenderingDriver::CreateDescriptorPool()
 {
     const uint32 descriptorPoolMaxSets = 1024;
-    std::vector<VkDescriptorPoolSize> descriptorPoolSizes;
+    Vector<VkDescriptorPoolSize> descriptorPoolSizes;
 
-    VkDescriptorPoolSize& uniformBufferPool = descriptorPoolSizes.emplace_back();
+    VkDescriptorPoolSize& uniformBufferPool = descriptorPoolSizes.Emplace();
     uniformBufferPool.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     uniformBufferPool.descriptorCount = 512;
 
-    VkDescriptorPoolSize& combinedImageSamplerPool = descriptorPoolSizes.emplace_back();
+    VkDescriptorPoolSize& combinedImageSamplerPool = descriptorPoolSizes.Emplace();
     combinedImageSamplerPool.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     combinedImageSamplerPool.descriptorCount = 512;
 
     VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
     descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     descriptorPoolCreateInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-    descriptorPoolCreateInfo.poolSizeCount = (uint32)descriptorPoolSizes.size();
-    descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes.data();
+    descriptorPoolCreateInfo.poolSizeCount = (uint32)descriptorPoolSizes.Count();
+    descriptorPoolCreateInfo.pPoolSizes = descriptorPoolSizes.Elements();
     descriptorPoolCreateInfo.maxSets = descriptorPoolMaxSets;
 
     if (vkCreateDescriptorPool(m_LogicalDevice, &descriptorPoolCreateInfo, nullptr, &m_DescriptorPool) != VK_SUCCESS)
@@ -604,11 +607,11 @@ void VulkanRenderingDriver::ShutdownBackend()
 
     /* Destroy synchronization objects. */
     {
-        SE_ASSERT(m_FencePool.InUse.empty());
+        SE_ASSERT(m_FencePool.InUse.IsEmpty());
         for (VkFence fence : m_FencePool.Unused)
             vkDestroyFence(m_LogicalDevice, fence, nullptr);
 
-        SE_ASSERT(m_SemaphorePool.InUse.empty());
+        SE_ASSERT(m_SemaphorePool.InUse.IsEmpty());
         for (VkSemaphore semaphore : m_SemaphorePool.Unused)
             vkDestroySemaphore(m_LogicalDevice, semaphore, nullptr);
     }
@@ -618,7 +621,7 @@ void VulkanRenderingDriver::ShutdownBackend()
     m_DescriptorPool = VK_NULL_HANDLE;
 
     /* Destroy command pools. */
-    m_CommandPoolForQueueFamilyIndex.clear();
+    m_CommandPoolForQueueFamilyIndex.ClearAndShrink();
 
     /* Destroy logical device. */
     vkDestroyDevice(m_LogicalDevice, nullptr);
@@ -740,35 +743,35 @@ void VulkanRenderingDriver::ExecuteCommandList(const RefPtr<CommandList>& comman
     RefPtr<VulkanCommandList> vulkanCommandList = commandList.As<VulkanCommandList>();
     VkCommandBuffer commandBufferHandle = vulkanCommandList->GetHandle();
 
-    std::vector<VkSemaphore> waitSemaphores;
-    waitSemaphores.reserve(executeInfo.WaitSemaphores.size());
-    std::vector<VkPipelineStageFlags> waitStageMasks;
-    waitStageMasks.reserve(executeInfo.WaitSemaphores.size());
+    Vector<VkSemaphore> waitSemaphores;
+    waitSemaphores.EnsureCapacity(executeInfo.WaitSemaphores.Count());
+    Vector<VkPipelineStageFlags> waitStageMasks;
+    waitStageMasks.EnsureCapacity(executeInfo.WaitSemaphores.Count());
 
-    for (uint32 semaphoreIndex = 0; semaphoreIndex < executeInfo.WaitSemaphores.size(); ++semaphoreIndex)
+    for (uint32 semaphoreIndex = 0; semaphoreIndex < executeInfo.WaitSemaphores.Count(); ++semaphoreIndex)
     {
         VkPipelineStageFlags waitStageMask = 0;
         if (executeInfo.WaitStageBits[semaphoreIndex] & PIPELINE_STAGE_TOP_OF_PIPE_BIT)             { waitStageMask |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT; }
         if (executeInfo.WaitStageBits[semaphoreIndex] & PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT) { waitStageMask |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; }
 
-        waitSemaphores.push_back((VkSemaphore)executeInfo.WaitSemaphores[semaphoreIndex]);
-        waitStageMasks.push_back(waitStageMask);
+        waitSemaphores.Add((VkSemaphore)executeInfo.WaitSemaphores[semaphoreIndex]);
+        waitStageMasks.Add(waitStageMask);
     }
 
-    std::vector<VkSemaphore> signalSemaphores;
-    signalSemaphores.reserve(executeInfo.SignalSemaphores.size());
+    Vector<VkSemaphore> signalSemaphores;
+    signalSemaphores.EnsureCapacity(executeInfo.SignalSemaphores.Count());
     for (SemaphoreHandle semaphore : executeInfo.SignalSemaphores)
-        signalSemaphores.push_back((VkSemaphore)semaphore);
+        signalSemaphores.Add((VkSemaphore)semaphore);
 
     VkSubmitInfo submitInfo = {};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.waitSemaphoreCount = (uint32)waitSemaphores.size();
-    submitInfo.pWaitSemaphores = waitSemaphores.data();
-    submitInfo.pWaitDstStageMask = waitStageMasks.data();
+    submitInfo.waitSemaphoreCount = (uint32)waitSemaphores.Count();
+    submitInfo.pWaitSemaphores = waitSemaphores.Elements();
+    submitInfo.pWaitDstStageMask = waitStageMasks.Elements();
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &commandBufferHandle;
-    submitInfo.signalSemaphoreCount = (uint32)signalSemaphores.size();
-    submitInfo.pSignalSemaphores = signalSemaphores.data();
+    submitInfo.signalSemaphoreCount = (uint32)signalSemaphores.Count();
+    submitInfo.pSignalSemaphores = signalSemaphores.Elements();
 
     VkQueue submisionQueue = VK_NULL_HANDLE;
     switch (commandList->GetFamily())

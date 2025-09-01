@@ -15,18 +15,18 @@ public:
     struct DescriptorSetCache
     {
         VulkanDescriptorSetLayout Layout;
-        std::vector<OwnPtr<VulkanDescriptorSet>> Sets;
+        Vector<OwnPtr<VulkanDescriptorSet>> Sets;
     };
 
 public:
-    VulkanDescriptorSetManager(const WeakRefPtr<VulkanShader>& parentShader, const std::unordered_map<uint32, VulkanDescriptorSetLayout>& setLayouts);
+    VulkanDescriptorSetManager(const WeakRefPtr<VulkanShader>& parentShader, const HashMap<uint32, VulkanDescriptorSetLayout>& setLayouts);
     ~VulkanDescriptorSetManager();
 
-    NODISCARD std::vector<VulkanDescriptorSet*> AcquireDescriptorSets(const ShaderResourcesBindPack& bindPack);
+    NODISCARD Vector<VulkanDescriptorSet*> AcquireDescriptorSets(const ShaderResourcesBindPack& bindPack);
 
 private:
     WeakRefPtr<VulkanShader> m_ParentShader;
-    std::unordered_map<uint32, DescriptorSetCache> m_SetCaches;
+    HashMap<uint32, DescriptorSetCache> m_SetCaches;
 };
 
 }
