@@ -25,6 +25,11 @@ using usize   = unsigned long long;
 using ssize   = signed long long;
 using uintptr = unsigned long long;
 
+using Float32 = float;
+using Float64 = double;
+
+using Bool8  = bool;
+
 using ReadonlyByte  = const uint8;
 using WriteonlyByte = uint8;
 using ReadWriteByte = uint8;
