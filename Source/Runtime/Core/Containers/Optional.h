@@ -156,4 +156,100 @@ private:
     bool m_HasValue;
 };
 
+template<typename T>
+class Optional<T&>
+{
+public:
+    FORCEINLINE Optional()
+        : m_Value(nullptr)
+    {}
+
+    FORCEINLINE ~Optional()
+    {}
+
+    FORCEINLINE Optional(const Optional& other)
+        : m_Value(other.m_Value)
+    {}
+
+    FORCEINLINE Optional(Optional&& other) noexcept
+        : m_Value(other.m_Value)
+    {
+        other.m_Value = nullptr;
+    }
+
+    FORCEINLINE Optional(T& value)
+        : m_Value(&value)
+    {}
+
+    FORCEINLINE Optional& operator=(const Optional& other)
+    {
+        m_Value = other.m_Value;
+        return *this;
+    }
+
+    FORCEINLINE Optional& operator=(Optional&& other) noexcept
+    {
+        // Handle the self-assignment case.
+        if (this == &other)
+            return *this;
+        
+        m_Value = other.m_Value;
+        other.m_Value = nullptr;
+
+        return *this;
+    }
+
+    FORCEINLINE Optional& operator=(T& value)
+    {
+        m_Value = &value;
+        return *this;
+    }
+
+public:
+    NODISCARD FORCEINLINE bool HasValue() const
+    {
+        return (m_Value != nullptr);
+    }
+
+    NODISCARD FORCEINLINE T& Value()
+    {
+        SE_CHECK(HasValue());
+        return *m_Value;
+    }
+
+    NODISCARD FORCEINLINE const T& Value() const
+    {
+        SE_CHECK(HasValue());
+        return *m_Value;
+    }
+
+    NODISCARD FORCEINLINE T& NonConstValue() const
+    {
+        SE_CHECK(HasValue());
+        return *m_Value;
+    }
+
+    NODISCARD FORCEINLINE T& operator*() { return Value(); }
+    NODISCARD FORCEINLINE const T& operator*() const { return Value(); }
+
+    NODISCARD FORCEINLINE T* operator->() { return &Value(); }
+    NODISCARD FORCEINLINE const T* operator->() const { return &Value(); }
+
+    NODISCARD FORCEINLINE const T& ValueOr(const T& fallbackValue) const
+    {
+        if (HasValue())
+            return *m_Value;
+        return fallbackValue;
+    }
+
+public:
+    FORCEINLINE void Clear()
+    {
+        m_Value = nullptr;
+    }
+
+private:
+    T* m_Value;
+};
+
 }
