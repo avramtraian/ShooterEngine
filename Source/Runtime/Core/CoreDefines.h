@@ -65,6 +65,15 @@
     #define SHOOTER_API
 #endif // SE_TARGET_EDITOR
 
+#if SE_PLATFORM_WIN64
+    // NOTE(Traian): Disable the warnings related to DLL specifiers.
+    #pragma warning(disable : 4251)
+    #pragma warning(disable : 4275)
+
+    // NOTE(Traian): Disable warning C4200: nonstandard extension used: zero-sized array in struct/union
+    #pragma warning(disable : 4200)
+#endif // SE_PLATFORM_WIN64
+
 /**
  * GENERAL-PURPOSE, PLATFORM AGNOSTIC, MACROS.
  */
