@@ -23,4 +23,25 @@ void Engine::ShutdownCoreSystems()
     Logger::Shutdown();
 }
 
+bool Engine::Initialize()
+{
+    // Initialize the core engine systems.
+    if (!InitializeCoreSystems())
+    {
+        // There is no point of trying to continue the initialization process if critical
+        // systems were not able to be initialized.
+        return false;
+    }
+    SE_LOG_INFO("All core systems were initialized successfully.");
+
+    return true;
+}
+
+void Engine::Shutdown()
+{
+    // Shutdown the core engine systems.
+    SE_LOG_INFO("Shutting down the core systems...");
+    ShutdownCoreSystems();
+}
+
 }

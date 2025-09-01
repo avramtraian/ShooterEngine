@@ -12,12 +12,13 @@ class Engine
     SE_MAKE_SINGLETON_CLASS(Engine);
 
 public:
-    virtual bool Initialize() = 0;
-    virtual void Shutdown() = 0;
-    virtual void Execute() = 0;
-
     SHOOTER_API virtual bool InitializeCoreSystems();
     SHOOTER_API virtual void ShutdownCoreSystems();
+
+    SHOOTER_API virtual bool Initialize();
+    SHOOTER_API virtual void Shutdown();
+
+    virtual void Execute() = 0;
 };
 
 SHOOTER_API extern Engine* g_Engine;
