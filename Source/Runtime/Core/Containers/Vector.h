@@ -2,89 +2,258 @@
 
 #pragma once
 
+#include <Runtime/Core/Containers/Allocator.h>
+#include <Runtime/Core/Containers/Optional.h>
+#include <Runtime/Core/Containers/VectorView.h>
 #include <Runtime/Core/CoreAssertions.h>
 #include <Runtime/Core/CoreTypes.h>
 
 namespace SE
 {
 
-template<typename T>
+//
+// Certain operations on the Vector container may invoke element constructors or destructors,
+// which in turn could call functions on the same Vector. For example, calling 'Remove'
+// might trigger the destructor of an element, which could then call 'Add' on the same Vector!
+// Since the internal state of the Vector may be inconsistent during such operations, this could
+// lead to undefined behavior.
+//
+// To help prevent these issues, a protection mechanism is implemented that triggers an assert
+// if such a reentrant call is detected. This mechanism can be enabled by setting the macro
+// 'SE_VECTOR_CHECK_PROTECTION' to 1.
+//
+#define SE_VECTOR_CHECK_PROTECTION 1
+
+//
+// Dynamic linear array of typed elements. Assumes that elements implement a move constructor, since
+// re-locating elements from one buffer to a another buffer is critical. Since the internal memory
+// buffer may change when adding/removing elements, references and pointers to the elements stored
+// in the container are guaranteed to remain valid only when no additions or removals happen.
+// 
+// The Vector container is not reentrant. It doesn't implement any features to support concurrent access
+// to it, and even when used exclusively by a single thread, no reentrant function calls are allowed (the
+// constructor/destructor of a element stored in the container is not allowed to call any other function
+// on the same container) - see the 'SE_VECTOR_CHECK_PROTECTION' macro.
+//
+template<typename ElementType, typename Allocator = DefaultAllocator>
 class Vector
 {
 public:
-    /* By default, the container expands its internal memory block by a growth factor of 1.5. */
+    template<typename FriendElementType, typename FriendAllocator>
+    friend class Vector;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+public:
     static constexpr usize GROWTH_FACTOR_NUMERATOR = 3;
     static constexpr usize GROWTH_FACTOR_DENOMINATOR = 2;
+    static_assert(GROWTH_FACTOR_NUMERATOR > GROWTH_FACTOR_DENOMINATOR);
+    static_assert(GROWTH_FACTOR_DENOMINATOR != 0);
 
-    using Iterator             = T*;
-    using ConstIterator        = const T*;
-    using ReverseIterator      = T*;
-    using ReverseConstIterator = const T*;
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+public:
+#if SE_VECTOR_CHECK_PROTECTION
+    class ScopedProtectionLock
+    {
+        SE_MAKE_NONCOPYABLE(ScopedProtectionLock);
+        SE_MAKE_NONMOVABLE(ScopedProtectionLock);
+
+    public:
+        FORCEINLINE ScopedProtectionLock(const Vector<ElementType, Allocator>& vector)
+            : m_Vector(vector)
+        {
+            SE_ENSURE(m_Vector.IsNotProtected());
+            m_Vector.SetIsProtected(true);
+        }
+
+        FORCEINLINE ~ScopedProtectionLock()
+        {
+            SE_ENSURE(m_Vector.IsProtected());
+            m_Vector.SetIsProtected(false);
+        }
+
+    private:
+        const Vector<ElementType, Allocator>& m_Vector;
+    };
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#if SE_VECTOR_CHECK_PROTECTION
+    template<typename OtherAllocator>
+    using OtherScopedProtectionLock = Vector<ElementType, OtherAllocator>::ScopedProtectionLock;
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
     FORCEINLINE Vector()
         : m_Elements(nullptr)
         , m_Capacity(0)
         , m_Count(0)
+        , m_IsProtected(0)
     {}
 
-    FORCEINLINE Vector(const Vector& other)
-        : m_Capacity(other.m_Count)
-        , m_Count(other.m_Count)
-    {
-        m_Elements = Vector::AllocateMemory(m_Capacity);
-        Vector::CopyElements(m_Elements, other.m_Elements, m_Count);
-    }
-
-    FORCEINLINE Vector(Vector&& other) noexcept
-        : m_Elements(other.m_Elements)
-        , m_Capacity(other.m_Capacity)
-        , m_Count(other.m_Count)
-    {
-        other.m_Elements = nullptr;
-        other.m_Capacity = 0;
-        other.m_Count = 0;
-    }
-
-    FORCEINLINE Vector(std::initializer_list<T> initializerList)
-        : m_Capacity(initializerList.size())
-        , m_Count(initializerList.size())
-    {
-        m_Elements = AllocateMemory(m_Capacity);
-        CopyElements(m_Elements, initializerList.begin(), m_Count);
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     FORCEINLINE ~Vector()
     {
         ClearAndShrink();
     }
 
-    FORCEINLINE Vector& operator=(const Vector& other)
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    template<typename OtherAllocator>
+    FORCEINLINE Vector(const Vector<ElementType, OtherAllocator>& other)
+        : m_Elements(nullptr)
+        , m_Capacity(0)
+        , m_Count(0)
+        , m_IsProtected(0)
     {
-        if (this == &other)
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(other.IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        if (other.m_Count > 0)
         {
-            /* Handle self-assignment case. */
-            return *this;
+#if SE_VECTOR_CHECK_PROTECTION
+            OtherScopedProtectionLock<OtherAllocator> otherProtectionLock(other);
+            ScopedProtectionLock protectionLock(*this);
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+            ReAllocateElementsBuffer(other.m_Count);
+            m_Count = other.m_Count;
+            Vector::CopyElements(m_Elements, other.m_Elements, m_Count);
         }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE Vector(const Vector& other)
+        : m_Elements(nullptr)
+        , m_Capacity(0)
+        , m_Count(0)
+        , m_IsProtected(0)
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(other.IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        if (other.m_Count > 0)
+        {
+#if SE_VECTOR_CHECK_PROTECTION
+            OtherScopedProtectionLock<Allocator> otherProtectionLock(other);
+            ScopedProtectionLock protectionLock(*this);
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+            ReAllocateElementsBuffer(other.m_Count);
+            m_Count = other.m_Count;
+            Vector::CopyElements(m_Elements, other.m_Elements, m_Count);
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE Vector(Vector<ElementType, Allocator>&& other) noexcept
+        : m_Elements(other.m_Elements)
+        , m_Capacity(other.m_Capacity)
+        , m_Count(other.m_Count)
+        , m_IsProtected(0)
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        // NOTE(Traian): We don't need to acquire any protection locks because no elements are actually
+        // instantiated or destroyed, and thus no external constructors/destructors are called.
+        SE_ENSURE(other.IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        other.m_Elements = nullptr;
+        other.m_Capacity = 0;
+        other.m_Count = 0;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE Vector(std::initializer_list<ElementType> initiatlizerList)
+        : m_Elements(nullptr)
+        , m_Capacity(0)
+        , m_Count(0)
+        , m_IsProtected(0)
+    {
+        if (initiatlizerList.size() > 0)
+        {
+#if SE_VECTOR_CHECK_PROTECTION
+            ScopedProtectionLock protectionLock(*this);
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+            ReAllocateElementsBuffer(initiatlizerList.size());
+            m_Count = initiatlizerList.size();
+            Vector::CopyElements(m_Elements, initiatlizerList.begin(), m_Count);
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    template<typename OtherAllocator>
+    FORCEINLINE Vector& operator=(const Vector<ElementType, OtherAllocator>& other)
+    {
+        // Handle the self-assignment case.
+        if ((void*)this == (void*)(&other))
+            return *this;
+
+#if SE_VECTOR_CHECK_PROTECTION
+        // NOTE(Traian): We only check if the other vector is not locked and not this vector because the
+        // 'Clear' function does the same thing (and also acquires the protection lock).
+        SE_ENSURE(other.IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
 
         Clear();
-        EnsureCapacity(other.m_Count);
 
-        m_Count = other.m_Count;
-        CopyElements(m_Elements, other.m_Elements, m_Count);
+        if (other.m_Count > 0)
+        {
+#if SE_VECTOR_CHECK_PROTECTION
+            OtherScopedProtectionLock<OtherAllocator> otherProtectionLock(other);
+            ScopedProtectionLock protectionLock(*this);
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+            if (m_Capacity < other.m_Count)
+            {
+                ReAllocateElementsBuffer(other.m_Count);
+            }
+
+            m_Count = other.m_Count;
+            Vector::CopyElements(m_Elements, other.m_Elements, m_Count);
+        }
 
         return *this;
     }
 
-    FORCEINLINE Vector& operator=(Vector&& other) noexcept
-    {
-        if (this == &other)
-        {
-            // Handle self-assignment case.
-            return *this;
-        }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        ClearAndShrink();
+    FORCEINLINE Vector& operator=(const Vector& other)
+    {
+        // Forward the implementation to the templated version.
+        return this->operator=<Allocator>(other);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE Vector& operator=(Vector<ElementType, Allocator>&& other) noexcept
+    {
+        // Handle the self-assignment case.
+        if (this == &other)
+            return *this;
+
+#if SE_VECTOR_CHECK_PROTECTION
+        // NOTE(Traian): We only check if the other vector is not locked and not this vector because the
+        // 'Clear' function does the same thing (and also acquires the protection lock).
+        SE_ENSURE(other.IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        Clear();
+
+        // NOTE(Traian): We don't need to acquire any protection locks because no elements are actually
+        // instantiated or destroyed, and thus no external constructors/destructors are called.
 
         m_Elements = other.m_Elements;
         m_Capacity = other.m_Capacity;
@@ -97,208 +266,661 @@ public:
         return *this;
     }
 
-    FORCEINLINE Vector& operator=(std::initializer_list<T> initializerList)
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE Vector& operator=(std::initializer_list<ElementType> initiatlizerList)
     {
         Clear();
-        EnsureCapacity(initializerList.size());
 
-        m_Count = initializerList.size();
-        CopyElements(m_Elements, initializerList.begin(), m_Count);
+        if (initiatlizerList.size() > 0)
+        {
+#if SE_VECTOR_CHECK_PROTECTION
+            ScopedProtectionLock protectionLock(*this);
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+            ReAllocateElementsBuffer(initiatlizerList.size());
+            m_Count = initiatlizerList.size();
+            Vector::CopyElements(m_Elements, initiatlizerList.begin(), m_Count);
+        }
 
         return *this;
     }
 
-public:
-    NODISCARD FORCEINLINE T* Elements() { return m_Elements; }
-    NODISCARD FORCEINLINE const T* Elements() const { return m_Elements; }
-
-    NODISCARD FORCEINLINE usize Capacity() const { return m_Capacity; }
-    NODISCARD FORCEINLINE usize Count() const { return m_Count; }
-
-    NODISCARD FORCEINLINE bool IsEmpty() const { return m_Count == 0; }
-    NODISCARD FORCEINLINE bool HasElements() const { return m_Count > 0; }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    NODISCARD FORCEINLINE T& At(usize index)
+    NODISCARD FORCEINLINE ElementType* Elements()
     {
-        /* Index is out of bounds. */
-        SE_CHECK(index < m_Count);
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        return m_Elements;
+    }
+
+    NODISCARD FORCEINLINE const ElementType* Elements() const
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        return m_Elements;
+    }
+
+    NODISCARD FORCEINLINE ElementType* NonConstElements() const
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        return m_Elements;
+    }
+
+    NODISCARD FORCEINLINE usize Capacity() const
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+        
+        return m_Capacity;
+    }
+
+    NODISCARD FORCEINLINE usize Count() const
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        return m_Count;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    NODISCARD FORCEINLINE bool IsEmpty() const { return (Count() == 0); }
+    NODISCARD FORCEINLINE bool HasElements() const { return (Count() > 0); }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    NODISCARD FORCEINLINE VectorView<ElementType> View() { return VectorView<ElementType>(Elements(), Count()); }
+    NODISCARD FORCEINLINE VectorView<const ElementType> View() const { return VectorView<const ElementType>(Elements(), Count()); }
+
+    NODISCARD FORCEINLINE VectorView<const ElementType> ConstView() const { return VectorView<const ElementType>(Elements(), Count()); }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+public:
+    NODISCARD FORCEINLINE ElementType& At(usize index)
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        SE_ASSERT(index < m_Count);
         return m_Elements[index];
     }
 
-    NODISCARD FORCEINLINE const T& At(usize index) const
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    NODISCARD FORCEINLINE const ElementType& At(usize index) const
     {
-        /* Index is out of bounds. */
-        SE_CHECK(index < m_Count);
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        SE_ASSERT(index < m_Count);
         return m_Elements[index];
     }
 
-    NODISCARD FORCEINLINE T&       First()       { SE_CHECK(HasElements()); return m_Elements[0]; }
-    NODISCARD FORCEINLINE const T& First() const { SE_CHECK(HasElements()); return m_Elements[0]; }
-    NODISCARD FORCEINLINE T&       Last()        { SE_CHECK(HasElements()); return m_Elements[m_Count - 1]; }
-    NODISCARD FORCEINLINE const T& Last() const  { SE_CHECK(HasElements()); return m_Elements[m_Count - 1]; }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    NODISCARD FORCEINLINE ElementType& operator[](usize index) { return At(index); }
+    NODISCARD FORCEINLINE const ElementType& operator[](usize index) const { return At(index); }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    NODISCARD FORCEINLINE ElementType& First()
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        SE_ASSERT(HasElements());
+        return m_Elements[0];
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    NODISCARD FORCEINLINE const ElementType& First() const
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        SE_ASSERT(HasElements());
+        return m_Elements[0];
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    NODISCARD FORCEINLINE ElementType& Last()
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        SE_ASSERT(HasElements());
+        return m_Elements[m_Count - 1];
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    NODISCARD FORCEINLINE const ElementType& Last() const
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        SE_ASSERT(HasElements());
+        return m_Elements[m_Count - 1];
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    FORCEINLINE void Add(const T& element)
+    FORCEINLINE void Add(const ElementType& element)
     {
-        EnsureCapacity(m_Count + 1);
-        new (m_Elements + m_Count) T(element);
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+        ScopedProtectionLock protectionLock(*this);
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        if (m_Capacity < m_Count + 1)
+        {
+            const usize newCapacity = CalculateNextCapacity(m_Capacity, m_Count + 1);
+            ReAllocateElementsBuffer(newCapacity);
+        }
+
+        new (m_Elements + m_Count) ElementType(element);
         ++m_Count;
     }
 
-    FORCEINLINE void Add(T&& element)
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE void Add(ElementType&& element)
     {
-        EnsureCapacity(m_Count + 1);
-        new (m_Elements + m_Count) T(Move(element));
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+        ScopedProtectionLock protectionLock(*this);
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        if (m_Capacity < m_Count + 1)
+        {
+            const usize newCapacity = CalculateNextCapacity(m_Capacity, m_Count + 1);
+            ReAllocateElementsBuffer(newCapacity);
+        }
+
+        new (m_Elements + m_Count) ElementType(Move(element));
         ++m_Count;
     }
 
-    template<typename... Args>
-    FORCEINLINE void Emplace(Args&&... args)
-    {
-        EnsureCapacity(m_Count + 1);
-        new (m_Elements + m_Count) T(Forward<Args>(args)...);
-        ++m_Count;
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE void Add(std::initializer_list<T> initializerList)
+    FORCEINLINE void Add(std::initializer_list<ElementType> initializerList)
     {
         EnsureCapacity(m_Count + initializerList.size());
-        
-        for (usize index = m_Count; index < m_Count + initializerList.size(); ++index)
-            new (m_Elements + index) T(initializerList.begin()[index]);
 
-        m_Count += initializerList.size();
+        for (usize index = 0; index < initializerList.size(); ++index)
+            Add(initializerList.begin()[index]);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    template<typename... Args>
+    FORCEINLINE ElementType& Emplace(Args&&... args)
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+        ScopedProtectionLock protectionLock(*this);
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        if (m_Capacity < m_Count + 1)
+        {
+            const usize newCapacity = CalculateNextCapacity(m_Capacity, m_Count + 1);
+            ReAllocateElementsBuffer(newCapacity);
+        }
+
+        new (m_Elements + m_Count) ElementType(Forward<Args>(args)...);
+        return m_Elements[m_Count++];
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 public:
-    /**
-     * Removes the element stored at the given index by calling its destructor and moving the last
-     * element stored in the vector on its slot. 
-     * By performing this swap, the operation time complexity remains O(1), but the elements order
-     * will not be conserved.
-     */
+    FORCEINLINE void PopBack(usize popCount = 1)
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+        ScopedProtectionLock protectionLock(*this);
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        SE_ASSERT(popCount <= m_Count);
+        for (usize elementIndex = m_Count - popCount; elementIndex < m_Count; ++elementIndex)
+            m_Elements[elementIndex].~ElementType();
+        m_Count -= popCount;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE void RemoveIndex(usize elementIndex)
+    {
+        RemoveIndices(elementIndex, 1);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE void RemoveIndices(usize startElementIndex, usize removeCount)
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+        ScopedProtectionLock protectionLock(*this);
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        SE_ASSERT(startElementIndex + removeCount <= m_Count);
+
+        for (usize offset = 0; offset < removeCount; ++offset)
+            m_Elements[startElementIndex + offset].~ElementType();
+
+        const usize remainingCount = m_Count - (startElementIndex + removeCount);
+        const usize moveStartIndex = startElementIndex + removeCount;
+
+        for (usize offset = 0; offset < remainingCount; ++offset)
+        {
+            new (m_Elements + startElementIndex + offset) ElementType(Move(m_Elements[moveStartIndex + offset]));
+            m_Elements[moveStartIndex + offset].~ElementType();
+        }
+
+        m_Count -= removeCount;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     FORCEINLINE void RemoveIndexUnordered(usize elementIndex)
     {
-        /* Index is out of bounds. */
-        SE_CHECK(elementIndex < m_Count);
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+        ScopedProtectionLock protectionLock(*this);
+#endif // SE_VECTOR_CHECK_PROTECTION
 
-        m_Elements[elementIndex].~T();
+        SE_ASSERT(elementIndex < m_Count);
+        m_Elements[elementIndex].~ElementType();
         --m_Count;
 
         if (elementIndex != m_Count)
         {
-            new (m_Elements + elementIndex) T(m_Elements[m_Count]);
-            m_Elements[m_Count].~T();
+            new (m_Elements + elementIndex) ElementType(Move(m_Elements[m_Count]));
+            m_Elements[m_Count].~ElementType();
         }
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE void RemoveIndicesUnordered(usize startElementIndex, usize removeCount)
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+        ScopedProtectionLock protectionLock(*this);
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        SE_ASSERT(startElementIndex + removeCount <= m_Count);
+
+        for (usize offset = 0; offset < removeCount; ++offset)
+            m_Elements[startElementIndex + offset].~ElementType();
+
+        const usize remainingCount = m_Count - (startElementIndex + removeCount);
+        usize moveCount = removeCount;
+        if (moveCount > remainingCount)
+            moveCount = remainingCount;
+        const usize moveStartIndex = m_Count - moveCount;
+
+        for (usize offset = 0; offset < moveCount; ++offset)
+        {
+            new (m_Elements + startElementIndex + offset) ElementType(Move(m_Elements[moveStartIndex + offset]));
+            m_Elements[moveStartIndex + offset].~ElementType();
+        }
+
+        m_Count -= removeCount;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE void Remove(const ElementType& element)
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+        
+        usize elementIndex = 0;
+        while (elementIndex < m_Count)
+        {
+            if (m_Elements[elementIndex] == element)
+                RemoveIndex(elementIndex);
+            else
+                ++elementIndex;
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE void RemoveUnordered(const ElementType& element)
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        usize elementIndex = 0;
+        while (elementIndex < m_Count)
+        {
+            if (m_Elements[elementIndex] == element)
+                RemoveIndexUnordered(elementIndex);
+            else
+                ++elementIndex;
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE void RemoveBuffered(const ElementType& element)
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        Vector<ElementType, Allocator> newVector;
+        newVector.ReAllocateElementsBuffer(m_Capacity);
+        for (usize elementIndex = 0; elementIndex < m_Count; ++elementIndex)
+        {
+            if (m_Elements[elementIndex] == element)
+                newVector.Add(Move(m_Elements[elementIndex]));
+        }
+
+        (*this) = newVector;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    /* Returns 'INVALID_INDEX' if the vector doesn't contain the provided element. */
-    FORCEINLINE usize FindIndexOf(const T& element) const
+    NODISCARD FORCEINLINE bool Contains(const ElementType& element) const
     {
-        for (usize index = 0; index < m_Count; ++index)
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        const Optional<usize> elementIndex = FindFirstElementIndex(element);
+        return elementIndex.HasValue();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    NODISCARD FORCEINLINE Optional<usize> FindFirstElementIndex(const ElementType& element, usize searchFirstElementIndex = 0) const
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        Optional<usize> elementIndex;
+        for (usize index = searchFirstElementIndex; index < m_Count; ++index)
         {
             if (m_Elements[index] == element)
-                return index;
+            {
+                elementIndex = index;
+                break;
+            }
         }
 
-        return INVALID_INDEX;
+        return elementIndex;
     }
 
-    FORCEINLINE bool Contains(const T& element) const
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+public:
+    FORCEINLINE void SetCountDefaulted(usize newCount)
     {
-        const usize elementIndex = FindIndexOf(element);
-        return elementIndex != INVALID_INDEX;
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+        ScopedProtectionLock protectionLock(*this);
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        if (newCount == m_Count)
+            return;
+
+        if (newCount > m_Capacity)
+        {
+            ReAllocateElementsBuffer(newCount);
+        }
+
+        // Destroy excess elements. The loop condition already checks if any elements should be removed in the first place.
+        for (usize elementIndex = newCount; elementIndex < m_Count; ++elementIndex)
+            m_Elements[elementIndex].~ElementType();
+
+        // Add missing elements. The loop condition already checks if any elements should be added in the first place.
+        for (usize elementIndex = m_Count; elementIndex < newCount; ++elementIndex)
+            new (m_Elements + elementIndex) ElementType();
+
+        m_Count = newCount;
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE void SetCountFromTemplate(usize newCount, const ElementType& templateElement)
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+        ScopedProtectionLock protectionLock(*this);
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        if (newCount == m_Count)
+            return;
+
+        if (newCount > m_Capacity)
+        {
+            ReAllocateElementsBuffer(newCount);
+        }
+
+        // Destroy excess elements. The loop condition already checks if any elements should be removed in the first place.
+        for (usize elementIndex = newCount; elementIndex < m_Count; ++elementIndex)
+            m_Elements[elementIndex].~ElementType();
+
+        // Add missing elements. The loop condition already checks if any elements should be added in the first place.
+        for (usize elementIndex = m_Count; elementIndex < newCount; ++elementIndex)
+            new (m_Elements + elementIndex) ElementType(templateElement);
+
+        m_Count = newCount;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE void EnsureCapacity(usize requiredCapacity)
+    {
+        if (m_Capacity < requiredCapacity)
+        {
+            ReAllocateElementsBuffer(requiredCapacity);
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
     FORCEINLINE void Clear()
     {
-        for (usize index = 0; index < m_Count; ++index)
-            m_Elements[index].~T();
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+        ScopedProtectionLock protectionLock(*this);
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        for (usize elementIndex = 0; elementIndex < m_Count; ++elementIndex)
+            m_Elements[elementIndex].~ElementType();
         m_Count = 0;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    FORCEINLINE void ShrinkToFit()
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+        ScopedProtectionLock protectionLock(*this);
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        if (m_Count == m_Capacity)
+            return;
+
+        ReAllocateElementsBuffer(m_Count);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
     FORCEINLINE void ClearAndShrink()
     {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
         Clear();
-        Vector::FreeMemory(m_Elements, m_Capacity);
+
+        Allocator::Release(m_Elements);
         m_Elements = nullptr;
         m_Capacity = 0;
     }
-     
-    FORCEINLINE void EnsureCapacity(usize requiredCapacity)
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+public:
+    NODISCARD FORCEINLINE ElementType* begin()
     {
-        if (requiredCapacity <= m_Capacity)
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        return m_Elements;
+    }
+
+    NODISCARD FORCEINLINE const ElementType* begin() const
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        return m_Elements;
+    }
+
+    NODISCARD FORCEINLINE ElementType* end()
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        return m_Elements + m_Count;
+    }
+
+    NODISCARD FORCEINLINE const ElementType* end() const
+    {
+#if SE_VECTOR_CHECK_PROTECTION
+        SE_ENSURE(IsNotProtected());
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+        return m_Elements + m_Count;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+private:
+    NODISCARD FORCEINLINE static usize CalculateNextCapacity(usize currentCapacity, usize requiredCount)
+    {
+        const usize geometricNextCapacity = (currentCapacity * GROWTH_FACTOR_NUMERATOR) / GROWTH_FACTOR_DENOMINATOR;
+        if (geometricNextCapacity >= requiredCount)
+            return geometricNextCapacity;
+        return requiredCount;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE static void CopyElements(ElementType* dstElements, const ElementType* srcElements, usize count)
+    {
+        for (usize elementIndex = 0; elementIndex < count; ++elementIndex)
+            new (dstElements + elementIndex) ElementType(srcElements[elementIndex]);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    FORCEINLINE static void MoveElements(ElementType* dstElements, ElementType* srcElements, usize count)
+    {
+        for (usize elementIndex = 0; elementIndex < count; ++elementIndex)
         {
-            /* No expansion is needed. */
-            return;
+            new (dstElements + elementIndex) ElementType(Move(srcElements[elementIndex]));
+            srcElements[elementIndex].~ElementType();
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+private:
+    FORCEINLINE void ReAllocateElementsBuffer(usize newCapacity)
+    {
+        // NOTE(Traian): This should never be triggered by the user incorrectly using the API.
+        // If this assert fails, there is an internal container error.
+        SE_ASSERT(newCapacity >= m_Count);
+
+        // Allocate a new internal memory buffer.
+        const usize allocationSize = newCapacity * sizeof(ElementType);
+        void* newElementsBuffer = Allocator::GrowAllocation(m_Elements, allocationSize);
+        ElementType* newElements = static_cast<ElementType*>(newElementsBuffer);
+
+        // Only move the elements and destroy the old elements buffer if the grow operation returns
+        // a different memory block address, otherwise there is no point (or undefined behaviour risk).
+        if (m_Elements != newElements)
+        {
+            // Move the elements from the old buffer to the new buffer.
+            Vector::MoveElements(newElements, m_Elements, m_Count);
+
+            // Destroy the old internal memory buffer. Since the elements stored in it were
+            // destryed after they were moved in the new buffer, no clean-up is required.
+            Allocator::Release(m_Elements);
         }
 
-        usize newCapacity = (m_Capacity * GROWTH_FACTOR_NUMERATOR) / GROWTH_FACTOR_DENOMINATOR;
-        if (newCapacity < requiredCapacity)
-        {
-            /* The default (geometric) expansion size is not sufficient for storing the
-             * required number of elements. */
-            newCapacity = requiredCapacity;
-        }
-
-        T* newElements = Vector::AllocateMemory(newCapacity);
-        MoveElements(newElements, m_Elements, m_Count);
-        Vector::FreeMemory(m_Elements, m_Capacity);
-
+        // Assign the new internal memory buffer.
         m_Elements = newElements;
         m_Capacity = newCapacity;
     }
 
-public:
-    NODISCARD FORCEINLINE Iterator begin() { return Iterator(m_Elements); }
-    NODISCARD FORCEINLINE Iterator end() { return Iterator(m_Elements + m_Count); }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE ConstIterator begin() const { return ConstIterator(m_Elements); }
-    NODISCARD FORCEINLINE ConstIterator end() const { return ConstIterator(m_Elements + m_Count); }
+#if SE_VECTOR_CHECK_PROTECTION
+    NODISCARD FORCEINLINE bool IsProtected() const
+    {
+        return (m_IsProtected == 1);
+    }
 
-    NODISCARD FORCEINLINE ReverseIterator rbegin() { return ReverseIterator(m_Elements + m_Count - 1); }
-    NODISCARD FORCEINLINE ReverseIterator rend() { return ReverseIterator(m_Elements - 1); }
+    NODISCARD FORCEINLINE bool IsNotProtected() const
+    {
+        return (m_IsProtected == 0);
+    }
 
-    NODISCARD FORCEINLINE ReverseConstIterator rbegin() const { return ReverseConstIterator(m_Elements + m_Count - 1); }
-    NODISCARD FORCEINLINE ReverseConstIterator rend() const { return ReverseConstIterator(m_Elements - 1); }
+    NODISCARD FORCEINLINE void SetIsProtected(bool isProtected) const
+    {
+        if (isProtected)
+            m_IsProtected = 1;
+        else
+            m_IsProtected = 0;
+    }
+#endif // SE_VECTOR_CHECK_PROTECTION
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 private:
-    FORCEINLINE static T* AllocateMemory(usize capacity)
-    {
-        if (capacity == 0)
-            return nullptr;
-        return static_cast<T*>(::operator new(capacity * sizeof(T)));
-    }
-
-    FORCEINLINE static void FreeMemory(T* elements, usize capacity)
-    {
-        if (capacity == 0)
-            return;
-        ::operator delete(elements);
-    }
-
-    FORCEINLINE static void CopyElements(T* destinationElements, const T* sourceElements, usize count)
-    {
-        for (usize index = 0; index < count; ++index)
-            new (destinationElements + index) T(sourceElements[index]);
-    }
-
-    FORCEINLINE static void MoveElements(T* destinationElements, T* sourceElements, usize count)
-    {
-        for (usize index = 0; index < count; ++index)
-        {
-            new (destinationElements + index) T(Move(sourceElements[index]));
-            sourceElements[index].~T();
-        }
-    }
-
-private:
-    T* m_Elements;
+    ElementType* m_Elements;
     usize m_Capacity;
-    usize m_Count;
+    uint64 m_Count : 63;
+    mutable uint64 m_IsProtected : 1;
 };
 
 }
