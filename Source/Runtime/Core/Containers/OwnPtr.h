@@ -119,8 +119,9 @@ public:
     {
         if (m_Instance)
         {
-            delete m_Instance;
+            T* instance = m_Instance;
             m_Instance = nullptr;
+            delete instance;
         }
     }
 

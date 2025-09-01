@@ -246,8 +246,9 @@ public:
         if (m_Instance)
         {
             RefCounted* refCounted = (RefCounted*)m_Instance;
+            m_Instance = nullptr;
+            
             refCounted->DecrementStrongReferenceCount();
-
             if (refCounted->GetStrongReferenceCount() == 0)
             {
                 const uint32 weakReferenceCount = refCounted->GetWeakReferenceCount();
@@ -264,8 +265,6 @@ public:
                     ::operator delete(m_Instance);
                 }
             }
-
-            m_Instance = nullptr;
         }
     }
 
@@ -500,6 +499,8 @@ public:
         if (m_Instance)
         {
             RefCounted* refCounted = (RefCounted*)m_Instance;
+            m_Instance = nullptr;
+
             refCounted->DecrementWeakReferenceCount();
             if (refCounted->GetStrongReferenceCount() == 0 && refCounted->GetWeakReferenceCount() == 0)
             {
@@ -513,10 +514,8 @@ public:
                 // Because the 'RefCounted' destructor is marked as virtual, calling 'm_Instance->~RefCounted()' would invoke the object
                 // destructor AGAIN. So the bug would be that the same destructor is called twice!
 
-                ::operator delete(m_Instance);
+                ::operator delete((void*)refCounted);
             }
-
-            m_Instance = nullptr;
         }
     }
 
