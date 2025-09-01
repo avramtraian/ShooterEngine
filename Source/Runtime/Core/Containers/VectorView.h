@@ -5,8 +5,6 @@
 #include <Runtime/Core/CoreAssertions.h>
 #include <Runtime/Core/CoreTypes.h>
 
-#include <vector>
-
 namespace SE
 {
 
@@ -14,8 +12,6 @@ template<typename T>
 class VectorView
 {
 public:
-    using NonConstT = std::remove_const_t<T>;
-
     using Iterator = T*;
     using ConstIterator = const T*;
 
@@ -25,70 +21,29 @@ public:
         , m_Count(0)
     {}
 
-    FORCEINLINE constexpr VectorView(const VectorView& other)
-        : m_Elements(other.m_Elements)
-        , m_Count(other.m_Count)
-    {}
+    constexpr VectorView(const VectorView&) = default;
+    constexpr VectorView(VectorView&&) noexcept = default;
 
-    FORCEINLINE constexpr VectorView(VectorView&& other) noexcept
-        : m_Elements(other.m_Elements)
-        , m_Count(other.m_Count)
-    {
-        other.m_Elements = nullptr;
-        other.m_Count = 0;
-    }
+    constexpr VectorView& operator=(const VectorView&) = default;
+    constexpr VectorView& operator=(VectorView&&) noexcept = default;
 
-    FORCEINLINE constexpr VectorView& operator=(const VectorView& other)
-    {
-        // Handle self-assignment case.
-        if (this == &other)
-            return *this;
-
-        m_Elements = other.m_Elements;
-        m_Count = other.m_Count;
-        return *this;
-    }
-
-    FORCEINLINE constexpr VectorView& operator=(VectorView&& other) noexcept
-    {
-        // Handle self-assignment case.
-        if (this == &other)
-            return *this;
-
-        m_Elements = other.m_Elements;
-        m_Count = other.m_Count;
-        other.m_Elements = nullptr;
-        other.m_Count = 0;
-        return *this;
-    }
-
-public:
     FORCEINLINE constexpr VectorView(T* elements, usize count)
         : m_Elements(elements)
         , m_Count(count)
     {}
 
-    FORCEINLINE VectorView(const std::vector<NonConstT>& vector)
-        : m_Elements(vector.data())
-        , m_Count(vector.size())
+public:
+    FORCEINLINE constexpr VectorView(const VectorView<RemoveConst<T>>& other)
+    requires (!std::is_const_v<T>)
+        : m_Elements(other.m_Elements)
+        , m_Count(other.m_Count)
     {}
 
-    FORCEINLINE VectorView(std::vector<NonConstT>& vector)
-        : m_Elements(vector.data())
-        , m_Count(vector.size())
-    {}
-
-    FORCEINLINE VectorView& operator=(const std::vector<NonConstT>& vector)
+    FORCEINLINE constexpr VectorView& operator=(const VectorView<RemoveConst<T>>& other)
+    requires (!std::is_const_v<T>)
     {
-        m_Elements = vector.data();
-        m_Count = vector.size();
-        return *this;
-    }
-
-    FORCEINLINE VectorView& operator=(std::vector<NonConstT>& vector)
-    {
-        m_Elements = vector.data();
-        m_Count = vector.size();
+        m_Elements = other.m_Elements;
+        m_Count = other.m_Count;
         return *this;
     }
 
@@ -144,16 +99,6 @@ public:
     {
         SE_ASSERT(HasElements());
         return m_Elements[m_Count - 1];
-    }
-
-public:
-    NODISCARD FORCEINLINE std::vector<NonConstT> ToVector() const
-    {
-        std::vector<NonConstT> vector;
-        vector.reserve(m_Count);
-        for (usize index = 0; index < m_Count; ++index)
-            vector.push_back(m_Elements[index]);
-        return vector;
     }
 
 public:
