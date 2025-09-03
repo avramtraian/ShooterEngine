@@ -1,6 +1,7 @@
 // Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
 #include <Runtime/Core/Log.h>
+#include <Runtime/CoreObject/GlobalEnvironment.h>
 #include <Runtime/Engine/Engine.h>
 
 namespace SE
@@ -15,11 +16,18 @@ bool Engine::InitializeCoreSystems()
         return false;
     }
 
+    if (!GlobalObjectEnvironment::Initialize())
+    {
+        SE_LOG_ERROR("Failed to initialize the global object environment! Aborting.");
+        return false;
+    }
+
     return true;
 }
 
 void Engine::ShutdownCoreSystems()
 {
+    GlobalObjectEnvironment::Shutdown();
     Logger::Shutdown();
 }
 
