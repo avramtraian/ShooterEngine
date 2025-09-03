@@ -65,7 +65,7 @@ private:
     public:
         NODISCARD FORCEINLINE DelegateHandle GetHandle() const { return m_Handle; }
         NODISCARD virtual bool IsBound() const = 0;
-        virtual ReturnType Execute(ParameterTypes... parameters) = 0;
+        virtual ReturnType Execute(ParameterTypes... parameters) const = 0;
 
     protected:
         DelegateHandle m_Handle;
@@ -90,7 +90,7 @@ private:
             return true;
         }
 
-        virtual ReturnType Execute(ParameterTypes... parameters) override
+        virtual ReturnType Execute(ParameterTypes... parameters) const override
         {
             SE_ASSERT(m_Function != nullptr);
             return m_Function(Forward<ParameterTypes>(parameters)...);
@@ -120,7 +120,7 @@ private:
             return true;
         }
 
-        virtual ReturnType Execute(ParameterTypes... parameters) override
+        virtual ReturnType Execute(ParameterTypes... parameters) const override
         {
             return m_Lambda(Forward<ParameterTypes>(parameters)...);
         }
@@ -149,7 +149,7 @@ private:
             return m_UserObject.IsValid();
         }
 
-        virtual ReturnType Execute(ParameterTypes... parameters) override
+        virtual ReturnType Execute(ParameterTypes... parameters) const override
         {
             SE_ASSERT(m_UserObject.IsValid());
             UserClass* userObjectInstance = m_UserObject.Get();
@@ -200,13 +200,13 @@ public:
         return true;
     }
     
-    FORCEINLINE ReturnType Execute(ParameterTypes... parameters)
+    FORCEINLINE ReturnType Execute(ParameterTypes... parameters) const
     {
         SE_ASSERT(IsBound());
         return m_DelegateInstance->Execute(Forward<ParameterTypes>(parameters)...);
     }
 
-    FORCEINLINE void ExecuteIfBound(ParameterTypes... parameters)
+    FORCEINLINE void ExecuteIfBound(ParameterTypes... parameters) const
     requires(std::is_same_v<ReturnType, void>)
     {
         if (IsBound())
@@ -293,7 +293,7 @@ public:
     GenericMulticastDelegate& operator=(GenericMulticastDelegate&& other) noexcept = default;
 
 public:
-    FORCEINLINE void Broadcast(ParameterTypes... parameters)
+    FORCEINLINE void Broadcast(ParameterTypes... parameters) const
     {
         // List of delegates that are no longer bound.
         Vector<DelegateHandle> handlesToRemove;
@@ -350,7 +350,7 @@ public:
     }
 
 private:
-    HashMap<DelegateHandle, Delegate> m_Delegates;
+    mutable HashMap<DelegateHandle, Delegate> m_Delegates;
 };
 
 #pragma endregion
