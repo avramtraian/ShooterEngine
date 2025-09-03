@@ -31,17 +31,17 @@ NODISCARD SHOOTER_API DelegateHandle GenerateDelegateHandle();
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma region
 
-#define SE_DECLARE_DELEGATE              (DelegateType)                                                 using DelegateType = ::SE::GenericDelegate<void>;
-#define SE_DECLARE_DELEGATE_ONE_PARAM    (DelegateType, ParamType1)                                     using DelegateType = ::SE::GenericDelegate<void, ParamType1>;
-#define SE_DECLARE_DELEGATE_TWO_PARAMS   (DelegateType, ParamType1, ParamType2)                         using DelegateType = ::SE::GenericDelegate<void, ParamType1, ParamType2>;
-#define SE_DECLARE_DELEGATE_THREE_PARAMS (DelegateType, ParamType1, ParamType2, ParamType3)             using DelegateType = ::SE::GenericDelegate<void, ParamType1, ParamType2, ParamType3>;
-#define SE_DECLARE_DELEGATE_FOUR_PARAMS  (DelegateType, ParamType1, ParamType2, ParamType3, ParamType4) using DelegateType = ::SE::GenericDelegate<void, ParamType1, ParamType2, ParamType3, ParamType4>;
+#define SE_DECLARE_DELEGATE(DelegateType)                                                             using DelegateType = ::SE::GenericDelegate<void>;
+#define SE_DECLARE_DELEGATE_ONE_PARAM(DelegateType, ParamType1)                                       using DelegateType = ::SE::GenericDelegate<void, ParamType1>;
+#define SE_DECLARE_DELEGATE_TWO_PARAMS(DelegateType, ParamType1, ParamType2)                          using DelegateType = ::SE::GenericDelegate<void, ParamType1, ParamType2>;
+#define SE_DECLARE_DELEGATE_THREE_PARAMS(DelegateType, ParamType1, ParamType2, ParamType3)            using DelegateType = ::SE::GenericDelegate<void, ParamType1, ParamType2, ParamType3>;
+#define SE_DECLARE_DELEGATE_FOUR_PARAMS(DelegateType, ParamType1, ParamType2, ParamType3, ParamType4) using DelegateType = ::SE::GenericDelegate<void, ParamType1, ParamType2, ParamType3, ParamType4>;
 
-#define SE_DECLARE_DELEGATE_WITH_RETURN              (DelegateType, ReturnType)                                                 using DelegateType = ::SE::GenericDelegate<ReturnType>;
-#define SE_DECLARE_DELEGATE_WITH_RETURN_ONE_PARAM    (DelegateType, ReturnType, ParamType1)                                     using DelegateType = ::SE::GenericDelegate<ReturnType, ParamType1>;
-#define SE_DECLARE_DELEGATE_WITH_RETURN_TWO_PARAMS   (DelegateType, ReturnType, ParamType1, ParamType2)                         using DelegateType = ::SE::GenericDelegate<ReturnType, ParamType1, ParamType2>;
-#define SE_DECLARE_DELEGATE_WITH_RETURN_THREE_PARAMS (DelegateType, ReturnType, ParamType1, ParamType2, ParamType3)             using DelegateType = ::SE::GenericDelegate<ReturnType, ParamType1, ParamType2, ParamType3>;
-#define SE_DECLARE_DELEGATE_WITH_RETURN_FOUR_PARAMS  (DelegateType, ReturnType, ParamType1, ParamType2, ParamType3, ParamType4) using DelegateType = ::SE::GenericDelegate<ReturnType, ParamType1, ParamType2, ParamType3, ParamType4>;
+#define SE_DECLARE_DELEGATE_WITH_RETURN(DelegateType, ReturnType)                                                             using DelegateType = ::SE::GenericDelegate<ReturnType>;
+#define SE_DECLARE_DELEGATE_WITH_RETURN_ONE_PARAM(DelegateType, ReturnType, ParamType1)                                       using DelegateType = ::SE::GenericDelegate<ReturnType, ParamType1>;
+#define SE_DECLARE_DELEGATE_WITH_RETURN_TWO_PARAMS(DelegateType, ReturnType, ParamType1, ParamType2)                          using DelegateType = ::SE::GenericDelegate<ReturnType, ParamType1, ParamType2>;
+#define SE_DECLARE_DELEGATE_WITH_RETURN_THREE_PARAMS(DelegateType, ReturnType, ParamType1, ParamType2, ParamType3)            using DelegateType = ::SE::GenericDelegate<ReturnType, ParamType1, ParamType2, ParamType3>;
+#define SE_DECLARE_DELEGATE_WITH_RETURN_FOUR_PARAMS(DelegateType, ReturnType, ParamType1, ParamType2, ParamType3, ParamType4) using DelegateType = ::SE::GenericDelegate<ReturnType, ParamType1, ParamType2, ParamType3, ParamType4>;
 
 template<typename ReturnType, typename... ParameterTypes>
 class GenericDelegate
