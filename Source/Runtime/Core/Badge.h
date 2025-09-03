@@ -13,7 +13,7 @@ class Badge
     SE_MAKE_NONCOPYABLE(Badge);
     SE_MAKE_NONMOVABLE(Badge);
 
-    friend class T;
+    friend typename T;
 
 private:
     Badge() = default;
