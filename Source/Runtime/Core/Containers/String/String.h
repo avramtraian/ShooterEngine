@@ -199,6 +199,11 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    NODISCARD FORCEINLINE bool IsEmpty() const { return (ByteCountWithoutNullTerminator() == 0); }
+    NODISCARD FORCEINLINE bool HasCharacters() const { return (ByteCountWithoutNullTerminator() > 0); }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     NODISCARD FORCEINLINE const char* Characters() const
     {
         if (IsStoredInline())
