@@ -2,10 +2,10 @@
 
 #include <Runtime/Application/Window.h>
 
-#if SE_PLATFORM_WIN64
+#if SE_PLATFORM_WINDOWS
     #include <Runtime/Application/Platform/Windows/WindowsWindow.h>
     namespace SE { using NativeWindow = WindowsWindow; }
-#endif // SE_PLATFORM_WIN64
+#endif // SE_PLATFORM_WINDOWS
 
 namespace SE
 {

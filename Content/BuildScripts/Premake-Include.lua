@@ -29,8 +29,8 @@ function default_project_configuration()
     -- Allows Visual Studio to use multiple compiler processes when building.
     flags { "MultiProcessorCompile" }
 
-    filter "platforms:Win64"
-        defines { "SE_PLATFORM_WIN64=1" }
+    filter "platforms:Windows"
+        defines { "SE_PLATFORM_WINDOWS=1" }
     filter {}
 
     filter "configurations:EditorDebug"

@@ -10,12 +10,12 @@
 
 #include <vulkan/vulkan.h>
 
-#if SE_PLATFORM_WIN64
+#if SE_PLATFORM_WINDOWS
     #define WIN32_LEAN_AND_MEAN
     #define NOMINMAX
     #include <Windows.h>
     #include <vulkan/vulkan_win32.h>
-#endif // SE_PLATFORM_WIN64
+#endif // SE_PLATFORM_WINDOWS
 
 #define SE_VULKAN_CHECK(...)                                          \
     if ((__VA_ARGS__) != VK_SUCCESS) {                                \

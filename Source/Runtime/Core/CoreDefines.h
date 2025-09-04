@@ -6,9 +6,9 @@
  * PLATFORM MACROS.
  */
 
-#ifndef SE_PLATFORM_WIN64
-    #define SE_PLATFORM_WIN64 0
-#endif // SE_PLATFORM_WIN64
+#ifndef SE_PLATFORM_WINDOWS
+    #define SE_PLATFORM_WINDOWS 0
+#endif // SE_PLATFORM_WINDOWS
 
 /**
  * BUILD CONFIGURATION MACROS.
@@ -47,13 +47,13 @@
  * SHARED LIBRARY API SPECIFIERS.
  */
 
-#if SE_PLATFORM_WIN64
+#if SE_PLATFORM_WINDOWS
     #define SE_API_SPECIFIER_EXPORT __declspec(dllexport)
     #define SE_API_SPECIFIER_IMPORT __declspec(dllimport)
 #else
     #define SE_API_SPECIFIER_EXPORT
     #define SE_API_SPECIFIER_IMPORT
-#endif // SE_PLATFORM_WIN64
+#endif // SE_PLATFORM_WINDOWS
 
 #if SE_TARGET_EDITOR
     #ifdef SE_PROJECT_RUNTIME
@@ -65,14 +65,14 @@
     #define SHOOTER_API
 #endif // SE_TARGET_EDITOR
 
-#if SE_PLATFORM_WIN64
+#if SE_PLATFORM_WINDOWS
     // NOTE(Traian): Disable the warnings related to DLL specifiers.
     #pragma warning(disable : 4251)
     #pragma warning(disable : 4275)
 
     // NOTE(Traian): Disable warning C4200: nonstandard extension used: zero-sized array in struct/union
     #pragma warning(disable : 4200)
-#endif // SE_PLATFORM_WIN64
+#endif // SE_PLATFORM_WINDOWS
 
 /**
  * GENERAL-PURPOSE, PLATFORM AGNOSTIC, MACROS.

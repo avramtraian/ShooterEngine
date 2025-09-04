@@ -5,10 +5,10 @@
 #include <Runtime/Core/CoreTypes.h>
 #include <Runtime/Core/Math/Matrix.h>
 
-#if SE_PLATFORM_WIN64
+#if SE_PLATFORM_WINDOWS
     #define SE_MATRIX_TRANSORMATIONS_USE_DIRECTX
     #include <DirectXMath.h>
-#endif // SE_PLATFORM_WIN64
+#endif // SE_PLATFORM_WINDOWS
 
 namespace SE
 {

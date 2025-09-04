@@ -4,10 +4,10 @@
 
 #include <Runtime/Core/CoreDefines.h>
 
-#if SE_PLATFORM_WIN64
+#if SE_PLATFORM_WINDOWS
     #define WIN32_LEAN_AND_MEAN
     #define NOMINMAX
     #include <Windows.h>
 #else
     #error Trying to include the Windows headers but they are not available!
-#endif // SE_PLATFORM_WIN64
+#endif // SE_PLATFORM_WINDOWS

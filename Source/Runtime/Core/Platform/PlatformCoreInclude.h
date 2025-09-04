@@ -2,6 +2,6 @@
 
 #include <Runtime/Core/CoreDefines.h>
 
-#if SE_PLATFORM_WIN64
+#if SE_PLATFORM_WINDOWS
     #include <Runtime/Core/Platform/Windows/WindowsInclude.h>
-#endif // SE_PLATFORM_WIN64
+#endif // SE_PLATFORM_WINDOWS

@@ -333,7 +333,7 @@ bool VulkanRenderingDriver::FindQueueFamilyIndices()
      * a dummy surface and to test against them. */
     VkSurfaceKHR dummySurface = VK_NULL_HANDLE;
 
-#if SE_PLATFORM_WIN64
+#if SE_PLATFORM_WINDOWS
     WNDCLASSA windowClass = {};
     windowClass.hInstance = GetModuleHandle(nullptr);
     windowClass.lpszClassName = "ShooterVulkanDummyWindowClass";
@@ -351,7 +351,7 @@ bool VulkanRenderingDriver::FindQueueFamilyIndices()
     surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
     surfaceCreateInfo.hwnd = dummyWindow;
     SE_VULKAN_CHECK(vkCreateWin32SurfaceKHR(m_Instance, &surfaceCreateInfo, nullptr, &dummySurface));
-#endif // SE_PLATFORM_WIN64
+#endif // SE_PLATFORM_WINDOWS
 
     enum class QueueFamilyType : uint8_t
     {

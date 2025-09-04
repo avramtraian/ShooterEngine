@@ -16,7 +16,7 @@ VulkanSurface::VulkanSurface(const RefPtr<Window>& targetWindow)
     : m_Handle(VK_NULL_HANDLE)
     , m_TargetWindow(targetWindow)
 {
-#if SE_PLATFORM_WIN64
+#if SE_PLATFORM_WINDOWS
     VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
     surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
     surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
@@ -27,7 +27,7 @@ VulkanSurface::VulkanSurface(const RefPtr<Window>& targetWindow)
         SE_LOG_ERROR("Failed to create the [Vulkan] surface! (Result: %d)", result);
         return;
     }
-#endif // SE_PLATFORM_WIN64
+#endif // SE_PLATFORM_WINDOWS
 }
 
 VulkanSurface::~VulkanSurface()

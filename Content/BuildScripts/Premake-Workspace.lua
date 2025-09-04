@@ -27,10 +27,10 @@ workspace "ShooterEngine"
     platforms {
         -- Currently, the only supported platform is Windows on x86-64 architecture.
         -- However, as more platforms will be supported, they will be appended to this list.
-        "Win64"
+        "Windows"
     }
 
-    filter "platforms:Win64"
+    filter "platforms:Windows"
         system "Windows"
         -- Only the x86-64 architecture is currently supported.
         architecture "x86_64"
