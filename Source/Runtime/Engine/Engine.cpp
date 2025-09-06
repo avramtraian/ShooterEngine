@@ -9,7 +9,7 @@ namespace SE
 
 SHOOTER_API Engine* g_Engine = nullptr;
 
-bool Engine::InitializeCoreSystems()
+bool Engine::Initialize()
 {
     if (!Logger::Initialize())
     {
@@ -22,34 +22,16 @@ bool Engine::InitializeCoreSystems()
         return false;
     }
 
-    return true;
-}
-
-void Engine::ShutdownCoreSystems()
-{
-    GlobalObjectEnvironment::Shutdown();
-    Logger::Shutdown();
-}
-
-bool Engine::Initialize()
-{
-    // Initialize the core engine systems.
-    if (!InitializeCoreSystems())
-    {
-        // There is no point of trying to continue the initialization process if critical
-        // systems were not able to be initialized.
-        return false;
-    }
-    SE_LOG_INFO("All core systems were initialized successfully.");
-
+    SE_LOG_INFO("All core engine systems were initialized successfully.");
     return true;
 }
 
 void Engine::Shutdown()
 {
-    // Shutdown the core engine systems.
-    SE_LOG_INFO("Shutting down the core systems...");
-    ShutdownCoreSystems();
+    SE_LOG_INFO("Shutting down the core engine systems...");
+    
+    GlobalObjectEnvironment::Shutdown();
+    Logger::Shutdown();
 }
 
 }

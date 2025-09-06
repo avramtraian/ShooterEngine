@@ -15,13 +15,10 @@ SHOOTER_API GameEngine* g_GameEngine = nullptr;
 
 bool GameEngine::Initialize()
 {
-    if (!InitializeCoreSystems())
+    if (!Engine::Initialize())
     {
-        // There is no point of trying to continue the initialization process if critical
-        // systems were not able to be initialized.
         return false;
     }
-    SE_LOG_INFO("All core systems were initialized successfully.");
 
     m_GameWindow = Window::Create(WindowInfo()
         .SetStartMode(WindowMode::Maximized)
@@ -90,8 +87,7 @@ void GameEngine::Shutdown()
     /* Destroy the game window. */
     m_GameWindow.Release();
 
-    SE_LOG_INFO("Shutting down the core systems...");
-    ShutdownCoreSystems();
+    Engine::Shutdown();
 }
 
 void GameEngine::Execute()
