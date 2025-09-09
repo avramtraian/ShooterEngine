@@ -261,11 +261,13 @@ struct ObjectTypeFinder<HashMap<KeyType, ValueType, Allocator>>
             field.ByteOffset = offsetof(StructType, FieldName);                                                             \
             field.ByteCount = sizeof(StructType::FieldName);                                                                \
             field.ArrayCount = 1;                                                                                           \
+            objectStruct->AddField(field);                                                                                  \
             if (field.Type->GetKind() == ObjectTypeKind::Primitive || field.Type->GetKind() == ObjectTypeKind::Enum)        \
             {                                                                                                               \
-                MemoryCopy(field.DefaultValue.ValuePointer, &defaultStructInstance.FieldName, field.ByteCount);             \
+                ObjectFieldValue fieldDefaultValue = {};                                                                    \
+                MemoryCopy(fieldDefaultValue.ValuePointer, &defaultStructInstance.FieldName, field.ByteCount);              \
+                objectStruct->AddFieldDefaultValue(field.Name, fieldDefaultValue);                                          \
             }                                                                                                               \
-            objectStruct->AddField(field);                                                                                  \
         }
 
 #define SE_END_STRUCT_REFLECTION()                                                                                          \

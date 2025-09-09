@@ -41,6 +41,7 @@ namespace SE
         FORCEINLINE NODISCARD static StringView GetStaticName() { return VIEW(#StructName); }   \
         static constexpr bool HasParent = false;                                                \
         static const inline StringView ParentName = {};                                         \
+        friend void RegisterStucts();                                                           \
     public:
 
 //
@@ -54,8 +55,9 @@ namespace SE
         static constexpr void StructTag() {}                                                    \
         FORCEINLINE NODISCARD static StringView GetStaticName() { return VIEW(#StructName); }   \
         static constexpr bool HasParent = true;                                                 \
-        using Parent = ParentStructName;                                                        \
+        using Super = ParentStructName;                                                         \
         static const inline StringView ParentName = VIEW(#ParentStructName);                    \
+        friend void RegisterStucts();                                                           \
     public:
 
 }
