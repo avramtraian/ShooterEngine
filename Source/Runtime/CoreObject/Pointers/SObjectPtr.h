@@ -23,6 +23,14 @@ public:
     friend class GlobalObjectEnvironment;
 
 public:
+    NODISCARD FORCEINLINE static uint64 GetHash(const SObjectPtr& value)
+    {
+        if (!value.IsValid())
+            return 0;
+        return (uint64)value.Get();
+    }
+
+public:
     FORCEINLINE SObjectPtr()
         : m_Instance(nullptr)
     {}

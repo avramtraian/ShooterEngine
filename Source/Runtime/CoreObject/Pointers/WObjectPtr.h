@@ -27,6 +27,14 @@ public:
     friend class GlobalObjectEnvironment;
 
 public:
+    NODISCARD FORCEINLINE static uint64 GetHash(const WObjectPtr& value)
+    {
+        if (!value.IsValid())
+            return 0;
+        return (((uint64)value.m_SlotIndex << 32) | ((uint64)value.m_SlotGeneration << 0));
+    }
+
+public:
     FORCEINLINE WObjectPtr()
         : m_SlotIndex(INVALID_ENVIRONMENT_SLOT_INDEX)
         , m_SlotGeneration(INVALID_ENVIRONMENT_SLOT_GENERATION)
