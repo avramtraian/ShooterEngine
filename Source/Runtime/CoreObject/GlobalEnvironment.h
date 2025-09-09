@@ -24,6 +24,14 @@ public:
 
     SHOOTER_API static void DestroyObject(Object* object);
 
+    template<typename T>
+    NODISCARD FORCEINLINE static SObjectPtr<T> CreateObject()
+    {
+        SObjectPtr<ObjectClass> objectClass = T::GetStaticClass();
+        return CreateObject(Move(objectClass)).As<T>();
+    }
+
+public:
     NODISCARD SHOOTER_API static EnvironmentSlotGeneration GetSlotGeneration(EnvironmentSlotIndex slotIndex);
 
     NODISCARD SHOOTER_API static bool IsSlotValid(EnvironmentSlotIndex slotIndex, EnvironmentSlotGeneration slotGeneration);
