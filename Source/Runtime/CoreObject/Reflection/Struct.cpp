@@ -5,6 +5,10 @@
 namespace SE
 {
 
+ObjectStruct::ObjectStruct(const ObjectInitializer& objectInitializer)
+    : Object(objectInitializer)
+{
+}
 void ObjectStruct::SetName(String name)
 {
     SE_ASSERT(m_Name.IsEmpty());

@@ -62,7 +62,7 @@ public:
 class ObjectStruct : public Object
 {
 public:
-    ObjectStruct() = default;
+    ObjectStruct(const ObjectInitializer& objectInitializer);
     virtual ~ObjectStruct() override = default;
     NODISCARD virtual SObjectPtr<ObjectClass> GetClass() const { return {}; }
 

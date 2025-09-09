@@ -15,7 +15,7 @@ namespace SE
 struct ObjectSlot
 {
     Object* ObjectInstance;
-    uint32 SlotGeneration { INVALID_ENVIRONMENT_SLOT_GENERATION };
+    uint32 SlotGeneration { 0 };
 };
 
 struct GlobalObjectEnvironmentData
@@ -76,15 +76,19 @@ void GlobalObjectEnvironment::Shutdown()
 
 SObjectPtr<Object> GlobalObjectEnvironment::CreateObject(SObjectPtr<ObjectClass> objectClass)
 {
-    // Get the index of an empty object slot.
-    const EnvironmentSlotIndex slotIndex = AcquireEmptySlotIndex();
-
-    // Allocate memory and instantiate the object instance.
+    // Allocate memory for the instance and allocate the environment slot.
     void* objectMemoryBlock = ::operator new(objectClass->GetStructureByteCount());
-    Object* objectInstance = objectClass->ConstructInPlace(objectMemoryBlock);
+    const EnvironmentSlotIndex slotIndex = AllocateSlot(objectMemoryBlock);
+    
+    // Instantiate the object.
+    ObjectInitializer objectInitializer = {};
+    objectInitializer.InitialReferenceCount = 1;
+    objectInitializer.EnvSlotIndex = slotIndex;
+    Object* objectInstance = objectClass->ConstructInPlace(objectMemoryBlock, objectInitializer);
+    objectInstance->DecrementReferenceCount();
 
-    // Construct the object slot.
-    return ConstructSlot(slotIndex, objectInstance);
+    // Return a strong reference of the created object.
+    return SObjectPtr<Object>(objectInstance);
 }
 
 void GlobalObjectEnvironment::DestroyObject(Object* object)
@@ -92,6 +96,7 @@ void GlobalObjectEnvironment::DestroyObject(Object* object)
     // Destroy the object instance and release its memory block.
     SE_ASSERT(object->GetReferenceCount() == 0);
     const EnvironmentSlotIndex slotIndex = object->GetEnvironmentSlotIndex();
+    object->OnDestructor();
     object->~Object();
     ::operator delete(object);
 
@@ -144,14 +149,19 @@ SObjectPtr<ObjectClass> GlobalObjectEnvironment::FindOrCreateObjectClassByName(S
     if (existingObjectClass.HasValue())
         return existingObjectClass.Value();
 
-    // Get the index of an empty object slot.
-    const EnvironmentSlotIndex slotIndex = AcquireEmptySlotIndex();
+    // Allocate memory and allocate the environment slot.
+    void* objectMemoryBlock = ::operator new(sizeof(ObjectClass));
+    const EnvironmentSlotIndex slotIndex = AllocateSlot(objectMemoryBlock);
 
-    // Allocate memory and instantiate the object instance.
-    ObjectClass* objectClassInstance = new ObjectClass();
+    // Instantiate the object class.
+    ObjectInitializer objectInitializer = {};
+    objectInitializer.InitialReferenceCount = 1;
+    objectInitializer.EnvSlotIndex = slotIndex;
+    ObjectClass* objectClassInstance = new (objectMemoryBlock) ObjectClass(objectInitializer);
+    objectClassInstance->DecrementReferenceCount();
 
-    // Construct the object slot and register the object class.
-    SObjectPtr<ObjectClass> objectClass = ConstructSlot(slotIndex, objectClassInstance).As<ObjectClass>();
+    // Register the object class.
+    SObjectPtr<ObjectClass> objectClass = SObjectPtr<ObjectClass>(objectClassInstance);
     s_EnvironmentData->Classes.Add(className, objectClass);
     return objectClass;
 }
@@ -163,33 +173,43 @@ SObjectPtr<ObjectEnum> GlobalObjectEnvironment::FindOrCreateObjectEnumByName(Str
     if (existingObjectEnum.HasValue())
         return existingObjectEnum.Value();
 
-    // Get the index of an empty object slot.
-    const EnvironmentSlotIndex slotIndex = AcquireEmptySlotIndex();
+    // Allocate memory and allocate the environment slot.
+    void* objectMemoryBlock = ::operator new(sizeof(ObjectEnum));
+    const EnvironmentSlotIndex slotIndex = AllocateSlot(objectMemoryBlock);
 
-    // Allocate memory and instantiate the object instance.
-    ObjectEnum* objectEnumInstance = new ObjectEnum();
+    // Instantiate the object enum.
+    ObjectInitializer objectInitializer = {};
+    objectInitializer.InitialReferenceCount = 1;
+    objectInitializer.EnvSlotIndex = slotIndex;
+    ObjectEnum* objectEnumInstance = new (objectMemoryBlock) ObjectEnum(objectInitializer);
+    objectEnumInstance->DecrementReferenceCount();
 
-    // Construct the object slot and register the object enum.
-    SObjectPtr<ObjectEnum> objectEnum = ConstructSlot(slotIndex, objectEnumInstance).As<ObjectEnum>();
+    // Register the object enum.
+    SObjectPtr<ObjectEnum> objectEnum = SObjectPtr<ObjectEnum>(objectEnumInstance);
     s_EnvironmentData->Enums.Add(enumName, objectEnum);
     return objectEnum;
 }
 
 SObjectPtr<ObjectStruct> GlobalObjectEnvironment::FindOrCreateObjectStructByName(StringView structName)
 {
-    // Check if the provided struct name already has an associated object struct.
+    // Check if the provided allocate name already has an associated object struct.
     auto existingObjectStruct = s_EnvironmentData->Structs.GetIfExists(structName);
     if (existingObjectStruct.HasValue())
         return existingObjectStruct.Value();
 
-    // Get the index of an empty object slot.
-    const EnvironmentSlotIndex slotIndex = AcquireEmptySlotIndex();
+    // Allocate memory and construct the environment slot.
+    void* objectMemoryBlock = ::operator new(sizeof(ObjectStruct));
+    const EnvironmentSlotIndex slotIndex = AllocateSlot(objectMemoryBlock);
 
-    // Allocate memory and instantiate the object instance.
-    ObjectStruct* objectStructInstance = new ObjectStruct();
+    // Register the object struct.
+    ObjectInitializer objectInitializer = {};
+    objectInitializer.InitialReferenceCount = 1;
+    objectInitializer.EnvSlotIndex = slotIndex;
+    ObjectStruct* objectStructInstance = new (objectMemoryBlock) ObjectStruct(objectInitializer);
+    objectStructInstance->DecrementReferenceCount();
 
-    // Construct the object slot.
-    SObjectPtr<ObjectStruct> objectStruct = ConstructSlot(slotIndex, objectStructInstance).As<ObjectStruct>();
+    // Register the object enum.
+    SObjectPtr<ObjectStruct> objectStruct = SObjectPtr<ObjectStruct>(objectStructInstance);
     s_EnvironmentData->Structs.Add(structName, objectStruct);
     return objectStruct;
 }
@@ -201,33 +221,28 @@ void* GlobalObjectEnvironment::AllocateMemoryForObjectType(usize typeByteCount)
     return ::operator new(typeByteCount);
 }
 
-EnvironmentSlotIndex GlobalObjectEnvironment::AcquireEmptySlotIndex()
+EnvironmentSlotIndex GlobalObjectEnvironment::AllocateSlot(void* objectInstanceMemoryBlock)
 {
+    EnvironmentSlotIndex slotIndex;
     if (s_EnvironmentData->AvailableSlotIndices.HasElements())
     {
-        const EnvironmentSlotIndex slotIndex = s_EnvironmentData->AvailableSlotIndices.Last();
+        // Get an index from the available slot indices list.
+        slotIndex = s_EnvironmentData->AvailableSlotIndices.Last();
         s_EnvironmentData->AvailableSlotIndices.PopBack();
-        return slotIndex;
     }
     else
     {
-        const EnvironmentSlotIndex slotIndex = (EnvironmentSlotIndex)s_EnvironmentData->Slots.Count();
+        // Add more slots to the environment slots array.
+        slotIndex = (EnvironmentSlotIndex)s_EnvironmentData->Slots.Count();
         s_EnvironmentData->Slots.Emplace();
-        return slotIndex;
     }
-}
 
-SObjectPtr<Object> GlobalObjectEnvironment::ConstructSlot(EnvironmentSlotIndex slotIndex, Object* objectInstance)
-{
     // Initialize the object slot.
     ObjectSlot& objectSlot = s_EnvironmentData->Slots[slotIndex];
-    objectSlot.ObjectInstance = objectInstance;
+    objectSlot.ObjectInstance = static_cast<Object*>(objectInstanceMemoryBlock);
     objectSlot.SlotGeneration++;
-    objectInstance->SetEnvironmentSlotIndex({}, slotIndex);
 
-    // Create the strong object pointer and return it.
-    SObjectPtr<Object> objectPointer = SObjectPtr<Object>(objectInstance);
-    return objectPointer;
+    return slotIndex;
 }
 
 }

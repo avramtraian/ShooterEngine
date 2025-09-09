@@ -5,6 +5,11 @@
 namespace SE
 {
 
+ObjectEnum::ObjectEnum(const ObjectInitializer& objectInitializer)
+    : Object(objectInitializer)
+{ 
+}
+
 void ObjectEnum::SetEnumName(String name)
 {
     SE_ASSERT(m_EnumName.IsEmpty());

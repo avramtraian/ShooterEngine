@@ -22,7 +22,7 @@ struct ObjectEnumMember
 class ObjectEnum : public Object
 {
 public:
-    ObjectEnum() = default;
+    ObjectEnum(const ObjectInitializer& objectInitializer);
     virtual ~ObjectEnum() override = default;
     NODISCARD virtual SObjectPtr<ObjectClass> GetClass() const { return {}; }
 

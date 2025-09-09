@@ -13,4 +13,6 @@ class ObjectEnum;
 class ObjectStruct;
 class ObjectType;
 
+struct ObjectInitializer;
+
 }

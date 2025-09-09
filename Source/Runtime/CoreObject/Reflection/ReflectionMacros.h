@@ -275,27 +275,27 @@ struct ObjectTypeFinder<HashMap<KeyType, ValueType, Allocator>>
 //////////////////////////////////// CLASS REFLECTION MACROS. ////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define SE_BEGIN_CLASS_REFLECTION(ClassName)                                \
-    {                                                                       \
-        SObjectPtr<ObjectClass> objectClass = ClassName::GetStaticClass();  \
-        objectClass->SetName(VIEW(#ClassName));                             \
-        objectClass->SetStructureByteCount(sizeof(ClassName));              \
-        objectClass->SetParent(ClassName::Super::GetStaticClass());         \
-        objectClass->GetConstructInPlaceDelegate().BindRaw(                 \
-            [](void* memoryBlock) -> Object*                                \
-            {                                                               \
-                return new (memoryBlock) ClassName();                       \
-            });                                                             \
-        using ClassType = ClassName;                                        \
-        ClassName defaultClassInstance = {};                                \
-        SObjectPtr<ObjectStruct> objectStruct = objectClass;                \
-        using StructType = ClassName;                                       \
-        auto& defaultStructInstance = defaultClassInstance;
+#define SE_BEGIN_CLASS_REFLECTION(ClassName)                                                                \
+    {                                                                                                       \
+        SObjectPtr<ObjectClass> objectClass = ClassName::GetStaticClass();                                  \
+        objectClass->SetName(VIEW(#ClassName));                                                             \
+        objectClass->SetStructureByteCount(sizeof(ClassName));                                              \
+        objectClass->SetParent(ClassName::Super::GetStaticClass());                                         \
+        objectClass->GetConstructInPlaceDelegate().BindRaw(                                                 \
+            [](void* memoryBlock, const ObjectInitializer& objectInitializer) -> Object*                    \
+            {                                                                                               \
+                return new (memoryBlock) ClassName(objectInitializer);                                      \
+            });                                                                                             \
+        using ClassType = ClassName;                                                                        \
+        SObjectPtr<ClassName> defaultClassInstance = GlobalObjectEnvironment::CreateObject<ClassName>();    \
+        SObjectPtr<ObjectStruct> objectStruct = objectClass;                                                \
+        using StructType = ClassName;                                                                       \
+        auto& defaultStructInstance = *defaultClassInstance.Get();
 
-#define SE_CLASS_FIELD(FieldName)                                           \
+#define SE_CLASS_FIELD(FieldName)                                                                           \
         SE_STRUCT_FIELD(FieldName)
 
-#define SE_END_CLASS_REFLECTION()                                           \
+#define SE_END_CLASS_REFLECTION()                                                                           \
     }
 
 }

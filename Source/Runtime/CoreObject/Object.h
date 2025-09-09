@@ -18,8 +18,9 @@ class Object : public ObjectBase
     SE_MAKE_NONMOVABLE(Object);
 
 public:
-    Object() = default;
-    virtual ~Object() = default;
+    SHOOTER_API Object(const ObjectInitializer& objectInitializer);
+    SHOOTER_API virtual ~Object() override;
+    SHOOTER_API virtual void OnDestructor();
 
 public:
     NODISCARD static SObjectPtr<ObjectClass> GetStaticClass();

@@ -4,10 +4,17 @@
 
 #include <Runtime/Core/Badge.h>
 #include <Runtime/Core/NumericLimits.h>
+#include <Runtime/CoreObject/EnvironmentSlotIndex.h>
 #include <Runtime/CoreObject/Forward.h>
 
 namespace SE
 {
+
+struct ObjectInitializer
+{
+    uint32 InitialReferenceCount { 0 };
+    EnvironmentSlotIndex EnvSlotIndex { INVALID_ENVIRONMENT_SLOT_INDEX };
+};
 
 //
 // The base class for the 'Object' class.
@@ -20,8 +27,8 @@ class ObjectBase
     SE_MAKE_NONMOVABLE(ObjectBase);
 
 public:
-    ObjectBase() = default;
-    virtual ~ObjectBase() = default;
+    SHOOTER_API ObjectBase(const ObjectInitializer& objectInitializer);
+    SHOOTER_API virtual ~ObjectBase();
 
 public:
     NODISCARD FORCEINLINE uint32 GetReferenceCount() const
@@ -48,12 +55,6 @@ public:
         return m_EnvironmentSlotIndex;
     }
     
-    FORCEINLINE void SetEnvironmentSlotIndex(Badge<class GlobalObjectEnvironment>, EnvironmentSlotIndex slotIndex)
-    {
-        SE_ASSERT(m_EnvironmentSlotIndex == INVALID_ENVIRONMENT_SLOT_INDEX);
-        m_EnvironmentSlotIndex = slotIndex;
-    }
-
 private:
     //
     // The number of active strong object pointer that point towards this object instance.

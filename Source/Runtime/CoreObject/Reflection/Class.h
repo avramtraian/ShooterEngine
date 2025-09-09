@@ -9,19 +9,19 @@
 namespace SE
 {
 
-SE_DECLARE_DELEGATE_WITH_RETURN_ONE_PARAM(ConstructObjectInPlaceDelegate, Object*, void*);
+SE_DECLARE_DELEGATE_WITH_RETURN_TWO_PARAMS(ConstructObjectInPlaceDelegate, Object*, void*, const ObjectInitializer&);
 
 class ObjectClass : public ObjectStruct
 {
 public:
-    ObjectClass() = default;
+    ObjectClass(const ObjectInitializer& objectInitializer);
     virtual ~ObjectClass() override = default;
     NODISCARD virtual SObjectPtr<ObjectClass> GetClass() const { return {}; }
 
 public:
-    NODISCARD FORCEINLINE Object* ConstructInPlace(void* memoryBlock) const
+    NODISCARD FORCEINLINE Object* ConstructInPlace(void* memoryBlock, const ObjectInitializer& objectInitializer) const
     {
-        Object* objectInstance = m_ConstructInPlaceDelegate.Execute(memoryBlock);
+        Object* objectInstance = m_ConstructInPlaceDelegate.Execute(memoryBlock, objectInitializer);
         return objectInstance;
     }
 

@@ -55,9 +55,7 @@ public:
     }
 
 private:
-    NODISCARD static EnvironmentSlotIndex AcquireEmptySlotIndex();
-
-    NODISCARD static SObjectPtr<Object> ConstructSlot(EnvironmentSlotIndex slotIndex, Object* objectInstance);
+    static EnvironmentSlotIndex AllocateSlot(void* objectInstanceMemoryBlock);
 };
 
 }
