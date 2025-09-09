@@ -52,6 +52,16 @@ public:
         : m_Instance(nullptr)
     {}
 
+    FORCEINLINE SObjectPtr(T* instance)
+        : m_Instance(instance)
+    {
+        if (m_Instance)
+        {
+            ObjectBase* object = (ObjectBase*)m_Instance;
+            object->IncrementReferenceCount();
+        }
+    }
+
     FORCEINLINE SObjectPtr& operator=(const SObjectPtr& other)
     {
         // Handle the self-assignment case.
@@ -227,17 +237,6 @@ public:
     NODISCARD FORCEINLINE bool operator!=(const SObjectPtr<Q>& other) const
     {
         return ((void*)(m_Instance) != (void*)(other.m_Instance));
-    }
-
-private:
-    FORCEINLINE explicit SObjectPtr(T* instance)
-        : m_Instance(instance)
-    {
-        if (m_Instance)
-        {
-            ObjectBase* object = (ObjectBase*)m_Instance;
-            object->IncrementReferenceCount();
-        }
     }
 
 private:
