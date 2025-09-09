@@ -261,16 +261,32 @@ struct ObjectTypeFinder<HashMap<KeyType, ValueType, Allocator>>
             field.ByteOffset = offsetof(StructType, FieldName);                                                             \
             field.ByteCount = sizeof(StructType::FieldName);                                                                \
             field.ArrayCount = 1;                                                                                           \
-            objectStruct->AddField(field);                                                                                  \
-            if (field.Type->GetKind() == ObjectTypeKind::Primitive || field.Type->GetKind() == ObjectTypeKind::Enum)        \
-            {                                                                                                               \
-                ObjectFieldValue fieldDefaultValue = {};                                                                    \
-                MemoryCopy(fieldDefaultValue.ValuePointer, &defaultStructInstance.FieldName, field.ByteCount);              \
-                objectStruct->AddFieldDefaultValue(field.Name, fieldDefaultValue);                                          \
-            }                                                                                                               \
+            objectStruct->AddNonInheritedField(field);                                                                      \
         }
 
 #define SE_END_STRUCT_REFLECTION()                                                                                          \
+    }
+
+#define SE_GENERATE_STRUCT_DEFAULT_VALUES(StructName)                                                                       \
+    {                                                                                                                       \
+        SObjectPtr<ObjectStruct> objectStruct = GlobalObjectEnvironment::FindOrCreateObjectStructByName(VIEW(#StructName)); \
+        StructName defaultInstance = {};                                                                                    \
+        for (const auto& [fieldName, field] : objectStruct->GetFields())                                                    \
+        {                                                                                                                   \
+            const void* fieldData = (uint8*)(&defaultInstance) + field.ByteOffset;                                          \
+            switch (field.Type->GetKind())                                                                                  \
+            {                                                                                                               \
+                case ObjectTypeKind::Primitive:                                                                             \
+                case ObjectTypeKind::Enum:                                                                                  \
+                {                                                                                                           \
+                    ObjectFieldValue fieldDefaultValue = {};                                                                \
+                    MemoryCopy(fieldDefaultValue.ValuePointer, fieldData, field.ByteCount);                                 \
+                    objectStruct->AddFieldDefaultValue(fieldName, fieldDefaultValue);                                       \
+                    break;                                                                                                  \
+                }                                                                                                           \
+                default: break;                                                                                             \
+            }                                                                                                               \
+        }                                                                                                                   \
     }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -299,5 +315,28 @@ struct ObjectTypeFinder<HashMap<KeyType, ValueType, Allocator>>
 
 #define SE_END_CLASS_REFLECTION()                                                                           \
     }
+
+#define SE_GENERATE_CLASS_DEFAULT_VALUES(ClassName)                                                         \
+    {                                                                                                       \
+        SObjectPtr<ObjectClass> objectClass = ClassName::GetStaticClass();                                  \
+        SObjectPtr<ClassName> defaultInstance = GlobalObjectEnvironment::CreateObject<ClassName>();         \
+        for (const auto& [fieldName, field] : objectClass->GetFields())                                     \
+        {                                                                                                   \
+            const void* fieldData = (uint8*)(defaultInstance.Get()) + field.ByteOffset;                     \
+            switch (field.Type->GetKind())                                                                  \
+            {                                                                                               \
+                case ObjectTypeKind::Primitive:                                                             \
+                case ObjectTypeKind::Enum:                                                                  \
+                {                                                                                           \
+                    ObjectFieldValue fieldDefaultValue = {};                                                \
+                    MemoryCopy(fieldDefaultValue.ValuePointer, fieldData, field.ByteCount);                 \
+                    objectClass->AddFieldDefaultValue(fieldName, fieldDefaultValue);                        \
+                    break;                                                                                  \
+                }                                                                                           \
+                default: break;                                                                             \
+            }                                                                                               \
+        }                                                                                                   \
+    }
+    
 
 }

@@ -63,27 +63,34 @@ public:
 
 public:
     NODISCARD SHOOTER_API bool IsDerivedFrom(SObjectPtr<ObjectStruct> baseObjectStruct) const;
+    NODISCARD SHOOTER_API const HashSet<SObjectPtr<ObjectStruct>>& GetParentChain() const;
 
 public:
     NODISCARD FORCEINLINE const String& GetName() const { return m_Name; }
     NODISCARD FORCEINLINE usize GetStructureByteCount() const { return m_StructureByteCount; }
-    NODISCARD FORCEINLINE const HashMap<String, ObjectField>& GetFields() const { return m_Fields; }
+
+    NODISCARD FORCEINLINE const HashMap<String, ObjectField>& GetNonInheritedFields() const { return m_NonInheritedFields; }
     NODISCARD FORCEINLINE const HashMap<String, ObjectFieldValue>& GetFieldDefaultValues() const { return m_FieldDefaultValues; }
+    NODISCARD SHOOTER_API const HashMap<String, ObjectField>& GetFields() const;
 
     SHOOTER_API void SetName(String name);
     SHOOTER_API void SetStructureByteCount(usize structureByteCount);
     SHOOTER_API void SetParent(SObjectPtr<ObjectStruct> parent);
-    SHOOTER_API void AddField(const ObjectField& field);
-    SHOOTER_API void AddFieldDefaultValue(String fieldName, const ObjectFieldValue& defaultValue);
 
-    NODISCARD SHOOTER_API Optional<ObjectField> GetFieldFromName(StringView name) const;
+    SHOOTER_API void AddNonInheritedField(const ObjectField& field);
+    SHOOTER_API void AddFieldDefaultValue(String fieldName, const ObjectFieldValue& defaultValue);
 
 private:
     String m_Name;
     usize m_StructureByteCount { 0 };
-    HashSet<SObjectPtr<ObjectStruct>> m_Parents;
-    HashMap<String, ObjectField> m_Fields;
+    SObjectPtr<ObjectStruct> m_Parent;
+    HashMap<String, ObjectField> m_NonInheritedFields;
     HashMap<String, ObjectFieldValue> m_FieldDefaultValues;
+
+    // NOTE(Traian): Functions such as 'GetParentChain' and 'GetFields' will lazily create these data
+    // structures, as they require recursive calls to the structure parents.
+    mutable HashMap<String, ObjectField> m_CachedFields;
+    mutable HashSet<SObjectPtr<ObjectStruct>> m_CachedParentChain;
 };
 
 }
