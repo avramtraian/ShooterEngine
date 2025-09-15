@@ -57,13 +57,20 @@
 
 #if SE_TARGET_EDITOR
     #ifdef SE_PROJECT_RUNTIME
+        // DEPRECATED!
         #define SHOOTER_API SE_API_SPECIFIER_EXPORT
     #else
+        // DEPRECATED!
         #define SHOOTER_API SE_API_SPECIFIER_IMPORT
     #endif // SE_PROJECT_RUNTIME
 #else
+    // DEPRECATED!
     #define SHOOTER_API
 #endif // SE_TARGET_EDITOR
+
+// NOTE(Traian): For now, 'ENGINE_API' is just a wrapper around the 'SHOOTER_API' but we plan to migrate
+// all code using the 'SHOOTER_API' API specifier macro to the new 'ENGINE_API'. Always use this one!
+#define ENGINE_API SHOOTER_API
 
 #if SE_PLATFORM_WINDOWS
     // NOTE(Traian): Disable the warnings related to DLL specifiers.
