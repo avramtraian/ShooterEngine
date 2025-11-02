@@ -29,8 +29,8 @@ NODISCARD FORCEINLINE bool IsTextureDepthFormat(TextureFormat format)
 enum TextureFlagsEnum : uint32
 {
     TEXTURE_FLAG_NONE            = 0,
-    TEXTURE_FLAG_RENDER_TARGET   = BIT(0),
-    TEXTURE_FLAG_SHADER_RESOURCE = BIT(1),
+    TEXTURE_FLAG_RENDER_TARGET   = SE_BIT(0),
+    TEXTURE_FLAG_SHADER_RESOURCE = SE_BIT(1),
 };
 using TextureFlags = uint32;
 

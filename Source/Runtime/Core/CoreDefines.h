@@ -95,4 +95,4 @@
 #define UNLIKELY     [[unlikely]]
 
 #define SE_ARRAY_COUNT(x) (sizeof(x) / sizeof((x)[0]))
-#define BIT(x)            (1 << (x))
+#define SE_BIT(x)            (1 << (x))
