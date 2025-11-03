@@ -247,7 +247,7 @@ target_link_libraries(SE-Game-Standalone PUBLIC SE-Runtime-Static)
 add_dependencies(SE-Game-Standalone SE-Runtime-Static)
 
 # PIE.
-add_executable(SE-Game-PIE ${SE_GAME_SOURCE_FILES})
+add_library(SE-Game-PIE SHARED ${SE_GAME_SOURCE_FILES})
 target_include_directories(SE-Game-PIE PUBLIC ${CMAKE_SOURCE_DIR}/Source)
 target_compile_definitions(SE-Game-PIE PRIVATE "SE_TARGET_GAME_PIE=1")
 target_link_libraries(SE-Game-PIE PUBLIC SE-Runtime-Shared)
