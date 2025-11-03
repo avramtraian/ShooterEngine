@@ -1,26 +1,27 @@
 // Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
 #include <Runtime/Core/Containers/VectorView.h>
-#include <Runtime/Core/Memory/MemoryOperations.h>
 #include <Runtime/Core/Log.h>
+#include <Runtime/Core/Memory/MemoryOperations.h>
 #include <Runtime/Renderer/ShaderCompiler/ShaderCompiler.h>
-
-// Include the DXC compiler.
-#include <Windows.h>
-#include <atlbase.h>
-#include <dxc/dxcapi.h>
-#include <dxc/WinAdapter.h>
-
-// Include the SPIRV-Reflect library.
 #include <Runtime/Renderer/ShaderCompiler/spirv_reflect.h>
+
+// clang-format off
+#include <Runtime/Core/Platform/PlatformCoreInclude.h>
+#include <wrl.h>
+#include <dxc/dxcapi.h>
+// clang-format off
 
 namespace SE
 {
 
+
+#define SE_RELEASE_DXC_OBJECT(instancePointer) if (instancePointer) { instancePointer->Release(); }
+
 struct DXCInstance
 {
-    CComPtr<IDxcLibrary> Library;
-    CComPtr<IDxcCompiler3> Compiler;
+    IDxcLibrary*   Library;
+    IDxcCompiler3* Compiler;
 };
 static DXCInstance* s_DXCInstance;
 
@@ -65,16 +66,16 @@ bool ShaderCompiler::Compile()
 
     Vector<ShaderStage> existingShaderStages;
 
-#define _SE_CHECK_IF_STAGE_IS_PRESENT(x)                                        \
-    if constexpr (ShaderStage::x != ShaderStage::Unknown)                       \
-    {                                                                           \
-        if (m_SourceCode.Contains(GetEntryPointNameForStage(ShaderStage::x)))   \
-            existingShaderStages.Add(ShaderStage::x);                           \
+#define _SE_CHECK_IF_STAGE_IS_PRESENT(x)                                      \
+    if constexpr (ShaderStage::x != ShaderStage::Unknown)                     \
+    {                                                                         \
+        if (m_SourceCode.Contains(GetEntryPointNameForStage(ShaderStage::x))) \
+            existingShaderStages.Add(ShaderStage::x);                         \
     }
     SE_ENUMERATE_SHADER_STAGES(_SE_CHECK_IF_STAGE_IS_PRESENT)
 #undef _SE_CHECK_IF_STAGE_IS_PRESENT
 
-    for (ShaderStage shaderStage : existingShaderStages)
+    for (const ShaderStage shaderStage : existingShaderStages)
     {
         Vector<const wchar_t*> compilerArguments;
         compilerArguments.EnsureCapacity(8);
@@ -95,9 +96,9 @@ bool ShaderCompiler::Compile()
 
         // Add the stage to the compiled stages list.
         CompiledShaderStage& compiledStage = m_CompiledStages.Emplace();
-        compiledStage.Stage = shaderStage;
-        compiledStage.Bytecode = std::move(bytecode);
-        compiledStage.ReflectionData = std::move(reflectionData.Value());
+        compiledStage.Stage                = shaderStage;
+        compiledStage.Bytecode             = std::move(bytecode);
+        compiledStage.ReflectionData       = std::move(reflectionData.Value());
     }
 
     return true;
@@ -120,7 +121,7 @@ void ShaderCompiler::AddStageSpecificCompilerArguments(Vector<const wchar_t*>& o
     {
         case ShaderStage::Vertex:   stageTarget = L"vs_6_1"; break;
         case ShaderStage::Fragment: stageTarget = L"ps_6_1"; break;
-        default: SE_ASSERT_NOT_REACHED;
+        default:                    SE_ASSERT_NOT_REACHED;
     }
 
     // Set the stage target.
@@ -132,7 +133,7 @@ void ShaderCompiler::AddStageSpecificCompilerArguments(Vector<const wchar_t*>& o
     {
         case ShaderStage::Vertex:   entryPointName = L"VSMain"; break;
         case ShaderStage::Fragment: entryPointName = L"FSMain"; break;
-        default: SE_ASSERT_NOT_REACHED;
+        default:                    SE_ASSERT_NOT_REACHED;
     }
 
     // Set the entry point.
@@ -150,54 +151,58 @@ void ShaderCompiler::AddStageSpecificCompilerArguments(Vector<const wchar_t*>& o
 Buffer ShaderCompiler::GenerateBytecodeForStage(ShaderStage stage, VectorView<const wchar_t*> compilerArguments)
 {
     DxcBuffer sourceCodeBuffer = {};
-    sourceCodeBuffer.Encoding = DXC_CP_ACP;
-    sourceCodeBuffer.Size = m_SourceCode.ByteCountWithNullTerminator();
-    sourceCodeBuffer.Ptr = m_SourceCode.Characters();
+    sourceCodeBuffer.Encoding  = DXC_CP_ACP;
+    sourceCodeBuffer.Size      = m_SourceCode.ByteCountWithNullTerminator();
+    sourceCodeBuffer.Ptr       = m_SourceCode.Characters();
 
     // Run the DXC compiler.
-    CComPtr<IDxcResult> stageCompilationResult;
-    HRESULT compileResult = s_DXCInstance->Compiler->Compile(
-        &sourceCodeBuffer,
-        (LPCWSTR*)compilerArguments.Elements(), (uint32)compilerArguments.Count(),
-        nullptr, IID_PPV_ARGS(&stageCompilationResult));
+    IDxcResult* stageCompilationResult;
+    HRESULT compileResult = s_DXCInstance->Compiler->Compile(&sourceCodeBuffer, compilerArguments.Elements(), static_cast<uint32>(compilerArguments.Count()),
+                                                             nullptr, IID_PPV_ARGS(&stageCompilationResult));
     if (SUCCEEDED(compileResult))
         stageCompilationResult->GetStatus(&compileResult);
+
+    Buffer bytecodeBuffer;
 
     if (SUCCEEDED(compileResult))
     {
         // Read the stage bytecode.
-        CComPtr<IDxcBlob> bycodeBlob;
-        stageCompilationResult->GetResult(&bycodeBlob);
-        Buffer bytecode;
-        bytecode.SetByteCount(bycodeBlob->GetBufferSize());
-        MemoryCopy(bytecode.Data(), bycodeBlob->GetBufferPointer(), bycodeBlob->GetBufferSize());
-        return bytecode;
-    }
-
-    CComPtr<IDxcBlobEncoding> errorBlob;
-    if (SUCCEEDED(stageCompilationResult->GetErrorBuffer(&errorBlob)) && errorBlob)
-    {
-        const String errorMessage = StringView::FromUTF8((const char*)errorBlob->GetBufferPointer());
-        m_ErrorMessages.Add(Move(errorMessage));
+        IDxcBlob* bytecodeBlob = nullptr;
+        stageCompilationResult->GetResult(&bytecodeBlob);
+        bytecodeBuffer.SetByteCount(bytecodeBlob->GetBufferSize());
+        MemoryCopy(bytecodeBuffer.Data(), bytecodeBlob->GetBufferPointer(), bytecodeBlob->GetBufferSize());
+        SE_RELEASE_DXC_OBJECT(bytecodeBlob);
     }
     else
     {
-        // TODO(Traian): Include the shader stage name in the error message. Currently, this is not implemented
-        // as we have no standard way to format strings in the engine.
-        m_ErrorMessages.Add(VIEW("Shader compilation failed but no error messages were returned by the DXC compiler!"));
+        IDxcBlobEncoding* errorBlob = nullptr;
+        if (SUCCEEDED(stageCompilationResult->GetErrorBuffer(&errorBlob)) && errorBlob)
+        {
+            const String errorMessage = StringView::FromUTF8(static_cast<const char*>(errorBlob->GetBufferPointer()));
+            m_ErrorMessages.Add(Move(errorMessage));
+        }
+        else
+        {
+            // TODO: Include the shader stage name in the error message. Currently, this is not implemented
+            //       as we have no standard way to format strings in the engine.
+            m_ErrorMessages.Add(VIEW("Shader compilation failed but no error messages were returned by the DXC compiler!"));
+        }
+
+        SE_RELEASE_DXC_OBJECT(errorBlob);
     }
 
-    return {};
+    SE_RELEASE_DXC_OBJECT(stageCompilationResult);
+    return bytecodeBuffer;
 }
 
 Optional<ShaderReflectionData> ShaderCompiler::GenerateReflectionData(ShaderStage stage, ReadonlyBufferView bytecode)
 {
     SpvReflectShaderModule shaderModule = {};
-    SpvReflectResult result = spvReflectCreateShaderModule(bytecode.ByteCount(), bytecode.Data(), &shaderModule);
+    SpvReflectResult       result       = spvReflectCreateShaderModule(bytecode.ByteCount(), bytecode.Data(), &shaderModule);
     if (result != SPV_REFLECT_RESULT_SUCCESS)
     {
-        // TODO(Traian): Include the shader stage name in the error message. Currently, this is not implemented
-        // as we have no standard way to format strings in the engine.
+        // TODO: Include the shader stage name in the error message. Currently, this is not implemented
+        //       as we have no standard way to format strings in the engine.
         m_ErrorMessages.Add(VIEW("Failed to generate reflection data using SPIRV-Reflect!"));
         return {};
     }
@@ -207,7 +212,7 @@ Optional<ShaderReflectionData> ShaderCompiler::GenerateReflectionData(ShaderStag
     // Read descriptor bindings.
     {
         uint32 descriptorBindingCount = 0;
-        result = spvReflectEnumerateDescriptorBindings(&shaderModule, &descriptorBindingCount, nullptr);
+        result                        = spvReflectEnumerateDescriptorBindings(&shaderModule, &descriptorBindingCount, nullptr);
         if (result != SPV_REFLECT_RESULT_SUCCESS)
         {
             spvReflectDestroyShaderModule(&shaderModule);
@@ -222,8 +227,8 @@ Optional<ShaderReflectionData> ShaderCompiler::GenerateReflectionData(ShaderStag
         for (const SpvReflectDescriptorBinding* descriptorBinding : descriptorBindings)
         {
             ShaderReflectionDescriptorBinding& binding = reflectionData.DescriptorSets[descriptorBinding->set][descriptorBinding->binding];
-            binding.Name = StringView::FromUTF8(descriptorBinding->name);
-            binding.ArrayCount = descriptorBinding->count;
+            binding.Name                               = StringView::FromUTF8(descriptorBinding->name);
+            binding.ArrayCount                         = descriptorBinding->count;
 
             switch (descriptorBinding->descriptor_type)
             {
@@ -261,7 +266,7 @@ Optional<ShaderReflectionData> ShaderCompiler::GenerateReflectionData(ShaderStag
                     binding.DescriptorType = ShaderReflectionDescriptorType::CombinedImageSampler;
                     break;
                 }
-                
+
                 case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
                 {
                     SE_ASSERT(binding.DescriptorType == ShaderReflectionDescriptorType::Unknown);
@@ -302,7 +307,7 @@ const CompiledShaderStage& ShaderCompiler::GetCompiledStage(ShaderStage stage) c
     }
 
     SE_ASSERT_NOT_REACHED;
-    return m_CompiledStages.First();
+    return *m_CompiledStages.Elements();
 }
 
-}
+} // namespace SE
