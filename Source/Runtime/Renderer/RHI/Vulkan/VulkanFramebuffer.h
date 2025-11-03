@@ -10,7 +10,7 @@
 namespace SE
 {
 
-class VulkanFramebuffer : public LockCounted
+class VulkanFramebuffer final : public LockCounted
 {
 public:
     VulkanFramebuffer(const WeakRefPtr<VulkanRenderPass>& parentRenderPass);
