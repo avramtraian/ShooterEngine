@@ -12,6 +12,7 @@ Checks: >
   -readability-make-member-function-const,
   -readability-named-parameter,
   -readability-redundant-access-specifiers,
+  -readability-redundant-inline-specifier,
   -readability-redundant-preprocessor,
   -readability-static-accessed-through-instance,
   -readability-use-std-min-max,
