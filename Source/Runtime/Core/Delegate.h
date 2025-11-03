@@ -325,7 +325,7 @@ public:
     FORCEINLINE DelegateHandle AddLambda(LambdaType lambda)
     {
         Delegate delegate;
-        delegate.BindLambda<LambdaType>(Move(lambda));
+        delegate.template BindLambda<LambdaType>(Move(lambda));
         const DelegateHandle handle = delegate.GetBoundHandle();
         m_Delegates.Add(handle, Move(delegate));
         return handle;
@@ -335,7 +335,7 @@ public:
     FORCEINLINE DelegateHandle AddRefCounted(const StrongRefPtr<UserClass>& userObject, PFN_ClassMethod<UserClass, void, ParameterTypes...> classMethod)
     {
         Delegate delegate;
-        delegate.BindRefCounted<UserClass>(userObject, classMethod);
+        delegate.template BindRefCounted<UserClass>(userObject, classMethod);
         const DelegateHandle handle = delegate.GetBoundHandle();
         m_Delegates.Add(handle, Move(delegate));
         return handle;

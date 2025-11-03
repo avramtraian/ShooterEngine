@@ -15,7 +15,7 @@ concept HasGetHash = requires (const T& value)
 {
     // Requires that T has a static method 'GetHash' that takes a const reference to some object instance
     // of type T and returns something that can be converted to a 64-bit unsigned integer.
-    { T::GetHash(value) } -> std::convertible_to<uint64>;
+    { T::GetHash(value) };
 };
 
 template<typename T>
