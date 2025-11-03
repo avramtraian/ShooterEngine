@@ -9,37 +9,37 @@ namespace SE
 
 float Math::Sqrt(float value)
 {
-    return std::sqrtf(value);
+    return std::sqrt(value);
 }
 
 float Math::Sin(float value)
 {
-    return std::sinf(value);
+    return std::sin(value);
 }
 
 float Math::Cos(float value)
 {
-    return std::cosf(value);
+    return std::cos(value);
 }
 
 float Math::Tan(float value)
 {
-    return std::tanf(value);
+    return std::tan(value);
 }
 
 float Math::Asin(float value)
 {
-    return std::asinf(value);
+    return std::asin(value);
 }
 
 float Math::Acos(float value)
 {
-    return std::acosf(value);
+    return std::acos(value);
 }
 
 float Math::Atan(float value)
 {
-    return std::atanf(value);
+    return std::atan(value);
 }
 
-}
+} // namespace SE
