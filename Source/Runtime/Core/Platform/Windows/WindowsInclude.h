@@ -6,7 +6,9 @@
 
 #if SE_PLATFORM_WINDOWS
     #define WIN32_LEAN_AND_MEAN
-    #define NOMINMAX
+    #ifndef NOMINMAX
+        #define NOMINMAX
+    #endif // NOMINMAX
     #include <Windows.h>
 #else
     #error Trying to include the Windows headers but they are not available!
