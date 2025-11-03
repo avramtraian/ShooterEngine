@@ -12,31 +12,24 @@
 #ifdef __clang__
     #define SE_COMPILER_CLANG 1
 #else
-    #ifdef __GNUC__
-        #define SE_COMPILER_GCC 1
-    #endif // __GNUC__
     #ifdef _MSC_BUILD
         #define SE_COMPILER_MSVC 1
     #endif // _MSC_BUILD
 #endif // __clang__
 
-#ifndef SE_COMPILER_CLANG
-    #define SE_COMPILER_CLANG 0
-#endif // SE_COMPILER_CLANG
-
-#ifndef SE_COMPILER_GCC
-    #define SE_COMPILER_GCC 0
-#endif // SE_COMPILER_GCC
-
 #ifndef SE_COMPILER_MSVC
     #define SE_COMPILER_MSVC 0
 #endif // SE_COMPILER_MSVC
 
-#if !SE_COMPILER_CLANG && !SE_COMPILER_GCC && !SE_COMPILER_MSVC
+#ifndef SE_COMPILER_CLANG
+    #define SE_COMPILER_CLANG 0
+#endif // SE_COMPILER_CLANG
+
+#if !SE_COMPILER_CLANG && !SE_COMPILER_MSVC
     #error Unknown or unsupported compiler!
 #endif // Any compiler.
 
-#define SE_COMPILER_COUNT (SE_COMPILER_CLANG + SE_COMPILER_MSVC + SE_COMPILER_GCC)
+#define SE_COMPILER_COUNT (SE_COMPILER_CLANG + SE_COMPILER_MSVC)
 #if (SE_COMPILER_COUNT > 1)
     #error Multiple compilers were detected!
 #endif // There are multiple compiler macros set to 1.
@@ -94,8 +87,8 @@
         #define SE_PLATFORM_ARCHITECTURE_ARM64 1
     #endif // defined(_M_ARM64)
 
-#elif SE_COMPILER_CLANG || SE_COMPILER_GCC
-// NOTE: Check the architecture macros defined by both Clang and GCC.
+#elif SE_COMPILER_CLANG
+// NOTE: Check the architecture macros defined by Clang.
 
     #if defined(__i386__)
         #define SE_PLATFORM_ARCHITECTURE_X32 1
@@ -204,7 +197,7 @@
 #define LIKELY       [[likely]]
 #define UNLIKELY     [[unlikely]]
 
-#if SE_COMPILER_CLANG || SE_COMPILER_GCC
+#if SE_COMPILER_CLANG
     #define ALWAYS_INLINE          __attribute__((always_inline)) inline
     #define SE_FUNCTION            __PRETTY_FUNCTION__
     #define SE_PLATFORM_DEBUGBREAK __builtin_trap()
@@ -212,27 +205,27 @@
     #define ALWAYS_INLINE          __forceinline
     #define SE_FUNCTION            __FUNCSIG__
     #define SE_PLATFORM_DEBUGBREAK __debugbreak()
-#endif
+#endif // Supported compiler
 
 #define SE_IMPL_STRINGIFY(x)      #x
 #define SE_IMPL_CONCATENATE(x, y) x##y
 
-#define SE_STRINGIFY(x)      SE_IMPL_STRINGIFY(x)
-#define SE_CONCATENATE(x, y) SE_IMPL_CONCATENATE(x, y)
-#define SE_ARRAY_COUNT(x)    (sizeof(x) / sizeof((x)[0]))
-#define SE_BIT(x)            (1 << (x))
+#define SE_STRINGIFY(x)           SE_IMPL_STRINGIFY(x)
+#define SE_CONCATENATE(x, y)      SE_IMPL_CONCATENATE(x, y)
+#define SE_ARRAY_COUNT(x)         (sizeof(x) / sizeof((x)[0]))
+#define SE_BIT(x)                 (1 << (x))
 
 //========================================================================================================================================//
 //--------------------------------------------------------- EXPORT API SPECIFIERS --------------------------------------------------------//
 //========================================================================================================================================//
 
-#if SE_COMPILER_MSVC
+#if SE_PLATFORM_WINDOWS
     #define SE_API_SPECIFIER_EXPORT __declspec(dllexport)
     #define SE_API_SPECIFIER_IMPORT __declspec(dllimport)
 #else
-    #define SE_API_SPECIFIER_EXPORT
-    #define SE_API_SPECIFIER_IMPORT
-#endif // SE_COMPILER_MSVC
+    #define SE_API_SPECIFIER_EXPORT __attribute__((visibility("default")))
+    #define SE_API_SPECIFIER_IMPORT __attribute__((visibility("default")))
+#endif // SE_PLATFORM_WINDOWS
 
 #if SE_TARGET_RUNTIME_SHARED
     #define RUNTIME_API SE_API_SPECIFIER_EXPORT
