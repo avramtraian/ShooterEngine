@@ -12,12 +12,12 @@ class Engine
     SE_MAKE_SINGLETON_CLASS(Engine);
 
 public:
-    SHOOTER_API virtual bool Initialize();
-    SHOOTER_API virtual void Shutdown();
+    RUNTIME_API virtual bool Initialize();
+    RUNTIME_API virtual void Shutdown();
 
     virtual void Execute() = 0;
 };
 
-SHOOTER_API extern Engine* g_Engine;
+RUNTIME_API extern Engine* g_Engine;
 
 }

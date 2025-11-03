@@ -23,7 +23,7 @@ using PFN_RawFunction = ReturnType(*)(ParameterTypes...);
 using DelegateHandle = uint64;
 constexpr DelegateHandle INVALID_DELEGATE_HANDLE = 0;
 
-NODISCARD SHOOTER_API DelegateHandle GenerateDelegateHandle();
+NODISCARD RUNTIME_API DelegateHandle GenerateDelegateHandle();
 
 #pragma endregion
 ///////////////////////////////////////////////////////////////////////////////////////////////////

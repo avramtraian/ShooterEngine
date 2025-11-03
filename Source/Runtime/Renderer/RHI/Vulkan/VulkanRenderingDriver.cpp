@@ -14,7 +14,7 @@
 namespace SE
 {
 
-SHOOTER_API VulkanRenderingDriver* g_VulkanDriver;
+RUNTIME_API VulkanRenderingDriver* g_VulkanDriver;
 
 static VkBool32 VulkanDebugMessengerCallback(VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity, VkDebugUtilsMessageTypeFlagsEXT,
                                              const VkDebugUtilsMessengerCallbackDataEXT* callbackData, void*)

@@ -16,9 +16,9 @@ public:
     System() = default;
     virtual ~System() = default;
 
-    ENGINE_API virtual void OnBeginPlay();
-    ENGINE_API virtual void OnEndPlay();
-    ENGINE_API virtual void OnUpdate(float deltaTime);
+    RUNTIME_API virtual void OnBeginPlay();
+    RUNTIME_API virtual void OnEndPlay();
+    RUNTIME_API virtual void OnUpdate(float deltaTime);
 };
 
 }

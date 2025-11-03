@@ -6,7 +6,7 @@
 namespace SE
 {
 
-NODISCARD SHOOTER_API uint64 GetCityHash64(const char* characters, usize byteCount)
+NODISCARD RUNTIME_API uint64 GetCityHash64(const char* characters, usize byteCount)
 {
     const uint64 hashValue = CityHash64(characters, byteCount);
     return hashValue;

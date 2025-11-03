@@ -32,13 +32,13 @@ public:
     RHIObjectCallback() = default;
     FORCEINLINE ~RHIObjectCallback() { Release(); }
 
-    SHOOTER_API RHIObjectCallback(const RefPtr<RHIObject>& object, RHIObjectCallbackType callbackType, PFN_RHIObjectCallback callback);
-    SHOOTER_API RHIObjectCallback(const RefPtr<RHIObject>& object, RHIObjectCallbackType callbackType, RHIObjectCallbackID callbackID);
+    RUNTIME_API RHIObjectCallback(const RefPtr<RHIObject>& object, RHIObjectCallbackType callbackType, PFN_RHIObjectCallback callback);
+    RUNTIME_API RHIObjectCallback(const RefPtr<RHIObject>& object, RHIObjectCallbackType callbackType, RHIObjectCallbackID callbackID);
 
-    SHOOTER_API void Set(const RefPtr<RHIObject>& object, RHIObjectCallbackType callbackType, PFN_RHIObjectCallback callback);
-    SHOOTER_API void Set(const RefPtr<RHIObject>& object, RHIObjectCallbackType callbackType, RHIObjectCallbackID callbackID);
+    RUNTIME_API void Set(const RefPtr<RHIObject>& object, RHIObjectCallbackType callbackType, PFN_RHIObjectCallback callback);
+    RUNTIME_API void Set(const RefPtr<RHIObject>& object, RHIObjectCallbackType callbackType, RHIObjectCallbackID callbackID);
 
-    SHOOTER_API void Release();
+    RUNTIME_API void Release();
 
 public:
     FORCEINLINE RHIObjectCallback(RHIObjectCallback&& other) noexcept
@@ -83,8 +83,8 @@ public:
     virtual ~RHIObject() override = default;
 
 public:
-    SHOOTER_API RHIObjectCallbackID AddCallbackAndGetID(RHIObjectCallbackType callbackType, PFN_RHIObjectCallback callback);
-    SHOOTER_API void RemoveCallbackID(RHIObjectCallbackType callbackType, RHIObjectCallbackID callbackID);
+    RUNTIME_API RHIObjectCallbackID AddCallbackAndGetID(RHIObjectCallbackType callbackType, PFN_RHIObjectCallback callback);
+    RUNTIME_API void RemoveCallbackID(RHIObjectCallbackType callbackType, RHIObjectCallbackID callbackID);
 
     NODISCARD FORCEINLINE RHIObjectCallback AddCallback(RHIObjectCallbackType callbackType, PFN_RHIObjectCallback callback)
     {
@@ -95,7 +95,7 @@ public:
     }
 
 protected:
-    SHOOTER_API void DispatchCallbacksOfType(RHIObjectCallbackType callbackType);
+    RUNTIME_API void DispatchCallbacksOfType(RHIObjectCallbackType callbackType);
 
 private:
     struct Callbacks

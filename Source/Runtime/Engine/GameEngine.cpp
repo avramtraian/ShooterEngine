@@ -11,7 +11,7 @@
 namespace SE
 {
 
-SHOOTER_API GameEngine* g_GameEngine = nullptr;
+RUNTIME_API GameEngine* g_GameEngine = nullptr;
 
 bool GameEngine::Initialize()
 {

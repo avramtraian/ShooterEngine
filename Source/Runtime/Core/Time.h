@@ -17,10 +17,10 @@ public:
         return duration;
     }
 
-    NODISCARD SHOOTER_API static TimeDuration FromSeconds(float seconds);
-    NODISCARD SHOOTER_API static TimeDuration FromMilliseconds(float milliseconds);
-    NODISCARD SHOOTER_API static TimeDuration FromMicroseconds(float microseconds);
-    NODISCARD SHOOTER_API static TimeDuration FromNanoseconds(float nanoseconds);
+    NODISCARD RUNTIME_API static TimeDuration FromSeconds(float seconds);
+    NODISCARD RUNTIME_API static TimeDuration FromMilliseconds(float milliseconds);
+    NODISCARD RUNTIME_API static TimeDuration FromMicroseconds(float microseconds);
+    NODISCARD RUNTIME_API static TimeDuration FromNanoseconds(float nanoseconds);
 
 public:
     TimeDuration() = default;
@@ -31,10 +31,10 @@ public:
     TimeDuration& operator=(TimeDuration&&) noexcept = default;
 
 public:
-    NODISCARD SHOOTER_API float ToSeconds() const;
-    NODISCARD SHOOTER_API float ToMilliseconds() const;
-    NODISCARD SHOOTER_API float ToMicroseconds() const;
-    NODISCARD SHOOTER_API float ToNanoseconds() const;
+    NODISCARD RUNTIME_API float ToSeconds() const;
+    NODISCARD RUNTIME_API float ToMilliseconds() const;
+    NODISCARD RUNTIME_API float ToMicroseconds() const;
+    NODISCARD RUNTIME_API float ToNanoseconds() const;
 
 public:
     NODISCARD FORCEINLINE bool operator==(const TimeDuration& other) const { return (m_TickCount == other.m_TickCount); }
@@ -58,12 +58,12 @@ public:
     Timer(Timer&&) noexcept = default;
     Timer& operator=(Timer&&) noexcept = default;
 
-    SHOOTER_API void Start();
-    SHOOTER_API void Stop();
-    SHOOTER_API void Reset();
+    RUNTIME_API void Start();
+    RUNTIME_API void Stop();
+    RUNTIME_API void Reset();
     
-    NODISCARD SHOOTER_API TimeDuration GetElapsed() const;
-    NODISCARD SHOOTER_API bool IsRunning() const;
+    NODISCARD RUNTIME_API TimeDuration GetElapsed() const;
+    NODISCARD RUNTIME_API bool IsRunning() const;
 
 private:
     uint64 m_StartTickCount { 0 };

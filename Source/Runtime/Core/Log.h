@@ -25,10 +25,10 @@ class Logger
     SE_MAKE_NAMESPACE_CLASS(Logger);
 
 public:
-    SHOOTER_API static bool Initialize();
-    SHOOTER_API static void Shutdown();
+    RUNTIME_API static bool Initialize();
+    RUNTIME_API static void Shutdown();
 
-    SHOOTER_API static void Submit(LogCategory category, const char* message);
+    RUNTIME_API static void Submit(LogCategory category, const char* message);
 
     template<typename... Args>
     FORCEINLINE static void Submit(LogCategory category, const char* message, Args&&... args)

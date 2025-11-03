@@ -7,10 +7,10 @@
 namespace SE
 {
 
-SHOOTER_API void MemoryCopy(void* destination, const void* source, usize byteCount);
+RUNTIME_API void MemoryCopy(void* destination, const void* source, usize byteCount);
 
-SHOOTER_API void MemorySet(void* destination, uint8 byteValue, usize byteCount);
+RUNTIME_API void MemorySet(void* destination, uint8 byteValue, usize byteCount);
 
-SHOOTER_API void MemoryZero(void* destination, usize byteCount);
+RUNTIME_API void MemoryZero(void* destination, usize byteCount);
 
 }

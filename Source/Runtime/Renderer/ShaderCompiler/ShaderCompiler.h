@@ -27,19 +27,19 @@ class ShaderCompiler
     SE_MAKE_NONMOVABLE(ShaderCompiler);
 
 public:
-    SHOOTER_API ShaderCompiler(String shaderSourceCode);
-    SHOOTER_API ~ShaderCompiler() = default;
+    RUNTIME_API ShaderCompiler(String shaderSourceCode);
+    RUNTIME_API ~ShaderCompiler() = default;
 
-    NODISCARD SHOOTER_API static StringView GetEntryPointNameForStage(ShaderStage stage);
-    SHOOTER_API bool Compile();
+    NODISCARD RUNTIME_API static StringView GetEntryPointNameForStage(ShaderStage stage);
+    RUNTIME_API bool Compile();
 
 public:
     NODISCARD FORCEINLINE bool HasErrorMessages() const { return m_ErrorMessages.HasElements(); }
     NODISCARD FORCEINLINE const Vector<String>& GetErrorMessages() const { return m_ErrorMessages; }
     NODISCARD FORCEINLINE const Vector<CompiledShaderStage>& GetCompiledStages() const { return m_CompiledStages; }
 
-    NODISCARD SHOOTER_API bool IsStageCompiled(ShaderStage stage) const;
-    NODISCARD SHOOTER_API const CompiledShaderStage& GetCompiledStage(ShaderStage stage) const;
+    NODISCARD RUNTIME_API bool IsStageCompiled(ShaderStage stage) const;
+    NODISCARD RUNTIME_API const CompiledShaderStage& GetCompiledStage(ShaderStage stage) const;
 
 private:
     void AddBaseCompilerArguments(Vector<const wchar_t*>& outArguments);

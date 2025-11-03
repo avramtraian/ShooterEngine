@@ -41,22 +41,22 @@ public:
     NODISCARD FORCEINLINE usize GetStructureByteCount() const { return m_StructureByteCount; }
     NODISCARD FORCEINLINE const Vector<Field>& GetNonInheritedFields() const { return m_NonInheritedFields; }
 
-    ENGINE_API void SetStructUUID(UUID structUUID);
-    ENGINE_API void SetParentStructUUID(UUID parentStructUUID);
-    ENGINE_API void SetName(String name);
-    ENGINE_API void SetStructureByteCount(usize structureByteCount);
+    RUNTIME_API void SetStructUUID(UUID structUUID);
+    RUNTIME_API void SetParentStructUUID(UUID parentStructUUID);
+    RUNTIME_API void SetName(String name);
+    RUNTIME_API void SetStructureByteCount(usize structureByteCount);
 
-    ENGINE_API void AddNonInheritedField(Field field);
+    RUNTIME_API void AddNonInheritedField(Field field);
     
-    ENGINE_API void SetConstructFunction(PFN_ConstructStruct function);
-    ENGINE_API void SetDestructFunction(PFN_DestructStruct function);
-    ENGINE_API void SetCopyFunction(PFN_CopyStruct function);
+    RUNTIME_API void SetConstructFunction(PFN_ConstructStruct function);
+    RUNTIME_API void SetDestructFunction(PFN_DestructStruct function);
+    RUNTIME_API void SetCopyFunction(PFN_CopyStruct function);
 
-    ENGINE_API void ExecuteConstruct(void* dstMemoryBlock);
-    ENGINE_API void ExecuteDestruct(void* dstMemoryBlock);
-    ENGINE_API void ExecuteCopy(void* dstMemoryBlock, const void* srcMemoryBlock);
+    RUNTIME_API void ExecuteConstruct(void* dstMemoryBlock);
+    RUNTIME_API void ExecuteDestruct(void* dstMemoryBlock);
+    RUNTIME_API void ExecuteCopy(void* dstMemoryBlock, const void* srcMemoryBlock);
 
-    NODISCARD ENGINE_API void* AllocateFieldType(usize fieldTypeByteCount);
+    NODISCARD RUNTIME_API void* AllocateFieldType(usize fieldTypeByteCount);
 
 private:
     UUID m_StructUUID { UUID::Invalid() };

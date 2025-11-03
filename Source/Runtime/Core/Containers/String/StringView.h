@@ -9,7 +9,7 @@
 namespace SE
 {
 
-NODISCARD SHOOTER_API uint64 GetCityHash64(const char* characters, usize byteCount);
+NODISCARD RUNTIME_API uint64 GetCityHash64(const char* characters, usize byteCount);
 
 class StringView
 {
@@ -21,8 +21,8 @@ public:
     }
 
 public:
-    NODISCARD SHOOTER_API static StringView FromUTF8(const char* characters, usize byteCount);
-    NODISCARD SHOOTER_API static StringView FromUTF8(const char* nullTerminatedCharacters);
+    NODISCARD RUNTIME_API static StringView FromUTF8(const char* characters, usize byteCount);
+    NODISCARD RUNTIME_API static StringView FromUTF8(const char* nullTerminatedCharacters);
 
 public:
     FORCEINLINE constexpr StringView()

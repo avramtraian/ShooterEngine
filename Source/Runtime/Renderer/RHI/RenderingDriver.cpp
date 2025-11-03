@@ -7,7 +7,7 @@
 namespace SE
 {
 
-SHOOTER_API RenderingDriver* g_RenderingDriver;
+RUNTIME_API RenderingDriver* g_RenderingDriver;
 
 bool RenderingDriver::Initialize(const RenderingDriverInfo& info)
 {

@@ -12,7 +12,7 @@ class UUID
 public:
     NODISCARD FORCEINLINE static constexpr UUID Invalid() { return UUID(0); }
 
-    NODISCARD SHOOTER_API static UUID Generate();
+    NODISCARD RUNTIME_API static UUID Generate();
 
     NODISCARD FORCEINLINE static constexpr uint64 GetHash(const UUID& uuid)
     {

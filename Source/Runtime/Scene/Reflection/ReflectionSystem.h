@@ -29,11 +29,11 @@ public:
     NODISCARD FORCEINLINE UUID GetSystemUUID() const { return m_SystemUUID; }
     NODISCARD FORCEINLINE const String& GetName() const { return m_Name; }
 
-    ENGINE_API void SetSystemUUID(UUID systemUUID);
-    ENGINE_API void SetName(String name);
+    RUNTIME_API void SetSystemUUID(UUID systemUUID);
+    RUNTIME_API void SetName(String name);
 
-    ENGINE_API void SetConstructFunction(PFN_ConstructSystem function);
-    ENGINE_API System* ExecuteConstruct(void* dstMemoryBlock);
+    RUNTIME_API void SetConstructFunction(PFN_ConstructSystem function);
+    RUNTIME_API System* ExecuteConstruct(void* dstMemoryBlock);
 
 private:
     UUID m_SystemUUID { UUID::Invalid() };

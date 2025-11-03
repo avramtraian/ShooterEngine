@@ -35,10 +35,10 @@ public:
     NODISCARD FORCEINLINE PrimitiveDataType GetUnderlyingDataType() const { return m_UnderlyingDataType; }
     NODISCARD FORCEINLINE const Vector<Member>& GetMembers() const { return m_Members; }
 
-    ENGINE_API void SetEnumUUID(UUID enumUUID);
-    ENGINE_API void SetName(String name);
-    ENGINE_API void SetUnderlyingDataType(PrimitiveDataType underlyingDataType);
-    ENGINE_API void AddMember(Member enumMember);
+    RUNTIME_API void SetEnumUUID(UUID enumUUID);
+    RUNTIME_API void SetName(String name);
+    RUNTIME_API void SetUnderlyingDataType(PrimitiveDataType underlyingDataType);
+    RUNTIME_API void AddMember(Member enumMember);
 
 private:
     UUID m_EnumUUID { UUID::Invalid() };

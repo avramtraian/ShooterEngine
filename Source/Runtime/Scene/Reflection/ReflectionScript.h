@@ -33,12 +33,12 @@ public:
     NODISCARD FORCEINLINE ReflectionStruct& GetStruct() { return m_Struct; }
     NODISCARD FORCEINLINE const ReflectionStruct& GetStruct() const { return m_Struct; }
 
-    ENGINE_API void SetScriptUUID(UUID scriptUUID);
-    ENGINE_API void SetParentScriptUUID(UUID parentScriptUUID);
-    ENGINE_API void SetName(String name);
+    RUNTIME_API void SetScriptUUID(UUID scriptUUID);
+    RUNTIME_API void SetParentScriptUUID(UUID parentScriptUUID);
+    RUNTIME_API void SetName(String name);
 
-    ENGINE_API void SetConstructFunction(PFN_ConstructScript function);
-    ENGINE_API Script* ExecuteConstruct(void* dstMemoryBlock) const;
+    RUNTIME_API void SetConstructFunction(PFN_ConstructScript function);
+    RUNTIME_API Script* ExecuteConstruct(void* dstMemoryBlock) const;
 
 private:
     UUID m_ScriptUUID { UUID::Invalid() };

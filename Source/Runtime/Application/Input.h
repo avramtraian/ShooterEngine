@@ -51,32 +51,32 @@ class Input
     SE_MAKE_NAMESPACE_CLASS(Input);
 
 public:
-    SHOOTER_API static bool Initialize();
-    SHOOTER_API static void Shutdown();
+    RUNTIME_API static bool Initialize();
+    RUNTIME_API static void Shutdown();
 
     // NOTE(Traian): The input system tries to not depend on events processed by the provided source windows, and instead
     // determine the state of the keys or the mouse position globally (potential security risk?). However, depending on the
     // platform, certain input variables can't be queried globally (such as the mouse wheel scroll offset on Windows), and
     // thus all windows that receive input events should be registered using this function.
-    SHOOTER_API static void AddSourceWindow(RefPtr<Window> window);
+    RUNTIME_API static void AddSourceWindow(RefPtr<Window> window);
 
-    SHOOTER_API static void OnPreUpdate(float deltaTime);
-    SHOOTER_API static void OnUpdate(float deltaTime);
-    SHOOTER_API static void OnPostUpdate(float deltaTime);
+    RUNTIME_API static void OnPreUpdate(float deltaTime);
+    RUNTIME_API static void OnUpdate(float deltaTime);
+    RUNTIME_API static void OnPostUpdate(float deltaTime);
 
 public:
-    SHOOTER_API static bool IsKeyDown(KeyCode keyCode);
-    SHOOTER_API static bool IsMouseButtonDown(MouseButton mouseButton);
+    RUNTIME_API static bool IsKeyDown(KeyCode keyCode);
+    RUNTIME_API static bool IsMouseButtonDown(MouseButton mouseButton);
 
-    SHOOTER_API static bool WasKeyPressedThisFrame(KeyCode keyCode);
-    SHOOTER_API static bool WasKeyReleasedThisFrame(KeyCode keyCode);
+    RUNTIME_API static bool WasKeyPressedThisFrame(KeyCode keyCode);
+    RUNTIME_API static bool WasKeyReleasedThisFrame(KeyCode keyCode);
 
-    SHOOTER_API static bool WasMouseButtonPressedThisFrame(MouseButton mouseButton);
-    SHOOTER_API static bool WasMouseButtonReleasedThisFrame(MouseButton mouseButton);
+    RUNTIME_API static bool WasMouseButtonPressedThisFrame(MouseButton mouseButton);
+    RUNTIME_API static bool WasMouseButtonReleasedThisFrame(MouseButton mouseButton);
 
-    SHOOTER_API static int32 GetMouseDeltaX();
-    SHOOTER_API static int32 GetMouseDeltaY();
-    SHOOTER_API static float GetMouseWheelScrollOffset();
+    RUNTIME_API static int32 GetMouseDeltaX();
+    RUNTIME_API static int32 GetMouseDeltaY();
+    RUNTIME_API static float GetMouseWheelScrollOffset();
 
 private:
     static void HandleOnMouseWheelScrolled(RefPtr<Window> sourceWindow, float scrollOffset);

@@ -14,9 +14,9 @@ public:
     GameEngine() = default;
     virtual ~GameEngine() override = default;
     
-    SHOOTER_API virtual bool Initialize() override;
-    SHOOTER_API virtual void Shutdown() override;
-    SHOOTER_API virtual void Execute() override;
+    RUNTIME_API virtual bool Initialize() override;
+    RUNTIME_API virtual void Shutdown() override;
+    RUNTIME_API virtual void Execute() override;
 
 private:
     void OnUpdate(float deltaTime);
@@ -25,6 +25,6 @@ private:
     RefPtr<Window> m_GameWindow;
 };
 
-SHOOTER_API extern GameEngine* g_GameEngine;
+RUNTIME_API extern GameEngine* g_GameEngine;
 
 }

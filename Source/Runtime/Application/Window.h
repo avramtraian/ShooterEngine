@@ -56,7 +56,7 @@ SE_DECLARE_MULTICAST_DELEGATE_TWO_PARAMS(OnMouseWheelScrolledDelegate, RefPtr<cl
 class Window : public RefCounted
 {
 public:
-    NODISCARD SHOOTER_API static RefPtr<Window> Create(const WindowInfo& info);
+    NODISCARD RUNTIME_API static RefPtr<Window> Create(const WindowInfo& info);
 
 public:
     Window() = default;

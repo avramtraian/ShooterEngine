@@ -36,8 +36,8 @@ class RenderingDriver
     SE_MAKE_SINGLETON_CLASS(RenderingDriver);
 
 public:
-    SHOOTER_API static bool Initialize(const RenderingDriverInfo& info);
-    SHOOTER_API static void Shutdown();
+    RUNTIME_API static bool Initialize(const RenderingDriverInfo& info);
+    RUNTIME_API static void Shutdown();
 
 public:
     virtual RefPtr<RenderingSurface>            CreateSurface                       (const RenderingSurfaceInfo& info)          = 0;
@@ -72,6 +72,6 @@ private:
     virtual void ShutdownBackend() = 0;
 };
 
-SHOOTER_API extern RenderingDriver* g_RenderingDriver;
+RUNTIME_API extern RenderingDriver* g_RenderingDriver;
 
 }

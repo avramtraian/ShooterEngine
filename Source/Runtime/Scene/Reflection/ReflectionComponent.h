@@ -35,16 +35,16 @@ public:
     NODISCARD FORCEINLINE ReflectionStruct& GetStruct() { return m_Struct; }
     NODISCARD FORCEINLINE const ReflectionStruct& GetStruct() const { return m_Struct; }
 
-    ENGINE_API void SetComponentUUID(UUID componentUUID);
-    ENGINE_API void SetName(String name);
+    RUNTIME_API void SetComponentUUID(UUID componentUUID);
+    RUNTIME_API void SetName(String name);
 
-    ENGINE_API void SetConstructFunction(PFN_ConstructComponent function);
-    ENGINE_API void SetDestructFunction(PFN_DestructComponent function);
-    ENGINE_API void SetCopyFunction(PFN_CopyComponent function);
+    RUNTIME_API void SetConstructFunction(PFN_ConstructComponent function);
+    RUNTIME_API void SetDestructFunction(PFN_DestructComponent function);
+    RUNTIME_API void SetCopyFunction(PFN_CopyComponent function);
 
-    ENGINE_API void ExecuteConstruct(void* dstMemoryBlock);
-    ENGINE_API void ExecuteDestruct(void* dstMemoryBlock);
-    ENGINE_API void ExecuteCopy(void* dstMemoryBlock, const void* srcMemoryBlock);
+    RUNTIME_API void ExecuteConstruct(void* dstMemoryBlock);
+    RUNTIME_API void ExecuteDestruct(void* dstMemoryBlock);
+    RUNTIME_API void ExecuteCopy(void* dstMemoryBlock, const void* srcMemoryBlock);
 
 private:
     UUID m_ComponentUUID;

@@ -240,8 +240,6 @@
 #endif // RUNTIME_API
 
 // DEPRECATED: These macro are here only for compatibility reasons - no newly written code should use them.
-#define SHOOTER_API RUNTIME_API
-#define ENGINE_API  RUNTIME_API
 #ifndef FORCEINLINE
     #define FORCEINLINE ALWAYS_INLINE
 #endif // FORCEINLINE

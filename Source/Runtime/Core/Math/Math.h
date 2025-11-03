@@ -62,15 +62,15 @@ public:
     }
 
 public:
-    NODISCARD SHOOTER_API static float Sqrt(float value);
+    NODISCARD RUNTIME_API static float Sqrt(float value);
 
-    NODISCARD SHOOTER_API static float Sin(float value);
-    NODISCARD SHOOTER_API static float Cos(float value);
-    NODISCARD SHOOTER_API static float Tan(float value);
+    NODISCARD RUNTIME_API static float Sin(float value);
+    NODISCARD RUNTIME_API static float Cos(float value);
+    NODISCARD RUNTIME_API static float Tan(float value);
 
-    NODISCARD SHOOTER_API static float Asin(float value);
-    NODISCARD SHOOTER_API static float Acos(float value);
-    NODISCARD SHOOTER_API static float Atan(float value);
+    NODISCARD RUNTIME_API static float Asin(float value);
+    NODISCARD RUNTIME_API static float Acos(float value);
+    NODISCARD RUNTIME_API static float Atan(float value);
 
 public:
     NODISCARD FORCEINLINE static float ToRad(float degrees)

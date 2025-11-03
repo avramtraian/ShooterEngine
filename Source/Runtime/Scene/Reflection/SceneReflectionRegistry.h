@@ -17,24 +17,24 @@ class SceneReflectionRegistry
     SE_MAKE_NAMESPACE_CLASS(SceneReflectionRegistry);
 
 public:
-    ENGINE_API static bool Initialize();
-    ENGINE_API static void Shutdown();
+    RUNTIME_API static bool Initialize();
+    RUNTIME_API static void Shutdown();
 
 public:
-    NODISCARD ENGINE_API static const ReflectionEnum& GetEnumFromUUID(UUID enumUUID);
-    NODISCARD ENGINE_API static const ReflectionStruct& GetStructFromUUID(UUID structUUID);
+    NODISCARD RUNTIME_API static const ReflectionEnum& GetEnumFromUUID(UUID enumUUID);
+    NODISCARD RUNTIME_API static const ReflectionStruct& GetStructFromUUID(UUID structUUID);
 
-    NODISCARD ENGINE_API static const ReflectionComponent& GetComponentFromUUID(UUID componentUUID);
-    NODISCARD ENGINE_API static const ReflectionSystem& GetSystemFromUUID(UUID systemUUID);
-    NODISCARD ENGINE_API static const ReflectionScript& GetScriptFromUUID(UUID scriptUUID);
+    NODISCARD RUNTIME_API static const ReflectionComponent& GetComponentFromUUID(UUID componentUUID);
+    NODISCARD RUNTIME_API static const ReflectionSystem& GetSystemFromUUID(UUID systemUUID);
+    NODISCARD RUNTIME_API static const ReflectionScript& GetScriptFromUUID(UUID scriptUUID);
 
 public:
-    NODISCARD ENGINE_API static ReflectionEnum& CreateEnumFromUUID(UUID enumUUID);
-    NODISCARD ENGINE_API static ReflectionStruct& CreateStructFromUUID(UUID structUUID);
+    NODISCARD RUNTIME_API static ReflectionEnum& CreateEnumFromUUID(UUID enumUUID);
+    NODISCARD RUNTIME_API static ReflectionStruct& CreateStructFromUUID(UUID structUUID);
 
-    NODISCARD ENGINE_API static ReflectionComponent& CreateComponentFromUUID(UUID componentUUID);
-    NODISCARD ENGINE_API static ReflectionSystem& CreateSystemFromUUID(UUID systemUUID);
-    NODISCARD ENGINE_API static ReflectionScript& CreateScriptFromUUID(UUID scriptUUID);
+    NODISCARD RUNTIME_API static ReflectionComponent& CreateComponentFromUUID(UUID componentUUID);
+    NODISCARD RUNTIME_API static ReflectionSystem& CreateSystemFromUUID(UUID systemUUID);
+    NODISCARD RUNTIME_API static ReflectionScript& CreateScriptFromUUID(UUID scriptUUID);
 };
 
 }

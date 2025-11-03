@@ -14,7 +14,7 @@ enum class AssertionKind : uint8
     Ensure,
 };
 
-SHOOTER_API void OnAssertionFailed(AssertionKind kind, const char* expression, const char* file, const char* function, uint32 line);
+RUNTIME_API void OnAssertionFailed(AssertionKind kind, const char* expression, const char* file, const char* function, uint32 line);
 
 }
 

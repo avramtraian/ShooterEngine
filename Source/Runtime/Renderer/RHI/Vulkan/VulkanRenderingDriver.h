@@ -119,6 +119,6 @@ private:
     VkDescriptorPool m_DescriptorPool;
 };
 
-SHOOTER_API extern VulkanRenderingDriver* g_VulkanDriver;
+RUNTIME_API extern VulkanRenderingDriver* g_VulkanDriver;
 
 }

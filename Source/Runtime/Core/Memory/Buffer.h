@@ -13,15 +13,15 @@ class Buffer
     SE_MAKE_NONCOPYABLE(Buffer);
 
 public:
-    NODISCARD SHOOTER_API static Buffer Copy(const Buffer& sourceBuffer);
-    NODISCARD SHOOTER_API static Buffer Copy(ReadonlyBufferView sourceBuffer);
+    NODISCARD RUNTIME_API static Buffer Copy(const Buffer& sourceBuffer);
+    NODISCARD RUNTIME_API static Buffer Copy(ReadonlyBufferView sourceBuffer);
 
 public:
-    SHOOTER_API Buffer();
-    SHOOTER_API ~Buffer();
+    RUNTIME_API Buffer();
+    RUNTIME_API ~Buffer();
 
-    SHOOTER_API         Buffer(Buffer&& other) noexcept;
-    SHOOTER_API Buffer& operator=(Buffer&& other) noexcept;
+    RUNTIME_API         Buffer(Buffer&& other) noexcept;
+    RUNTIME_API Buffer& operator=(Buffer&& other) noexcept;
 
 public:
     NODISCARD FORCEINLINE void*       Data() { return m_Data; }
@@ -52,13 +52,13 @@ public:
     NODISCARD FORCEINLINE VectorView<const uint8> ToVectorView() const { return VectorView<const uint8>(Bytes(), m_ByteCount); }
 
 public:
-    SHOOTER_API void SetByteCount(usize byteCount);
-    SHOOTER_API void EnsureByteCount(usize byteCount);
+    RUNTIME_API void SetByteCount(usize byteCount);
+    RUNTIME_API void EnsureByteCount(usize byteCount);
 
-    SHOOTER_API void SetByteCountWithoutCopy(usize byteCount);
-    SHOOTER_API void EnsureByteCountWithoutCopy(usize byteCount);
+    RUNTIME_API void SetByteCountWithoutCopy(usize byteCount);
+    RUNTIME_API void EnsureByteCountWithoutCopy(usize byteCount);
 
-    SHOOTER_API void Release();
+    RUNTIME_API void Release();
 
 private:
     void* m_Data;
