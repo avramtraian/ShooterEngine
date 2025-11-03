@@ -1,18 +1,27 @@
 ---
 AccessModifierOffset: -4
-AlignAfterOpenBracket: BlockIndent
+AlignAfterOpenBracket: Align
 AlignArrayOfStructures: Left
 AlignConsecutiveAssignments:
-  Enabled: false
+  Enabled: true
+  AcrossComments: false
+  AcrossEmptyLines: true
+  AlignFunctionDeclarations: true
 AlignConsecutiveBitFields:
   Enabled: true
+  AcrossComments: false
+  AcrossEmptyLines: true
 AlignConsecutiveDeclarations:
-  Enabled: false
+  Enabled: true
+  AcrossComments: false
+  AcrossEmptyLines: true
 AlignConsecutiveMacros:
   Enabled: true
+  AcrossComments: true
+  AcrossEmptyLines: true
 AlignEscapedNewlines: Left
 AlignOperands: Align
-AlignTrailingComments: Never
+AlignTrailingComments: false
 AllowAllArgumentsOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
 AllowShortBlocksOnASingleLine: Empty
@@ -26,8 +35,8 @@ AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: Yes
 AttributeMacros: [ ]
-BinPackArguments: false
-BinPackParameters: false
+BinPackArguments: true
+BinPackParameters: true
 BitFieldColonSpacing: Both
 BreakBeforeBraces: Custom
 BraceWrapping:
@@ -94,7 +103,7 @@ PointerAlignment: Left
 QualifierAlignment: Custom
 QualifierOrder: [ 'inline', 'static', 'constexpr', 'const', 'volatile', 'type' ]
 ReferenceAlignment: Pointer
-ReflowComments: true
+ReflowComments: Always
 RequiresClausePosition: OwnLine
 RequiresExpressionIndentation: OuterScope
 SeparateDefinitionBlocks: Leave
