@@ -7,8 +7,9 @@
 namespace SE
 {
 
-enum class KeyCode : uint16_t
+enum class KeyCode : uint16
 {
+    // clang-format off
     Unknown = 0,
 
     // NOTE(Traian): The order in which the key codes appear inside each category is important, as
@@ -33,13 +34,16 @@ enum class KeyCode : uint16_t
     F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
 
     MaxEnumValue,
+    // clang-format on
 };
 
-enum class MouseButton : uint8_t
+enum class MouseButton : uint8
 {
+    // clang-format off
     Unknown = 0,
     Left, Middle, Right,
     MaxEnumValue,
+    // clang-format on
 };
 
 class Input
@@ -70,12 +74,12 @@ public:
     SHOOTER_API static bool WasMouseButtonPressedThisFrame(MouseButton mouseButton);
     SHOOTER_API static bool WasMouseButtonReleasedThisFrame(MouseButton mouseButton);
 
-    SHOOTER_API static int32_t GetMouseDeltaX();
-    SHOOTER_API static int32_t GetMouseDeltaY();
+    SHOOTER_API static int32 GetMouseDeltaX();
+    SHOOTER_API static int32 GetMouseDeltaY();
     SHOOTER_API static float GetMouseWheelScrollOffset();
 
 private:
     static void HandleOnMouseWheelScrolled(RefPtr<Window> sourceWindow, float scrollOffset);
 };
 
-}
+} // namespace SE

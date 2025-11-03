@@ -2,7 +2,6 @@
 
 #include <Runtime/Application/Input.h>
 #include <Runtime/Core/Containers/HashMap.h>
-#include <Runtime/Core/Containers/Vector.h>
 #include <Runtime/Core/CoreAssertions.h>
 #include <Runtime/Core/Math/Vector.h>
 #include <Runtime/Core/Platform/PlatformCoreInclude.h>
@@ -10,7 +9,7 @@
 namespace SE
 {
 
-enum SwitchState : uint8_t
+enum SwitchState : uint8
 {
     Up,
     Down,
@@ -20,12 +19,12 @@ enum SwitchState : uint8_t
 
 struct WindowsInputData
 {
-    HashMap<KeyCode, SwitchState> KeyStates;
+    HashMap<KeyCode, SwitchState>     KeyStates;
     HashMap<MouseButton, SwitchState> MouseButtonStates;
 
     Optional<Vector2i> LastFrameMousePosition;
     Optional<Vector2i> CurrentFrameMousePosition;
-    float MouseWheelScrollOffset = 0.0F;
+    float              MouseWheelScrollOffset = 0.0F;
 };
 
 static WindowsInputData* s_InputData;
@@ -40,20 +39,20 @@ bool Input::Initialize()
     // user (by calling 'IsKeyDown' for example), to ensure that for the duration of the entire frame the input system
     // returns the same result when asked about the state of a key we create these tables and update them once per frame.
 
-    for (uint16_t keyCodeValue = 1; keyCodeValue < (uint16_t)KeyCode::MaxEnumValue; ++keyCodeValue)
+    for (uint16 keyCodeValue = 1; keyCodeValue < static_cast<uint16>(KeyCode::MaxEnumValue); ++keyCodeValue)
     {
-        const KeyCode keyCode = (KeyCode)keyCodeValue;
+        const KeyCode keyCode = static_cast<KeyCode>(keyCodeValue);
         s_InputData->KeyStates.Add(keyCode, SwitchState::Up);
     }
-    for (uint16_t mouseButtonValue = 1; mouseButtonValue < (uint8_t)MouseButton::MaxEnumValue; mouseButtonValue++)
+    for (uint16 mouseButtonValue = 1; mouseButtonValue < static_cast<uint8>(MouseButton::MaxEnumValue); mouseButtonValue++)
     {
-        const MouseButton mouseButton = (MouseButton)mouseButtonValue;
+        const MouseButton mouseButton = static_cast<MouseButton>(mouseButtonValue);
         s_InputData->MouseButtonStates.Add(mouseButton, SwitchState::Up);
     }
 
     return true;
 }
-    
+
 void Input::Shutdown()
 {
     if (!s_InputData)
@@ -76,22 +75,22 @@ void Input::AddSourceWindow(RefPtr<Window> window)
 
 static int TranslateKeyCodeToVirtualKey(KeyCode keyCode)
 {
-    // NOTE(Traian): The key-codes are translated to the Windows layer using the following documenation.
+    // NOTE(Traian): The key-codes are translated to the Windows layer using the following documentation.
     // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
 
-    const uint16_t keyCodeValue = (uint16_t)keyCode;
+    const uint16 keyCodeValue = static_cast<uint16>(keyCode);
 
     // Check for alphabetical key-codes.
-    if ((uint16_t)KeyCode::A <= keyCodeValue && keyCodeValue <= (uint16_t)KeyCode::Z)
-        return 'A' + (keyCodeValue - (uint16_t)KeyCode::A);
+    if (static_cast<uint16>(KeyCode::A) <= keyCodeValue && keyCodeValue <= static_cast<uint16>(KeyCode::Z))
+        return 'A' + (keyCodeValue - static_cast<uint16>(KeyCode::A));
 
     // Check for numerical key-codes.
-    if ((uint16_t)KeyCode::Zero <= keyCodeValue && keyCodeValue <= (uint16_t)KeyCode::Nine)
-        return '0' + (keyCodeValue - (uint16_t)KeyCode::Zero);
+    if (static_cast<uint16>(KeyCode::Zero) <= keyCodeValue && keyCodeValue <= static_cast<uint16>(KeyCode::Nine))
+        return '0' + (keyCodeValue - static_cast<uint16>(KeyCode::Zero));
 
     // Check for function key-codes.
-    if ((uint16_t)KeyCode::F1 <= keyCodeValue && keyCodeValue <= (uint16_t)KeyCode::F12)
-        return VK_F1 + (keyCodeValue - (uint16_t)KeyCode::F1);
+    if (static_cast<uint16>(KeyCode::F1) <= keyCodeValue && keyCodeValue <= static_cast<uint16>(KeyCode::F12))
+        return VK_F1 + (keyCodeValue - static_cast<uint16>(KeyCode::F1));
 
     switch (keyCode)
     {
@@ -116,7 +115,7 @@ static int TranslateKeyCodeToVirtualKey(KeyCode keyCode)
 
 static int TranslateMouseButtonToVirtualKey(MouseButton mouseButton)
 {
-    // NOTE(Traian): The mouse-buttons are translated to the Windows layer using the following documenation.
+    // NOTE(Traian): The mouse-buttons are translated to the Windows layer using the following documentation.
     // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
 
     switch (mouseButton)
@@ -155,7 +154,7 @@ void Input::OnUpdate(float deltaTime)
         return;
 
     // Update the key states.
-    for (uint16_t keyCodeValue = 1; keyCodeValue < (uint16_t)KeyCode::MaxEnumValue; ++keyCodeValue)
+    for (uint16 keyCodeValue = 1; keyCodeValue < (uint16)KeyCode::MaxEnumValue; ++keyCodeValue)
     {
         const KeyCode keyCode = (KeyCode)keyCodeValue;
         SE_ASSERT(s_InputData->KeyStates.Contains(keyCode));
@@ -170,9 +169,9 @@ void Input::OnUpdate(float deltaTime)
     }
 
     // Update the mouse button states.
-    for (uint16_t mouseButtonValue = 1; mouseButtonValue < (uint8_t)MouseButton::MaxEnumValue; mouseButtonValue++)
+    for (uint16 mouseButtonValue = 1; mouseButtonValue < static_cast<uint8>(MouseButton::MaxEnumValue); mouseButtonValue++)
     {
-        const MouseButton mouseButton = (MouseButton)mouseButtonValue;
+        const MouseButton mouseButton = static_cast<MouseButton>(mouseButtonValue);
         SE_ASSERT(s_InputData->MouseButtonStates.Contains(mouseButton));
         const bool isDown = CheckIfMouseButtonIsDown(mouseButton);
 
@@ -186,7 +185,7 @@ void Input::OnUpdate(float deltaTime)
 
     // Update the mouse position.
     s_InputData->LastFrameMousePosition = s_InputData->CurrentFrameMousePosition;
-    POINT mousePosition = {};
+    POINT mousePosition                 = {};
     if (GetCursorPos(&mousePosition))
         s_InputData->CurrentFrameMousePosition = Vector2i(mousePosition.x, mousePosition.y);
 }
@@ -266,7 +265,7 @@ bool Input::WasMouseButtonReleasedThisFrame(MouseButton mouseButton)
     return switchState == SwitchState::ReleasedThisFrame;
 }
 
-int32_t Input::GetMouseDeltaX()
+int32 Input::GetMouseDeltaX()
 {
     // Check that the input system has been initialized.
     if (!s_InputData)
@@ -280,7 +279,7 @@ int32_t Input::GetMouseDeltaX()
     return s_InputData->CurrentFrameMousePosition->X - s_InputData->LastFrameMousePosition->X;
 }
 
-int32_t Input::GetMouseDeltaY()
+int32 Input::GetMouseDeltaY()
 {
     // Check that the input system has been initialized.
     if (!s_InputData)
@@ -313,4 +312,4 @@ void Input::HandleOnMouseWheelScrolled(RefPtr<Window> sourceWindow, float scroll
     s_InputData->MouseWheelScrollOffset += scrollOffset;
 }
 
-}
+} // namespace SE
