@@ -62,6 +62,13 @@
 #ifndef CITY_HASH_H_
 #define CITY_HASH_H_
 
+// NOTE: THE FOLLOWING SECTION IS NOT PART OF THE OFFICIAL LIBRARY!
+// Include the core definitions from the runtime in order to disable certain warnings.
+#include <Runtime/Core/CoreDefines.h>
+#if defined(LIKELY)
+    #undef LIKELY
+#endif // defined(LIKELY)
+
 #include <stdlib.h>  // for size_t.
 #include <stdint.h>
 #include <utility>
