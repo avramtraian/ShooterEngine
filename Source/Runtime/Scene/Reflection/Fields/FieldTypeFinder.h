@@ -74,7 +74,7 @@ struct FieldTypeFinder<T>
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T>
-requires (ReflectionStructUUID<T>::IsStructType)
+requires (ReflectionStructMetadata<T>::IsSpecialized)
 struct FieldTypeFinder<T>
 {
     NODISCARD FORCEINLINE static constexpr usize GetRequiredMemory()
@@ -123,7 +123,7 @@ struct FieldTypeFinder<Vector<ElementType, Allocator>>
     NODISCARD FORCEINLINE static FieldType* AllocateFieldType(void* memoryBlock)
     {
         constexpr usize vectorRequiredMemory = sizeof(FieldTypedVectorType<ElementType, Allocator>);
-        constexpr usize elementTypeRequiredMemory = FieldTypeFinder<ElementType>::GetRequiredMemory();
+        MAYBE_UNUSED constexpr usize elementTypeRequiredMemory = FieldTypeFinder<ElementType>::GetRequiredMemory();
 
         // NOTE(Traian): Allocate the required memory blocks for each field type in the same order they
         // will be accessed later on (to optimize cache lines).
@@ -152,7 +152,7 @@ struct FieldTypeFinder<HashSet<ElementType, Allocator>>
     NODISCARD FORCEINLINE static FieldType* AllocateFieldType(void* memoryBlock)
     {
         constexpr usize hashSetRequiredMemory = sizeof(FieldTypedHashSetType<ElementType, Allocator>);
-        constexpr usize elementTypeRequiredMemory = FieldTypeFinder<ElementType>::GetRequiredMemory();
+        MAYBE_UNUSED constexpr usize elementTypeRequiredMemory = FieldTypeFinder<ElementType>::GetRequiredMemory();
 
         // NOTE(Traian): Allocate the required memory blocks for each field type in the same order they
         // will be accessed later on (to optimize cache lines).
@@ -183,7 +183,7 @@ struct FieldTypeFinder<HashMap<KeyType, ValueType, Allocator>>
     {
         constexpr usize hashMapRequiredMemory = sizeof(FieldTypedHashMapType<KeyType, ValueType, Allocator>);
         constexpr usize keyTypeRequiredMemory = FieldTypeFinder<KeyType>::GetRequiredMemory();
-        constexpr usize valueTypeRequiredMemory = FieldTypeFinder<ValueType>::GetRequiredMemory();
+        MAYBE_UNUSED constexpr usize valueTypeRequiredMemory = FieldTypeFinder<ValueType>::GetRequiredMemory();
 
         // NOTE(Traian): Allocate the required memory blocks for each field type in the same order they
         // will be accessed later on (to optimize cache lines).

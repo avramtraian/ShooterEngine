@@ -12,7 +12,7 @@
 namespace SE
 {
 
-class VulkanRenderPass : public RenderPass
+class VulkanRenderPass final : public RenderPass
 {
 public:
     VulkanRenderPass(const RenderPassInfo& info);

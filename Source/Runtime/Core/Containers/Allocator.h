@@ -21,7 +21,7 @@ public:
         return allocationBlock;
     }
 
-    NODISCARD FORCEINLINE static void Release(void* allocationBlock)
+    FORCEINLINE static void Release(void* allocationBlock)
     {
         if (allocationBlock == nullptr)
             return;

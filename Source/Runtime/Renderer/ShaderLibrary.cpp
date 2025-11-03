@@ -68,7 +68,7 @@ bool ShaderLibrary::LoadFromFile(String shaderName, const std::filesystem::path&
     if (!compiler.Compile())
     {
         SE_LOG_WARN("Shader '%s' compilation has failed with the following error messages:", shaderName.Characters());
-        for (const String& errorMessage : compiler.GetErrorMessages())
+        for (MAYBE_UNUSED const String& errorMessage : compiler.GetErrorMessages())
         {
             SE_LOG_WARN("  %s", errorMessage.Characters());
         }

@@ -10,7 +10,7 @@
 namespace SE
 {
 
-class VulkanPipeline : public LockCounted
+class VulkanPipeline final : public LockCounted
 {
 public:
     VulkanPipeline(const WeakRefPtr<VulkanRenderPass>& parentRenderPass);

@@ -12,8 +12,8 @@ class PlatformTime
     SE_MAKE_NAMESPACE_CLASS(PlatformTime);
 
 public:
-    SHOOTER_API NODISCARD static uint64 GetCurrentPerformanceCounter();
-    SHOOTER_API NODISCARD static uint64 GetPerformanceCounterFrequency();
+    NODISCARD SHOOTER_API static uint64 GetCurrentPerformanceCounter();
+    NODISCARD SHOOTER_API static uint64 GetPerformanceCounterFrequency();
 };
 
-}
+} // namespace SE

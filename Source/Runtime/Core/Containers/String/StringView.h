@@ -31,13 +31,13 @@ public:
     {}
 
     FORCEINLINE constexpr StringView(const StringView& other)
-        : m_Characters(other.m_Characters)
-        , m_ByteCount(other.m_ByteCount)
+        : m_ByteCount(other.m_ByteCount)
+        , m_Characters(other.m_Characters)
     {}
 
     FORCEINLINE constexpr StringView(StringView&& other) noexcept
-        : m_Characters(other.m_Characters)
-        , m_ByteCount(other.m_ByteCount)
+        : m_ByteCount(other.m_ByteCount)
+        , m_Characters(other.m_Characters)
     {
         other.m_Characters = nullptr;
         other.m_ByteCount = 0;
@@ -88,7 +88,7 @@ public:
     }
 
 private:
-    usize m_ByteCount;
+    usize       m_ByteCount;
     const char* m_Characters;
 };
 

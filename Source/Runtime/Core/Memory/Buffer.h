@@ -13,31 +13,37 @@ class Buffer
     SE_MAKE_NONCOPYABLE(Buffer);
 
 public:
-    SHOOTER_API NODISCARD static Buffer Copy(const Buffer& sourceBuffer);
-    SHOOTER_API NODISCARD static Buffer Copy(ReadonlyBufferView sourceBuffer);
+    NODISCARD SHOOTER_API static Buffer Copy(const Buffer& sourceBuffer);
+    NODISCARD SHOOTER_API static Buffer Copy(ReadonlyBufferView sourceBuffer);
 
 public:
     SHOOTER_API Buffer();
     SHOOTER_API ~Buffer();
 
-    SHOOTER_API Buffer(Buffer&& other) noexcept;
+    SHOOTER_API         Buffer(Buffer&& other) noexcept;
     SHOOTER_API Buffer& operator=(Buffer&& other) noexcept;
 
 public:
-    NODISCARD FORCEINLINE void* Data() { return m_Data; }
+    NODISCARD FORCEINLINE void*       Data() { return m_Data; }
     NODISCARD FORCEINLINE const void* Data() const { return m_Data; }
 
-    NODISCARD FORCEINLINE uint8* Bytes() { return (uint8*)m_Data; }
+    NODISCARD FORCEINLINE uint8*       Bytes() { return (uint8*)m_Data; }
     NODISCARD FORCEINLINE const uint8* Bytes() const { return (const uint8*)m_Data; }
 
     NODISCARD FORCEINLINE usize ByteCount() const { return m_ByteCount; }
-    NODISCARD FORCEINLINE bool IsEmpty() const { return (m_ByteCount == 0); }
-    NODISCARD FORCEINLINE bool HasData() const { return (m_ByteCount > 0); }
+    NODISCARD FORCEINLINE bool  IsEmpty() const { return (m_ByteCount == 0); }
+    NODISCARD FORCEINLINE bool  HasData() const { return (m_ByteCount > 0); }
 
     template<typename T>
-    NODISCARD FORCEINLINE T* DataAs() { return (T*)m_Data; }
+    NODISCARD FORCEINLINE T* DataAs()
+    {
+        return (T*)m_Data;
+    }
     template<typename T>
-    NODISCARD FORCEINLINE const T* DataAs() const { return (const T*)m_Data; }
+    NODISCARD FORCEINLINE const T* DataAs() const
+    {
+        return (const T*)m_Data;
+    }
 
 public:
     NODISCARD FORCEINLINE ReadonlyBufferView ToView() const { return ReadonlyBufferView(*this); }
@@ -71,7 +77,7 @@ FORCEINLINE ReadonlyBufferView::ReadonlyBufferView(const Buffer& buffer)
 
 FORCEINLINE ReadonlyBufferView& ReadonlyBufferView::operator=(const Buffer& buffer)
 {
-    m_Data = buffer.Data();
+    m_Data      = buffer.Data();
     m_ByteCount = buffer.ByteCount();
     return *this;
 }
@@ -83,9 +89,9 @@ FORCEINLINE BufferView::BufferView(Buffer& buffer)
 
 FORCEINLINE BufferView& BufferView::operator=(Buffer& buffer)
 {
-    m_Data = buffer.Data();
+    m_Data      = buffer.Data();
     m_ByteCount = buffer.ByteCount();
     return *this;
 }
 
-}
+} // namespace SE

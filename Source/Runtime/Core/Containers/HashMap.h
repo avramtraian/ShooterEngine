@@ -10,20 +10,15 @@ namespace SE
 {
 
 template<typename KeyType, typename ValueType, typename Allocator = DefaultAllocator>
-requires(
-    !std::is_const_v<KeyType> && !std::is_reference_v<KeyType> &&
-    !std::is_const_v<ValueType> && !std::is_reference_v<ValueType>
-)
+requires (!std::is_const_v<KeyType> && !std::is_reference_v<KeyType> && !std::is_const_v<ValueType> && !std::is_reference_v<ValueType>)
 class HashMap
 {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
     template<typename FriendKeyType, typename FriendValueType, typename FriendAllocator>
-    requires(
-        !std::is_const_v<FriendKeyType> && !std::is_reference_v<FriendKeyType> &&
-        !std::is_const_v<FriendValueType> && !std::is_reference_v<FriendValueType>
-    )
+    requires (!std::is_const_v<FriendKeyType> && !std::is_reference_v<FriendKeyType> && !std::is_const_v<FriendValueType> &&
+              !std::is_reference_v<FriendValueType>)
     friend class HashMap;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -31,7 +26,7 @@ public:
 public:
     struct Bucket
     {
-        Bucket& operator=(const Bucket&) = delete;
+        Bucket& operator=(const Bucket&)     = delete;
         Bucket& operator=(Bucket&&) noexcept = delete;
 
     public:
@@ -42,8 +37,7 @@ public:
         }
 
     public:
-        FORCEINLINE Bucket()
-        {}
+        FORCEINLINE Bucket() {}
 
         FORCEINLINE ~Bucket()
         {
@@ -81,15 +75,15 @@ public:
         NODISCARD FORCEINLINE const ValueType& Value() const { return *ValuePointer(); }
 
     public:
-        alignas (KeyType) uint8 m_KeyStorage[sizeof(KeyType)];
-        alignas (ValueType) uint8 m_ValueStorage[sizeof(ValueType)];
+        alignas(KeyType) uint8 m_KeyStorage[sizeof(KeyType)];
+        alignas(ValueType) uint8 m_ValueStorage[sizeof(ValueType)];
     };
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    using HashSetContainer = typename HashSet<Bucket, Allocator>;
+    using HashSetContainer = HashSet<Bucket, Allocator>;
 
-    using BucketState = HashSetContainer::EntryState;
+    using BucketState      = HashSetContainer::EntryState;
 
 #if SE_HASH_SET_CHECK_PROTECTION
     using ScopedProtectionLock = HashSetContainer::ScopedProtectionLock;
@@ -101,19 +95,19 @@ public:
     struct GenericIteratorBucket
     {
         SE_MAKE_NONMOVABLE(GenericIteratorBucket);
-        GenericIteratorBucket() = delete;
+        GenericIteratorBucket()                                        = delete;
         GenericIteratorBucket& operator=(const GenericIteratorBucket&) = delete;
 
     public:
-        ~GenericIteratorBucket() = default;
+        ~GenericIteratorBucket()                            = default;
         GenericIteratorBucket(const GenericIteratorBucket&) = default;
 
     public:
-        const KeyType Key;
+        const KeyType     Key;
         IteratorValueType Value;
     };
 
-    using IteratorBucket = GenericIteratorBucket<ValueType>;
+    using IteratorBucket      = GenericIteratorBucket<ValueType>;
     using ConstIteratorBucket = GenericIteratorBucket<const ValueType>;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -122,16 +116,17 @@ public:
     class GenericIterator
     {
     public:
-        FORCEINLINE GenericIterator(GenericIteratorBucket<IteratorValueType>* buckets, GenericIteratorBucket<IteratorValueType>* bucketsEnd, BucketState* states)
+        FORCEINLINE GenericIterator(GenericIteratorBucket<IteratorValueType>* buckets, GenericIteratorBucket<IteratorValueType>* bucketsEnd,
+                                    BucketState* states)
             : m_Buckets(buckets)
             , m_BucketsEnd(bucketsEnd)
             , m_States(states)
         {}
 
-        GenericIterator(const GenericIterator&) = default;
-        GenericIterator(GenericIterator&&) noexcept = default;
+        GenericIterator(const GenericIterator&)                = default;
+        GenericIterator(GenericIterator&&) noexcept            = default;
 
-        GenericIterator& operator=(const GenericIterator&) = default;
+        GenericIterator& operator=(const GenericIterator&)     = default;
         GenericIterator& operator=(GenericIterator&&) noexcept = default;
 
     public:
@@ -172,42 +167,33 @@ public:
             return preIncrementValue;
         }
 
-        NODISCARD FORCEINLINE bool operator==(const GenericIterator& other) const
-        {
-            return (m_Buckets == other.m_Buckets);
-        }
+        NODISCARD FORCEINLINE bool operator==(const GenericIterator& other) const { return (m_Buckets == other.m_Buckets); }
 
-        NODISCARD FORCEINLINE bool operator!=(const GenericIterator& other) const
-        {
-            return (m_Buckets != other.m_Buckets);
-        }
+        NODISCARD FORCEINLINE bool operator!=(const GenericIterator& other) const { return (m_Buckets != other.m_Buckets); }
 
     private:
         GenericIteratorBucket<IteratorValueType>* m_Buckets;
         GenericIteratorBucket<IteratorValueType>* m_BucketsEnd;
-        BucketState* m_States;
+        BucketState*                              m_States;
     };
 
-    using Iterator = GenericIterator<ValueType>;
+    using Iterator      = GenericIterator<ValueType>;
     using ConstIterator = GenericIterator<const ValueType>;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE static const Bucket& GetBucketFromKey(const KeyType& key)
-    {
-        return reinterpret_cast<const Bucket&>(key);
-    }
+    NODISCARD FORCEINLINE static const Bucket& GetBucketFromKey(const KeyType& key) { return reinterpret_cast<const Bucket&>(key); }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    FORCEINLINE HashMap() = default;
-    FORCEINLINE ~HashMap() = default;
+    FORCEINLINE HashMap()                              = default;
+    FORCEINLINE ~HashMap()                             = default;
 
-    FORCEINLINE HashMap(const HashMap&) = default;
-    FORCEINLINE HashMap(HashMap&&) noexcept = default;
+    FORCEINLINE HashMap(const HashMap&)                = default;
+    FORCEINLINE HashMap(HashMap&&) noexcept            = default;
 
-    FORCEINLINE HashMap& operator=(const HashMap&) = default;
+    FORCEINLINE HashMap& operator=(const HashMap&)     = default;
     FORCEINLINE HashMap& operator=(HashMap&&) noexcept = default;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -229,10 +215,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    NODISCARD FORCEINLINE usize Count() const
-    {
-        return m_Buckets.Count();
-    }
+    NODISCARD FORCEINLINE usize Count() const { return m_Buckets.Count(); }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -258,9 +241,8 @@ public:
         SE_ENSURE(m_Buckets.IsNotProtected());
 #endif // SE_HASH_SET_CHECK_PROTECTION
 
-        const Bucket& bucket = GetBucketFromKey(key);
-        const Bucket& keyBucket = GetBucketFromKey(key);
-        const uint64 keyBucketHash = Bucket::GetHash(keyBucket);
+        const Bucket&         keyBucket        = GetBucketFromKey(key);
+        const uint64          keyBucketHash    = Bucket::GetHash(keyBucket);
         const Optional<usize> bucketEntryIndex = m_Buckets.GetEntryIndexOf(keyBucket, keyBucketHash);
         if (bucketEntryIndex.HasValue())
             return m_Buckets.m_Entries.Slots[bucketEntryIndex.Value()].Value();
@@ -277,9 +259,8 @@ public:
         SE_ENSURE(m_Buckets.IsNotProtected());
 #endif // SE_HASH_SET_CHECK_PROTECTION
 
-        const Bucket& bucket = GetBucketFromKey(key);
-        const Bucket& keyBucket = GetBucketFromKey(key);
-        const uint64 keyBucketHash = Bucket::GetHash(keyBucket);
+        const Bucket&         keyBucket        = GetBucketFromKey(key);
+        const uint64          keyBucketHash    = Bucket::GetHash(keyBucket);
         const Optional<usize> bucketEntryIndex = m_Buckets.GetEntryIndexOf(keyBucket, keyBucketHash);
         if (bucketEntryIndex.HasValue())
             return m_Buckets.m_Entries.Slots[bucketEntryIndex.Value()].Value();
@@ -305,40 +286,22 @@ public:
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
+
 public:
-    FORCEINLINE ValueType& Add(const KeyType& key, const ValueType& value)
-    {
-        return AddImplementation<const KeyType&, const ValueType&>(key, value);
-    }
+    FORCEINLINE ValueType& Add(const KeyType& key, const ValueType& value) { return AddImplementation<const KeyType&, const ValueType&>(key, value); }
 
-    FORCEINLINE ValueType& Add(const KeyType& key, ValueType&& value)
-    {
-        return AddImplementation<const KeyType&, ValueType&&>(key, Move(value));
-    }
+    FORCEINLINE ValueType& Add(const KeyType& key, ValueType&& value) { return AddImplementation<const KeyType&, ValueType&&>(key, Move(value)); }
 
-    FORCEINLINE ValueType& Add(KeyType&& key, const ValueType& value)
-    {
-        return AddImplementation<KeyType&&, const ValueType&>(Move(key), value);
-    }
+    FORCEINLINE ValueType& Add(KeyType&& key, const ValueType& value) { return AddImplementation<KeyType&&, const ValueType&>(Move(key), value); }
 
-    FORCEINLINE ValueType& Add(KeyType&& key, ValueType&& value)
-    {
-        return AddImplementation<KeyType&&, ValueType&&>(Move(key), Move(value));
-    }
+    FORCEINLINE ValueType& Add(KeyType&& key, ValueType&& value) { return AddImplementation<KeyType&&, ValueType&&>(Move(key), Move(value)); }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    NODISCARD FORCEINLINE ValueType& operator[](const KeyType& key)
-    {
-        return GetOrAddImplementation<const KeyType&>(key);
-    }
+    NODISCARD FORCEINLINE ValueType& operator[](const KeyType& key) { return GetOrAddImplementation<const KeyType&>(key); }
 
-    NODISCARD FORCEINLINE ValueType& operator[](KeyType&& key)
-    {
-        return GetOrAddImplementation<KeyType&&>(Move(key));
-    }
+    NODISCARD FORCEINLINE ValueType& operator[](KeyType&& key) { return GetOrAddImplementation<KeyType&&>(Move(key)); }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -360,25 +323,13 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    FORCEINLINE void EnsureCapacity(usize capacity)
-    {
-        m_Buckets.EnsureCapacity(capacity);
-    }
+    FORCEINLINE void EnsureCapacity(usize capacity) { m_Buckets.EnsureCapacity(capacity); }
 
-    FORCEINLINE void Clear()
-    {
-        m_Buckets.Clear();
-    }
+    FORCEINLINE void Clear() { m_Buckets.Clear(); }
 
-    FORCEINLINE void ShrinkToFit()
-    {
-        m_Buckets.ShrinkToFit();
-    }
+    FORCEINLINE void ShrinkToFit() { m_Buckets.ShrinkToFit(); }
 
-    FORCEINLINE void ClearAndShrink()
-    {
-        m_Buckets.ClearAndShrink();
-    }
+    FORCEINLINE void ClearAndShrink() { m_Buckets.ClearAndShrink(); }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -389,11 +340,9 @@ public:
         SE_ENSURE(m_Buckets.IsNotProtected());
 #endif // SE_HASH_SET_CHECK_PROTECTION
 
-        return Iterator(
-            reinterpret_cast<IteratorBucket*>(m_Buckets.m_Entries.Slots + bucketEntryIndex),
-            reinterpret_cast<IteratorBucket*>(m_Buckets.m_Entries.Slots + m_Buckets.m_Entries.Count),
-            m_Buckets.m_Entries.States + bucketEntryIndex
-        );
+        return Iterator(reinterpret_cast<IteratorBucket*>(m_Buckets.m_Entries.Slots + bucketEntryIndex),
+                        reinterpret_cast<IteratorBucket*>(m_Buckets.m_Entries.Slots + m_Buckets.m_Entries.Count),
+                        m_Buckets.m_Entries.States + bucketEntryIndex);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -404,11 +353,9 @@ public:
         SE_ENSURE(m_Buckets.IsNotProtected());
 #endif // SE_HASH_SET_CHECK_PROTECTION
 
-        return ConstIterator(
-            reinterpret_cast<ConstIteratorBucket*>(m_Buckets.m_Entries.Slots + bucketEntryIndex),
-            reinterpret_cast<ConstIteratorBucket*>(m_Buckets.m_Entries.Slots + m_Buckets.m_Entries.Count),
-            m_Buckets.m_Entries.States + bucketEntryIndex
-        );
+        return ConstIterator(reinterpret_cast<ConstIteratorBucket*>(m_Buckets.m_Entries.Slots + bucketEntryIndex),
+                             reinterpret_cast<ConstIteratorBucket*>(m_Buckets.m_Entries.Slots + m_Buckets.m_Entries.Count),
+                             m_Buckets.m_Entries.States + bucketEntryIndex);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -493,10 +440,8 @@ public:
 
 private:
     template<typename KeyParameterType, typename ValueParameterType>
-    requires (
-        std::is_same_v<RemoveConst<RemoveReference<RemoveConst<KeyParameterType>>>, KeyType> &&
-        std::is_same_v<RemoveConst<RemoveReference<RemoveConst<ValueParameterType>>>, ValueType>
-    )
+    requires (std::is_same_v<RemoveConst<RemoveReference<RemoveConst<KeyParameterType>>>, KeyType> &&
+              std::is_same_v<RemoveConst<RemoveReference<RemoveConst<ValueParameterType>>>, ValueType>)
     FORCEINLINE ValueType& AddImplementation(KeyParameterType key, ValueParameterType value)
     {
         // TODO(Traian): Combine the search for the key with the search for the first available index
@@ -517,14 +462,14 @@ private:
         }
 
         // Find the first available index where to construct the bucket.
-        const Bucket& keyBucket = GetBucketFromKey(key);
-        const uint64 keyBucketHash = Bucket::GetHash(keyBucket);
+        const Bucket&         keyBucket        = GetBucketFromKey(key);
+        const uint64          keyBucketHash    = Bucket::GetHash(keyBucket);
         const Optional<usize> bucketEntryIndex = m_Buckets.GetFirstAvailableEntryIndex(keyBucket, keyBucketHash);
         SE_ASSERT(bucketEntryIndex.HasValue());
         const usize entryIndex = bucketEntryIndex.Value();
 
         // Construct the bucket.
-        Bucket& bucket = m_Buckets.m_Entries.Slots[entryIndex];
+        Bucket& bucket                         = m_Buckets.m_Entries.Slots[entryIndex];
         m_Buckets.m_Entries.States[entryIndex] = HashSetContainer::EntryState::Occupied;
         new (bucket.KeyPointer()) KeyType(Move(key));
         new (bucket.ValuePointer()) ValueType(Move(value));
@@ -543,11 +488,11 @@ private:
         SE_ENSURE(m_Buckets.IsNotProtected());
 #endif // SE_HASH_SET_CHECK_PROTECTION
 
-        const Bucket& keyBucket = GetBucketFromKey(key);
-        const uint64 keyBucketHash = Bucket::GetHash(keyBucket);
+        const Bucket&   keyBucket        = GetBucketFromKey(key);
+        const uint64    keyBucketHash    = Bucket::GetHash(keyBucket);
         Optional<usize> bucketEntryIndex = m_Buckets.GetEntryIndexOfOrFirstAvailable(keyBucket, keyBucketHash);
 
-        const usize requiredEntryCount = HashSetContainer::CalculateRequiredEntryCount(m_Buckets.m_Count + 1);
+        const usize requiredEntryCount   = HashSetContainer::CalculateRequiredEntryCount(m_Buckets.m_Count + 1);
 
         if (bucketEntryIndex.HasValue())
         {
@@ -565,7 +510,7 @@ private:
 #endif // SE_HASH_SET_CHECK_PROTECTION
 
                 // Construct the bucket.
-                Bucket& bucket = m_Buckets.m_Entries.Slots[entryIndex];
+                Bucket& bucket                         = m_Buckets.m_Entries.Slots[entryIndex];
                 m_Buckets.m_Entries.States[entryIndex] = HashSetContainer::EntryState::Occupied;
                 new (bucket.KeyPointer()) KeyType(key);
                 new (bucket.ValuePointer()) ValueType();
@@ -589,7 +534,7 @@ private:
         const usize entryIndex = bucketEntryIndex.Value();
 
         // Construct the bucket.
-        Bucket& bucket = m_Buckets.m_Entries.Slots[entryIndex];
+        Bucket& bucket                         = m_Buckets.m_Entries.Slots[entryIndex];
         m_Buckets.m_Entries.States[entryIndex] = HashSetContainer::EntryState::Occupied;
         new (bucket.KeyPointer()) KeyType(Move(key));
         new (bucket.ValuePointer()) ValueType();
@@ -603,4 +548,4 @@ private:
     HashSetContainer m_Buckets;
 };
 
-}
+} // namespace SE

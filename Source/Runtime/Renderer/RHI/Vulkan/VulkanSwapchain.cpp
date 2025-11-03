@@ -1,17 +1,18 @@
 // Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
-#include <Runtime/Renderer/RHI/Vulkan/VulkanSwapchain.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderingDriver.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanRenderingSurface.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanSwapchain.h>
 
 namespace SE
 {
 
-static String VulkanPresentModeToString(VkPresentModeKHR presentMode)
+MAYBE_UNUSED static String VulkanPresentModeToString(VkPresentModeKHR presentMode)
 {
     switch (presentMode)
     {
-#define _SE_CASE(presentModeName) case presentModeName: return VIEW(#presentModeName);
+#define _SE_CASE(presentModeName) \
+    case presentModeName: return VIEW(#presentModeName);
         _SE_CASE(VK_PRESENT_MODE_IMMEDIATE_KHR);
         _SE_CASE(VK_PRESENT_MODE_MAILBOX_KHR);
         _SE_CASE(VK_PRESENT_MODE_FIFO_KHR);
@@ -39,8 +40,8 @@ VulkanSwapchain::VulkanSwapchain(const VulkanSwapchainInfo& info)
     }
     else
     {
-        m_ImmutableProperties.Format = VK_FORMAT_B8G8R8A8_UNORM;
-        m_ImmutableProperties.ColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+        m_ImmutableProperties.Format      = VK_FORMAT_B8G8R8A8_UNORM;
+        m_ImmutableProperties.ColorSpace  = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
         m_ImmutableProperties.PresentMode = FindBestPresentMode(info.Surface->GetHandle());
 
         // Submit information about the swapchain creation to the logger.
@@ -51,28 +52,25 @@ VulkanSwapchain::VulkanSwapchain(const VulkanSwapchainInfo& info)
     }
 
     VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
-    swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    swapchainCreateInfo.surface = info.Surface->GetHandle();
-    swapchainCreateInfo.minImageCount = info.MinImageCount;
-    swapchainCreateInfo.imageFormat = m_ImmutableProperties.Format;
-    swapchainCreateInfo.imageColorSpace = m_ImmutableProperties.ColorSpace;
-    swapchainCreateInfo.imageExtent.width = m_SizeX;
-    swapchainCreateInfo.imageExtent.height = m_SizeY;
-    swapchainCreateInfo.imageArrayLayers = 1;
-    swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    swapchainCreateInfo.queueFamilyIndexCount = 0;
-    swapchainCreateInfo.pQueueFamilyIndices = nullptr;
-    swapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-    swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    swapchainCreateInfo.presentMode = m_ImmutableProperties.PresentMode;
-    swapchainCreateInfo.clipped = VK_FALSE;
-    swapchainCreateInfo.oldSwapchain =
-        (info.OldSwapchain.IsValid())
-            ? info.OldSwapchain->GetHandle()
-            : VK_NULL_HANDLE;
+    swapchainCreateInfo.sType                    = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    swapchainCreateInfo.surface                  = info.Surface->GetHandle();
+    swapchainCreateInfo.minImageCount            = info.MinImageCount;
+    swapchainCreateInfo.imageFormat              = m_ImmutableProperties.Format;
+    swapchainCreateInfo.imageColorSpace          = m_ImmutableProperties.ColorSpace;
+    swapchainCreateInfo.imageExtent.width        = m_SizeX;
+    swapchainCreateInfo.imageExtent.height       = m_SizeY;
+    swapchainCreateInfo.imageArrayLayers         = 1;
+    swapchainCreateInfo.imageUsage               = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    swapchainCreateInfo.imageSharingMode         = VK_SHARING_MODE_EXCLUSIVE;
+    swapchainCreateInfo.queueFamilyIndexCount    = 0;
+    swapchainCreateInfo.pQueueFamilyIndices      = nullptr;
+    swapchainCreateInfo.preTransform             = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+    swapchainCreateInfo.compositeAlpha           = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    swapchainCreateInfo.presentMode              = m_ImmutableProperties.PresentMode;
+    swapchainCreateInfo.clipped                  = VK_FALSE;
+    swapchainCreateInfo.oldSwapchain             = (info.OldSwapchain.IsValid()) ? info.OldSwapchain->GetHandle() : VK_NULL_HANDLE;
 
-    const VkResult swapchainCreateResult = vkCreateSwapchainKHR(g_VulkanDriver->GetDevice(), &swapchainCreateInfo, nullptr, &m_Handle);
+    const VkResult swapchainCreateResult         = vkCreateSwapchainKHR(g_VulkanDriver->GetDevice(), &swapchainCreateInfo, nullptr, &m_Handle);
     if (swapchainCreateResult != VK_SUCCESS)
     {
         SE_LOG_ERROR("Failed to create the [Vulkan] swapchain! (Result: %d)", swapchainCreateResult);
@@ -89,22 +87,22 @@ VulkanSwapchain::VulkanSwapchain(const VulkanSwapchainInfo& info)
     m_ImageViews.EnsureCapacity(swapchainImageCount);
     for (VkImage image : m_Images)
     {
-        VkImageViewCreateInfo imageViewCreateInfo = {};
-        imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        imageViewCreateInfo.image = image;
-        imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        imageViewCreateInfo.format = m_ImmutableProperties.Format;
-        imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-        imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-        imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-        imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-        imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-        imageViewCreateInfo.subresourceRange.levelCount = 1;
+        VkImageViewCreateInfo imageViewCreateInfo           = {};
+        imageViewCreateInfo.sType                           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        imageViewCreateInfo.image                           = image;
+        imageViewCreateInfo.viewType                        = VK_IMAGE_VIEW_TYPE_2D;
+        imageViewCreateInfo.format                          = m_ImmutableProperties.Format;
+        imageViewCreateInfo.components.r                    = VK_COMPONENT_SWIZZLE_IDENTITY;
+        imageViewCreateInfo.components.g                    = VK_COMPONENT_SWIZZLE_IDENTITY;
+        imageViewCreateInfo.components.b                    = VK_COMPONENT_SWIZZLE_IDENTITY;
+        imageViewCreateInfo.components.a                    = VK_COMPONENT_SWIZZLE_IDENTITY;
+        imageViewCreateInfo.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageViewCreateInfo.subresourceRange.baseMipLevel   = 0;
+        imageViewCreateInfo.subresourceRange.levelCount     = 1;
         imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-        imageViewCreateInfo.subresourceRange.layerCount = 1;
+        imageViewCreateInfo.subresourceRange.layerCount     = 1;
 
-        VkImageView imageViewHandle = VK_NULL_HANDLE;
+        VkImageView imageViewHandle                         = VK_NULL_HANDLE;
         if (VkResult result = vkCreateImageView(g_VulkanDriver->GetDevice(), &imageViewCreateInfo, nullptr, &imageViewHandle); result != VK_SUCCESS)
         {
             SE_LOG_ERROR("Failed to create [Vulkan] image view for swapchain image! (Result: %d)", result);
@@ -153,28 +151,21 @@ VulkanSwapchain::~VulkanSwapchain()
 
 VkPresentModeKHR VulkanSwapchain::FindBestPresentMode(VkSurfaceKHR surface) const
 {
-    uint32 availablePresentModeCount = 0;
+    uint32                   availablePresentModeCount = 0;
     Vector<VkPresentModeKHR> availablePresentModes;
-    const VkResult getPresentModesResult = vkGetPhysicalDeviceSurfacePresentModesKHR(
-        g_VulkanDriver->GetPhysicalDevice().Handle,
-        surface,
-        &availablePresentModeCount,
-        nullptr);
+    const VkResult           getPresentModesResult =
+        vkGetPhysicalDeviceSurfacePresentModesKHR(g_VulkanDriver->GetPhysicalDevice().Handle, surface, &availablePresentModeCount, nullptr);
     if (getPresentModesResult == VK_SUCCESS)
     {
         availablePresentModes.SetCountDefaulted(availablePresentModeCount);
-        SE_VULKAN_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(
-            g_VulkanDriver->GetPhysicalDevice().Handle,
-            surface,
-            &availablePresentModeCount,
-            availablePresentModes.Elements()));
+        SE_VULKAN_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(g_VulkanDriver->GetPhysicalDevice().Handle, surface, &availablePresentModeCount,
+                                                                  availablePresentModes.Elements()));
         SE_ENSURE(availablePresentModes.Count() == availablePresentModeCount);
     }
 
     // List of desirable present modes. The first element in this list that is
     // available on the current platform and device will be picked.
-    const Vector<VkPresentModeKHR> desiredPresentModes =
-    {
+    const Vector<VkPresentModeKHR> desiredPresentModes = {
         VK_PRESENT_MODE_MAILBOX_KHR,
         VK_PRESENT_MODE_FIFO_KHR,
     };
@@ -190,7 +181,7 @@ VkPresentModeKHR VulkanSwapchain::FindBestPresentMode(VkSurfaceKHR surface) cons
         {
             if (desiredPresentMode == availablePresentMode)
             {
-                presentMode = desiredPresentMode;
+                presentMode                = desiredPresentMode;
                 desiredPresentModeWasFound = true;
                 break;
             }
@@ -203,4 +194,4 @@ VkPresentModeKHR VulkanSwapchain::FindBestPresentMode(VkSurfaceKHR surface) cons
     return presentMode;
 }
 
-}
+} // namespace SE

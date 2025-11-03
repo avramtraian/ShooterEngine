@@ -905,7 +905,7 @@ private:
         return (m_IsProtected == 0);
     }
 
-    NODISCARD FORCEINLINE void SetIsProtected(bool isProtected) const
+    FORCEINLINE void SetIsProtected(bool isProtected) const
     {
         if (isProtected)
             m_IsProtected = 1;

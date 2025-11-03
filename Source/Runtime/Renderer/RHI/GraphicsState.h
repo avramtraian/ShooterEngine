@@ -78,7 +78,7 @@ public:
     bool                      EnableBlending       { true };
 
 public:
-    inline GraphicsState& SetVertexInputLayout         (GraphicsVertexInputLayout layout) { VertexInputLayout = std::move(layout);                            return *this; }
+    inline GraphicsState& SetVertexInputLayout         (GraphicsVertexInputLayout layout) { VertexInputLayout = Move(layout);                                 return *this; }
     inline GraphicsState& SetTopology                  (GraphicsTopology topology)        { Topology = topology;                                              return *this; }
     inline GraphicsState& SetCullMode                  (GraphicsCullMode cullMode)        { CullMode = cullMode;                                              return *this; }
     inline GraphicsState& SetFrontFace                 (GraphicsFrontFace frontFace)      { FrontFace = frontFace;                                            return *this; }

@@ -25,7 +25,7 @@ enum class DescriptorSetCompatibility : uint8
     // WorthUpdating,
 };
 
-class VulkanDescriptorSet : public LockCounted
+class VulkanDescriptorSet final : public LockCounted
 {
 public:
     VulkanDescriptorSet(VkDescriptorPool descriptorPool, uint32 setIndex, const VulkanDescriptorSetLayout& setLayout, const WeakRefPtr<VulkanShader>& parentShader);

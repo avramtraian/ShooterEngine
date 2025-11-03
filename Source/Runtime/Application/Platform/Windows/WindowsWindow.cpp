@@ -44,7 +44,7 @@ static LRESULT WindowsWindowProcedure(HWND windowHandle, UINT message, WPARAM wP
         case WM_MOUSEWHEEL:
         {
             const int64 delta = GET_WHEEL_DELTA_WPARAM(wParam);
-            window->GetOnMouseWheelScrolledDelegate().Broadcast(window, (float)delta / (float)WHEEL_DELTA);
+            window->GetOnMouseWheelScrolledDelegate().Broadcast(window, static_cast<float>(delta) / static_cast<float>(WHEEL_DELTA));
             return 0;
         }
     }
@@ -60,9 +60,9 @@ WindowsWindow::WindowsWindow(const WindowInfo& info)
     static bool s_IsWindowClassRegistered = false;
     if (!s_IsWindowClassRegistered)
     {
-        WNDCLASSA windowClass = {};
-        windowClass.lpfnWndProc = WindowsWindowProcedure;
-        windowClass.hInstance = GetModuleHandle(nullptr);
+        WNDCLASSA windowClass     = {};
+        windowClass.lpfnWndProc   = WindowsWindowProcedure;
+        windowClass.hInstance     = GetModuleHandle(nullptr);
         windowClass.lpszClassName = "ShooterWindowClass";
 
         RegisterClassA(&windowClass);
@@ -70,14 +70,14 @@ WindowsWindow::WindowsWindow(const WindowInfo& info)
     }
 
     // Determine the window position and size.
-    int windowSizeX = info.SizeX.ValueOr(CW_USEDEFAULT);
-    int windowSizeY = info.SizeY.ValueOr(CW_USEDEFAULT);
-    int windowPositionX = info.PositionX.ValueOr(CW_USEDEFAULT);
-    int windowPositionY = info.PositionY.ValueOr(CW_USEDEFAULT);
+    const int windowSizeX     = info.SizeX.ValueOr(static_cast<uint32>(CW_USEDEFAULT));
+    const int windowSizeY     = info.SizeY.ValueOr(static_cast<uint32>(CW_USEDEFAULT));
+    const int windowPositionX = info.PositionX.ValueOr(CW_USEDEFAULT);
+    const int windowPositionY = info.PositionY.ValueOr(CW_USEDEFAULT);
 
     // Determine the window creation flags.
     DWORD windowStyleFlags = WS_OVERLAPPEDWINDOW;
-    DWORD windowShowMode = SW_SHOW;
+    DWORD windowShowMode   = SW_SHOW;
 
     if (info.StartMode == WindowMode::Maximized)
     {
@@ -91,10 +91,8 @@ WindowsWindow::WindowsWindow(const WindowInfo& info)
     }
 
     // Create the window.
-    m_WindowHandle = CreateWindowA(
-        "ShooterWindowClass", info.Title.Characters(), windowStyleFlags,
-        windowPositionX, windowPositionY, windowSizeX, windowSizeY,
-        nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
+    m_WindowHandle = CreateWindowA("ShooterWindowClass", info.Title.Characters(), windowStyleFlags, windowPositionX, windowPositionY, windowSizeX, windowSizeY,
+                                   nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
     if (m_WindowHandle == nullptr)
     {
         SE_LOG_ERROR("Failed to create window with title '%s'!", info.Title.Characters());
@@ -173,7 +171,7 @@ WindowMode WindowsWindow::GetCurrentMode() const
 
     if (IsZoomed(m_WindowHandle))
         return WindowMode::Maximized;
-    
+
     if (IsIconic(m_WindowHandle))
         return WindowMode::Minimized;
 
@@ -186,24 +184,20 @@ void WindowsWindow::SetSize(Optional<uint32> sizeX, Optional<uint32> sizeY)
     GetClientRect(m_WindowHandle, &currentWindowClientRect);
 
     // Get the new size of the window client area.
-    const uint32 newClientSizeX = sizeX.ValueOr((uint32)(currentWindowClientRect.right - currentWindowClientRect.left));
-    const uint32 newClientSizeY = sizeY.ValueOr((uint32)(currentWindowClientRect.bottom - currentWindowClientRect.top));
+    const uint32 newClientSizeX = sizeX.ValueOr(static_cast<uint32>(currentWindowClientRect.right - currentWindowClientRect.left));
+    const uint32 newClientSizeY = sizeY.ValueOr(static_cast<uint32>(currentWindowClientRect.bottom - currentWindowClientRect.top));
 
     // Get current window style & ex-style.
-    const DWORD currentStyle = GetWindowLong(m_WindowHandle, GWL_STYLE);
+    const DWORD currentStyle   = GetWindowLong(m_WindowHandle, GWL_STYLE);
     const DWORD currentExStyle = GetWindowLong(m_WindowHandle, GWL_EXSTYLE);
 
     // Adjust the window rectangle.
-    RECT windowRect = { 0, 0, (LONG)newClientSizeX, (LONG)newClientSizeY };
+    RECT windowRect = { 0, 0, static_cast<LONG>(newClientSizeX), static_cast<LONG>(newClientSizeY) };
     AdjustWindowRectEx(&windowRect, currentStyle, FALSE, currentExStyle);
 
     // Resize the window to that rectangle.
-    SetWindowPos(
-        m_WindowHandle, nullptr,
-        0, 0,
-        windowRect.right - windowRect.left,
-        windowRect.bottom - windowRect.top,
-        SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+    SetWindowPos(m_WindowHandle, nullptr, 0, 0, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top,
+                 SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
 void WindowsWindow::SetCurrentMode(WindowMode mode)
@@ -225,10 +219,10 @@ void WindowsWindow::SetCurrentMode(WindowMode mode)
     // Handle non-fullscreen state.
     if (mode == WindowMode::Windowed)
         ShowWindow(m_WindowHandle, SW_RESTORE);
-    
+
     if (mode == WindowMode::Minimized)
         ShowWindow(m_WindowHandle, SW_MINIMIZE);
-    
+
     if (mode == WindowMode::Maximized)
         ShowWindow(m_WindowHandle, SW_MAXIMIZE);
 }
@@ -255,8 +249,8 @@ void WindowsWindow::EnterFullscreen(WindowMode previousMode)
     // Get the previous window placement. It will be used to restore the window when exiting fullscreen mode.
     WINDOWPLACEMENT windowPlacement = {};
     GetWindowPlacement(m_WindowHandle, &windowPlacement);
-    m_FullscreenState = FullscreenState();
-    m_FullscreenState->PreviousMode = previousMode;
+    m_FullscreenState                          = FullscreenState();
+    m_FullscreenState->PreviousMode            = previousMode;
     m_FullscreenState->PreviousWindowPlacement = windowPlacement;
 
     // Remove window decorations.
@@ -266,12 +260,14 @@ void WindowsWindow::EnterFullscreen(WindowMode previousMode)
     MONITORINFO monitorInfo = { sizeof(MONITORINFO) };
     if (GetMonitorInfo(MonitorFromWindow(m_WindowHandle, MONITOR_DEFAULTTOPRIMARY), &monitorInfo))
     {
+        // clang-format off
         SetWindowPos(
             m_WindowHandle, HWND_TOP,
             monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top,
             monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
             monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
             SWP_FRAMECHANGED | SWP_NOOWNERZORDER);
+        // clang-format on
     }
 }
 
@@ -284,13 +280,9 @@ void WindowsWindow::ExitFullscreen(WindowMode newMode)
     SetWindowLong(m_WindowHandle, GWL_STYLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE);
 
     SetWindowPlacement(m_WindowHandle, &m_FullscreenState->PreviousWindowPlacement);
-    SetWindowPos(
-        m_WindowHandle, nullptr,
-        0, 0, 0, 0,
-        SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
-        SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+    SetWindowPos(m_WindowHandle, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
 
     m_FullscreenState.Clear();
 }
 
-}
+} // namespace SE

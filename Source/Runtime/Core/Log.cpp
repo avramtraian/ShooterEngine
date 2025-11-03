@@ -37,7 +37,7 @@ void Logger::Submit(LogCategory category, const char* message)
     static char s_LogMessageBuffer[4096] = {};
     const usize categoryIndex = static_cast<usize>(category);
 
-    const int writtenByteCount = sprintf_s(
+    MAYBE_UNUSED const int writtenByteCount = sprintf_s(
         s_LogMessageBuffer,
         "[%s]: %s%s\n",
         s_CategoryTable[categoryIndex], s_PaddingTable[categoryIndex], message

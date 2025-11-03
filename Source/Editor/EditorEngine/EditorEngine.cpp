@@ -22,12 +22,12 @@ bool EditorEngine::Initialize()
 
     m_EditorWindow = Window::Create(WindowInfo()
         .SetStartMode(WindowMode::Maximized)
-#if SE_CONFIGURATION_EDITOR_DEBUG
+#if SE_CONFIGURATION_DEBUG
         .SetTitle(VIEW("ShooterEditor - Windows 64-bit - EditorDebug | Untitled Project"))
-#endif // SE_CONFIGURATION_EDITOR_DEBUG
-#if SE_CONFIGURATION_EDITOR_DEVELOPMENT
+#endif // SE_CONFIGURATION_DEBUG
+#if SE_CONFIGURATION_DEVELOPMENT
         .SetTitle(VIEW("ShooterEditor - Windows 64-bit - EditorDevelopment | Untitled Project"))
-#endif // SE_CONFIGURATION_EDITOR_DEVELOPMENT
+#endif // SE_CONFIGURATION_DEVELOPMENT
     );
     if (!m_EditorWindow.IsValid())
     {

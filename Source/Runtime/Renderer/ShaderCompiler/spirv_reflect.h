@@ -31,6 +31,7 @@ VERSION HISTORY
 #ifndef SPIRV_REFLECT_H
 #define SPIRV_REFLECT_H
 
+#include <Runtime/Core/CoreDefines.h>
 /*
 NOTE(Traian): The following lines of commented code were replaced by the single '#include <spirv.h>' line.
 Since we include the entirety of the SPIRV-Reflect source code, there is no point in such a complicated include path.

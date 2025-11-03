@@ -29,6 +29,12 @@
 
 #include "city.h"
 
+// NOTE: THE FOLLOWING SECTION IS NOT PART OF THE OFFICIAL LIBRARY!
+#if SE_COMPILER_MSVC
+    // NOTE: Disable warning 'declaration of '...' hides previous local declaration' .
+    #pragma warning(disable : 4456)
+#endif // SE_COMPILER_MSVC
+
 #include <algorithm>
 #include <string.h>  // for memcpy and memset
 
@@ -46,7 +52,10 @@ static uint32 UNALIGNED_LOAD32(const char *p) {
   return result;
 }
 
-#ifdef _MSC_VER
+// NOTE: By default, this only checked if the '_MSC_VER' macro is defined (as you can see below). Since we support multiple compilers when targeting
+// Windows, we had to change this pre-processor switch to check for our own 'SE_PLATFORM_WINDOWS' macro instead.
+// #ifdef _MSC_VER
+#if SE_PLATFORM_WINDOWS
 
 #include <stdlib.h>
 #define bswap_32(x) _byteswap_ulong(x)

@@ -10,10 +10,7 @@ namespace SE
 class UUID
 {
 public:
-    NODISCARD FORCEINLINE static constexpr UUID Invalid()
-    {
-        return UUID(0);
-    }
+    NODISCARD FORCEINLINE static constexpr UUID Invalid() { return UUID(0); }
 
     NODISCARD SHOOTER_API static UUID Generate();
 
@@ -54,7 +51,7 @@ public:
         if (this == &other)
             return *this;
 
-        m_Value = other.m_Value;
+        m_Value       = other.m_Value;
         other.m_Value = 0;
         return *this;
     }
@@ -71,17 +68,4 @@ private:
     uint64 m_Value;
 };
 
-}
-
-namespace std
-{
-
-template<>
-struct hash<SE::UUID> {
-    std::size_t operator()(const SE::UUID& uuid) const noexcept
-    {
-        return std::hash<uint64_t>{}(uuid.GetValue());
-    }
-};
-
-}
+} // namespace SE
