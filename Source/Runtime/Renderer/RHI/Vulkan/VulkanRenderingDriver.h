@@ -38,23 +38,23 @@ public:
     VulkanRenderingDriver() = default;
     virtual ~VulkanRenderingDriver() override = default;
 
-    NODISCARD FORCEINLINE VkInstance GetInstance() const { return m_Instance; }
-    NODISCARD FORCEINLINE VkDevice GetDevice() const { return m_LogicalDevice; }
-    NODISCARD FORCEINLINE const PhysicalDevice& GetPhysicalDevice() const { return m_PhysicalDevice; }
-    NODISCARD FORCEINLINE const QueueFamilyIndices& GetQueueFamilyIndices() const { return m_QueueFamilyIndices; }
+    NODISCARD ALWAYS_INLINE VkInstance GetInstance() const { return m_Instance; }
+    NODISCARD ALWAYS_INLINE VkDevice GetDevice() const { return m_LogicalDevice; }
+    NODISCARD ALWAYS_INLINE const PhysicalDevice& GetPhysicalDevice() const { return m_PhysicalDevice; }
+    NODISCARD ALWAYS_INLINE const QueueFamilyIndices& GetQueueFamilyIndices() const { return m_QueueFamilyIndices; }
 
-    NODISCARD FORCEINLINE VkQueue GetGraphicsQueue() const { return m_QueueGraphics; }
-    NODISCARD FORCEINLINE VkQueue GetTransferQueue() const { return m_QueueTransfer; }
-    NODISCARD FORCEINLINE VkQueue GetComputeQueue() const { return m_QueueCompute; }
-    NODISCARD FORCEINLINE VkQueue GetPresentQueue() const { return m_QueuePresent; }
+    NODISCARD ALWAYS_INLINE VkQueue GetGraphicsQueue() const { return m_QueueGraphics; }
+    NODISCARD ALWAYS_INLINE VkQueue GetTransferQueue() const { return m_QueueTransfer; }
+    NODISCARD ALWAYS_INLINE VkQueue GetComputeQueue() const { return m_QueueCompute; }
+    NODISCARD ALWAYS_INLINE VkQueue GetPresentQueue() const { return m_QueuePresent; }
 
-    NODISCARD FORCEINLINE RefPtr<VulkanCommandPool> GetCommandPool(uint32 queueFamilyIndex) const
+    NODISCARD ALWAYS_INLINE RefPtr<VulkanCommandPool> GetCommandPool(uint32 queueFamilyIndex) const
     {
         SE_ENSURE(m_CommandPoolForQueueFamilyIndex.Contains(queueFamilyIndex));
         return m_CommandPoolForQueueFamilyIndex.At(queueFamilyIndex);
     }
 
-    NODISCARD FORCEINLINE VkDescriptorPool GetDescriptorPool() const { return m_DescriptorPool; }
+    NODISCARD ALWAYS_INLINE VkDescriptorPool GetDescriptorPool() const { return m_DescriptorPool; }
 
 public:
     virtual RefPtr<RenderingSurface> CreateSurface(const RenderingSurfaceInfo& info) override;

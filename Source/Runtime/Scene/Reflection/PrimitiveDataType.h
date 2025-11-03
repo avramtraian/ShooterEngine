@@ -36,7 +36,7 @@ enum class PrimitiveDataType : uint8
 template<typename T>
 struct PrimitiveDataTypeFinder
 {
-    NODISCARD FORCEINLINE static constexpr PrimitiveDataType GetDataType()
+    NODISCARD ALWAYS_INLINE static constexpr PrimitiveDataType GetDataType()
     {
         static_assert(false, "You must specialize PrimitiveDataTypeFinder<T> in order to use this type!");
         return PrimitiveDataType::Unknown;
@@ -47,7 +47,7 @@ struct PrimitiveDataTypeFinder
     template<>                                                                  \
     struct PrimitiveDataTypeFinder<Type>                                        \
     {                                                                           \
-        NODISCARD FORCEINLINE static constexpr PrimitiveDataType GetDataType()  \
+        NODISCARD ALWAYS_INLINE static constexpr PrimitiveDataType GetDataType()  \
         {                                                                       \
             return PrimitiveDataType::Enum;                                     \
         }                                                                       \

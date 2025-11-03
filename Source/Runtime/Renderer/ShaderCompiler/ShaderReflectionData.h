@@ -28,7 +28,7 @@ struct ShaderReflectionDescriptorBinding
 struct ShaderReflectionDescriptorSet
 {
     HashMap<uint32, ShaderReflectionDescriptorBinding> Bindings;
-    NODISCARD FORCEINLINE ShaderReflectionDescriptorBinding& operator[](uint32 bindingIndex) { return Bindings[bindingIndex]; }
+    NODISCARD ALWAYS_INLINE ShaderReflectionDescriptorBinding& operator[](uint32 bindingIndex) { return Bindings[bindingIndex]; }
 };
 
 struct ShaderReflectionData

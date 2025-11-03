@@ -26,8 +26,8 @@ public:
     ReflectionSystem() = default;
     ~ReflectionSystem() = default;
 
-    NODISCARD FORCEINLINE UUID GetSystemUUID() const { return m_SystemUUID; }
-    NODISCARD FORCEINLINE const String& GetName() const { return m_Name; }
+    NODISCARD ALWAYS_INLINE UUID GetSystemUUID() const { return m_SystemUUID; }
+    NODISCARD ALWAYS_INLINE const String& GetName() const { return m_Name; }
 
     RUNTIME_API void SetSystemUUID(UUID systemUUID);
     RUNTIME_API void SetName(String name);

@@ -15,13 +15,13 @@ namespace SE
 template<typename T>
 struct FieldTypeFinder
 {
-    NODISCARD FORCEINLINE static constexpr usize GetRequiredMemory()
+    NODISCARD ALWAYS_INLINE static constexpr usize GetRequiredMemory()
     {
         static_assert(false, "You must specialize FieldTypeFinder<T> in order to use this type!");
         return 0;
     }
 
-    NODISCARD FORCEINLINE static FieldType* AllocateFieldType(void* memoryBlock)
+    NODISCARD ALWAYS_INLINE static FieldType* AllocateFieldType(void* memoryBlock)
     {
         static_assert(false, "You must specialize FieldTypeFinder<T> in order to use this type!");
         return nullptr;
@@ -36,12 +36,12 @@ struct FieldTypeFinder
     template<>                                                                          \
     struct FieldTypeFinder<Type>                                                        \
     {                                                                                   \
-        NODISCARD FORCEINLINE static constexpr usize GetRequiredMemory()                \
+        NODISCARD ALWAYS_INLINE static constexpr usize GetRequiredMemory()                \
         {                                                                               \
             return sizeof(FieldPrimitiveType);                                          \
         }                                                                               \
                                                                                         \
-        NODISCARD FORCEINLINE static FieldType* AllocateFieldType(void* memoryBlock)    \
+        NODISCARD ALWAYS_INLINE static FieldType* AllocateFieldType(void* memoryBlock)    \
         {                                                                               \
             return new (memoryBlock) FieldPrimitiveType(PrimitiveDataType::Enum);       \
         }                                                                               \
@@ -57,12 +57,12 @@ template<typename T>
 requires (std::is_enum_v<T>)
 struct FieldTypeFinder<T>
 {
-    NODISCARD FORCEINLINE static constexpr usize GetRequiredMemory()
+    NODISCARD ALWAYS_INLINE static constexpr usize GetRequiredMemory()
     {
         return sizeof(FieldEnumType);
     }
 
-    NODISCARD FORCEINLINE static FieldType* AllocateFieldType(void* memoryBlock)
+    NODISCARD ALWAYS_INLINE static FieldType* AllocateFieldType(void* memoryBlock)
     {
         constexpr UUID enumUUID = ReflectionEnumMetadata<T>::EnumUUID;
         return new (memoryBlock) FieldEnumType(enumUUID);
@@ -77,12 +77,12 @@ template<typename T>
 requires (ReflectionStructMetadata<T>::IsSpecialized)
 struct FieldTypeFinder<T>
 {
-    NODISCARD FORCEINLINE static constexpr usize GetRequiredMemory()
+    NODISCARD ALWAYS_INLINE static constexpr usize GetRequiredMemory()
     {
         return sizeof(FieldStructType);
     }
 
-    NODISCARD FORCEINLINE static FieldType* AllocateFieldType(void* memoryBlock)
+    NODISCARD ALWAYS_INLINE static FieldType* AllocateFieldType(void* memoryBlock)
     {
         constexpr UUID structUUID = ReflectionStructMetadata<T>::StructUUID;
         return new (memoryBlock) FieldStructType(structUUID);
@@ -96,12 +96,12 @@ struct FieldTypeFinder<T>
 template<>
 struct FieldTypeFinder<String>
 {
-    NODISCARD FORCEINLINE static constexpr usize GetRequiredMemory()
+    NODISCARD ALWAYS_INLINE static constexpr usize GetRequiredMemory()
     {
         return sizeof(FieldStringType);
     }
 
-    NODISCARD FORCEINLINE static FieldType* AllocateFieldType(void* memoryBlock)
+    NODISCARD ALWAYS_INLINE static FieldType* AllocateFieldType(void* memoryBlock)
     {
         return new (memoryBlock) FieldStringType();
     }
@@ -114,13 +114,13 @@ struct FieldTypeFinder<String>
 template<typename ElementType, typename Allocator>
 struct FieldTypeFinder<Vector<ElementType, Allocator>>
 {
-    NODISCARD FORCEINLINE static constexpr usize GetRequiredMemory()
+    NODISCARD ALWAYS_INLINE static constexpr usize GetRequiredMemory()
     {
         constexpr usize elementTypeRequiredMemory = FieldTypeFinder<ElementType>::GetRequiredMemory();
         return elementTypeRequiredMemory + sizeof(FieldTypedVectorType<ElementType, Allocator>);
     }
 
-    NODISCARD FORCEINLINE static FieldType* AllocateFieldType(void* memoryBlock)
+    NODISCARD ALWAYS_INLINE static FieldType* AllocateFieldType(void* memoryBlock)
     {
         constexpr usize vectorRequiredMemory = sizeof(FieldTypedVectorType<ElementType, Allocator>);
         MAYBE_UNUSED constexpr usize elementTypeRequiredMemory = FieldTypeFinder<ElementType>::GetRequiredMemory();
@@ -143,13 +143,13 @@ struct FieldTypeFinder<Vector<ElementType, Allocator>>
 template<typename ElementType, typename Allocator>
 struct FieldTypeFinder<HashSet<ElementType, Allocator>>
 {
-    NODISCARD FORCEINLINE static constexpr usize GetRequiredMemory()
+    NODISCARD ALWAYS_INLINE static constexpr usize GetRequiredMemory()
     {
         constexpr usize elementTypeRequiredMemory = FieldTypeFinder<ElementType>::GetRequiredMemory();
         return elementTypeRequiredMemory + sizeof(FieldTypedHashSetType<ElementType, Allocator>);
     }
 
-    NODISCARD FORCEINLINE static FieldType* AllocateFieldType(void* memoryBlock)
+    NODISCARD ALWAYS_INLINE static FieldType* AllocateFieldType(void* memoryBlock)
     {
         constexpr usize hashSetRequiredMemory = sizeof(FieldTypedHashSetType<ElementType, Allocator>);
         MAYBE_UNUSED constexpr usize elementTypeRequiredMemory = FieldTypeFinder<ElementType>::GetRequiredMemory();
@@ -172,14 +172,14 @@ struct FieldTypeFinder<HashSet<ElementType, Allocator>>
 template<typename KeyType, typename ValueType, typename Allocator>
 struct FieldTypeFinder<HashMap<KeyType, ValueType, Allocator>>
 {
-    NODISCARD FORCEINLINE static constexpr usize GetRequiredMemory()
+    NODISCARD ALWAYS_INLINE static constexpr usize GetRequiredMemory()
     {
         constexpr usize keyTypeRequiredMemory = FieldTypeFinder<KeyType>::GetRequiredMemory();
         constexpr usize valueTypeRequiredMemory = FieldTypeFinder<ValueType>::GetRequiredMemory();
         return (keyTypeRequiredMemory + valueTypeRequiredMemory) + sizeof(FieldTypedHashMapType<KeyType, ValueType, Allocator>);
     }
 
-    NODISCARD FORCEINLINE static FieldType* AllocateFieldType(void* memoryBlock)
+    NODISCARD ALWAYS_INLINE static FieldType* AllocateFieldType(void* memoryBlock)
     {
         constexpr usize hashMapRequiredMemory = sizeof(FieldTypedHashMapType<KeyType, ValueType, Allocator>);
         constexpr usize keyTypeRequiredMemory = FieldTypeFinder<KeyType>::GetRequiredMemory();

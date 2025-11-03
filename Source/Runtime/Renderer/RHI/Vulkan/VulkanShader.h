@@ -25,17 +25,17 @@ public:
     VulkanShader(const ShaderInfo& info);
     virtual ~VulkanShader() override;
 
-    NODISCARD FORCEINLINE uint32 GetModuleCount() const { return (uint32)m_Modules.Count(); }
-    NODISCARD FORCEINLINE const Vector<Module>& GetModules() const { return m_Modules; }
+    NODISCARD ALWAYS_INLINE uint32 GetModuleCount() const { return (uint32)m_Modules.Count(); }
+    NODISCARD ALWAYS_INLINE const Vector<Module>& GetModules() const { return m_Modules; }
 
-    NODISCARD FORCEINLINE VkPipelineLayout GetPipelineLayout() const { return m_PipelineLayout; }
+    NODISCARD ALWAYS_INLINE VkPipelineLayout GetPipelineLayout() const { return m_PipelineLayout; }
 
 public:
-    NODISCARD FORCEINLINE const HashMap<uint32, VulkanDescriptorSetLayout>& GetDescriptorSetLayouts() const { return m_DescriptorSetLayouts; }
-    NODISCARD FORCEINLINE VulkanDescriptorSetManager& GetDescriptorSetManager() { return *m_DescriptorSetManager; }
-    NODISCARD FORCEINLINE const VulkanDescriptorSetManager& GetDescriptorSetManager() const { return *m_DescriptorSetManager; }
+    NODISCARD ALWAYS_INLINE const HashMap<uint32, VulkanDescriptorSetLayout>& GetDescriptorSetLayouts() const { return m_DescriptorSetLayouts; }
+    NODISCARD ALWAYS_INLINE VulkanDescriptorSetManager& GetDescriptorSetManager() { return *m_DescriptorSetManager; }
+    NODISCARD ALWAYS_INLINE const VulkanDescriptorSetManager& GetDescriptorSetManager() const { return *m_DescriptorSetManager; }
 
-    NODISCARD FORCEINLINE const VulkanDescriptorSetLayout& GetDescriptorSetLayout(uint32 setIndex) const
+    NODISCARD ALWAYS_INLINE const VulkanDescriptorSetLayout& GetDescriptorSetLayout(uint32 setIndex) const
     {
         SE_ASSERT(m_DescriptorSetLayouts.Contains(setIndex));
         return m_DescriptorSetLayouts.At(setIndex);

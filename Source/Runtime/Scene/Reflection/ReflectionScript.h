@@ -23,15 +23,15 @@ public:
     ReflectionScript() = default;
     ~ReflectionScript() = default;
 
-    NODISCARD FORCEINLINE UUID GetScriptUUID() const { return m_ScriptUUID; }
-    NODISCARD FORCEINLINE UUID GetParentScriptUUID() const { return m_ParentScriptUUID; }
-    NODISCARD FORCEINLINE const String& GetName() const { return m_Name; }
+    NODISCARD ALWAYS_INLINE UUID GetScriptUUID() const { return m_ScriptUUID; }
+    NODISCARD ALWAYS_INLINE UUID GetParentScriptUUID() const { return m_ParentScriptUUID; }
+    NODISCARD ALWAYS_INLINE const String& GetName() const { return m_Name; }
 
     // NOTE(Traian): The reflection struct returned by these methods are not the same as
     // the ones created directly by the 'SceneReflectionRegistry'. They only hold information
     // regarding the fields of the script and the memory layout, not about UUID/name/parenting.
-    NODISCARD FORCEINLINE ReflectionStruct& GetStruct() { return m_Struct; }
-    NODISCARD FORCEINLINE const ReflectionStruct& GetStruct() const { return m_Struct; }
+    NODISCARD ALWAYS_INLINE ReflectionStruct& GetStruct() { return m_Struct; }
+    NODISCARD ALWAYS_INLINE const ReflectionStruct& GetStruct() const { return m_Struct; }
 
     RUNTIME_API void SetScriptUUID(UUID scriptUUID);
     RUNTIME_API void SetParentScriptUUID(UUID parentScriptUUID);

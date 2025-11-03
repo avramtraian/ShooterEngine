@@ -32,9 +32,9 @@ public:
     ~VulkanDescriptorSet();
 
 public:
-    NODISCARD FORCEINLINE VkDescriptorSet GetHandle() const { return m_DescriptorSet; }
-    NODISCARD FORCEINLINE VkDescriptorSetLayout GetLayout() const { return m_DescriptorSetLayout.Handle; }
-    NODISCARD FORCEINLINE uint32 GetSetIndex() const { return m_SetIndex; }
+    NODISCARD ALWAYS_INLINE VkDescriptorSet GetHandle() const { return m_DescriptorSet; }
+    NODISCARD ALWAYS_INLINE VkDescriptorSetLayout GetLayout() const { return m_DescriptorSetLayout.Handle; }
+    NODISCARD ALWAYS_INLINE uint32 GetSetIndex() const { return m_SetIndex; }
 
     NODISCARD DescriptorSetCompatibility IsCompatibleWithBindings(const HashMap<uint32, RefPtr<ShaderResource>>& bindings) const;
     void UpdateBindings(const HashMap<uint32, RefPtr<ShaderResource>>& bindings);

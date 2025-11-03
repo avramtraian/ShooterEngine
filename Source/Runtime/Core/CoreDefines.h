@@ -239,11 +239,6 @@
     #define RUNTIME_API
 #endif // RUNTIME_API
 
-// DEPRECATED: These macro are here only for compatibility reasons - no newly written code should use them.
-#ifndef FORCEINLINE
-    #define FORCEINLINE ALWAYS_INLINE
-#endif // FORCEINLINE
-
 //========================================================================================================================================//
 //------------------------------------------------------- DISABLE WARNINGS GLOBALLY ------------------------------------------------------//
 //========================================================================================================================================//

@@ -30,7 +30,7 @@ class RHIObjectCallback
 
 public:
     RHIObjectCallback() = default;
-    FORCEINLINE ~RHIObjectCallback() { Release(); }
+    ALWAYS_INLINE ~RHIObjectCallback() { Release(); }
 
     RUNTIME_API RHIObjectCallback(const RefPtr<RHIObject>& object, RHIObjectCallbackType callbackType, PFN_RHIObjectCallback callback);
     RUNTIME_API RHIObjectCallback(const RefPtr<RHIObject>& object, RHIObjectCallbackType callbackType, RHIObjectCallbackID callbackID);
@@ -41,7 +41,7 @@ public:
     RUNTIME_API void Release();
 
 public:
-    FORCEINLINE RHIObjectCallback(RHIObjectCallback&& other) noexcept
+    ALWAYS_INLINE RHIObjectCallback(RHIObjectCallback&& other) noexcept
         : m_Object(other.m_Object)
         , m_CallackType(other.m_CallackType)
         , m_CallbackID(other.m_CallbackID)
@@ -51,7 +51,7 @@ public:
         other.m_CallbackID = INVALID_RHI_OBJECT_CALLBACK_ID;
     }
 
-    FORCEINLINE RHIObjectCallback& operator=(RHIObjectCallback&& other) noexcept
+    ALWAYS_INLINE RHIObjectCallback& operator=(RHIObjectCallback&& other) noexcept
     {
         // Handle self-assignment case.
         if (this == &other)
@@ -86,7 +86,7 @@ public:
     RUNTIME_API RHIObjectCallbackID AddCallbackAndGetID(RHIObjectCallbackType callbackType, PFN_RHIObjectCallback callback);
     RUNTIME_API void RemoveCallbackID(RHIObjectCallbackType callbackType, RHIObjectCallbackID callbackID);
 
-    NODISCARD FORCEINLINE RHIObjectCallback AddCallback(RHIObjectCallbackType callbackType, PFN_RHIObjectCallback callback)
+    NODISCARD ALWAYS_INLINE RHIObjectCallback AddCallback(RHIObjectCallbackType callbackType, PFN_RHIObjectCallback callback)
     {
         const RHIObjectCallbackID callbackID = AddCallbackAndGetID(callbackType, std::move(callback));
         RHIObjectCallback scopedCallback;

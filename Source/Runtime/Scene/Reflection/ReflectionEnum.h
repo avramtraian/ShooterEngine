@@ -30,10 +30,10 @@ public:
     ReflectionEnum() = default;
     ~ReflectionEnum() = default;
 
-    NODISCARD FORCEINLINE UUID GetEnumUUID() const { return m_EnumUUID; }
-    NODISCARD FORCEINLINE const String& GetName() const { return m_Name; }
-    NODISCARD FORCEINLINE PrimitiveDataType GetUnderlyingDataType() const { return m_UnderlyingDataType; }
-    NODISCARD FORCEINLINE const Vector<Member>& GetMembers() const { return m_Members; }
+    NODISCARD ALWAYS_INLINE UUID GetEnumUUID() const { return m_EnumUUID; }
+    NODISCARD ALWAYS_INLINE const String& GetName() const { return m_Name; }
+    NODISCARD ALWAYS_INLINE PrimitiveDataType GetUnderlyingDataType() const { return m_UnderlyingDataType; }
+    NODISCARD ALWAYS_INLINE const Vector<Member>& GetMembers() const { return m_Members; }
 
     RUNTIME_API void SetEnumUUID(UUID enumUUID);
     RUNTIME_API void SetName(String name);

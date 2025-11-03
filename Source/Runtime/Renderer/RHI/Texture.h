@@ -19,7 +19,7 @@ enum class TextureFormat : uint8
     MaxEnumValue,
 };
 
-NODISCARD FORCEINLINE bool IsTextureDepthFormat(TextureFormat format)
+NODISCARD ALWAYS_INLINE bool IsTextureDepthFormat(TextureFormat format)
 {
     if (format == TextureFormat::D24S8) { return true; }
 

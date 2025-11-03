@@ -57,13 +57,13 @@ private:
     class DelegateInstanceInterface : public RefCounted
     {
     public:
-        FORCEINLINE DelegateInstanceInterface()
+        ALWAYS_INLINE DelegateInstanceInterface()
             : m_Handle(GenerateDelegateHandle())
         {}
         virtual ~DelegateInstanceInterface() override = default;
 
     public:
-        NODISCARD FORCEINLINE DelegateHandle GetHandle() const { return m_Handle; }
+        NODISCARD ALWAYS_INLINE DelegateHandle GetHandle() const { return m_Handle; }
         NODISCARD virtual bool IsBound() const = 0;
         virtual ReturnType Execute(ParameterTypes... parameters) const = 0;
 
@@ -78,7 +78,7 @@ private:
     class DelegateRawFunction : public DelegateInstanceInterface
     {
     public:
-        FORCEINLINE DelegateRawFunction(PFN_RawFunction<ReturnType, ParameterTypes...> function)
+        ALWAYS_INLINE DelegateRawFunction(PFN_RawFunction<ReturnType, ParameterTypes...> function)
             : m_Function(function)
         {}
         virtual ~DelegateRawFunction() override = default;
@@ -108,7 +108,7 @@ private:
     class DelegateLambda : public DelegateInstanceInterface
     {
     public:
-        FORCEINLINE DelegateLambda(LambdaType lambda)
+        ALWAYS_INLINE DelegateLambda(LambdaType lambda)
             : m_Lambda(Move(lambda))
         {}
         virtual ~DelegateLambda() override = default;
@@ -137,7 +137,7 @@ private:
     class DelegateRefCountedMethod : public DelegateInstanceInterface
     {
     public:
-        FORCEINLINE DelegateRefCountedMethod(const StrongRefPtr<UserClass>& userObject, PFN_ClassMethod<UserClass, ReturnType, ParameterTypes...> classMethod)
+        ALWAYS_INLINE DelegateRefCountedMethod(const StrongRefPtr<UserClass>& userObject, PFN_ClassMethod<UserClass, ReturnType, ParameterTypes...> classMethod)
             : m_UserObject(userObject)
             , m_ClassMethod(classMethod)
         {}
@@ -165,28 +165,28 @@ public:
     GenericDelegate() = default;
     ~GenericDelegate() = default;
 
-    FORCEINLINE GenericDelegate(const GenericDelegate& other)
+    ALWAYS_INLINE GenericDelegate(const GenericDelegate& other)
         : m_DelegateInstance(other.m_DelegateInstance)
     {}
 
-    FORCEINLINE GenericDelegate(GenericDelegate&& other) noexcept
+    ALWAYS_INLINE GenericDelegate(GenericDelegate&& other) noexcept
         : m_DelegateInstance(Move(other.m_DelegateInstance))
     {}
 
-    FORCEINLINE GenericDelegate& operator=(const GenericDelegate& other)
+    ALWAYS_INLINE GenericDelegate& operator=(const GenericDelegate& other)
     {
         m_DelegateInstance = other.m_DelegateInstance;
         return *this;
     }
 
-    FORCEINLINE GenericDelegate& operator=(GenericDelegate&& other) noexcept
+    ALWAYS_INLINE GenericDelegate& operator=(GenericDelegate&& other) noexcept
     {
         m_DelegateInstance = Move(other.m_DelegateInstance);
         return *this;
     }
     
 public:
-    NODISCARD FORCEINLINE bool IsBound() const
+    NODISCARD ALWAYS_INLINE bool IsBound() const
     {
         if (!m_DelegateInstance.IsValid())
             return false;
@@ -200,13 +200,13 @@ public:
         return true;
     }
     
-    FORCEINLINE ReturnType Execute(ParameterTypes... parameters) const
+    ALWAYS_INLINE ReturnType Execute(ParameterTypes... parameters) const
     {
         SE_ASSERT(IsBound());
         return m_DelegateInstance->Execute(Forward<ParameterTypes>(parameters)...);
     }
 
-    FORCEINLINE void ExecuteIfBound(ParameterTypes... parameters) const
+    ALWAYS_INLINE void ExecuteIfBound(ParameterTypes... parameters) const
     requires(std::is_same_v<ReturnType, void>)
     {
         if (IsBound())
@@ -215,19 +215,19 @@ public:
         }
     }
 
-    NODISCARD FORCEINLINE DelegateHandle GetBoundHandle() const
+    NODISCARD ALWAYS_INLINE DelegateHandle GetBoundHandle() const
     {
         if (!IsBound())
             return INVALID_DELEGATE_HANDLE;
         return m_DelegateInstance->GetHandle();
     }
 
-    FORCEINLINE void Release()
+    ALWAYS_INLINE void Release()
     {
         m_DelegateInstance.Release();
     }
 
-    FORCEINLINE void ReleaseIfHandleMatches(DelegateHandle handle)
+    ALWAYS_INLINE void ReleaseIfHandleMatches(DelegateHandle handle)
     {
         if (GetBoundHandle() == handle)
         {
@@ -236,21 +236,21 @@ public:
     }
 
 public:
-    FORCEINLINE DelegateHandle BindRaw(PFN_RawFunction<ReturnType, ParameterTypes...> function)
+    ALWAYS_INLINE DelegateHandle BindRaw(PFN_RawFunction<ReturnType, ParameterTypes...> function)
     {
         m_DelegateInstance = CreateRef<DelegateRawFunction>(function);
         return m_DelegateInstance->GetHandle();
     }
 
     template<typename LambdaType>
-    FORCEINLINE DelegateHandle BindLambda(LambdaType lambda)
+    ALWAYS_INLINE DelegateHandle BindLambda(LambdaType lambda)
     {
         m_DelegateInstance = CreateRef<DelegateLambda<LambdaType>>(Move(lambda));
         return m_DelegateInstance->GetHandle();
     }
 
     template<typename UserClass>
-    FORCEINLINE DelegateHandle BindRefCounted(const StrongRefPtr<UserClass>& userObject, PFN_ClassMethod<UserClass, ReturnType, ParameterTypes...> classMethod)
+    ALWAYS_INLINE DelegateHandle BindRefCounted(const StrongRefPtr<UserClass>& userObject, PFN_ClassMethod<UserClass, ReturnType, ParameterTypes...> classMethod)
     {
         m_DelegateInstance = CreateRef<DelegateRefCountedMethod<UserClass>>(userObject, classMethod);
         return m_DelegateInstance->GetHandle();
@@ -293,7 +293,7 @@ public:
     GenericMulticastDelegate& operator=(GenericMulticastDelegate&& other) noexcept = default;
 
 public:
-    FORCEINLINE void Broadcast(ParameterTypes... parameters) const
+    ALWAYS_INLINE void Broadcast(ParameterTypes... parameters) const
     {
         // List of delegates that are no longer bound.
         Vector<DelegateHandle> handlesToRemove;
@@ -312,7 +312,7 @@ public:
     }
 
 public:
-    FORCEINLINE DelegateHandle AddRaw(PFN_RawFunction<void, ParameterTypes...> function)
+    ALWAYS_INLINE DelegateHandle AddRaw(PFN_RawFunction<void, ParameterTypes...> function)
     {
         Delegate delegate;
         delegate.BindRaw(function);
@@ -322,7 +322,7 @@ public:
     }
 
     template<typename LambdaType>
-    FORCEINLINE DelegateHandle AddLambda(LambdaType lambda)
+    ALWAYS_INLINE DelegateHandle AddLambda(LambdaType lambda)
     {
         Delegate delegate;
         delegate.template BindLambda<LambdaType>(Move(lambda));
@@ -332,7 +332,7 @@ public:
     }
 
     template<typename UserClass>
-    FORCEINLINE DelegateHandle AddRefCounted(const StrongRefPtr<UserClass>& userObject, PFN_ClassMethod<UserClass, void, ParameterTypes...> classMethod)
+    ALWAYS_INLINE DelegateHandle AddRefCounted(const StrongRefPtr<UserClass>& userObject, PFN_ClassMethod<UserClass, void, ParameterTypes...> classMethod)
     {
         Delegate delegate;
         delegate.template BindRefCounted<UserClass>(userObject, classMethod);
@@ -341,7 +341,7 @@ public:
         return handle;
     }
 
-    FORCEINLINE void Remove(DelegateHandle handle)
+    ALWAYS_INLINE void Remove(DelegateHandle handle)
     {
         if (handle == INVALID_DELEGATE_HANDLE)
             return;

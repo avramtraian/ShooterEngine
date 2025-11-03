@@ -14,7 +14,7 @@ NODISCARD RUNTIME_API uint64 GetCityHash64(const char* characters, usize byteCou
 class StringView
 {
 public:
-    NODISCARD FORCEINLINE static uint64 GetHash(const StringView& view)
+    NODISCARD ALWAYS_INLINE static uint64 GetHash(const StringView& view)
     {
         const uint64 hashValue = GetCityHash64(view.Characters(), view.ByteCount());
         return hashValue;
@@ -25,17 +25,17 @@ public:
     NODISCARD RUNTIME_API static StringView FromUTF8(const char* nullTerminatedCharacters);
 
 public:
-    FORCEINLINE constexpr StringView()
+    ALWAYS_INLINE constexpr StringView()
         : m_ByteCount(0)
         , m_Characters(nullptr)
     {}
 
-    FORCEINLINE constexpr StringView(const StringView& other)
+    ALWAYS_INLINE constexpr StringView(const StringView& other)
         : m_ByteCount(other.m_ByteCount)
         , m_Characters(other.m_Characters)
     {}
 
-    FORCEINLINE constexpr StringView(StringView&& other) noexcept
+    ALWAYS_INLINE constexpr StringView(StringView&& other) noexcept
         : m_ByteCount(other.m_ByteCount)
         , m_Characters(other.m_Characters)
     {
@@ -43,14 +43,14 @@ public:
         other.m_ByteCount = 0;
     }
 
-    FORCEINLINE constexpr StringView& operator=(const StringView& other)
+    ALWAYS_INLINE constexpr StringView& operator=(const StringView& other)
     {
         m_Characters = other.m_Characters;
         m_ByteCount = other.m_ByteCount;
         return *this;
     }
 
-    FORCEINLINE constexpr StringView& operator=(StringView&& other) noexcept
+    ALWAYS_INLINE constexpr StringView& operator=(StringView&& other) noexcept
     {
         m_Characters = other.m_Characters;
         m_ByteCount = other.m_ByteCount;
@@ -60,14 +60,14 @@ public:
     }
 
 public:
-    NODISCARD FORCEINLINE usize ByteCount() const { return m_ByteCount; }
-    NODISCARD FORCEINLINE const char* Characters() const { return m_Characters; }
+    NODISCARD ALWAYS_INLINE usize ByteCount() const { return m_ByteCount; }
+    NODISCARD ALWAYS_INLINE const char* Characters() const { return m_Characters; }
 
-    NODISCARD FORCEINLINE bool IsEmpty() const { return m_ByteCount == 0; }
-    NODISCARD FORCEINLINE bool HasCharacters() const { return m_ByteCount > 0; }
+    NODISCARD ALWAYS_INLINE bool IsEmpty() const { return m_ByteCount == 0; }
+    NODISCARD ALWAYS_INLINE bool HasCharacters() const { return m_ByteCount > 0; }
 
 public:
-    NODISCARD FORCEINLINE bool operator==(const StringView& other) const
+    NODISCARD ALWAYS_INLINE bool operator==(const StringView& other) const
     {
         if (m_ByteCount != other.m_ByteCount)
             return false;
@@ -81,7 +81,7 @@ public:
         return true;
     }
 
-    NODISCARD FORCEINLINE bool operator!=(const StringView& other) const
+    NODISCARD ALWAYS_INLINE bool operator!=(const StringView& other) const
     {
         const bool areEqual = ((*this) == other);
         return !areEqual;

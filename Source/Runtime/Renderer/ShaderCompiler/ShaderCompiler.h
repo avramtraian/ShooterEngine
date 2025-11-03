@@ -34,9 +34,9 @@ public:
     RUNTIME_API bool Compile();
 
 public:
-    NODISCARD FORCEINLINE bool HasErrorMessages() const { return m_ErrorMessages.HasElements(); }
-    NODISCARD FORCEINLINE const Vector<String>& GetErrorMessages() const { return m_ErrorMessages; }
-    NODISCARD FORCEINLINE const Vector<CompiledShaderStage>& GetCompiledStages() const { return m_CompiledStages; }
+    NODISCARD ALWAYS_INLINE bool HasErrorMessages() const { return m_ErrorMessages.HasElements(); }
+    NODISCARD ALWAYS_INLINE const Vector<String>& GetErrorMessages() const { return m_ErrorMessages; }
+    NODISCARD ALWAYS_INLINE const Vector<CompiledShaderStage>& GetCompiledStages() const { return m_CompiledStages; }
 
     NODISCARD RUNTIME_API bool IsStageCompiled(ShaderStage stage) const;
     NODISCARD RUNTIME_API const CompiledShaderStage& GetCompiledStage(ShaderStage stage) const;

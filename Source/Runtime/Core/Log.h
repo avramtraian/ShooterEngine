@@ -31,7 +31,7 @@ public:
     RUNTIME_API static void Submit(LogCategory category, const char* message);
 
     template<typename... Args>
-    FORCEINLINE static void Submit(LogCategory category, const char* message, Args&&... args)
+    ALWAYS_INLINE static void Submit(LogCategory category, const char* message, Args&&... args)
     {
         static char s_formatted_message_buffer[4096] = {};
         const int written_byte_count = sprintf_s(s_formatted_message_buffer, message, Forward<Args>(args)...);

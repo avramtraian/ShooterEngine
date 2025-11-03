@@ -11,13 +11,13 @@ namespace SE
 template<typename T>
 struct NumericLimits
 {
-    NODISCARD FORCEINLINE static constexpr T Min()
+    NODISCARD ALWAYS_INLINE static constexpr T Min()
     {
         static_assert(false, "You must specialize NumericLimits<T> in order to use the 'Min' function!");
         return T();
     }
 
-    NODISCARD FORCEINLINE static constexpr T Max()
+    NODISCARD ALWAYS_INLINE static constexpr T Max()
     {
         static_assert(false, "You must specialize NumericLimits<T> in order to use the 'Max' function!");
         return T();
@@ -28,12 +28,12 @@ struct NumericLimits
     template<>                                                                            \
     struct NumericLimits<PrimitiveType>                                                   \
     {                                                                                     \
-        NODISCARD FORCEINLINE static constexpr PrimitiveType Min()                        \
+        NODISCARD ALWAYS_INLINE static constexpr PrimitiveType Min()                        \
         {                                                                                 \
             return PrimitiveType(MIN_VALUE);                                              \
         }                                                                                 \
                                                                                           \
-        NODISCARD FORCEINLINE static constexpr PrimitiveType Max()                        \
+        NODISCARD ALWAYS_INLINE static constexpr PrimitiveType Max()                        \
         {                                                                                 \
             return PrimitiveType(MAX_VALUE);                                              \
         }                                                                                 \

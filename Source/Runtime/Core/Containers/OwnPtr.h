@@ -20,26 +20,26 @@ public:
     SE_MAKE_NONCOPYABLE(OwnPtr);
 
 public:
-    FORCEINLINE OwnPtr()
+    ALWAYS_INLINE OwnPtr()
         : m_Instance(nullptr)
     {}
 
-    FORCEINLINE ~OwnPtr()
+    ALWAYS_INLINE ~OwnPtr()
     {
         Release();
     }
 
-    FORCEINLINE OwnPtr(OwnPtr&& other) noexcept
+    ALWAYS_INLINE OwnPtr(OwnPtr&& other) noexcept
         : m_Instance(other.m_Instance)
     {
         other.m_Instance = nullptr;
     }
 
-    FORCEINLINE OwnPtr(NullptrType)
+    ALWAYS_INLINE OwnPtr(NullptrType)
         : m_Instance(nullptr)
     {}
 
-    FORCEINLINE OwnPtr& operator=(OwnPtr&& other) noexcept
+    ALWAYS_INLINE OwnPtr& operator=(OwnPtr&& other) noexcept
     {
         // Handle the self-assignment case.
         if (this == &other)
@@ -53,7 +53,7 @@ public:
         return *this;
     }
 
-    FORCEINLINE OwnPtr& operator=(NullptrType)
+    ALWAYS_INLINE OwnPtr& operator=(NullptrType)
     {
         Release();
         return *this;
@@ -62,7 +62,7 @@ public:
 public:
     template<typename Q>
     requires(!std::is_same_v<T, Q> && std::is_base_of_v<T, Q>)
-    FORCEINLINE OwnPtr(OwnPtr<Q>&& other) noexcept
+    ALWAYS_INLINE OwnPtr(OwnPtr<Q>&& other) noexcept
         : m_Instance(other.m_Instance)
     {
         other.m_Instance = nullptr;
@@ -70,7 +70,7 @@ public:
 
     template<typename Q>
     requires(!std::is_same_v<T, Q> && std::is_base_of_v<T, Q>)
-    FORCEINLINE OwnPtr& operator=(OwnPtr<Q>&& other) noexcept
+    ALWAYS_INLINE OwnPtr& operator=(OwnPtr<Q>&& other) noexcept
     {
         // Handle the self-assignment case.
         if ((void*)(this) == (void*)(&other))
@@ -85,37 +85,37 @@ public:
     }
 
 public:
-    NODISCARD FORCEINLINE bool IsValid() const
+    NODISCARD ALWAYS_INLINE bool IsValid() const
     {
         return m_Instance != nullptr;
     }
 
-    NODISCARD FORCEINLINE T* Get()
+    NODISCARD ALWAYS_INLINE T* Get()
     {
         SE_ASSERT(IsValid());
         return m_Instance;
     }
 
-    NODISCARD FORCEINLINE const T* Get() const
+    NODISCARD ALWAYS_INLINE const T* Get() const
     {
         SE_ASSERT(IsValid());
         return m_Instance;
     }
 
-    NODISCARD FORCEINLINE T* GetNonConst() const
+    NODISCARD ALWAYS_INLINE T* GetNonConst() const
     {
         SE_ASSERT(IsValid());
         return m_Instance;
     }
 
-    NODISCARD FORCEINLINE T* operator->() { return Get(); }
-    NODISCARD FORCEINLINE const T* operator->() const { return Get(); }
+    NODISCARD ALWAYS_INLINE T* operator->() { return Get(); }
+    NODISCARD ALWAYS_INLINE const T* operator->() const { return Get(); }
     
-    NODISCARD FORCEINLINE T& operator*() { return *Get(); }
-    NODISCARD FORCEINLINE const T& operator*() const { return *Get(); }
+    NODISCARD ALWAYS_INLINE T& operator*() { return *Get(); }
+    NODISCARD ALWAYS_INLINE const T& operator*() const { return *Get(); }
 
 public:
-    FORCEINLINE void Release()
+    ALWAYS_INLINE void Release()
     {
         if (m_Instance)
         {
@@ -126,7 +126,7 @@ public:
     }
 
     template<typename Q>
-    NODISCARD FORCEINLINE OwnPtr<Q> As()
+    NODISCARD ALWAYS_INLINE OwnPtr<Q> As()
     {
         OwnPtr<Q> casted;
         casted.m_Instance = m_Instance;
@@ -139,7 +139,7 @@ private:
 };
 
 template<typename T>
-NODISCARD FORCEINLINE OwnPtr<T> AdoptOwn(T* instance)
+NODISCARD ALWAYS_INLINE OwnPtr<T> AdoptOwn(T* instance)
 {
     OwnPtr<T> ownPtr;
     ownPtr.m_Instance = instance;
@@ -147,7 +147,7 @@ NODISCARD FORCEINLINE OwnPtr<T> AdoptOwn(T* instance)
 }
 
 template<typename T, typename... Args>
-NODISCARD FORCEINLINE OwnPtr<T> CreateOwn(Args&&... args)
+NODISCARD ALWAYS_INLINE OwnPtr<T> CreateOwn(Args&&... args)
 {
     OwnPtr<T> ownPtr;
     ownPtr.m_Instance = new T(Forward<Args>(args)...);

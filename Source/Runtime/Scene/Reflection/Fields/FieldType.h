@@ -51,26 +51,26 @@ class FieldAssetReferenceType;
 class FieldType
 {
 public:
-    FORCEINLINE explicit FieldType(FieldTypeKind kind)
+    ALWAYS_INLINE explicit FieldType(FieldTypeKind kind)
         : m_Kind(kind)
     {}
 
     virtual ~FieldType() = default;
-    NODISCARD FORCEINLINE FieldTypeKind GetKind() const { return m_Kind; }
+    NODISCARD ALWAYS_INLINE FieldTypeKind GetKind() const { return m_Kind; }
 
 public:
     // C++ types.
-    NODISCARD FORCEINLINE const FieldPrimitiveType& AsPrimitive() const { return reinterpret_cast<const FieldPrimitiveType&>(*this); }
-    NODISCARD FORCEINLINE const FieldEnumType& AsEnum() const { return reinterpret_cast<const FieldEnumType&>(*this); }
-    NODISCARD FORCEINLINE const FieldStructType& AsStruct() const { return reinterpret_cast<const FieldStructType&>(*this); }
-    NODISCARD FORCEINLINE const FieldStringType& AsString() const { return reinterpret_cast<const FieldStringType&>(*this); }
-    NODISCARD FORCEINLINE const FieldVectorType& AsVector() const { return reinterpret_cast<const FieldVectorType&>(*this); }
-    NODISCARD FORCEINLINE const FieldHashSetType& AsHashSet() const { return reinterpret_cast<const FieldHashSetType&>(*this); }
-    NODISCARD FORCEINLINE const FieldHashMapType& AsHashMap() const { return reinterpret_cast<const FieldHashMapType&>(*this); }
+    NODISCARD ALWAYS_INLINE const FieldPrimitiveType& AsPrimitive() const { return reinterpret_cast<const FieldPrimitiveType&>(*this); }
+    NODISCARD ALWAYS_INLINE const FieldEnumType& AsEnum() const { return reinterpret_cast<const FieldEnumType&>(*this); }
+    NODISCARD ALWAYS_INLINE const FieldStructType& AsStruct() const { return reinterpret_cast<const FieldStructType&>(*this); }
+    NODISCARD ALWAYS_INLINE const FieldStringType& AsString() const { return reinterpret_cast<const FieldStringType&>(*this); }
+    NODISCARD ALWAYS_INLINE const FieldVectorType& AsVector() const { return reinterpret_cast<const FieldVectorType&>(*this); }
+    NODISCARD ALWAYS_INLINE const FieldHashSetType& AsHashSet() const { return reinterpret_cast<const FieldHashSetType&>(*this); }
+    NODISCARD ALWAYS_INLINE const FieldHashMapType& AsHashMap() const { return reinterpret_cast<const FieldHashMapType&>(*this); }
 
     // Engine types.
-    NODISCARD FORCEINLINE const FieldEntityReferenceType& AsEntityReference() const { return reinterpret_cast<const FieldEntityReferenceType&>(*this); }
-    NODISCARD FORCEINLINE const FieldAssetReferenceType& AsAssetReference() const { return reinterpret_cast<const FieldAssetReferenceType&>(*this); }
+    NODISCARD ALWAYS_INLINE const FieldEntityReferenceType& AsEntityReference() const { return reinterpret_cast<const FieldEntityReferenceType&>(*this); }
+    NODISCARD ALWAYS_INLINE const FieldAssetReferenceType& AsAssetReference() const { return reinterpret_cast<const FieldAssetReferenceType&>(*this); }
 
 private:
     FieldTypeKind m_Kind;
@@ -83,14 +83,14 @@ private:
 class FieldPrimitiveType : public FieldType
 {
 public:
-    FORCEINLINE explicit FieldPrimitiveType(PrimitiveDataType dataType)
+    ALWAYS_INLINE explicit FieldPrimitiveType(PrimitiveDataType dataType)
         : FieldType(GetStaticKind())
         , m_DataType(dataType)
     {}
 
     virtual ~FieldPrimitiveType() override = default;
-    NODISCARD FORCEINLINE static FieldTypeKind GetStaticKind() { return FieldTypeKind::Primitive; }
-    NODISCARD FORCEINLINE PrimitiveDataType GetDataType() const { return m_DataType; }
+    NODISCARD ALWAYS_INLINE static FieldTypeKind GetStaticKind() { return FieldTypeKind::Primitive; }
+    NODISCARD ALWAYS_INLINE PrimitiveDataType GetDataType() const { return m_DataType; }
 
 private:
     PrimitiveDataType m_DataType;
@@ -103,14 +103,14 @@ private:
 class FieldEnumType : public FieldType
 {
 public:
-    FORCEINLINE explicit FieldEnumType(UUID enumUUID)
+    ALWAYS_INLINE explicit FieldEnumType(UUID enumUUID)
         : FieldType(GetStaticKind())
         , m_EnumUUID(enumUUID)
     {}
 
     virtual ~FieldEnumType() override = default;
-    NODISCARD FORCEINLINE static FieldTypeKind GetStaticKind() { return FieldTypeKind::Enum; }
-    NODISCARD FORCEINLINE UUID GetEnumUUID() const { return m_EnumUUID; }
+    NODISCARD ALWAYS_INLINE static FieldTypeKind GetStaticKind() { return FieldTypeKind::Enum; }
+    NODISCARD ALWAYS_INLINE UUID GetEnumUUID() const { return m_EnumUUID; }
 
 private:
     UUID m_EnumUUID;
@@ -123,14 +123,14 @@ private:
 class FieldStructType : public FieldType
 {
 public:
-    FORCEINLINE explicit FieldStructType(UUID structUUID)
+    ALWAYS_INLINE explicit FieldStructType(UUID structUUID)
         : FieldType(GetStaticKind())
         , m_StructUUID(structUUID)
     {}
 
     virtual ~FieldStructType() override = default;
-    NODISCARD FORCEINLINE static FieldTypeKind GetStaticKind() { return FieldTypeKind::Struct; }
-    NODISCARD FORCEINLINE UUID GetStructUUID() const { return m_StructUUID; }
+    NODISCARD ALWAYS_INLINE static FieldTypeKind GetStaticKind() { return FieldTypeKind::Struct; }
+    NODISCARD ALWAYS_INLINE UUID GetStructUUID() const { return m_StructUUID; }
 
 private:
     UUID m_StructUUID;
@@ -143,12 +143,12 @@ private:
 class FieldStringType : public FieldType
 {
 public:
-    FORCEINLINE explicit FieldStringType()
+    ALWAYS_INLINE explicit FieldStringType()
         : FieldType(GetStaticKind())
     {}
 
     virtual ~FieldStringType() override = default;
-    NODISCARD FORCEINLINE static FieldTypeKind GetStaticKind() { return FieldTypeKind::String; }
+    NODISCARD ALWAYS_INLINE static FieldTypeKind GetStaticKind() { return FieldTypeKind::String; }
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -158,14 +158,14 @@ public:
 class FieldVectorType : public FieldType
 {
 public:
-    FORCEINLINE explicit FieldVectorType(const FieldType* elementType)
+    ALWAYS_INLINE explicit FieldVectorType(const FieldType* elementType)
         : FieldType(GetStaticKind())
         , m_ElementType(elementType)
     {}
 
     virtual ~FieldVectorType() override = default;
-    NODISCARD FORCEINLINE static FieldTypeKind GetStaticKind() { return FieldTypeKind::Vector; }
-    NODISCARD FORCEINLINE const FieldType* GetElementType() const { return m_ElementType; }
+    NODISCARD ALWAYS_INLINE static FieldTypeKind GetStaticKind() { return FieldTypeKind::Vector; }
+    NODISCARD ALWAYS_INLINE const FieldType* GetElementType() const { return m_ElementType; }
 
 public:
     NODISCARD virtual usize GetCapacity(const void* fieldMemoryBlock) const = 0;
@@ -180,7 +180,7 @@ public:
 
 public:
     template<typename Predicate>
-    FORCEINLINE void ForEachElementRW(void* fieldMemoryBlock, Predicate predicate) const
+    ALWAYS_INLINE void ForEachElementRW(void* fieldMemoryBlock, Predicate predicate) const
     {
         const usize elementCount = GetCount(fieldMemoryBlock);
         uint8* elements = static_cast<uint8*>(GetElementsRW(fieldMemoryBlock));
@@ -194,7 +194,7 @@ public:
     }
 
     template<typename Predicate>
-    FORCEINLINE void ForEachElementRO(const void* fieldMemoryBlock, Predicate predicate) const
+    ALWAYS_INLINE void ForEachElementRO(const void* fieldMemoryBlock, Predicate predicate) const
     {
         const usize elementCount = GetCount(fieldMemoryBlock);
         const uint8* elements = static_cast<const uint8*>(GetElementsRO(fieldMemoryBlock));
@@ -218,50 +218,50 @@ public:
     using Vector = Vector<ElementType, Allocator>;
 
 public:
-    FORCEINLINE explicit FieldTypedVectorType(const FieldType* elementType)
+    ALWAYS_INLINE explicit FieldTypedVectorType(const FieldType* elementType)
         : FieldVectorType(elementType)
     {}
 
     virtual ~FieldTypedVectorType() override = default;
 
 public:
-    NODISCARD FORCEINLINE virtual usize GetCapacity(const void* fieldMemoryBlock) const override
+    NODISCARD ALWAYS_INLINE virtual usize GetCapacity(const void* fieldMemoryBlock) const override
     {
         const Vector* vector = static_cast<const Vector*>(fieldMemoryBlock);
         return vector->Capacity();
     }
 
-    NODISCARD FORCEINLINE virtual usize GetCount(const void* fieldMemoryBlock) const override
+    NODISCARD ALWAYS_INLINE virtual usize GetCount(const void* fieldMemoryBlock) const override
     {
         const Vector* vector = static_cast<const Vector*>(fieldMemoryBlock);
         return vector->Count();
     }
 
-    NODISCARD FORCEINLINE virtual usize GetElementSize() const override
+    NODISCARD ALWAYS_INLINE virtual usize GetElementSize() const override
     {
         return sizeof(ElementType);
     }
 
-    NODISCARD FORCEINLINE virtual void* GetElementsRW(void* fieldMemoryBlock) const override
+    NODISCARD ALWAYS_INLINE virtual void* GetElementsRW(void* fieldMemoryBlock) const override
     {
         Vector* vector = static_cast<Vector*>(fieldMemoryBlock);
         return vector->Elements();
     }
 
-    NODISCARD FORCEINLINE virtual const void* GetElementsRO(const void* fieldMemoryBlock) const override
+    NODISCARD ALWAYS_INLINE virtual const void* GetElementsRO(const void* fieldMemoryBlock) const override
     {
         const Vector* vector = static_cast<const Vector*>(fieldMemoryBlock);
         return vector->Elements();
     }
 
-    FORCEINLINE virtual void AddElement(void* fieldMemoryBlock, const void* elementMemoryBlock) const override
+    ALWAYS_INLINE virtual void AddElement(void* fieldMemoryBlock, const void* elementMemoryBlock) const override
     {
         Vector* vector = static_cast<Vector*>(fieldMemoryBlock);
         const ElementType* element = static_cast<const ElementType*>(elementMemoryBlock);
         vector->Add(*element);
     }
 
-    FORCEINLINE virtual void RemoveElement(void* fieldMemoryBlock, usize elementIndex) const override
+    ALWAYS_INLINE virtual void RemoveElement(void* fieldMemoryBlock, usize elementIndex) const override
     {
         Vector* vector = static_cast<Vector*>(fieldMemoryBlock);
         vector->RemoveIndex(elementIndex);
@@ -277,14 +277,14 @@ SE_DECLARE_DELEGATE_ONE_PARAM(ForEachHashSetEntryDelegate, const void*);
 class FieldHashSetType : public FieldType
 {
 public:
-    FORCEINLINE FieldHashSetType(const FieldType* elementType)
+    ALWAYS_INLINE FieldHashSetType(const FieldType* elementType)
         : FieldType(GetStaticKind())
         , m_ElementType(elementType)
     {}
 
     virtual ~FieldHashSetType() override = default;
-    NODISCARD FORCEINLINE static FieldTypeKind GetStaticKind() { return FieldTypeKind::HashSet; }
-    NODISCARD FORCEINLINE const FieldType* GetElementType() const { return m_ElementType; }
+    NODISCARD ALWAYS_INLINE static FieldTypeKind GetStaticKind() { return FieldTypeKind::HashSet; }
+    NODISCARD ALWAYS_INLINE const FieldType* GetElementType() const { return m_ElementType; }
 
 public:
     NODISCARD virtual usize GetCount(const void* fieldMemoryBlock) const = 0;
@@ -305,34 +305,34 @@ public:
     using HashSet = HashSet<ElementType, Allocator>;
 
 public:
-    FORCEINLINE FieldTypedHashSetType(const FieldType* elementType)
+    ALWAYS_INLINE FieldTypedHashSetType(const FieldType* elementType)
         : FieldHashSetType(elementType)
     {}
 
     virtual ~FieldTypedHashSetType() override = default;
 
 public:
-    NODISCARD FORCEINLINE virtual usize GetCount(const void* fieldMemoryBlock) const override
+    NODISCARD ALWAYS_INLINE virtual usize GetCount(const void* fieldMemoryBlock) const override
     {
         const HashSet* hashSet = static_cast<const HashSet*>(fieldMemoryBlock);
         return hashSet->Count();
     }
 
-    FORCEINLINE virtual void Add(void* fieldMemoryBlock, const void* elementMemoryBlock) const override
+    ALWAYS_INLINE virtual void Add(void* fieldMemoryBlock, const void* elementMemoryBlock) const override
     {
         HashSet* hashSet = static_cast<HashSet*>(fieldMemoryBlock);
         const ElementType* element = static_cast<const ElementType*>(elementMemoryBlock);
         hashSet->Add(*element);
     }
 
-    FORCEINLINE virtual void Remove(void* fieldMemoryBlock, const void* elementMemoryBlock) const override
+    ALWAYS_INLINE virtual void Remove(void* fieldMemoryBlock, const void* elementMemoryBlock) const override
     {
         HashSet* hashSet = static_cast<HashSet*>(fieldMemoryBlock);
         const ElementType* element = static_cast<const ElementType*>(elementMemoryBlock);
         hashSet->RemoveIfExists(*element);
     }
 
-    FORCEINLINE virtual void ForEachEntry(const void* fieldMemoryBlock, const ForEachHashSetEntryDelegate& delegate) const override
+    ALWAYS_INLINE virtual void ForEachEntry(const void* fieldMemoryBlock, const ForEachHashSetEntryDelegate& delegate) const override
     {
         const HashSet* hashSet = static_cast<const HashSet*>(fieldMemoryBlock);
         for (const ElementType& element : *hashSet)
@@ -353,16 +353,16 @@ SE_DECLARE_DELEGATE_TWO_PARAMS(ForEachHashMapEntryRODelegate, const void*, const
 class FieldHashMapType : public FieldType
 {
 public:
-    FORCEINLINE FieldHashMapType(const FieldType* keyType, const FieldType* valueType)
+    ALWAYS_INLINE FieldHashMapType(const FieldType* keyType, const FieldType* valueType)
         : FieldType(GetStaticKind())
         , m_KeyType(keyType)
         , m_ValueType(valueType)
     {}
 
     virtual ~FieldHashMapType() override = default;
-    NODISCARD FORCEINLINE static FieldTypeKind GetStaticKind() { return FieldTypeKind::HashMap; }
-    NODISCARD FORCEINLINE const FieldType* GetKeyType() const { return m_KeyType; }
-    NODISCARD FORCEINLINE const FieldType* GetValueType() const { return m_ValueType; }
+    NODISCARD ALWAYS_INLINE static FieldTypeKind GetStaticKind() { return FieldTypeKind::HashMap; }
+    NODISCARD ALWAYS_INLINE const FieldType* GetKeyType() const { return m_KeyType; }
+    NODISCARD ALWAYS_INLINE const FieldType* GetValueType() const { return m_ValueType; }
 
 public:
     NODISCARD virtual usize GetCount(const void* fieldMemoryBlock) const = 0;
@@ -385,20 +385,20 @@ public:
     using HashMap = HashMap<KeyType, ValueType, Allocator>;
 
 public:
-    FORCEINLINE FieldTypedHashMapType(const FieldType* keyType, const FieldType* valueType)
+    ALWAYS_INLINE FieldTypedHashMapType(const FieldType* keyType, const FieldType* valueType)
         : FieldHashMapType(keyType, valueType)
     {}
 
     virtual ~FieldTypedHashMapType() override = default;
 
 public:
-    NODISCARD FORCEINLINE virtual usize GetCount(const void* fieldMemoryBlock) const override
+    NODISCARD ALWAYS_INLINE virtual usize GetCount(const void* fieldMemoryBlock) const override
     {
         const HashMap* hashMap = static_cast<const HashMap*>(fieldMemoryBlock);
         return hashMap->Count();
     }
 
-    FORCEINLINE virtual void Add(void* fieldMemoryBlock, const void* keyMemoryBlock, const void* valueMemoryBlock) const override
+    ALWAYS_INLINE virtual void Add(void* fieldMemoryBlock, const void* keyMemoryBlock, const void* valueMemoryBlock) const override
     {
         HashMap* hashMap = static_cast<HashMap*>(fieldMemoryBlock);
         const KeyType* key = static_cast<const KeyType*>(keyMemoryBlock);
@@ -406,14 +406,14 @@ public:
         hashMap->Add(*key, *value);
     }
 
-    FORCEINLINE virtual void Remove(void* fieldMemoryBlock, const void* keyMemoryBlock) const override
+    ALWAYS_INLINE virtual void Remove(void* fieldMemoryBlock, const void* keyMemoryBlock) const override
     {
         HashMap* hashMap = static_cast<HashMap*>(fieldMemoryBlock);
         const KeyType* key = static_cast<const KeyType*>(keyMemoryBlock);
         hashMap->RemoveIfExist(*key);
     }
 
-    FORCEINLINE virtual void ForEachEntryRW(void* fieldMemoryBlock, const ForEachHashMapEntryRWDelegate& delegate) const override
+    ALWAYS_INLINE virtual void ForEachEntryRW(void* fieldMemoryBlock, const ForEachHashMapEntryRWDelegate& delegate) const override
     {
         HashMap* hashMap = static_cast<HashMap*>(fieldMemoryBlock);
         for (auto& [key, value] : *hashMap)
@@ -424,7 +424,7 @@ public:
         }
     }
 
-    FORCEINLINE virtual void ForEachEntryRO(const void* fieldMemoryBlock, const ForEachHashMapEntryRODelegate& delegate) const override
+    ALWAYS_INLINE virtual void ForEachEntryRO(const void* fieldMemoryBlock, const ForEachHashMapEntryRODelegate& delegate) const override
     {
         const HashMap* hashMap = static_cast<const HashMap*>(fieldMemoryBlock);
         for (const auto& [key, value] : *hashMap)

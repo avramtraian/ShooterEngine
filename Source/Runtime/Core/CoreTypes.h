@@ -64,19 +64,19 @@ template<typename T> using RemoveConst     = typename Implementation::RemoveCons
 template<typename T> using RemovePointer   = typename Implementation::RemovePointer<T>::Type;
 
 template<typename T>
-NODISCARD FORCEINLINE RemoveReference<T>&& Move(T&& instance) noexcept
+NODISCARD ALWAYS_INLINE RemoveReference<T>&& Move(T&& instance) noexcept
 {
     return static_cast<RemoveReference<T>&&>(instance);
 }
 
 template<typename T>
-NODISCARD FORCEINLINE T&& Forward(RemoveReference<T>& instance) noexcept
+NODISCARD ALWAYS_INLINE T&& Forward(RemoveReference<T>& instance) noexcept
 {
     return static_cast<T&&>(instance);
 }
 
 template<typename T>
-NODISCARD FORCEINLINE T&& Forward(RemoveReference<T>&& instance) noexcept
+NODISCARD ALWAYS_INLINE T&& Forward(RemoveReference<T>&& instance) noexcept
 {
     return static_cast<T&&>(instance);
 }

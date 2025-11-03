@@ -18,13 +18,13 @@ public:
     NODISCARD virtual uint32 GetSizeY() const override;
     NODISCARD virtual WindowMode GetCurrentMode() const override;
 
-    NODISCARD FORCEINLINE virtual void* GetNativeHandle() const override { return m_WindowHandle; }
-    NODISCARD FORCEINLINE virtual bool IsRequestedToClose() const override { return m_IsRequestedToClose; }
+    NODISCARD ALWAYS_INLINE virtual void* GetNativeHandle() const override { return m_WindowHandle; }
+    NODISCARD ALWAYS_INLINE virtual bool IsRequestedToClose() const override { return m_IsRequestedToClose; }
 
-    NODISCARD FORCEINLINE virtual OnWindowResizedDelegate& GetOnWindowResizedDelegate() override { return m_OnWindowResizedDelegate; }
-    NODISCARD FORCEINLINE virtual OnWindowClosedDelegate& GetOnWindowClosedDelegate() override { return m_OnWindowClosedDelegate; }
+    NODISCARD ALWAYS_INLINE virtual OnWindowResizedDelegate& GetOnWindowResizedDelegate() override { return m_OnWindowResizedDelegate; }
+    NODISCARD ALWAYS_INLINE virtual OnWindowClosedDelegate& GetOnWindowClosedDelegate() override { return m_OnWindowClosedDelegate; }
 
-    NODISCARD FORCEINLINE virtual OnMouseWheelScrolledDelegate& GetOnMouseWheelScrolledDelegate() override { return m_OnMouseWheelScrolledDelegate; }
+    NODISCARD ALWAYS_INLINE virtual OnMouseWheelScrolledDelegate& GetOnMouseWheelScrolledDelegate() override { return m_OnMouseWheelScrolledDelegate; }
 
 public:
     virtual void SetSize(Optional<uint32> sizeX, Optional<uint32> sizeY) override;

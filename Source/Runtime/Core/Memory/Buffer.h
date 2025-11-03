@@ -24,32 +24,32 @@ public:
     RUNTIME_API Buffer& operator=(Buffer&& other) noexcept;
 
 public:
-    NODISCARD FORCEINLINE void*       Data() { return m_Data; }
-    NODISCARD FORCEINLINE const void* Data() const { return m_Data; }
+    NODISCARD ALWAYS_INLINE void*       Data() { return m_Data; }
+    NODISCARD ALWAYS_INLINE const void* Data() const { return m_Data; }
 
-    NODISCARD FORCEINLINE uint8*       Bytes() { return (uint8*)m_Data; }
-    NODISCARD FORCEINLINE const uint8* Bytes() const { return (const uint8*)m_Data; }
+    NODISCARD ALWAYS_INLINE uint8*       Bytes() { return (uint8*)m_Data; }
+    NODISCARD ALWAYS_INLINE const uint8* Bytes() const { return (const uint8*)m_Data; }
 
-    NODISCARD FORCEINLINE usize ByteCount() const { return m_ByteCount; }
-    NODISCARD FORCEINLINE bool  IsEmpty() const { return (m_ByteCount == 0); }
-    NODISCARD FORCEINLINE bool  HasData() const { return (m_ByteCount > 0); }
+    NODISCARD ALWAYS_INLINE usize ByteCount() const { return m_ByteCount; }
+    NODISCARD ALWAYS_INLINE bool  IsEmpty() const { return (m_ByteCount == 0); }
+    NODISCARD ALWAYS_INLINE bool  HasData() const { return (m_ByteCount > 0); }
 
     template<typename T>
-    NODISCARD FORCEINLINE T* DataAs()
+    NODISCARD ALWAYS_INLINE T* DataAs()
     {
         return (T*)m_Data;
     }
     template<typename T>
-    NODISCARD FORCEINLINE const T* DataAs() const
+    NODISCARD ALWAYS_INLINE const T* DataAs() const
     {
         return (const T*)m_Data;
     }
 
 public:
-    NODISCARD FORCEINLINE ReadonlyBufferView ToView() const { return ReadonlyBufferView(*this); }
+    NODISCARD ALWAYS_INLINE ReadonlyBufferView ToView() const { return ReadonlyBufferView(*this); }
 
-    NODISCARD FORCEINLINE VectorView<uint8> ToVectorView() { return VectorView<uint8>(Bytes(), m_ByteCount); }
-    NODISCARD FORCEINLINE VectorView<const uint8> ToVectorView() const { return VectorView<const uint8>(Bytes(), m_ByteCount); }
+    NODISCARD ALWAYS_INLINE VectorView<uint8> ToVectorView() { return VectorView<uint8>(Bytes(), m_ByteCount); }
+    NODISCARD ALWAYS_INLINE VectorView<const uint8> ToVectorView() const { return VectorView<const uint8>(Bytes(), m_ByteCount); }
 
 public:
     RUNTIME_API void SetByteCount(usize byteCount);
@@ -70,24 +70,24 @@ private:
 // implementation is in this file in order to avoid circular includes.      //
 //////////////////////////////////////////////////////////////////////////////
 
-FORCEINLINE ReadonlyBufferView::ReadonlyBufferView(const Buffer& buffer)
+ALWAYS_INLINE ReadonlyBufferView::ReadonlyBufferView(const Buffer& buffer)
     : m_Data(buffer.Data())
     , m_ByteCount(buffer.ByteCount())
 {}
 
-FORCEINLINE ReadonlyBufferView& ReadonlyBufferView::operator=(const Buffer& buffer)
+ALWAYS_INLINE ReadonlyBufferView& ReadonlyBufferView::operator=(const Buffer& buffer)
 {
     m_Data      = buffer.Data();
     m_ByteCount = buffer.ByteCount();
     return *this;
 }
 
-FORCEINLINE BufferView::BufferView(Buffer& buffer)
+ALWAYS_INLINE BufferView::BufferView(Buffer& buffer)
     : m_Data(buffer.Data())
     , m_ByteCount(buffer.ByteCount())
 {}
 
-FORCEINLINE BufferView& BufferView::operator=(Buffer& buffer)
+ALWAYS_INLINE BufferView& BufferView::operator=(Buffer& buffer)
 {
     m_Data      = buffer.Data();
     m_ByteCount = buffer.ByteCount();

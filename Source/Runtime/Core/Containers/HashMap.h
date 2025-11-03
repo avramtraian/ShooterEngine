@@ -30,49 +30,49 @@ public:
         Bucket& operator=(Bucket&&) noexcept = delete;
 
     public:
-        NODISCARD FORCEINLINE static uint64 GetHash(const Bucket& bucket)
+        NODISCARD ALWAYS_INLINE static uint64 GetHash(const Bucket& bucket)
         {
             // Forward the implementation to the key hashing function.
             return Hash<KeyType>::Get(bucket.Key());
         }
 
     public:
-        FORCEINLINE Bucket() {}
+        ALWAYS_INLINE Bucket() {}
 
-        FORCEINLINE ~Bucket()
+        ALWAYS_INLINE ~Bucket()
         {
             Key().~KeyType();
             Value().~ValueType();
         }
 
-        FORCEINLINE Bucket(const Bucket& other)
+        ALWAYS_INLINE Bucket(const Bucket& other)
         {
             new (m_KeyStorage) KeyType(other.Key());
             new (m_ValueStorage) ValueType(other.Value());
         }
 
-        FORCEINLINE Bucket(Bucket&& other) noexcept
+        ALWAYS_INLINE Bucket(Bucket&& other) noexcept
         {
             new (m_KeyStorage) KeyType(Move(other.Key()));
             new (m_ValueStorage) ValueType(Move(other.Value()));
         }
 
-        NODISCARD FORCEINLINE bool operator==(const Bucket& other) const
+        NODISCARD ALWAYS_INLINE bool operator==(const Bucket& other) const
         {
             // Forward the implementation to the key equality check operator.
             return (Key() == other.Key());
         }
 
     public:
-        NODISCARD FORCEINLINE KeyType* KeyPointer() { return reinterpret_cast<KeyType*>(m_KeyStorage); }
-        NODISCARD FORCEINLINE const KeyType* KeyPointer() const { return reinterpret_cast<const KeyType*>(m_KeyStorage); }
-        NODISCARD FORCEINLINE KeyType& Key() { return *KeyPointer(); }
-        NODISCARD FORCEINLINE const KeyType& Key() const { return *KeyPointer(); }
+        NODISCARD ALWAYS_INLINE KeyType* KeyPointer() { return reinterpret_cast<KeyType*>(m_KeyStorage); }
+        NODISCARD ALWAYS_INLINE const KeyType* KeyPointer() const { return reinterpret_cast<const KeyType*>(m_KeyStorage); }
+        NODISCARD ALWAYS_INLINE KeyType& Key() { return *KeyPointer(); }
+        NODISCARD ALWAYS_INLINE const KeyType& Key() const { return *KeyPointer(); }
 
-        NODISCARD FORCEINLINE ValueType* ValuePointer() { return reinterpret_cast<ValueType*>(m_ValueStorage); }
-        NODISCARD FORCEINLINE const ValueType* ValuePointer() const { return reinterpret_cast<const ValueType*>(m_ValueStorage); }
-        NODISCARD FORCEINLINE ValueType& Value() { return *ValuePointer(); }
-        NODISCARD FORCEINLINE const ValueType& Value() const { return *ValuePointer(); }
+        NODISCARD ALWAYS_INLINE ValueType* ValuePointer() { return reinterpret_cast<ValueType*>(m_ValueStorage); }
+        NODISCARD ALWAYS_INLINE const ValueType* ValuePointer() const { return reinterpret_cast<const ValueType*>(m_ValueStorage); }
+        NODISCARD ALWAYS_INLINE ValueType& Value() { return *ValuePointer(); }
+        NODISCARD ALWAYS_INLINE const ValueType& Value() const { return *ValuePointer(); }
 
     public:
         alignas(KeyType) uint8 m_KeyStorage[sizeof(KeyType)];
@@ -116,7 +116,7 @@ public:
     class GenericIterator
     {
     public:
-        FORCEINLINE GenericIterator(GenericIteratorBucket<IteratorValueType>* buckets, GenericIteratorBucket<IteratorValueType>* bucketsEnd,
+        ALWAYS_INLINE GenericIterator(GenericIteratorBucket<IteratorValueType>* buckets, GenericIteratorBucket<IteratorValueType>* bucketsEnd,
                                     BucketState* states)
             : m_Buckets(buckets)
             , m_BucketsEnd(bucketsEnd)
@@ -130,14 +130,14 @@ public:
         GenericIterator& operator=(GenericIterator&&) noexcept = default;
 
     public:
-        NODISCARD FORCEINLINE GenericIteratorBucket<IteratorValueType>& operator*() const
+        NODISCARD ALWAYS_INLINE GenericIteratorBucket<IteratorValueType>& operator*() const
         {
             SE_ASSERT(m_Buckets != m_BucketsEnd);
             SE_ASSERT(*m_States == BucketState::Occupied);
             return *m_Buckets;
         }
 
-        NODISCARD FORCEINLINE GenericIteratorBucket<IteratorValueType>* operator->() const
+        NODISCARD ALWAYS_INLINE GenericIteratorBucket<IteratorValueType>* operator->() const
         {
             SE_ASSERT(m_Buckets != m_BucketsEnd);
             SE_ASSERT(*m_States == BucketState::Occupied);
@@ -145,7 +145,7 @@ public:
         }
 
         // Pre-increment operator.
-        FORCEINLINE GenericIterator& operator++()
+        ALWAYS_INLINE GenericIterator& operator++()
         {
             while (m_Buckets != m_BucketsEnd)
             {
@@ -160,16 +160,16 @@ public:
         }
 
         // Post-increment operator.
-        FORCEINLINE GenericIterator operator++(int)
+        ALWAYS_INLINE GenericIterator operator++(int)
         {
             GenericIterator preIncrementValue = *this;
             this->operator++();
             return preIncrementValue;
         }
 
-        NODISCARD FORCEINLINE bool operator==(const GenericIterator& other) const { return (m_Buckets == other.m_Buckets); }
+        NODISCARD ALWAYS_INLINE bool operator==(const GenericIterator& other) const { return (m_Buckets == other.m_Buckets); }
 
-        NODISCARD FORCEINLINE bool operator!=(const GenericIterator& other) const { return (m_Buckets != other.m_Buckets); }
+        NODISCARD ALWAYS_INLINE bool operator!=(const GenericIterator& other) const { return (m_Buckets != other.m_Buckets); }
 
     private:
         GenericIteratorBucket<IteratorValueType>* m_Buckets;
@@ -182,31 +182,31 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE static const Bucket& GetBucketFromKey(const KeyType& key) { return reinterpret_cast<const Bucket&>(key); }
+    NODISCARD ALWAYS_INLINE static const Bucket& GetBucketFromKey(const KeyType& key) { return reinterpret_cast<const Bucket&>(key); }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    FORCEINLINE HashMap()                              = default;
-    FORCEINLINE ~HashMap()                             = default;
+    ALWAYS_INLINE HashMap()                              = default;
+    ALWAYS_INLINE ~HashMap()                             = default;
 
-    FORCEINLINE HashMap(const HashMap&)                = default;
-    FORCEINLINE HashMap(HashMap&&) noexcept            = default;
+    ALWAYS_INLINE HashMap(const HashMap&)                = default;
+    ALWAYS_INLINE HashMap(HashMap&&) noexcept            = default;
 
-    FORCEINLINE HashMap& operator=(const HashMap&)     = default;
-    FORCEINLINE HashMap& operator=(HashMap&&) noexcept = default;
+    ALWAYS_INLINE HashMap& operator=(const HashMap&)     = default;
+    ALWAYS_INLINE HashMap& operator=(HashMap&&) noexcept = default;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     template<typename OtherAllocator>
-    FORCEINLINE HashMap(const HashMap<KeyType, ValueType, OtherAllocator>& other)
+    ALWAYS_INLINE HashMap(const HashMap<KeyType, ValueType, OtherAllocator>& other)
         : m_Buckets(other.m_Buckets)
     {}
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     template<typename OtherAllocator>
-    FORCEINLINE HashMap& operator=(const HashMap<KeyType, ValueType, OtherAllocator>& other)
+    ALWAYS_INLINE HashMap& operator=(const HashMap<KeyType, ValueType, OtherAllocator>& other)
     {
         m_Buckets = other.m_Buckets;
         return *this;
@@ -215,17 +215,17 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    NODISCARD FORCEINLINE usize Count() const { return m_Buckets.Count(); }
+    NODISCARD ALWAYS_INLINE usize Count() const { return m_Buckets.Count(); }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE bool IsEmpty() const { return (Count() == 0); }
-    NODISCARD FORCEINLINE bool HasElements() const { return (Count() > 0); }
+    NODISCARD ALWAYS_INLINE bool IsEmpty() const { return (Count() == 0); }
+    NODISCARD ALWAYS_INLINE bool HasElements() const { return (Count() > 0); }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    NODISCARD FORCEINLINE bool Contains(const KeyType& key) const
+    NODISCARD ALWAYS_INLINE bool Contains(const KeyType& key) const
     {
         const Bucket& bucket = GetBucketFromKey(key);
         return m_Buckets.Contains(bucket);
@@ -233,7 +233,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE Optional<ValueType&> GetIfExists(const KeyType& key)
+    NODISCARD ALWAYS_INLINE Optional<ValueType&> GetIfExists(const KeyType& key)
     {
 #if SE_HASH_SET_CHECK_PROTECTION
         // NOTE(Traian): Since this function doesn't create or destroy any buckets, there is no need to acquire a
@@ -251,7 +251,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE Optional<const ValueType&> GetIfExists(const KeyType& key) const
+    NODISCARD ALWAYS_INLINE Optional<const ValueType&> GetIfExists(const KeyType& key) const
     {
 #if SE_HASH_SET_CHECK_PROTECTION
         // NOTE(Traian): Since this function doesn't create or destroy any buckets, there is no need to acquire a
@@ -269,7 +269,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE ValueType& At(const KeyType& key)
+    NODISCARD ALWAYS_INLINE ValueType& At(const KeyType& key)
     {
         Optional<ValueType&> value = GetIfExists(key);
         SE_ASSERT(value.HasValue());
@@ -278,7 +278,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE const ValueType& At(const KeyType& key) const
+    NODISCARD ALWAYS_INLINE const ValueType& At(const KeyType& key) const
     {
         Optional<const ValueType&> value = GetIfExists(key);
         SE_ASSERT(value.HasValue());
@@ -288,25 +288,25 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    FORCEINLINE ValueType& Add(const KeyType& key, const ValueType& value) { return AddImplementation<const KeyType&, const ValueType&>(key, value); }
+    ALWAYS_INLINE ValueType& Add(const KeyType& key, const ValueType& value) { return AddImplementation<const KeyType&, const ValueType&>(key, value); }
 
-    FORCEINLINE ValueType& Add(const KeyType& key, ValueType&& value) { return AddImplementation<const KeyType&, ValueType&&>(key, Move(value)); }
+    ALWAYS_INLINE ValueType& Add(const KeyType& key, ValueType&& value) { return AddImplementation<const KeyType&, ValueType&&>(key, Move(value)); }
 
-    FORCEINLINE ValueType& Add(KeyType&& key, const ValueType& value) { return AddImplementation<KeyType&&, const ValueType&>(Move(key), value); }
+    ALWAYS_INLINE ValueType& Add(KeyType&& key, const ValueType& value) { return AddImplementation<KeyType&&, const ValueType&>(Move(key), value); }
 
-    FORCEINLINE ValueType& Add(KeyType&& key, ValueType&& value) { return AddImplementation<KeyType&&, ValueType&&>(Move(key), Move(value)); }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-public:
-    NODISCARD FORCEINLINE ValueType& operator[](const KeyType& key) { return GetOrAddImplementation<const KeyType&>(key); }
-
-    NODISCARD FORCEINLINE ValueType& operator[](KeyType&& key) { return GetOrAddImplementation<KeyType&&>(Move(key)); }
+    ALWAYS_INLINE ValueType& Add(KeyType&& key, ValueType&& value) { return AddImplementation<KeyType&&, ValueType&&>(Move(key), Move(value)); }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    FORCEINLINE void RemoveIfExist(const KeyType& key)
+    NODISCARD ALWAYS_INLINE ValueType& operator[](const KeyType& key) { return GetOrAddImplementation<const KeyType&>(key); }
+
+    NODISCARD ALWAYS_INLINE ValueType& operator[](KeyType&& key) { return GetOrAddImplementation<KeyType&&>(Move(key)); }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+public:
+    ALWAYS_INLINE void RemoveIfExist(const KeyType& key)
     {
         const Bucket& keyBucket = GetBucketFromKey(key);
         m_Buckets.RemoveIfExists(keyBucket);
@@ -314,7 +314,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE void RemoveUnchecked(const KeyType& key)
+    ALWAYS_INLINE void RemoveUnchecked(const KeyType& key)
     {
         const Bucket& keyBucket = GetBucketFromKey(key);
         m_Buckets.RemoveUnchecked(keyBucket);
@@ -323,18 +323,18 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    FORCEINLINE void EnsureCapacity(usize capacity) { m_Buckets.EnsureCapacity(capacity); }
+    ALWAYS_INLINE void EnsureCapacity(usize capacity) { m_Buckets.EnsureCapacity(capacity); }
 
-    FORCEINLINE void Clear() { m_Buckets.Clear(); }
+    ALWAYS_INLINE void Clear() { m_Buckets.Clear(); }
 
-    FORCEINLINE void ShrinkToFit() { m_Buckets.ShrinkToFit(); }
+    ALWAYS_INLINE void ShrinkToFit() { m_Buckets.ShrinkToFit(); }
 
-    FORCEINLINE void ClearAndShrink() { m_Buckets.ClearAndShrink(); }
+    ALWAYS_INLINE void ClearAndShrink() { m_Buckets.ClearAndShrink(); }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    NODISCARD FORCEINLINE Iterator IteratorAt(usize bucketEntryIndex)
+    NODISCARD ALWAYS_INLINE Iterator IteratorAt(usize bucketEntryIndex)
     {
 #if SE_HASH_SET_CHECK_PROTECTION
         SE_ENSURE(m_Buckets.IsNotProtected());
@@ -347,7 +347,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE ConstIterator IteratorAt(usize bucketEntryIndex) const
+    NODISCARD ALWAYS_INLINE ConstIterator IteratorAt(usize bucketEntryIndex) const
     {
 #if SE_HASH_SET_CHECK_PROTECTION
         SE_ENSURE(m_Buckets.IsNotProtected());
@@ -360,7 +360,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE Iterator begin()
+    NODISCARD ALWAYS_INLINE Iterator begin()
     {
 #if SE_HASH_SET_CHECK_PROTECTION
         SE_ENSURE(m_Buckets.IsNotProtected());
@@ -388,7 +388,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE ConstIterator begin() const
+    NODISCARD ALWAYS_INLINE ConstIterator begin() const
     {
 #if SE_HASH_SET_CHECK_PROTECTION
         SE_ENSURE(m_Buckets.IsNotProtected());
@@ -416,7 +416,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE Iterator end()
+    NODISCARD ALWAYS_INLINE Iterator end()
     {
 #if SE_HASH_SET_CHECK_PROTECTION
         SE_ENSURE(m_Buckets.IsNotProtected());
@@ -427,7 +427,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE ConstIterator end() const
+    NODISCARD ALWAYS_INLINE ConstIterator end() const
     {
 #if SE_HASH_SET_CHECK_PROTECTION
         SE_ENSURE(m_Buckets.IsNotProtected());
@@ -442,7 +442,7 @@ private:
     template<typename KeyParameterType, typename ValueParameterType>
     requires (std::is_same_v<RemoveConst<RemoveReference<RemoveConst<KeyParameterType>>>, KeyType> &&
               std::is_same_v<RemoveConst<RemoveReference<RemoveConst<ValueParameterType>>>, ValueType>)
-    FORCEINLINE ValueType& AddImplementation(KeyParameterType key, ValueParameterType value)
+    ALWAYS_INLINE ValueType& AddImplementation(KeyParameterType key, ValueParameterType value)
     {
         // TODO(Traian): Combine the search for the key with the search for the first available index
         // into a single operation to avoid a redundant hash evaluation and entries iteration.
@@ -481,7 +481,7 @@ private:
 
     template<typename KeyParameterType>
     // requires (std::is_same_v<RemoveReference<RemoveConst<KeyParameterType>>, KeyType>)
-    NODISCARD FORCEINLINE ValueType& GetOrAddImplementation(KeyParameterType key)
+    NODISCARD ALWAYS_INLINE ValueType& GetOrAddImplementation(KeyParameterType key)
     {
 #if SE_HASH_SET_CHECK_PROTECTION
         // NOTE(Traian): Since 'GetEntryIndexOf' is an internal hash set function, it doesn't check or acquire the protection lock.

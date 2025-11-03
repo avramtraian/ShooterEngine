@@ -25,38 +25,38 @@ public:
 
 public:
     template<typename T>
-    NODISCARD FORCEINLINE static T Min(T a, T b)
+    NODISCARD ALWAYS_INLINE static T Min(T a, T b)
     {
         return (a < b) ? a : b;
     }
 
     template<typename T>
-    NODISCARD FORCEINLINE static T Max(T a, T b)
+    NODISCARD ALWAYS_INLINE static T Max(T a, T b)
     {
         return (a > b) ? a : b;
     }
 
     template<typename T>
-    NODISCARD FORCEINLINE static T Clamp(T value, T minBound, T maxBound)
+    NODISCARD ALWAYS_INLINE static T Clamp(T value, T minBound, T maxBound)
     {
         SE_ASSERT(minBound <= maxBound);
         return Math::Min<T>(maxBound, Math::Max<T>(minBound, value));
     }
 
     template<typename T>
-    NODISCARD FORCEINLINE static T Abs(T value)
+    NODISCARD ALWAYS_INLINE static T Abs(T value)
     {
         return (value > 0) ? value : -value;
     }
 
 public:
-    NODISCARD FORCEINLINE static bool AreNearlyEqual(float a, float b, float tolerance)
+    NODISCARD ALWAYS_INLINE static bool AreNearlyEqual(float a, float b, float tolerance)
     {
         const float delta = Math::Abs(a - b);
         return (delta <= tolerance);
     }
     
-    NODISCARD FORCEINLINE static bool AreNearlyEqual(float a, float b)
+    NODISCARD ALWAYS_INLINE static bool AreNearlyEqual(float a, float b)
     {
         return AreNearlyEqual(a, b, SMALL_NUMBER);
     }
@@ -73,13 +73,13 @@ public:
     NODISCARD RUNTIME_API static float Atan(float value);
 
 public:
-    NODISCARD FORCEINLINE static float ToRad(float degrees)
+    NODISCARD ALWAYS_INLINE static float ToRad(float degrees)
     {
         constexpr float DEG_TO_RAD = PI / 180.0F;
         return degrees * DEG_TO_RAD;
     }
 
-    NODISCARD FORCEINLINE static float ToDeg(float radians)
+    NODISCARD ALWAYS_INLINE static float ToDeg(float radians)
     {
         constexpr float RAD_TO_DEG = 180.0F / PI;
         return radians * RAD_TO_DEG;

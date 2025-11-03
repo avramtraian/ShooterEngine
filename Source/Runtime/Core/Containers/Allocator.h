@@ -13,7 +13,7 @@ class DefaultAllocator
     SE_MAKE_NAMESPACE_CLASS(DefaultAllocator);
 
 public:
-    NODISCARD FORCEINLINE static void* Allocate(usize byteCount)
+    NODISCARD ALWAYS_INLINE static void* Allocate(usize byteCount)
     {
         if (byteCount == 0)
             return nullptr;
@@ -21,14 +21,14 @@ public:
         return allocationBlock;
     }
 
-    FORCEINLINE static void Release(void* allocationBlock)
+    ALWAYS_INLINE static void Release(void* allocationBlock)
     {
         if (allocationBlock == nullptr)
             return;
         ::operator delete(allocationBlock);
     }
 
-    NODISCARD FORCEINLINE static void* GrowAllocation(void* allocationBlock, usize newByteCount)
+    NODISCARD ALWAYS_INLINE static void* GrowAllocation(void* allocationBlock, usize newByteCount)
     {
         // TODO(Traian): Actually try to grow the current allocation block instead of just fetching a new one.
         return DefaultAllocator::Allocate(newByteCount);

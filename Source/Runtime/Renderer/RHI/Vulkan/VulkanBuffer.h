@@ -26,9 +26,9 @@ public:
     void Release();
 
 public:
-    NODISCARD FORCEINLINE VkBuffer GetHandle() const { return m_BufferHandle; }
-    NODISCARD FORCEINLINE VkDeviceMemory GetMemory() const { return m_BufferMemory; }
-    NODISCARD FORCEINLINE usize GetSize() const { return m_BufferSize; }
+    NODISCARD ALWAYS_INLINE VkBuffer GetHandle() const { return m_BufferHandle; }
+    NODISCARD ALWAYS_INLINE VkDeviceMemory GetMemory() const { return m_BufferMemory; }
+    NODISCARD ALWAYS_INLINE usize GetSize() const { return m_BufferSize; }
 
 public:
     void* Map(usize offset, usize size);
@@ -53,7 +53,7 @@ public:
     virtual void UploadDataImmediately(const void* verticesData, usize verticesDataOffset, usize verticesDataSize) override;
 
 public:
-    NODISCARD FORCEINLINE VkBuffer GetHandle() const { return m_Buffer.GetHandle(); }
+    NODISCARD ALWAYS_INLINE VkBuffer GetHandle() const { return m_Buffer.GetHandle(); }
 
 private:
     VulkanBuffer m_Buffer;
@@ -69,13 +69,13 @@ public:
     VulkanIndexBuffer(const IndexBufferInfo& info);
     virtual ~VulkanIndexBuffer() override = default;
 
-    NODISCARD FORCEINLINE virtual IndexBufferDataType GetDataType() const override { return m_DataType; }
-    NODISCARD FORCEINLINE virtual uint32 GetIndexCount() const override { return m_IndexCount; }
+    NODISCARD ALWAYS_INLINE virtual IndexBufferDataType GetDataType() const override { return m_DataType; }
+    NODISCARD ALWAYS_INLINE virtual uint32 GetIndexCount() const override { return m_IndexCount; }
 
     virtual void UploadDataImmediately(const void* indices, uint32 indexOffset, uint32 indexCount) override;
 
 public:
-    NODISCARD FORCEINLINE VkBuffer GetHandle() const { return m_Buffer.GetHandle(); }
+    NODISCARD ALWAYS_INLINE VkBuffer GetHandle() const { return m_Buffer.GetHandle(); }
 
 private:
     VulkanBuffer m_Buffer;
@@ -96,8 +96,8 @@ public:
     virtual void UploadDataImmediately(const void* bufferData, usize bufferDataOffset, usize bufferDataSize) override;
 
 public:
-    NODISCARD FORCEINLINE VkBuffer GetHandle() const { return m_Buffer.GetHandle(); }
-    NODISCARD FORCEINLINE usize GetBufferSize() const { return m_Buffer.GetSize(); }
+    NODISCARD ALWAYS_INLINE VkBuffer GetHandle() const { return m_Buffer.GetHandle(); }
+    NODISCARD ALWAYS_INLINE usize GetBufferSize() const { return m_Buffer.GetSize(); }
 
 public:
     VulkanBuffer m_Buffer;

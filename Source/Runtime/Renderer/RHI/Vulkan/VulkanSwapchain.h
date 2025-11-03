@@ -43,24 +43,24 @@ public:
     VulkanSwapchain(const VulkanSwapchainInfo& info);
     virtual ~VulkanSwapchain() override;
 
-    NODISCARD FORCEINLINE VkSwapchainKHR GetHandle() const { return m_Handle; }
-    NODISCARD FORCEINLINE uint32 GetSizeX() const { return m_SizeX; }
-    NODISCARD FORCEINLINE uint32 GetSizeY() const { return m_SizeY; }
-    NODISCARD FORCEINLINE const ImmutableProperties& GetImmutableProperties() const { return m_ImmutableProperties; }
+    NODISCARD ALWAYS_INLINE VkSwapchainKHR GetHandle() const { return m_Handle; }
+    NODISCARD ALWAYS_INLINE uint32 GetSizeX() const { return m_SizeX; }
+    NODISCARD ALWAYS_INLINE uint32 GetSizeY() const { return m_SizeY; }
+    NODISCARD ALWAYS_INLINE const ImmutableProperties& GetImmutableProperties() const { return m_ImmutableProperties; }
     
-    NODISCARD FORCEINLINE uint32 GetImageCount() const { return (uint32)m_Images.Count(); }
-    NODISCARD FORCEINLINE const Vector<VkImage>& GetImages() const { return m_Images; }
-    NODISCARD FORCEINLINE const Vector<VkImageView>& GetImageViews() const { return m_ImageViews; }
+    NODISCARD ALWAYS_INLINE uint32 GetImageCount() const { return (uint32)m_Images.Count(); }
+    NODISCARD ALWAYS_INLINE const Vector<VkImage>& GetImages() const { return m_Images; }
+    NODISCARD ALWAYS_INLINE const Vector<VkImageView>& GetImageViews() const { return m_ImageViews; }
 
-    NODISCARD FORCEINLINE const Vector<SemaphoreHandle>& GetImageAvailableSemaphores() const { return m_ImageAvailableSemaphores; }
-    NODISCARD FORCEINLINE SemaphoreHandle GetImageAvailableSemaphore(uint32 frameIndex) const
+    NODISCARD ALWAYS_INLINE const Vector<SemaphoreHandle>& GetImageAvailableSemaphores() const { return m_ImageAvailableSemaphores; }
+    NODISCARD ALWAYS_INLINE SemaphoreHandle GetImageAvailableSemaphore(uint32 frameIndex) const
     {
         SE_ASSERT(frameIndex < m_ImageAvailableSemaphores.Count());
         return m_ImageAvailableSemaphores.At(frameIndex);
     }
 
-    NODISCARD FORCEINLINE const Vector<SemaphoreHandle>& GetRenderFinishedSemaphores() const { return m_RenderFinishedSemaphores; }
-    NODISCARD FORCEINLINE SemaphoreHandle GetRenderFinishedSemaphore(uint32 frameIndex) const
+    NODISCARD ALWAYS_INLINE const Vector<SemaphoreHandle>& GetRenderFinishedSemaphores() const { return m_RenderFinishedSemaphores; }
+    NODISCARD ALWAYS_INLINE SemaphoreHandle GetRenderFinishedSemaphore(uint32 frameIndex) const
     {
         SE_ASSERT(frameIndex < m_RenderFinishedSemaphores.Count());
         return m_RenderFinishedSemaphores.At(frameIndex);

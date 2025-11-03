@@ -95,15 +95,15 @@ public:
 public:
     VulkanTexture2D(VulkanTexture2DType type) : m_Type(type) {}
     virtual ~VulkanTexture2D() override = default;
-    NODISCARD FORCEINLINE VulkanTexture2DType GetType() const { return m_Type; }
+    NODISCARD ALWAYS_INLINE VulkanTexture2DType GetType() const { return m_Type; }
 
-    NODISCARD FORCEINLINE const Handle& GetHandle() const { return m_Handle; }
-    NODISCARD FORCEINLINE const Properties& GetProperties() const { return m_Properties; }
+    NODISCARD ALWAYS_INLINE const Handle& GetHandle() const { return m_Handle; }
+    NODISCARD ALWAYS_INLINE const Properties& GetProperties() const { return m_Properties; }
 
-    NODISCARD FORCEINLINE virtual uint32 GetSizeX() const override { return m_Properties.SizeX; }
-    NODISCARD FORCEINLINE virtual uint32 GetSizeY() const override { return m_Properties.SizeY; }
-    NODISCARD FORCEINLINE virtual TextureFormat GetFormat() const override { return m_Properties.Format; }
-    NODISCARD FORCEINLINE virtual TextureFlags GetFlags() const override { return m_Properties.Flags; }
+    NODISCARD ALWAYS_INLINE virtual uint32 GetSizeX() const override { return m_Properties.SizeX; }
+    NODISCARD ALWAYS_INLINE virtual uint32 GetSizeY() const override { return m_Properties.SizeY; }
+    NODISCARD ALWAYS_INLINE virtual TextureFormat GetFormat() const override { return m_Properties.Format; }
+    NODISCARD ALWAYS_INLINE virtual TextureFlags GetFlags() const override { return m_Properties.Flags; }
 
 protected:
     VulkanTexture2DType m_Type;
@@ -130,15 +130,15 @@ public:
 public:
     VulkanStorageTexture2D(const Texture2DInfo& info);
     virtual ~VulkanStorageTexture2D() override;
-    NODISCARD FORCEINLINE static VulkanTexture2DType GetStaticType() { return VulkanTexture2DType::Storage; }
+    NODISCARD ALWAYS_INLINE static VulkanTexture2DType GetStaticType() { return VulkanTexture2DType::Storage; }
 
-    NODISCARD FORCEINLINE VkDeviceMemory GetTextureMemory() const { return m_TextureMemory; }
-    NODISCARD FORCEINLINE const Sampler& GetSampler() const { return m_Sampler; }
+    NODISCARD ALWAYS_INLINE VkDeviceMemory GetTextureMemory() const { return m_TextureMemory; }
+    NODISCARD ALWAYS_INLINE const Sampler& GetSampler() const { return m_Sampler; }
 
     virtual void UploadData(ConstVectorView<uint8> textureData, Texture2DUploadDataPolicy policy) override;
 
-    NODISCARD FORCEINLINE bool IsPendingUploadData() const { return m_IsPendingUploadData; }
-    NODISCARD FORCEINLINE ConstVectorView<uint8> GetPendingTextureData() const { return m_PendingTextureData.ToVectorView(); }
+    NODISCARD ALWAYS_INLINE bool IsPendingUploadData() const { return m_IsPendingUploadData; }
+    NODISCARD ALWAYS_INLINE ConstVectorView<uint8> GetPendingTextureData() const { return m_PendingTextureData.ToVectorView(); }
     void ReleasePendingTextureData();
 
     void GenerateUploadDataCommands(RefPtr<VulkanCommandList> commandList, const VulkanBuffer& stagingBuffer);
@@ -166,7 +166,7 @@ class VulkanSwapchainTexture2D : public VulkanTexture2D
 public:
     VulkanSwapchainTexture2D(const RefPtr<VulkanSwapchain>& swapchain, uint32 imageIndex);
     virtual ~VulkanSwapchainTexture2D() override;
-    NODISCARD FORCEINLINE static VulkanTexture2DType GetStaticType() { return VulkanTexture2DType::Swapchain; }
+    NODISCARD ALWAYS_INLINE static VulkanTexture2DType GetStaticType() { return VulkanTexture2DType::Swapchain; }
 
     virtual void UploadData(ConstVectorView<uint8> textureData, Texture2DUploadDataPolicy policy) override;
 

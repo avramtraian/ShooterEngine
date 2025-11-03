@@ -60,14 +60,14 @@ public:
         SE_MAKE_NONMOVABLE(ScopedProtectionLock);
 
     public:
-        FORCEINLINE ScopedProtectionLock(const Vector<ElementType, Allocator>& vector)
+        ALWAYS_INLINE ScopedProtectionLock(const Vector<ElementType, Allocator>& vector)
             : m_Vector(vector)
         {
             SE_ENSURE(m_Vector.IsNotProtected());
             m_Vector.SetIsProtected(true);
         }
 
-        FORCEINLINE ~ScopedProtectionLock()
+        ALWAYS_INLINE ~ScopedProtectionLock()
         {
             SE_ENSURE(m_Vector.IsProtected());
             m_Vector.SetIsProtected(false);
@@ -88,7 +88,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    FORCEINLINE Vector()
+    ALWAYS_INLINE Vector()
         : m_Elements(nullptr)
         , m_Capacity(0)
         , m_Count(0)
@@ -97,7 +97,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE ~Vector()
+    ALWAYS_INLINE ~Vector()
     {
         ClearAndShrink();
     }
@@ -105,7 +105,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     template<typename OtherAllocator>
-    FORCEINLINE Vector(const Vector<ElementType, OtherAllocator>& other)
+    ALWAYS_INLINE Vector(const Vector<ElementType, OtherAllocator>& other)
         : m_Elements(nullptr)
         , m_Capacity(0)
         , m_Count(0)
@@ -130,7 +130,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE Vector(const Vector& other)
+    ALWAYS_INLINE Vector(const Vector& other)
         : m_Elements(nullptr)
         , m_Capacity(0)
         , m_Count(0)
@@ -155,7 +155,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE Vector(Vector<ElementType, Allocator>&& other) noexcept
+    ALWAYS_INLINE Vector(Vector<ElementType, Allocator>&& other) noexcept
         : m_Elements(other.m_Elements)
         , m_Capacity(other.m_Capacity)
         , m_Count(other.m_Count)
@@ -174,7 +174,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE Vector(std::initializer_list<ElementType> initiatlizerList)
+    ALWAYS_INLINE Vector(std::initializer_list<ElementType> initiatlizerList)
         : m_Elements(nullptr)
         , m_Capacity(0)
         , m_Count(0)
@@ -195,7 +195,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     template<typename OtherAllocator>
-    FORCEINLINE Vector& operator=(const Vector<ElementType, OtherAllocator>& other)
+    ALWAYS_INLINE Vector& operator=(const Vector<ElementType, OtherAllocator>& other)
     {
         // Handle the self-assignment case.
         if ((void*)this == (void*)(&other))
@@ -230,7 +230,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE Vector& operator=(const Vector& other)
+    ALWAYS_INLINE Vector& operator=(const Vector& other)
     {
         // Forward the implementation to the templated version.
         return this->operator=<Allocator>(other);
@@ -238,7 +238,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE Vector& operator=(Vector<ElementType, Allocator>&& other) noexcept
+    ALWAYS_INLINE Vector& operator=(Vector<ElementType, Allocator>&& other) noexcept
     {
         // Handle the self-assignment case.
         if (this == &other)
@@ -268,7 +268,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE Vector& operator=(std::initializer_list<ElementType> initiatlizerList)
+    ALWAYS_INLINE Vector& operator=(std::initializer_list<ElementType> initiatlizerList)
     {
         Clear();
 
@@ -289,7 +289,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    NODISCARD FORCEINLINE ElementType* Elements()
+    NODISCARD ALWAYS_INLINE ElementType* Elements()
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -298,7 +298,7 @@ public:
         return m_Elements;
     }
 
-    NODISCARD FORCEINLINE const ElementType* Elements() const
+    NODISCARD ALWAYS_INLINE const ElementType* Elements() const
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -307,7 +307,7 @@ public:
         return m_Elements;
     }
 
-    NODISCARD FORCEINLINE ElementType* NonConstElements() const
+    NODISCARD ALWAYS_INLINE ElementType* NonConstElements() const
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -316,16 +316,16 @@ public:
         return m_Elements;
     }
 
-    NODISCARD FORCEINLINE usize Capacity() const
+    NODISCARD ALWAYS_INLINE usize Capacity() const
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
 #endif // SE_VECTOR_CHECK_PROTECTION
-        
+
         return m_Capacity;
     }
 
-    NODISCARD FORCEINLINE usize Count() const
+    NODISCARD ALWAYS_INLINE usize Count() const
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -336,20 +336,20 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE bool IsEmpty() const { return (Count() == 0); }
-    NODISCARD FORCEINLINE bool HasElements() const { return (Count() > 0); }
+    NODISCARD ALWAYS_INLINE bool IsEmpty() const { return (Count() == 0); }
+    NODISCARD ALWAYS_INLINE bool HasElements() const { return (Count() > 0); }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE VectorView<ElementType> View() { return VectorView<ElementType>(Elements(), Count()); }
-    NODISCARD FORCEINLINE VectorView<const ElementType> View() const { return VectorView<const ElementType>(Elements(), Count()); }
+    NODISCARD ALWAYS_INLINE VectorView<ElementType> View() { return VectorView<ElementType>(Elements(), Count()); }
+    NODISCARD ALWAYS_INLINE VectorView<const ElementType> View() const { return VectorView<const ElementType>(Elements(), Count()); }
 
-    NODISCARD FORCEINLINE VectorView<const ElementType> ConstView() const { return VectorView<const ElementType>(Elements(), Count()); }
+    NODISCARD ALWAYS_INLINE VectorView<const ElementType> ConstView() const { return VectorView<const ElementType>(Elements(), Count()); }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    NODISCARD FORCEINLINE ElementType& At(usize index)
+    NODISCARD ALWAYS_INLINE ElementType& At(usize index)
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -361,7 +361,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE const ElementType& At(usize index) const
+    NODISCARD ALWAYS_INLINE const ElementType& At(usize index) const
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -373,12 +373,12 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE ElementType& operator[](usize index) { return At(index); }
-    NODISCARD FORCEINLINE const ElementType& operator[](usize index) const { return At(index); }
+    NODISCARD ALWAYS_INLINE ElementType& operator[](usize index) { return At(index); }
+    NODISCARD ALWAYS_INLINE const ElementType& operator[](usize index) const { return At(index); }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE ElementType& First()
+    NODISCARD ALWAYS_INLINE ElementType& First()
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -390,7 +390,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE const ElementType& First() const
+    NODISCARD ALWAYS_INLINE const ElementType& First() const
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -402,7 +402,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE ElementType& Last()
+    NODISCARD ALWAYS_INLINE ElementType& Last()
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -414,7 +414,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE const ElementType& Last() const
+    NODISCARD ALWAYS_INLINE const ElementType& Last() const
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -427,7 +427,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    FORCEINLINE void Add(const ElementType& element)
+    ALWAYS_INLINE void Add(const ElementType& element)
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -446,7 +446,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE void Add(ElementType&& element)
+    ALWAYS_INLINE void Add(ElementType&& element)
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -465,7 +465,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE void Add(std::initializer_list<ElementType> initializerList)
+    ALWAYS_INLINE void Add(std::initializer_list<ElementType> initializerList)
     {
         EnsureCapacity(m_Count + initializerList.size());
 
@@ -476,7 +476,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     template<typename... Args>
-    FORCEINLINE ElementType& Emplace(Args&&... args)
+    ALWAYS_INLINE ElementType& Emplace(Args&&... args)
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -496,7 +496,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    FORCEINLINE void PopBack(usize popCount = 1)
+    ALWAYS_INLINE void PopBack(usize popCount = 1)
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -511,14 +511,14 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE void RemoveIndex(usize elementIndex)
+    ALWAYS_INLINE void RemoveIndex(usize elementIndex)
     {
         RemoveIndices(elementIndex, 1);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE void RemoveIndices(usize startElementIndex, usize removeCount)
+    ALWAYS_INLINE void RemoveIndices(usize startElementIndex, usize removeCount)
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -544,7 +544,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE void RemoveIndexUnordered(usize elementIndex)
+    ALWAYS_INLINE void RemoveIndexUnordered(usize elementIndex)
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -564,7 +564,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE void RemoveIndicesUnordered(usize startElementIndex, usize removeCount)
+    ALWAYS_INLINE void RemoveIndicesUnordered(usize startElementIndex, usize removeCount)
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -593,12 +593,12 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE void Remove(const ElementType& element)
+    ALWAYS_INLINE void Remove(const ElementType& element)
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
 #endif // SE_VECTOR_CHECK_PROTECTION
-        
+
         usize elementIndex = 0;
         while (elementIndex < m_Count)
         {
@@ -611,7 +611,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE void RemoveUnordered(const ElementType& element)
+    ALWAYS_INLINE void RemoveUnordered(const ElementType& element)
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -629,7 +629,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE void RemoveBuffered(const ElementType& element)
+    ALWAYS_INLINE void RemoveBuffered(const ElementType& element)
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -649,7 +649,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    NODISCARD FORCEINLINE bool Contains(const ElementType& element) const
+    NODISCARD ALWAYS_INLINE bool Contains(const ElementType& element) const
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -661,7 +661,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE Optional<usize> FindFirstElementIndex(const ElementType& element, usize searchFirstElementIndex = 0) const
+    NODISCARD ALWAYS_INLINE Optional<usize> FindFirstElementIndex(const ElementType& element, usize searchFirstElementIndex = 0) const
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -683,7 +683,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    FORCEINLINE void SetCountDefaulted(usize newCount)
+    ALWAYS_INLINE void SetCountDefaulted(usize newCount)
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -711,7 +711,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE void SetCountFromTemplate(usize newCount, const ElementType& templateElement)
+    ALWAYS_INLINE void SetCountFromTemplate(usize newCount, const ElementType& templateElement)
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -739,7 +739,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE void EnsureCapacity(usize requiredCapacity)
+    ALWAYS_INLINE void EnsureCapacity(usize requiredCapacity)
     {
         if (m_Capacity < requiredCapacity)
         {
@@ -750,7 +750,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    FORCEINLINE void Clear()
+    ALWAYS_INLINE void Clear()
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -763,8 +763,8 @@ public:
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
-    FORCEINLINE void ShrinkToFit()
+
+    ALWAYS_INLINE void ShrinkToFit()
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -778,8 +778,8 @@ public:
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
-    FORCEINLINE void ClearAndShrink()
+
+    ALWAYS_INLINE void ClearAndShrink()
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -795,7 +795,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    NODISCARD FORCEINLINE ElementType* begin()
+    NODISCARD ALWAYS_INLINE ElementType* begin()
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -804,7 +804,7 @@ public:
         return m_Elements;
     }
 
-    NODISCARD FORCEINLINE const ElementType* begin() const
+    NODISCARD ALWAYS_INLINE const ElementType* begin() const
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -813,7 +813,7 @@ public:
         return m_Elements;
     }
 
-    NODISCARD FORCEINLINE ElementType* end()
+    NODISCARD ALWAYS_INLINE ElementType* end()
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -822,7 +822,7 @@ public:
         return m_Elements + m_Count;
     }
 
-    NODISCARD FORCEINLINE const ElementType* end() const
+    NODISCARD ALWAYS_INLINE const ElementType* end() const
     {
 #if SE_VECTOR_CHECK_PROTECTION
         SE_ENSURE(IsNotProtected());
@@ -834,7 +834,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 private:
-    NODISCARD FORCEINLINE static usize CalculateNextCapacity(usize currentCapacity, usize requiredCount)
+    NODISCARD ALWAYS_INLINE static usize CalculateNextCapacity(usize currentCapacity, usize requiredCount)
     {
         const usize geometricNextCapacity = (currentCapacity * GROWTH_FACTOR_NUMERATOR) / GROWTH_FACTOR_DENOMINATOR;
         if (geometricNextCapacity >= requiredCount)
@@ -844,7 +844,7 @@ private:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE static void CopyElements(ElementType* dstElements, const ElementType* srcElements, usize count)
+    ALWAYS_INLINE static void CopyElements(ElementType* dstElements, const ElementType* srcElements, usize count)
     {
         for (usize elementIndex = 0; elementIndex < count; ++elementIndex)
             new (dstElements + elementIndex) ElementType(srcElements[elementIndex]);
@@ -852,7 +852,7 @@ private:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE static void MoveElements(ElementType* dstElements, ElementType* srcElements, usize count)
+    ALWAYS_INLINE static void MoveElements(ElementType* dstElements, ElementType* srcElements, usize count)
     {
         for (usize elementIndex = 0; elementIndex < count; ++elementIndex)
         {
@@ -864,7 +864,7 @@ private:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 private:
-    FORCEINLINE void ReAllocateElementsBuffer(usize newCapacity)
+    ALWAYS_INLINE void ReAllocateElementsBuffer(usize newCapacity)
     {
         // NOTE(Traian): This should never be triggered by the user incorrectly using the API.
         // If this assert fails, there is an internal container error.
@@ -895,17 +895,17 @@ private:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if SE_VECTOR_CHECK_PROTECTION
-    NODISCARD FORCEINLINE bool IsProtected() const
+    NODISCARD ALWAYS_INLINE bool IsProtected() const
     {
         return (m_IsProtected == 1);
     }
 
-    NODISCARD FORCEINLINE bool IsNotProtected() const
+    NODISCARD ALWAYS_INLINE bool IsNotProtected() const
     {
         return (m_IsProtected == 0);
     }
 
-    FORCEINLINE void SetIsProtected(bool isProtected) const
+    ALWAYS_INLINE void SetIsProtected(bool isProtected) const
     {
         if (isProtected)
             m_IsProtected = 1;

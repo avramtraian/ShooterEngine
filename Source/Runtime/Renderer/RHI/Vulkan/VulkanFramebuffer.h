@@ -18,20 +18,20 @@ public:
 
     void Invalidate(const Vector<RefPtr<Texture2D>>& textures, VkRenderPass renderPassHandle);
     void Destroy();
-    NODISCARD FORCEINLINE bool IsValid() const { return (m_Handle != VK_NULL_HANDLE); }
+    NODISCARD ALWAYS_INLINE bool IsValid() const { return (m_Handle != VK_NULL_HANDLE); }
 
     NODISCARD bool IsCompatibleWithRenderPassBeginInfo(const RenderPassBeginInfo& beginInfo) const;
 
 public:
-    NODISCARD FORCEINLINE VkFramebuffer GetHandle() const { return m_Handle; }
+    NODISCARD ALWAYS_INLINE VkFramebuffer GetHandle() const { return m_Handle; }
 
-    NODISCARD FORCEINLINE uint32 GetSizeX() const
+    NODISCARD ALWAYS_INLINE uint32 GetSizeX() const
     {
         SE_ENSURE(m_Textures.HasElements());
         return m_Textures.First()->GetSizeX();
     }
 
-    NODISCARD FORCEINLINE uint32 GetSizeY() const
+    NODISCARD ALWAYS_INLINE uint32 GetSizeY() const
     {
         SE_ENSURE(m_Textures.HasElements());
         return m_Textures.First()->GetSizeY();

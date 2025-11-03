@@ -35,11 +35,11 @@ public:
     ReflectionStruct() = default;
     ~ReflectionStruct() = default;
 
-    NODISCARD FORCEINLINE UUID GetStructUUID() const { return m_StructUUID; }
-    NODISCARD FORCEINLINE UUID GetParentStructUUID() const { return m_ParentStructUUID; }
-    NODISCARD FORCEINLINE const String& GetName() const { return m_Name; }
-    NODISCARD FORCEINLINE usize GetStructureByteCount() const { return m_StructureByteCount; }
-    NODISCARD FORCEINLINE const Vector<Field>& GetNonInheritedFields() const { return m_NonInheritedFields; }
+    NODISCARD ALWAYS_INLINE UUID GetStructUUID() const { return m_StructUUID; }
+    NODISCARD ALWAYS_INLINE UUID GetParentStructUUID() const { return m_ParentStructUUID; }
+    NODISCARD ALWAYS_INLINE const String& GetName() const { return m_Name; }
+    NODISCARD ALWAYS_INLINE usize GetStructureByteCount() const { return m_StructureByteCount; }
+    NODISCARD ALWAYS_INLINE const Vector<Field>& GetNonInheritedFields() const { return m_NonInheritedFields; }
 
     RUNTIME_API void SetStructUUID(UUID structUUID);
     RUNTIME_API void SetParentStructUUID(UUID parentStructUUID);

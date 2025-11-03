@@ -32,21 +32,21 @@ public:
     virtual ~RefCounted() = default;
 
 protected:
-    FORCEINLINE RefCounted()
+    ALWAYS_INLINE RefCounted()
         : m_StrongReferenceCount(1)
         , m_WeakReferenceCount(0)
     {}
 
 public:
-    NODISCARD FORCEINLINE uint32 GetStrongReferenceCount() const { return m_StrongReferenceCount; }
-    NODISCARD FORCEINLINE uint32 GetWeakReferenceCount() const { return m_WeakReferenceCount; }
+    NODISCARD ALWAYS_INLINE uint32 GetStrongReferenceCount() const { return m_StrongReferenceCount; }
+    NODISCARD ALWAYS_INLINE uint32 GetWeakReferenceCount() const { return m_WeakReferenceCount; }
 
 private:
-    FORCEINLINE void IncrementStrongReferenceCount() { ++m_StrongReferenceCount; }
-    FORCEINLINE void DecrementStrongReferenceCount() { --m_StrongReferenceCount; }
+    ALWAYS_INLINE void IncrementStrongReferenceCount() { ++m_StrongReferenceCount; }
+    ALWAYS_INLINE void DecrementStrongReferenceCount() { --m_StrongReferenceCount; }
 
-    FORCEINLINE void IncrementWeakReferenceCount() { ++m_WeakReferenceCount; }
-    FORCEINLINE void DecrementWeakReferenceCount() { --m_WeakReferenceCount; }
+    ALWAYS_INLINE void IncrementWeakReferenceCount() { ++m_WeakReferenceCount; }
+    ALWAYS_INLINE void DecrementWeakReferenceCount() { --m_WeakReferenceCount; }
 
 private:
     uint32 m_StrongReferenceCount;
@@ -68,17 +68,17 @@ class StrongRefPtr
     template<typename Q, typename... Args> friend StrongRefPtr<Q> CreateStrongRef                                 (Args&&...);
 
 public:
-    FORCEINLINE StrongRefPtr()
+    ALWAYS_INLINE StrongRefPtr()
         : m_Instance(nullptr)
     {}
 
-    FORCEINLINE ~StrongRefPtr()
+    ALWAYS_INLINE ~StrongRefPtr()
     {
         Release();
     }
 
 public:
-    FORCEINLINE StrongRefPtr(const StrongRefPtr& other)
+    ALWAYS_INLINE StrongRefPtr(const StrongRefPtr& other)
         : m_Instance(other.m_Instance)
     {
         if (m_Instance)
@@ -88,13 +88,13 @@ public:
         }
     }
 
-    FORCEINLINE StrongRefPtr(StrongRefPtr&& other) noexcept
+    ALWAYS_INLINE StrongRefPtr(StrongRefPtr&& other) noexcept
         : m_Instance(other.m_Instance)
     {
         other.m_Instance = nullptr;
     }
-    
-    FORCEINLINE StrongRefPtr& operator=(const StrongRefPtr& other)
+
+    ALWAYS_INLINE StrongRefPtr& operator=(const StrongRefPtr& other)
     {
         // Handle the self-assignment case.
         if (this == &other)
@@ -112,7 +112,7 @@ public:
         return *this;
     }
 
-    FORCEINLINE StrongRefPtr& operator=(StrongRefPtr&& other) noexcept
+    ALWAYS_INLINE StrongRefPtr& operator=(StrongRefPtr&& other) noexcept
     {
         // Handle the self-assignment case.
         if (this == &other)
@@ -129,7 +129,7 @@ public:
 public:
     template<typename Q>
     requires(!std::is_same_v<T, Q> && std::is_base_of_v<T, Q>)
-    FORCEINLINE StrongRefPtr(const StrongRefPtr<Q>& other)
+    ALWAYS_INLINE StrongRefPtr(const StrongRefPtr<Q>& other)
         : m_Instance(other.m_Instance)
     {
         if (m_Instance)
@@ -138,10 +138,10 @@ public:
             refCounted->IncrementStrongReferenceCount();
         }
     }
-    
+
     template<typename Q>
     requires(!std::is_same_v<T, Q> && std::is_base_of_v<T, Q>)
-    FORCEINLINE StrongRefPtr(StrongRefPtr<Q>&& other) noexcept
+    ALWAYS_INLINE StrongRefPtr(StrongRefPtr<Q>&& other) noexcept
         : m_Instance(other.m_Instance)
     {
         other.m_Instance = nullptr;
@@ -149,7 +149,7 @@ public:
 
     template<typename Q>
     requires(!std::is_same_v<T, Q> && std::is_base_of_v<T, Q>)
-    FORCEINLINE StrongRefPtr& operator=(const StrongRefPtr<Q>& other)
+    ALWAYS_INLINE StrongRefPtr& operator=(const StrongRefPtr<Q>& other)
     {
         // Handle the self-assignment case.
         if ((void*)this == (void*)(&other))
@@ -166,10 +166,10 @@ public:
 
         return *this;
     }
-    
+
     template<typename Q>
     requires(!std::is_same_v<T, Q> && std::is_base_of_v<T, Q>)
-    FORCEINLINE StrongRefPtr& operator=(StrongRefPtr<Q>&& other) noexcept
+    ALWAYS_INLINE StrongRefPtr& operator=(StrongRefPtr<Q>&& other) noexcept
     {
         // Handle the self-assignment case.
         if ((void*)(this) == (void*)(&other))
@@ -186,17 +186,17 @@ public:
 public:
     template<typename Q>
     requires(std::is_base_of_v<T, Q>)
-    FORCEINLINE StrongRefPtr(const WeakRefPtr<Q>& weakRefPtr);
+    ALWAYS_INLINE StrongRefPtr(const WeakRefPtr<Q>& weakRefPtr);
 
     template<typename Q>
     requires(std::is_base_of_v<T, Q>)
-    FORCEINLINE StrongRefPtr& operator=(const WeakRefPtr<Q>& weakRefPtr);
+    ALWAYS_INLINE StrongRefPtr& operator=(const WeakRefPtr<Q>& weakRefPtr);
 
-    FORCEINLINE StrongRefPtr(std::nullptr_t)
+    ALWAYS_INLINE StrongRefPtr(std::nullptr_t)
         : m_Instance(nullptr)
     {}
 
-    FORCEINLINE StrongRefPtr& operator=(std::nullptr_t)
+    ALWAYS_INLINE StrongRefPtr& operator=(std::nullptr_t)
     {
         Release();
         return *this;
@@ -204,50 +204,50 @@ public:
 
     template<typename Q>
     requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
-    NODISCARD FORCEINLINE bool operator==(const WeakRefPtr<Q>& weakRefPtr) const;
+    NODISCARD ALWAYS_INLINE bool operator==(const WeakRefPtr<Q>& weakRefPtr) const;
 
     template<typename Q>
     requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
-    NODISCARD FORCEINLINE bool operator!=(const WeakRefPtr<Q>& weakRefPtr) const;
+    NODISCARD ALWAYS_INLINE bool operator!=(const WeakRefPtr<Q>& weakRefPtr) const;
 
 public:
-    NODISCARD FORCEINLINE T* Get()
+    NODISCARD ALWAYS_INLINE T* Get()
     {
         SE_ASSERT(IsValid());
         return m_Instance;
     }
 
-    NODISCARD FORCEINLINE const T* Get() const
+    NODISCARD ALWAYS_INLINE const T* Get() const
     {
         SE_ASSERT(IsValid());
         return m_Instance;
     }
 
-    NODISCARD FORCEINLINE T* GetNonConst() const
+    NODISCARD ALWAYS_INLINE T* GetNonConst() const
     {
         SE_ASSERT(IsValid());
         return m_Instance;
     }
 
-    NODISCARD FORCEINLINE T* operator->() { return Get(); }
-    NODISCARD FORCEINLINE const T* operator->() const { return Get(); }
+    NODISCARD ALWAYS_INLINE T* operator->() { return Get(); }
+    NODISCARD ALWAYS_INLINE const T* operator->() const { return Get(); }
 
-    NODISCARD FORCEINLINE T& operator*() { return *Get(); }
-    NODISCARD FORCEINLINE const T& operator*() const { return *Get(); }
+    NODISCARD ALWAYS_INLINE T& operator*() { return *Get(); }
+    NODISCARD ALWAYS_INLINE const T& operator*() const { return *Get(); }
 
 public:
-    NODISCARD FORCEINLINE bool IsValid() const
+    NODISCARD ALWAYS_INLINE bool IsValid() const
     {
         return (m_Instance != nullptr);
     }
 
-    FORCEINLINE void Release()
+    ALWAYS_INLINE void Release()
     {
         if (m_Instance)
         {
             RefCounted* refCounted = (RefCounted*)m_Instance;
             m_Instance = nullptr;
-            
+
             refCounted->DecrementStrongReferenceCount();
             if (refCounted->GetStrongReferenceCount() == 0)
             {
@@ -269,7 +269,7 @@ public:
     }
 
     template<typename Q>
-    NODISCARD FORCEINLINE StrongRefPtr<Q> As() const
+    NODISCARD ALWAYS_INLINE StrongRefPtr<Q> As() const
     {
         StrongRefPtr<Q> casted;
 
@@ -285,14 +285,14 @@ public:
 
     template<typename Q>
     requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
-    NODISCARD FORCEINLINE bool operator==(const StrongRefPtr<Q>& other) const
+    NODISCARD ALWAYS_INLINE bool operator==(const StrongRefPtr<Q>& other) const
     {
         return (m_Instance == other.m_Instance);
     }
 
     template<typename Q>
     requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
-    NODISCARD FORCEINLINE bool operator!=(const StrongRefPtr<Q>& other) const
+    NODISCARD ALWAYS_INLINE bool operator!=(const StrongRefPtr<Q>& other) const
     {
         const bool areEqual = ((*this) == other);
         return !areEqual;
@@ -315,17 +315,17 @@ class WeakRefPtr
     template<typename Q> friend WeakRefPtr<Q> AdoptWeakRef (Q*);
 
 public:
-    FORCEINLINE WeakRefPtr()
+    ALWAYS_INLINE WeakRefPtr()
         : m_Instance(nullptr)
     {}
 
-    FORCEINLINE ~WeakRefPtr()
+    ALWAYS_INLINE ~WeakRefPtr()
     {
         Release();
     }
 
 public:
-    FORCEINLINE WeakRefPtr(const WeakRefPtr& other)
+    ALWAYS_INLINE WeakRefPtr(const WeakRefPtr& other)
         : m_Instance(nullptr)
     {
         if (other.IsValid())
@@ -336,13 +336,13 @@ public:
         }
     }
 
-    FORCEINLINE WeakRefPtr(WeakRefPtr&& other) noexcept
+    ALWAYS_INLINE WeakRefPtr(WeakRefPtr&& other) noexcept
         : m_Instance(other.m_Instance)
     {
         other.m_Instance = nullptr;
     }
 
-    FORCEINLINE WeakRefPtr& operator=(const WeakRefPtr& other)
+    ALWAYS_INLINE WeakRefPtr& operator=(const WeakRefPtr& other)
     {
         // Handle the self-assignment case.
         if (this == &other)
@@ -360,7 +360,7 @@ public:
         return *this;
     }
 
-    FORCEINLINE WeakRefPtr& operator=(WeakRefPtr&& other) noexcept
+    ALWAYS_INLINE WeakRefPtr& operator=(WeakRefPtr&& other) noexcept
     {
         // Handle the self-assignment case.
         if (this == &other)
@@ -377,7 +377,7 @@ public:
 public:
     template<typename Q>
     requires(!std::is_same_v<T, Q> && std::is_base_of_v<T, Q>)
-    FORCEINLINE WeakRefPtr(const WeakRefPtr<Q>& other)
+    ALWAYS_INLINE WeakRefPtr(const WeakRefPtr<Q>& other)
         : m_Instance(nullptr)
     {
         if (other.IsValid())
@@ -390,7 +390,7 @@ public:
 
     template<typename Q>
     requires(!std::is_same_v<T, Q> && std::is_base_of_v<T, Q>)
-    FORCEINLINE WeakRefPtr(WeakRefPtr<Q>&& other) noexcept
+    ALWAYS_INLINE WeakRefPtr(WeakRefPtr<Q>&& other) noexcept
         : m_Instance(other.m_Instance)
     {
         other.m_Instance = nullptr;
@@ -398,7 +398,7 @@ public:
 
     template<typename Q>
     requires(!std::is_same_v<T, Q> && std::is_base_of_v<T, Q>)
-    FORCEINLINE WeakRefPtr& operator=(const WeakRefPtr<Q>& other)
+    ALWAYS_INLINE WeakRefPtr& operator=(const WeakRefPtr<Q>& other)
     {
         // Handle the self-assignment case.
         if (this == &other)
@@ -418,7 +418,7 @@ public:
 
     template<typename Q>
     requires(!std::is_same_v<T, Q> && std::is_base_of_v<T, Q>)
-    FORCEINLINE WeakRefPtr& operator=(WeakRefPtr<Q>&& other) noexcept
+    ALWAYS_INLINE WeakRefPtr& operator=(WeakRefPtr<Q>&& other) noexcept
     {
         // Handle the self-assignment case.
         if (this == &other)
@@ -435,17 +435,17 @@ public:
 public:
     template<typename Q>
     requires(std::is_base_of_v<T, Q>)
-    FORCEINLINE WeakRefPtr(const StrongRefPtr<Q>& strongRefPtr);
+    ALWAYS_INLINE WeakRefPtr(const StrongRefPtr<Q>& strongRefPtr);
 
     template<typename Q>
     requires(std::is_base_of_v<T, Q>)
-    FORCEINLINE WeakRefPtr& operator=(const StrongRefPtr<Q>& strongRefPtr);
+    ALWAYS_INLINE WeakRefPtr& operator=(const StrongRefPtr<Q>& strongRefPtr);
 
-    FORCEINLINE WeakRefPtr(std::nullptr_t)
+    ALWAYS_INLINE WeakRefPtr(std::nullptr_t)
         : m_Instance(nullptr)
     {}
 
-    FORCEINLINE WeakRefPtr& operator=(std::nullptr_t)
+    ALWAYS_INLINE WeakRefPtr& operator=(std::nullptr_t)
     {
         Release();
         return *this;
@@ -453,39 +453,39 @@ public:
 
     template<typename Q>
     requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
-    NODISCARD FORCEINLINE bool operator==(const StrongRefPtr<Q>& strongRefPtr) const;
+    NODISCARD ALWAYS_INLINE bool operator==(const StrongRefPtr<Q>& strongRefPtr) const;
 
     template<typename Q>
     requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
-    NODISCARD FORCEINLINE bool operator!=(const StrongRefPtr<Q>& strongRefPtr) const;
+    NODISCARD ALWAYS_INLINE bool operator!=(const StrongRefPtr<Q>& strongRefPtr) const;
 
 public:
-    NODISCARD FORCEINLINE T* Get()
+    NODISCARD ALWAYS_INLINE T* Get()
     {
         SE_ASSERT(IsValid());
         return m_Instance;
     }
 
-    NODISCARD FORCEINLINE const T* Get() const
+    NODISCARD ALWAYS_INLINE const T* Get() const
     {
         SE_ASSERT(IsValid());
         return m_Instance;
     }
 
-    NODISCARD FORCEINLINE T* GetNonConst() const
+    NODISCARD ALWAYS_INLINE T* GetNonConst() const
     {
         SE_ASSERT(IsValid());
         return m_Instance;
     }
 
-    NODISCARD FORCEINLINE T* operator->() { return Get(); }
-    NODISCARD FORCEINLINE const T* operator->() const { return Get(); }
+    NODISCARD ALWAYS_INLINE T* operator->() { return Get(); }
+    NODISCARD ALWAYS_INLINE const T* operator->() const { return Get(); }
 
-    NODISCARD FORCEINLINE T& operator*() { return *Get(); }
-    NODISCARD FORCEINLINE const T& operator*() const { return *Get(); }
+    NODISCARD ALWAYS_INLINE T& operator*() { return *Get(); }
+    NODISCARD ALWAYS_INLINE const T& operator*() const { return *Get(); }
 
 public:
-    NODISCARD FORCEINLINE bool IsValid() const
+    NODISCARD ALWAYS_INLINE bool IsValid() const
     {
         if (m_Instance == nullptr)
             return false;
@@ -494,7 +494,7 @@ public:
         return (refCounted->GetStrongReferenceCount() > 0);
     }
 
-    FORCEINLINE void Release()
+    ALWAYS_INLINE void Release()
     {
         if (m_Instance)
         {
@@ -520,7 +520,7 @@ public:
     }
 
     template<typename Q>
-    NODISCARD FORCEINLINE WeakRefPtr<Q> As() const
+    NODISCARD ALWAYS_INLINE WeakRefPtr<Q> As() const
     {
         WeakRefPtr<Q> casted;
         if (m_Instance)
@@ -534,11 +534,11 @@ public:
 
     template<typename Q>
     requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
-    NODISCARD FORCEINLINE bool operator==(const WeakRefPtr<Q>& other) const
+    NODISCARD ALWAYS_INLINE bool operator==(const WeakRefPtr<Q>& other) const
     {
         const bool thisIsValid = IsValid();
         const bool otherIsValid = other.IsValid();
-        
+
         // One pointer is valid and the other is not valid, so they can't be the same.
         if (thisIsValid != otherIsValid)
             return false;
@@ -552,7 +552,7 @@ public:
 
     template<typename Q>
     requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
-    NODISCARD FORCEINLINE bool operator!=(const WeakRefPtr<Q>& other) const
+    NODISCARD ALWAYS_INLINE bool operator!=(const WeakRefPtr<Q>& other) const
     {
         const bool areEqual = ((*this) == other);
         return !areEqual;
@@ -689,7 +689,7 @@ bool WeakRefPtr<T>::operator!=(const StrongRefPtr<Q>& strongRefPtr) const
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T>
-NODISCARD FORCEINLINE StrongRefPtr<T> AdoptStrongRef(T* instance)
+NODISCARD ALWAYS_INLINE StrongRefPtr<T> AdoptStrongRef(T* instance)
 {
     StrongRefPtr<T> strongRefPtr;
     if (instance)
@@ -702,7 +702,7 @@ NODISCARD FORCEINLINE StrongRefPtr<T> AdoptStrongRef(T* instance)
 }
 
 template<typename T>
-NODISCARD FORCEINLINE StrongRefPtr<T> AdoptStrongRefWithoutIncrementingReferenceCount(T* instance)
+NODISCARD ALWAYS_INLINE StrongRefPtr<T> AdoptStrongRefWithoutIncrementingReferenceCount(T* instance)
 {
     StrongRefPtr<T> strongRefPtr;
     strongRefPtr.m_Instance = instance;
@@ -710,7 +710,7 @@ NODISCARD FORCEINLINE StrongRefPtr<T> AdoptStrongRefWithoutIncrementingReference
 }
 
 template<typename T, typename... Args>
-NODISCARD FORCEINLINE StrongRefPtr<T> CreateStrongRef(Args&&... args)
+NODISCARD ALWAYS_INLINE StrongRefPtr<T> CreateStrongRef(Args&&... args)
 {
     // NOTE(Traian): The default constructor of the RefCounted class initializes the strong reference count
     // to 1, so no increment is required here. The reason behind this decision is that the pointer can be adopted
@@ -724,7 +724,7 @@ NODISCARD FORCEINLINE StrongRefPtr<T> CreateStrongRef(Args&&... args)
 }
 
 template<typename T>
-NODISCARD FORCEINLINE WeakRefPtr<T> AdoptWeakRef(T* instance)
+NODISCARD ALWAYS_INLINE WeakRefPtr<T> AdoptWeakRef(T* instance)
 {
     WeakRefPtr<T> weakRefPtr;
     if (instance)
@@ -745,13 +745,13 @@ template<typename T>
 using RefPtr = StrongRefPtr<T>;
 
 template<typename T>
-NODISCARD FORCEINLINE RefPtr<T> AdoptRef(T* instance)
+NODISCARD ALWAYS_INLINE RefPtr<T> AdoptRef(T* instance)
 {
     return AdoptStrongRef<T>(instance);
 }
 
 template<typename T, typename... Args>
-NODISCARD FORCEINLINE RefPtr<T> CreateRef(Args&&... args)
+NODISCARD ALWAYS_INLINE RefPtr<T> CreateRef(Args&&... args)
 {
     return CreateStrongRef<T>(Forward<Args>(args)...);
 }

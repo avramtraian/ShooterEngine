@@ -19,17 +19,17 @@ public:
     ~VulkanRenderPass();
 
 public:
-    NODISCARD FORCEINLINE VkRenderPass GetHandle() const { return m_Handle; }
-    NODISCARD FORCEINLINE bool HasDepthStencilAttachment() const { return m_HasDepthStencilAttachment; }
-    NODISCARD FORCEINLINE const Vector<RenderPassAttachment>& GetAttachments() const { return m_Attachments; }
-    NODISCARD FORCEINLINE const RenderPassAttachment& GetAttachment(uint32 attachmentIndex) const
+    NODISCARD ALWAYS_INLINE VkRenderPass GetHandle() const { return m_Handle; }
+    NODISCARD ALWAYS_INLINE bool HasDepthStencilAttachment() const { return m_HasDepthStencilAttachment; }
+    NODISCARD ALWAYS_INLINE const Vector<RenderPassAttachment>& GetAttachments() const { return m_Attachments; }
+    NODISCARD ALWAYS_INLINE const RenderPassAttachment& GetAttachment(uint32 attachmentIndex) const
     {
         SE_ENSURE(attachmentIndex < m_Attachments.Count());
         return m_Attachments[attachmentIndex];
     }
 
-    NODISCARD FORCEINLINE uint32 GetAttachmentCount() const { return (uint32)m_Attachments.Count(); }
-    NODISCARD FORCEINLINE uint32 GetColorAttachmentCount() const
+    NODISCARD ALWAYS_INLINE uint32 GetAttachmentCount() const { return (uint32)m_Attachments.Count(); }
+    NODISCARD ALWAYS_INLINE uint32 GetColorAttachmentCount() const
     {
         SE_ENSURE(!m_Attachments.IsEmpty());
         uint32 colorAttachmentCount = (uint32)m_Attachments.Count();

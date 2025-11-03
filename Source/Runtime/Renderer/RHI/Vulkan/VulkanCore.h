@@ -23,7 +23,7 @@
 namespace SE
 {
 
-NODISCARD FORCEINLINE static String VulkanFormatToString(VkFormat format)
+NODISCARD ALWAYS_INLINE static String VulkanFormatToString(VkFormat format)
 {
     switch (format)
     {
@@ -64,12 +64,12 @@ template<typename VulkanHandleType>
 struct VulkanObjectPool
 {
 public:
-    NODISCARD FORCEINLINE uint32 GetNumberOfUnusedObjects() const { return (uint32)Unused.Count(); }
-    NODISCARD FORCEINLINE uint32 GetNumberOfInUseObjects() const { return (uint32)InUse.Count(); }
-    NODISCARD FORCEINLINE bool HasUnusedObjects() const { return (GetNumberOfUnusedObjects() > 0); }
+    NODISCARD ALWAYS_INLINE uint32 GetNumberOfUnusedObjects() const { return (uint32)Unused.Count(); }
+    NODISCARD ALWAYS_INLINE uint32 GetNumberOfInUseObjects() const { return (uint32)InUse.Count(); }
+    NODISCARD ALWAYS_INLINE bool HasUnusedObjects() const { return (GetNumberOfUnusedObjects() > 0); }
 
 public:
-    NODISCARD FORCEINLINE VulkanHandleType Acquire()
+    NODISCARD ALWAYS_INLINE VulkanHandleType Acquire()
     {
         if (Unused.IsEmpty())
             return VK_NULL_HANDLE;
@@ -81,7 +81,7 @@ public:
         return handle;
     }
 
-    FORCEINLINE void Retire(VulkanHandleType handle)
+    ALWAYS_INLINE void Retire(VulkanHandleType handle)
     {
         SE_ENSURE(InUse.Contains(handle));
         InUse.RemoveUnchecked(handle);

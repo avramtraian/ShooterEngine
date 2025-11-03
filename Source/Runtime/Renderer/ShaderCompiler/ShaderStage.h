@@ -21,7 +21,7 @@ enum class ShaderStage : uint8
 #undef _SE_ENUM_MEMBER
 };
 
-NODISCARD FORCEINLINE const char* ShaderStageToRawString(ShaderStage stage)
+NODISCARD ALWAYS_INLINE const char* ShaderStageToRawString(ShaderStage stage)
 {
     switch (stage)
     {
@@ -35,7 +35,7 @@ NODISCARD FORCEINLINE const char* ShaderStageToRawString(ShaderStage stage)
     return nullptr;
 }
 
-NODISCARD FORCEINLINE StringView ShaderStageToStringView(ShaderStage stage)
+NODISCARD ALWAYS_INLINE StringView ShaderStageToStringView(ShaderStage stage)
 {
     switch (stage)
     {
@@ -49,7 +49,7 @@ NODISCARD FORCEINLINE StringView ShaderStageToStringView(ShaderStage stage)
     return {};
 }
 
-NODISCARD FORCEINLINE String ShaderStageToString(ShaderStage stage)
+NODISCARD ALWAYS_INLINE String ShaderStageToString(ShaderStage stage)
 {
     switch (stage)
     {
@@ -63,7 +63,7 @@ NODISCARD FORCEINLINE String ShaderStageToString(ShaderStage stage)
     return {};
 }
 
-NODISCARD FORCEINLINE ShaderStage ShaderStageFromRawString(const char* stageString)
+NODISCARD ALWAYS_INLINE ShaderStage ShaderStageFromRawString(const char* stageString)
 {
 #define _SE_IF_CASE(x)                     \
     if (std::strcmp(stageString, #x) == 0) \
@@ -75,7 +75,7 @@ NODISCARD FORCEINLINE ShaderStage ShaderStageFromRawString(const char* stageStri
     SE_ASSERT_NOT_REACHED;
 }
 
-NODISCARD FORCEINLINE ShaderStage ShaderStageFromStringView(StringView stageString)
+NODISCARD ALWAYS_INLINE ShaderStage ShaderStageFromStringView(StringView stageString)
 {
 #define _SE_IF_CASE(x)           \
     if (stageString == VIEW(#x)) \
@@ -87,7 +87,7 @@ NODISCARD FORCEINLINE ShaderStage ShaderStageFromStringView(StringView stageStri
     SE_ASSERT_NOT_REACHED;
 }
 
-NODISCARD FORCEINLINE ShaderStage ShaderStageFromString(const String& stageString)
+NODISCARD ALWAYS_INLINE ShaderStage ShaderStageFromString(const String& stageString)
 {
 #define _SE_IF_CASE(x)           \
     if (stageString == VIEW(#x)) \

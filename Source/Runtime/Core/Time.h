@@ -10,7 +10,7 @@ namespace SE
 class TimeDuration
 {
 public:
-    NODISCARD FORCEINLINE static TimeDuration FromTicks(uint64 tickCount)
+    NODISCARD ALWAYS_INLINE static TimeDuration FromTicks(uint64 tickCount)
     {
         TimeDuration duration;
         duration.m_TickCount = tickCount;
@@ -37,12 +37,12 @@ public:
     NODISCARD RUNTIME_API float ToNanoseconds() const;
 
 public:
-    NODISCARD FORCEINLINE bool operator==(const TimeDuration& other) const { return (m_TickCount == other.m_TickCount); }
-    NODISCARD FORCEINLINE bool operator!=(const TimeDuration& other) const { return (m_TickCount != other.m_TickCount); }
-    NODISCARD FORCEINLINE bool operator>(const TimeDuration& other) const { return (m_TickCount > other.m_TickCount); }
-    NODISCARD FORCEINLINE bool operator<(const TimeDuration& other) const { return (m_TickCount < other.m_TickCount); }
-    NODISCARD FORCEINLINE bool operator>=(const TimeDuration& other) const { return (m_TickCount >= other.m_TickCount); }
-    NODISCARD FORCEINLINE bool operator<=(const TimeDuration& other) const { return (m_TickCount <= other.m_TickCount); }
+    NODISCARD ALWAYS_INLINE bool operator==(const TimeDuration& other) const { return (m_TickCount == other.m_TickCount); }
+    NODISCARD ALWAYS_INLINE bool operator!=(const TimeDuration& other) const { return (m_TickCount != other.m_TickCount); }
+    NODISCARD ALWAYS_INLINE bool operator>(const TimeDuration& other) const { return (m_TickCount > other.m_TickCount); }
+    NODISCARD ALWAYS_INLINE bool operator<(const TimeDuration& other) const { return (m_TickCount < other.m_TickCount); }
+    NODISCARD ALWAYS_INLINE bool operator>=(const TimeDuration& other) const { return (m_TickCount >= other.m_TickCount); }
+    NODISCARD ALWAYS_INLINE bool operator<=(const TimeDuration& other) const { return (m_TickCount <= other.m_TickCount); }
 
 private:
     uint64 m_TickCount { 0 };

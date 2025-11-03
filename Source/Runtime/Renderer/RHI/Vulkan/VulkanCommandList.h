@@ -17,8 +17,8 @@ public:
     VulkanCommandList(const CommandListInfo& info);
     virtual ~VulkanCommandList() override;
 
-    NODISCARD FORCEINLINE virtual CommandListFamily GetFamily() const override { return m_Family; }
-    NODISCARD FORCEINLINE VkCommandBuffer GetHandle() const { return m_CommandBuffer; }
+    NODISCARD ALWAYS_INLINE virtual CommandListFamily GetFamily() const override { return m_Family; }
+    NODISCARD ALWAYS_INLINE VkCommandBuffer GetHandle() const { return m_CommandBuffer; }
 
 public:
     virtual void Begin() override;
@@ -42,8 +42,8 @@ public:
     void CopyBufferToImage(const RefPtr<VulkanTexture2D>& dstTexture, VkBuffer srcBuffer);
 
 public:
-    NODISCARD FORCEINLINE virtual const DrawStatistics& GetDrawStatistics() const override { return m_DrawStatistics; }
-    NODISCARD FORCEINLINE virtual AccumultateStatisticsPolicy GetAccumulateStatisticsPolicy() const override { return m_AccumulateStatisticsPolicy; }
+    NODISCARD ALWAYS_INLINE virtual const DrawStatistics& GetDrawStatistics() const override { return m_DrawStatistics; }
+    NODISCARD ALWAYS_INLINE virtual AccumultateStatisticsPolicy GetAccumulateStatisticsPolicy() const override { return m_AccumulateStatisticsPolicy; }
 
     virtual void ResetDrawStatistics() override;
     virtual void SetAccumulateStatisticsPolicy(AccumultateStatisticsPolicy policy) override;

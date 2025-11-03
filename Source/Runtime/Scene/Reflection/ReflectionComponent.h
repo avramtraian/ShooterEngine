@@ -26,14 +26,14 @@ public:
     ReflectionComponent() = default;
     ~ReflectionComponent() = default;
 
-    NODISCARD FORCEINLINE UUID GetComponentUUID() const { return m_ComponentUUID; }
-    NODISCARD FORCEINLINE const String& GetName() const { return m_Name; }
+    NODISCARD ALWAYS_INLINE UUID GetComponentUUID() const { return m_ComponentUUID; }
+    NODISCARD ALWAYS_INLINE const String& GetName() const { return m_Name; }
 
     // NOTE(Traian): The reflection struct returned by these methods are not the same as
     // the ones created directly by the 'SceneReflectionRegistry'. They only hold information
     // regarding the fields of the script and the memory layout, not about UUID/name.
-    NODISCARD FORCEINLINE ReflectionStruct& GetStruct() { return m_Struct; }
-    NODISCARD FORCEINLINE const ReflectionStruct& GetStruct() const { return m_Struct; }
+    NODISCARD ALWAYS_INLINE ReflectionStruct& GetStruct() { return m_Struct; }
+    NODISCARD ALWAYS_INLINE const ReflectionStruct& GetStruct() const { return m_Struct; }
 
     RUNTIME_API void SetComponentUUID(UUID componentUUID);
     RUNTIME_API void SetName(String name);

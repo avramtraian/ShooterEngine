@@ -20,9 +20,9 @@ public:
     VulkanSurface(const RefPtr<Window>& targetWindow);
     virtual ~VulkanSurface() override;
 
-    NODISCARD FORCEINLINE VkSurfaceKHR GetHandle() const { return m_Handle; }
-    NODISCARD FORCEINLINE uint32 GetSizeX() const { return m_TargetWindow->GetSizeX(); }
-    NODISCARD FORCEINLINE uint32 GetSizeY() const { return m_TargetWindow->GetSizeY(); }
+    NODISCARD ALWAYS_INLINE VkSurfaceKHR GetHandle() const { return m_Handle; }
+    NODISCARD ALWAYS_INLINE uint32 GetSizeX() const { return m_TargetWindow->GetSizeX(); }
+    NODISCARD ALWAYS_INLINE uint32 GetSizeY() const { return m_TargetWindow->GetSizeY(); }
 
 private:
     VkSurfaceKHR m_Handle;
@@ -40,13 +40,13 @@ public:
     virtual ~VulkanRenderingSurface() override;
 
 public:
-    NODISCARD FORCEINLINE virtual uint32 GetMaxFramesInFlight() const override { return m_MaxFramesInFlight; }
-    NODISCARD FORCEINLINE virtual uint32 GetCurrentFrameIndex() const override { return m_CurrentFrameIndex; }
-    NODISCARD FORCEINLINE virtual uint32 GetCurrentSwapchainImageIndex() const override { return m_CurrentSwapchainImageIndex; }
+    NODISCARD ALWAYS_INLINE virtual uint32 GetMaxFramesInFlight() const override { return m_MaxFramesInFlight; }
+    NODISCARD ALWAYS_INLINE virtual uint32 GetCurrentFrameIndex() const override { return m_CurrentFrameIndex; }
+    NODISCARD ALWAYS_INLINE virtual uint32 GetCurrentSwapchainImageIndex() const override { return m_CurrentSwapchainImageIndex; }
 
-    NODISCARD FORCEINLINE virtual TextureFormat GetSurfaceFormat() const override { return TextureFormatFromVulkan(m_Swapchain->GetImmutableProperties().Format); }
-    NODISCARD FORCEINLINE virtual uint32 GetSurfaceSizeX() const override { return m_Swapchain->GetSizeX(); }
-    NODISCARD FORCEINLINE virtual uint32 GetSurfaceSizeY() const override { return m_Swapchain->GetSizeY(); }
+    NODISCARD ALWAYS_INLINE virtual TextureFormat GetSurfaceFormat() const override { return TextureFormatFromVulkan(m_Swapchain->GetImmutableProperties().Format); }
+    NODISCARD ALWAYS_INLINE virtual uint32 GetSurfaceSizeX() const override { return m_Swapchain->GetSizeX(); }
+    NODISCARD ALWAYS_INLINE virtual uint32 GetSurfaceSizeY() const override { return m_Swapchain->GetSizeY(); }
 
     virtual bool Invalidate() override;
 

@@ -27,9 +27,9 @@ public:
     VulkanCommandPool(const VulkanCommandPoolInfo& info);
     virtual ~VulkanCommandPool() override;
 
-    NODISCARD FORCEINLINE uint32 GetInUseCommandBufferCount() const { return (uint32)m_InUseCommandBuffers.Count(); }
-    NODISCARD FORCEINLINE uint32 GetUnusedCommandBufferCount() const { return (uint32)m_UnusedCommandBuffers.Count(); }
-    NODISCARD FORCEINLINE uint32 GetTotalCommandBufferCount() const { return GetInUseCommandBufferCount() + GetUnusedCommandBufferCount(); }
+    NODISCARD ALWAYS_INLINE uint32 GetInUseCommandBufferCount() const { return (uint32)m_InUseCommandBuffers.Count(); }
+    NODISCARD ALWAYS_INLINE uint32 GetUnusedCommandBufferCount() const { return (uint32)m_UnusedCommandBuffers.Count(); }
+    NODISCARD ALWAYS_INLINE uint32 GetTotalCommandBufferCount() const { return GetInUseCommandBufferCount() + GetUnusedCommandBufferCount(); }
 
     NODISCARD VkCommandBuffer AcquireCommandBuffer();
     void RetireCommandBuffer(VkCommandBuffer commandBufferHandle);

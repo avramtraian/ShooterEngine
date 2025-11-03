@@ -23,7 +23,7 @@ public:
 
     void Invalidate(const GraphicsState& graphicsState, const RefPtr<Shader>& shader, VkRenderPass renderPassHandle, uint32 colorAttachmentCount);
     void Destroy();
-    NODISCARD FORCEINLINE bool IsValid() const { return (m_Handle != VK_NULL_HANDLE); }
+    NODISCARD ALWAYS_INLINE bool IsValid() const { return (m_Handle != VK_NULL_HANDLE); }
 
     NODISCARD bool IsCompatibleWithGraphicsStateAndShader(const GraphicsState& graphicsState, const RefPtr<Shader>& shader) const;
 

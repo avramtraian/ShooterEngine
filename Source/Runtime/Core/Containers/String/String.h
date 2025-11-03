@@ -36,7 +36,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    NODISCARD FORCEINLINE static uint64 GetHash(const TString& string)
+    NODISCARD ALWAYS_INLINE static uint64 GetHash(const TString& string)
     {
         const uint64 hashValue = GetCityHash64(string.Characters(), string.ByteCountWithoutNullTerminator());
         return hashValue;
@@ -45,7 +45,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    FORCEINLINE TString()
+    ALWAYS_INLINE TString()
     {
         m_ByteCount           = 1;
         m_InlineCharacters[0] = '\0';
@@ -53,11 +53,11 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE ~TString() { Clear(); }
+    ALWAYS_INLINE ~TString() { Clear(); }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE TString(const TString& other)
+    ALWAYS_INLINE TString(const TString& other)
         : m_ByteCount(other.m_ByteCount)
     {
         if (other.IsStoredInline())
@@ -73,7 +73,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE TString(TString&& other) noexcept
+    ALWAYS_INLINE TString(TString&& other) noexcept
         : m_ByteCount(other.m_ByteCount)
     {
         if (other.IsStoredInline())
@@ -93,7 +93,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE TString(StringView view)
+    ALWAYS_INLINE TString(StringView view)
         : m_ByteCount(view.ByteCount() + sizeof(char))
     {
         char* destinationCharacters = m_InlineCharacters;
@@ -110,7 +110,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE TString& operator=(const TString& other)
+    ALWAYS_INLINE TString& operator=(const TString& other)
     {
         // Handle the self-assignment case.
         if (this == &other)
@@ -134,7 +134,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE TString& operator=(TString&& other) noexcept
+    ALWAYS_INLINE TString& operator=(TString&& other) noexcept
     {
         // Handle the self-assignment case.
         if (this == &other)
@@ -162,7 +162,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE TString& operator=(StringView view)
+    ALWAYS_INLINE TString& operator=(StringView view)
     {
         Clear();
         m_ByteCount                 = view.ByteCount() + sizeof(char);
@@ -184,7 +184,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    NODISCARD FORCEINLINE usize ByteCountWithNullTerminator() const
+    NODISCARD ALWAYS_INLINE usize ByteCountWithNullTerminator() const
     {
         SE_ASSERT(m_ByteCount > 0);
         return m_ByteCount;
@@ -192,7 +192,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE usize ByteCountWithoutNullTerminator() const
+    NODISCARD ALWAYS_INLINE usize ByteCountWithoutNullTerminator() const
     {
         SE_ASSERT(m_ByteCount > 0);
         return m_ByteCount - 1;
@@ -200,12 +200,12 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE bool IsEmpty() const { return (ByteCountWithoutNullTerminator() == 0); }
-    NODISCARD FORCEINLINE bool HasCharacters() const { return (ByteCountWithoutNullTerminator() > 0); }
+    NODISCARD ALWAYS_INLINE bool IsEmpty() const { return (ByteCountWithoutNullTerminator() == 0); }
+    NODISCARD ALWAYS_INLINE bool HasCharacters() const { return (ByteCountWithoutNullTerminator() > 0); }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE const char* Characters() const
+    NODISCARD ALWAYS_INLINE const char* Characters() const
     {
         if (IsStoredInline())
             return m_InlineCharacters;
@@ -214,7 +214,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE char* NonConstCharacters() const
+    NODISCARD ALWAYS_INLINE char* NonConstCharacters() const
     {
         const char* constCharacters = Characters();
         return const_cast<char*>(constCharacters);
@@ -223,7 +223,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    FORCEINLINE void Clear()
+    ALWAYS_INLINE void Clear()
     {
         if (IsStoredInline())
         {
@@ -245,7 +245,7 @@ public:
 
 public:
     template<typename OtherAllocator>
-    NODISCARD FORCEINLINE bool operator==(const TString<OtherAllocator>& other) const
+    NODISCARD ALWAYS_INLINE bool operator==(const TString<OtherAllocator>& other) const
     {
         if (m_ByteCount != other.m_ByteCount)
             return false;
@@ -264,7 +264,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE bool operator==(StringView view) const
+    NODISCARD ALWAYS_INLINE bool operator==(StringView view) const
     {
         if (ByteCountWithoutNullTerminator() != view.ByteCount())
             return false;
@@ -284,7 +284,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     template<typename OtherAllocator>
-    NODISCARD FORCEINLINE bool operator!=(const TString<OtherAllocator>& other) const
+    NODISCARD ALWAYS_INLINE bool operator!=(const TString<OtherAllocator>& other) const
     {
         const bool areEqual = ((*this) == other);
         return !areEqual;
@@ -292,7 +292,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE bool operator!=(StringView view) const
+    NODISCARD ALWAYS_INLINE bool operator!=(StringView view) const
     {
         const bool areEqual = ((*this) == view);
         return !areEqual;
@@ -301,7 +301,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 public:
-    NODISCARD FORCEINLINE Optional<usize> Find(StringView view, usize searchStartByteOffset = 0) const
+    NODISCARD ALWAYS_INLINE Optional<usize> Find(StringView view, usize searchStartByteOffset = 0) const
     {
         if (view.ByteCount() > ByteCountWithoutNullTerminator())
         {
@@ -332,7 +332,7 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    NODISCARD FORCEINLINE bool Contains(StringView view, usize searchStartByteOffset = 0) const
+    NODISCARD ALWAYS_INLINE bool Contains(StringView view, usize searchStartByteOffset = 0) const
     {
         Optional<usize> substringByteOffset = Find(view, searchStartByteOffset);
         return substringByteOffset.HasValue();
@@ -341,7 +341,7 @@ public:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 private:
-    NODISCARD FORCEINLINE static HeapData* AllocateHeapData(usize byteCount)
+    NODISCARD ALWAYS_INLINE static HeapData* AllocateHeapData(usize byteCount)
     {
         const usize allocationSize = sizeof(HeapData) + byteCount;
         void*       memoryBlock    = Allocator::Allocate(allocationSize);
@@ -352,7 +352,7 @@ private:
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE static void ReleaseHeapData(HeapData* heapData, usize byteCount)
+    ALWAYS_INLINE static void ReleaseHeapData(HeapData* heapData, usize byteCount)
     {
         MAYBE_UNUSED const usize allocationSize = sizeof(HeapData) + byteCount;
         Allocator::Release(heapData);
@@ -361,8 +361,8 @@ private:
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 private:
-    NODISCARD FORCEINLINE bool IsStoredInline() const { return (m_ByteCount <= INLINE_CAPACITY); }
-    NODISCARD FORCEINLINE bool IsStoredOnHeap() const { return (m_ByteCount > INLINE_CAPACITY); }
+    NODISCARD ALWAYS_INLINE bool IsStoredInline() const { return (m_ByteCount <= INLINE_CAPACITY); }
+    NODISCARD ALWAYS_INLINE bool IsStoredOnHeap() const { return (m_ByteCount > INLINE_CAPACITY); }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

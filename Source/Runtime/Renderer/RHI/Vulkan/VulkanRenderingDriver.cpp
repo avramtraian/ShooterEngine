@@ -56,7 +56,7 @@ enum class InstanceComponentType
 
 struct InstanceComponent
 {
-    FORCEINLINE InstanceComponent(InstanceComponentType type, String name)
+    ALWAYS_INLINE InstanceComponent(InstanceComponentType type, String name)
         : Type(type)
         , Name(Move(name))
     {}
