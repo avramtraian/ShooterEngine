@@ -30,7 +30,7 @@ public:
     SHOOTER_API ShaderCompiler(String shaderSourceCode);
     SHOOTER_API ~ShaderCompiler() = default;
 
-    SHOOTER_API NODISCARD static StringView GetEntryPointNameForStage(ShaderStage stage);
+    NODISCARD SHOOTER_API static StringView GetEntryPointNameForStage(ShaderStage stage);
     SHOOTER_API bool Compile();
 
 public:
@@ -38,8 +38,8 @@ public:
     NODISCARD FORCEINLINE const Vector<String>& GetErrorMessages() const { return m_ErrorMessages; }
     NODISCARD FORCEINLINE const Vector<CompiledShaderStage>& GetCompiledStages() const { return m_CompiledStages; }
 
-    SHOOTER_API NODISCARD bool IsStageCompiled(ShaderStage stage) const;
-    SHOOTER_API NODISCARD const CompiledShaderStage& GetCompiledStage(ShaderStage stage) const;
+    NODISCARD SHOOTER_API bool IsStageCompiled(ShaderStage stage) const;
+    NODISCARD SHOOTER_API const CompiledShaderStage& GetCompiledStage(ShaderStage stage) const;
 
 private:
     void AddBaseCompilerArguments(Vector<const wchar_t*>& outArguments);
@@ -49,9 +49,9 @@ private:
     Optional<ShaderReflectionData> GenerateReflectionData(ShaderStage stage, ReadonlyBufferView bytecode);
 
 private:
-    String m_SourceCode;
-    Vector<String> m_ErrorMessages;
+    String                      m_SourceCode;
+    Vector<String>              m_ErrorMessages;
     Vector<CompiledShaderStage> m_CompiledStages;
 };
 
-}
+} // namespace SE

@@ -9,18 +9,15 @@
 #include <Runtime/Core/Platform/PlatformCoreInclude.h>
 
 #include <vulkan/vulkan.h>
-
 #if SE_PLATFORM_WINDOWS
-    #define WIN32_LEAN_AND_MEAN
-    #define NOMINMAX
-    #include <Windows.h>
     #include <vulkan/vulkan_win32.h>
 #endif // SE_PLATFORM_WINDOWS
 
-#define SE_VULKAN_CHECK(...)                                          \
-    if ((__VA_ARGS__) != VK_SUCCESS) {                                \
-        SE_LOG_ERROR("Vulkan expression failed!\n%s", #__VA_ARGS__);  \
-        SE_ASSERT_NOT_REACHED;                                        \
+#define SE_VULKAN_CHECK(...)                                         \
+    if ((__VA_ARGS__) != VK_SUCCESS)                                 \
+    {                                                                \
+        SE_LOG_ERROR("Vulkan expression failed!\n%s", #__VA_ARGS__); \
+        SE_ASSERT_NOT_REACHED;                                       \
     }
 
 namespace SE
@@ -28,10 +25,10 @@ namespace SE
 
 NODISCARD FORCEINLINE static String VulkanFormatToString(VkFormat format)
 {
-
     switch (format)
     {
-#define _SE_CASE(formatName) case formatName: return VIEW(#formatName);
+#define _SE_CASE(formatName) \
+    case formatName: return VIEW(#formatName);
         _SE_CASE(VK_FORMAT_B8G8R8A8_UNORM);
         _SE_CASE(VK_FORMAT_B8G8R8A8_SNORM);
         _SE_CASE(VK_FORMAT_B8G8R8A8_UINT);
@@ -92,19 +89,13 @@ public:
     }
 
 public:
-    NODISCARD void AddUnusedObject(VulkanHandleType handle)
-    {
-        Unused.Add(handle);
-    }
+    void AddUnusedObject(VulkanHandleType handle) { Unused.Add(handle); }
 
-    NODISCARD void AddInUseObject(VulkanHandleType handle)
-    {
-        InUse.Add(handle);
-    }
+    void AddInUseObject(VulkanHandleType handle) { InUse.Add(handle); }
 
 public:
-    Vector<VulkanHandleType> Unused;
+    Vector<VulkanHandleType>  Unused;
     HashSet<VulkanHandleType> InUse;
 };
 
-}
+} // namespace SE
