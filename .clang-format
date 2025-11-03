@@ -6,7 +6,6 @@ AlignConsecutiveAssignments:
   Enabled: true
   AcrossComments: false
   AcrossEmptyLines: true
-  AlignFunctionDeclarations: true
 AlignConsecutiveBitFields:
   Enabled: true
   AcrossComments: false
@@ -14,11 +13,16 @@ AlignConsecutiveBitFields:
 AlignConsecutiveDeclarations:
   Enabled: true
   AcrossComments: false
-  AcrossEmptyLines: true
+  AcrossEmptyLines: false
+  AlignFunctionDeclarations: false
 AlignConsecutiveMacros:
   Enabled: true
   AcrossComments: true
   AcrossEmptyLines: true
+AlignConsecutiveShortCaseStatements:
+  Enabled: true
+  AcrossComments: false
+  AcrossEmptyLines: false
 AlignEscapedNewlines: Left
 AlignOperands: Align
 AlignTrailingComments: false
@@ -103,7 +107,7 @@ PointerAlignment: Left
 QualifierAlignment: Custom
 QualifierOrder: [ 'inline', 'static', 'constexpr', 'const', 'volatile', 'type' ]
 ReferenceAlignment: Pointer
-ReflowComments: Always
+# ReflowComments: Always
 RequiresClausePosition: OwnLine
 RequiresExpressionIndentation: OuterScope
 SeparateDefinitionBlocks: Leave
