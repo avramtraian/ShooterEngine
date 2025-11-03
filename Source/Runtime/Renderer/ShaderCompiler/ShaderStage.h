@@ -14,12 +14,9 @@ namespace SE
 
 enum class ShaderStage : uint8
 {
-#define SE_ENUMERATE_SHADER_STAGES(x) \
-    x(Unknown)                        \
-    x(Vertex)                         \
-    x(Fragment)
+#define SE_ENUMERATE_SHADER_STAGES(x) x(Unknown) x(Vertex) x(Fragment)
 
-#define _SE_ENUM_MEMBER(x) x,
+#define _SE_ENUM_MEMBER(x)            x,
     SE_ENUMERATE_SHADER_STAGES(_SE_ENUM_MEMBER)
 #undef _SE_ENUM_MEMBER
 };
@@ -28,7 +25,8 @@ NODISCARD FORCEINLINE const char* ShaderStageToRawString(ShaderStage stage)
 {
     switch (stage)
     {
-#define _SE_SWITCH_CASE(x) case ShaderStage::x: return #x;
+#define _SE_SWITCH_CASE(x) \
+    case ShaderStage::x: return #x;
         SE_ENUMERATE_SHADER_STAGES(_SE_SWITCH_CASE)
 #undef _SE_SWITCH_CASE
     }
@@ -41,7 +39,8 @@ NODISCARD FORCEINLINE StringView ShaderStageToStringView(ShaderStage stage)
 {
     switch (stage)
     {
-#define _SE_SWITCH_CASE(x) case ShaderStage::x: return VIEW(#x);
+#define _SE_SWITCH_CASE(x) \
+    case ShaderStage::x: return VIEW(#x);
         SE_ENUMERATE_SHADER_STAGES(_SE_SWITCH_CASE)
 #undef _SE_SWITCH_CASE
     }
@@ -54,7 +53,8 @@ NODISCARD FORCEINLINE String ShaderStageToString(ShaderStage stage)
 {
     switch (stage)
     {
-#define _SE_SWITCH_CASE(x) case ShaderStage::x: return VIEW(#x);
+#define _SE_SWITCH_CASE(x) \
+    case ShaderStage::x: return VIEW(#x);
         SE_ENUMERATE_SHADER_STAGES(_SE_SWITCH_CASE)
 #undef _SE_SWITCH_CASE
     }
@@ -65,23 +65,38 @@ NODISCARD FORCEINLINE String ShaderStageToString(ShaderStage stage)
 
 NODISCARD FORCEINLINE ShaderStage ShaderStageFromRawString(const char* stageString)
 {
-#define _SE_IF_CASE(x) if (std::strcmp(stageString, #x) == 0) { return ShaderStage::x; }
+#define _SE_IF_CASE(x)                     \
+    if (std::strcmp(stageString, #x) == 0) \
+    {                                      \
+        return ShaderStage::x;             \
+    }
     SE_ENUMERATE_SHADER_STAGES(_SE_IF_CASE)
 #undef _SE_IF_CASE
+    SE_ASSERT_NOT_REACHED;
 }
 
 NODISCARD FORCEINLINE ShaderStage ShaderStageFromStringView(StringView stageString)
 {
-#define _SE_IF_CASE(x) if (stageString == VIEW(#x)) { return ShaderStage::x; }
+#define _SE_IF_CASE(x)           \
+    if (stageString == VIEW(#x)) \
+    {                            \
+        return ShaderStage::x;   \
+    }
     SE_ENUMERATE_SHADER_STAGES(_SE_IF_CASE)
 #undef _SE_IF_CASE
+    SE_ASSERT_NOT_REACHED;
 }
 
 NODISCARD FORCEINLINE ShaderStage ShaderStageFromString(const String& stageString)
 {
-#define _SE_IF_CASE(x) if (stageString == VIEW(#x)) { return ShaderStage::x; }
+#define _SE_IF_CASE(x)           \
+    if (stageString == VIEW(#x)) \
+    {                            \
+        return ShaderStage::x;   \
+    }
     SE_ENUMERATE_SHADER_STAGES(_SE_IF_CASE)
 #undef _SE_IF_CASE
+    SE_ASSERT_NOT_REACHED;
 }
 
-}
+} // namespace SE

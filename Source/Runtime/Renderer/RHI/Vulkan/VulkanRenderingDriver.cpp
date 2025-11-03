@@ -802,7 +802,7 @@ void VulkanRenderingDriver::ExecuteCommandList(const RefPtr<CommandList>& comman
         default:                          SE_ASSERT_NOT_REACHED;
     }
 
-    SE_ASSERT(submisionQueue != VK_NULL_HANDLE);
+    SE_ASSERT(submissionQueue != VK_NULL_HANDLE);
     SE_VULKAN_CHECK(vkQueueSubmit(submissionQueue, 1, &submitInfo, static_cast<VkFence>(executeInfo.SignalFence)));
 }
 
