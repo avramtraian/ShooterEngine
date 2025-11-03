@@ -75,7 +75,7 @@ Vector<VulkanDescriptorSet*> VulkanDescriptorSetManager::AcquireDescriptorSets(c
         }
     }
 
-    for (VulkanDescriptorSet* descriptorSet : descriptorSets)
+    for (MAYBE_UNUSED VulkanDescriptorSet* descriptorSet : descriptorSets)
     {
         // NOTE(Traian): We expect the bind pack to have no missing binding indices.
         SE_ASSERT(descriptorSet->IsComplete());
