@@ -25,8 +25,12 @@ public:
 
     struct HeapData
     {
+#if SE_COMPILER_CLANG
+    #pragma clang diagnostic ignored "-Wc99-extensions"
+#endif // SE_COMPILER_CLANG
+
         uint32 ReferenceCount;
-        char Characters[];
+        char   Characters[];
     };
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,16 +47,13 @@ public:
 public:
     FORCEINLINE TString()
     {
-        m_ByteCount = 1;
+        m_ByteCount           = 1;
         m_InlineCharacters[0] = '\0';
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    FORCEINLINE ~TString()
-    {
-        Clear();
-    }
+    FORCEINLINE ~TString() { Clear(); }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -82,11 +83,11 @@ public:
         }
         else
         {
-            m_HeapData = other.m_HeapData;
+            m_HeapData       = other.m_HeapData;
             other.m_HeapData = nullptr;
         }
 
-        other.m_ByteCount = 1;
+        other.m_ByteCount           = 1;
         other.m_InlineCharacters[0] = '\0';
     }
 
@@ -98,9 +99,9 @@ public:
         char* destinationCharacters = m_InlineCharacters;
         if (IsStoredOnHeap())
         {
-            m_HeapData = TString::AllocateHeapData(m_ByteCount);
+            m_HeapData                 = TString::AllocateHeapData(m_ByteCount);
             m_HeapData->ReferenceCount = 1;
-            destinationCharacters = m_HeapData->Characters;
+            destinationCharacters      = m_HeapData->Characters;
         }
 
         MemoryCopy(destinationCharacters, view.Characters(), view.ByteCount());
@@ -149,11 +150,11 @@ public:
         }
         else
         {
-            m_HeapData = other.m_HeapData;
+            m_HeapData       = other.m_HeapData;
             other.m_HeapData = nullptr;
         }
 
-        other.m_ByteCount = 1;
+        other.m_ByteCount           = 1;
         other.m_InlineCharacters[0] = '\0';
 
         return *this;
@@ -164,14 +165,14 @@ public:
     FORCEINLINE TString& operator=(StringView view)
     {
         Clear();
-        m_ByteCount = view.ByteCount() + sizeof(char);
+        m_ByteCount                 = view.ByteCount() + sizeof(char);
 
         char* destinationCharacters = m_InlineCharacters;
         if (IsStoredOnHeap())
         {
-            m_HeapData = TString::AllocateHeapData(m_ByteCount);
+            m_HeapData                 = TString::AllocateHeapData(m_ByteCount);
             m_HeapData->ReferenceCount = 1;
-            destinationCharacters = m_HeapData->Characters;
+            destinationCharacters      = m_HeapData->Characters;
         }
 
         MemoryCopy(destinationCharacters, view.Characters(), view.ByteCount());
@@ -236,7 +237,7 @@ public:
             m_HeapData = nullptr;
         }
 
-        m_ByteCount = 1;
+        m_ByteCount           = 1;
         m_InlineCharacters[0] = '\0';
     }
 
@@ -249,7 +250,7 @@ public:
         if (m_ByteCount != other.m_ByteCount)
             return false;
 
-        const char* thisCharacters = Characters();
+        const char* thisCharacters  = Characters();
         const char* otherCharacters = other.Characters();
 
         for (usize byteOffset = 0; byteOffset < m_ByteCount; ++byteOffset)
@@ -268,7 +269,7 @@ public:
         if (ByteCountWithoutNullTerminator() != view.ByteCount())
             return false;
 
-        const char* thisCharacters = Characters();
+        const char* thisCharacters  = Characters();
         const char* otherCharacters = view.Characters();
 
         for (usize byteOffset = 0; byteOffset < view.ByteCount(); ++byteOffset)
@@ -343,9 +344,9 @@ private:
     NODISCARD FORCEINLINE static HeapData* AllocateHeapData(usize byteCount)
     {
         const usize allocationSize = sizeof(HeapData) + byteCount;
-        void* memoryBlock = Allocator::Allocate(allocationSize);
-        HeapData* heapData = static_cast<HeapData*>(memoryBlock);
-        heapData->ReferenceCount = 0;
+        void*       memoryBlock    = Allocator::Allocate(allocationSize);
+        HeapData*   heapData       = static_cast<HeapData*>(memoryBlock);
+        heapData->ReferenceCount   = 0;
         return heapData;
     }
 
@@ -369,11 +370,11 @@ private:
     usize m_ByteCount;
     union
     {
-        char m_InlineCharacters[INLINE_CAPACITY];
+        char      m_InlineCharacters[INLINE_CAPACITY];
         HeapData* m_HeapData;
     };
 };
 
 using String = TString<DefaultAllocator>;
 
-}
+} // namespace SE

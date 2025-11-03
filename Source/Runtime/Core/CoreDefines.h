@@ -242,4 +242,32 @@
 // DEPRECATED: These macro are here only for compatibility reasons - no newly written code should use them.
 #define SHOOTER_API RUNTIME_API
 #define ENGINE_API  RUNTIME_API
-#define FORCEINLINE ALWAYS_INLINE
+#ifndef FORCEINLINE
+    #define FORCEINLINE ALWAYS_INLINE
+#endif // FORCEINLINE
+
+//========================================================================================================================================//
+//------------------------------------------------------- DISABLE WARNINGS GLOBALLY ------------------------------------------------------//
+//========================================================================================================================================//
+
+#if SE_COMPILER_MSVC
+    // NOTE(Traian): Disable the warnings related to DLL specifiers.
+    #pragma warning(disable : 4251)
+    #pragma warning(disable : 4275)
+
+    // NOTE(Traian): Disable warning C4200: nonstandard extension used: zero-sized array in struct/union
+    #pragma warning(disable : 4200)
+
+    // NOTE: Disable warning 'unreferenced parameter'.
+    #pragma warning(disable : 4100)
+#endif // SE_PLATFORM_WINDOWS
+
+#if SE_COMPILER_CLANG
+    #pragma clang diagnostic ignored "-Wunused-parameter"
+    #pragma clang diagnostic ignored "-Wextra-semi"
+    #pragma clang diagnostic ignored "-Wgnu-anonymous-struct"
+    #pragma clang diagnostic ignored "-Wswitch"
+    #pragma clang diagnostic ignored "-Wswitch"
+    #pragma clang diagnostic ignored "-Wmicrosoft-enum-value"
+    #pragma clang diagnostic ignored "-Wlanguage-extension-token"
+#endif // SE_COMPILER_CLANG
