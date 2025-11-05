@@ -40,22 +40,22 @@ void ReflectionComponent::SetCopyFunction(PFN_CopyComponent function)
     m_CopyFunction = function;
 }
 
-void ReflectionComponent::ExecuteConstruct(void* dstMemoryBlock)
+void ReflectionComponent::ExecuteConstruct(void* dstMemoryBlock) const
 {
     SE_ASSERT(m_ConstructFunction != nullptr);
     m_ConstructFunction(dstMemoryBlock);
 }
 
-void ReflectionComponent::ExecuteDestruct(void* dstMemoryBlock)
+void ReflectionComponent::ExecuteDestruct(void* dstMemoryBlock) const
 {
     SE_ASSERT(m_DestructFunction != nullptr);
     m_DestructFunction(dstMemoryBlock);
 }
 
-void ReflectionComponent::ExecuteCopy(void* dstMemoryBlock, const void* srcMemoryBlock)
+void ReflectionComponent::ExecuteCopy(void* dstMemoryBlock, const void* srcMemoryBlock) const
 {
     SE_ASSERT(m_CopyFunction != nullptr);
     m_CopyFunction(dstMemoryBlock, srcMemoryBlock);
 }
 
-}
+} // namespace SE

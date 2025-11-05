@@ -11,11 +11,11 @@ namespace SE
 /////////////// REFLECTION COMPONENT.
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-using PFN_ConstructComponent = void(*)(void*);
+using PFN_ConstructComponent = void (*)(void*);
 
-using PFN_DestructComponent = void(*)(void*);
+using PFN_DestructComponent = void (*)(void*);
 
-using PFN_CopyComponent = void(*)(void*, const void*);
+using PFN_CopyComponent = void (*)(void*, const void*);
 
 class ReflectionComponent
 {
@@ -23,7 +23,7 @@ class ReflectionComponent
     SE_MAKE_NONMOVABLE(ReflectionComponent);
 
 public:
-    ReflectionComponent() = default;
+    ReflectionComponent()  = default;
     ~ReflectionComponent() = default;
 
     NODISCARD ALWAYS_INLINE UUID GetComponentUUID() const { return m_ComponentUUID; }
@@ -42,18 +42,18 @@ public:
     RUNTIME_API void SetDestructFunction(PFN_DestructComponent function);
     RUNTIME_API void SetCopyFunction(PFN_CopyComponent function);
 
-    RUNTIME_API void ExecuteConstruct(void* dstMemoryBlock);
-    RUNTIME_API void ExecuteDestruct(void* dstMemoryBlock);
-    RUNTIME_API void ExecuteCopy(void* dstMemoryBlock, const void* srcMemoryBlock);
+    RUNTIME_API void ExecuteConstruct(void* dstMemoryBlock) const;
+    RUNTIME_API void ExecuteDestruct(void* dstMemoryBlock) const;
+    RUNTIME_API void ExecuteCopy(void* dstMemoryBlock, const void* srcMemoryBlock) const;
 
 private:
-    UUID m_ComponentUUID;
-    String m_Name;
+    UUID             m_ComponentUUID;
+    String           m_Name;
     ReflectionStruct m_Struct;
 
     PFN_ConstructComponent m_ConstructFunction;
-    PFN_DestructComponent m_DestructFunction;
-    PFN_CopyComponent m_CopyFunction;
+    PFN_DestructComponent  m_DestructFunction;
+    PFN_CopyComponent      m_CopyFunction;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -75,6 +75,7 @@ public:
     struct ReflectionComponentMetadata<struct ComponentName>                \
     {                                                                       \
         SE_MAKE_NAMESPACE_CLASS(ReflectionComponentMetadata);               \
+                                                                            \
     public:                                                                 \
         static constexpr bool IsSpecialized { true };                       \
         static constexpr UUID ComponentUUID { componentUUIDValue };         \
@@ -84,37 +85,27 @@ public:
 /////////////// REFLECTION COMPONENT MACROS.
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define SE_BEGIN_COMPONENT_REFLECTION(ComponentName)                                                                                    \
-    {                                                                                                                                   \
-        using Metadata = ReflectionComponentMetadata<ComponentName>;                                                                    \
-        static_assert(Metadata::IsSpecialized, "Declare 'SE_REFLECTION_COMPONENT_METADATA(ComponentName)' before using this macro!");   \
-        ReflectionComponent& reflectionComponent = SceneReflectionRegistry::CreateComponentFromUUID(Metadata::ComponentUUID);           \
-        reflectionComponent.SetComponentUUID(Metadata::ComponentUUID);                                                                  \
-        reflectionComponent.SetName(VIEW(#ComponentName));                                                                              \
-        reflectionComponent.SetConstructFunction(                                                                                       \
-            [](void* dstMemoryBlock)                                                                                                    \
-            {                                                                                                                           \
-                new (dstMemoryBlock) ComponentName();                                                                                   \
-            });                                                                                                                         \
-        reflectionComponent.SetDestructFunction(                                                                                        \
-            [](void* dstMemoryBlock)                                                                                                    \
-            {                                                                                                                           \
-                static_cast<ComponentName*>(dstMemoryBlock)->~ComponentName();                                                          \
-            });                                                                                                                         \
-        reflectionComponent.SetCopyFunction(                                                                                            \
-            [](void* dstMemoryBlock, const void* srcMemoryBlock)                                                                        \
-            {                                                                                                                           \
-                const ComponentName* src = static_cast<const ComponentName*>(srcMemoryBlock);                                           \
-                new (dstMemoryBlock) ComponentName(*src);                                                                               \
-            });                                                                                                                         \
-        ReflectionStruct& reflectionStruct = reflectionComponent.GetStruct();                                                           \
-        reflectionStruct.SetStructureByteCount(sizeof(ComponentName));                                                                  \
+#define SE_BEGIN_COMPONENT_REFLECTION(ComponentName)                                                                                          \
+    {                                                                                                                                         \
+        using Metadata = ReflectionComponentMetadata<ComponentName>;                                                                          \
+        static_assert(Metadata::IsSpecialized, "Declare 'SE_REFLECTION_COMPONENT_METADATA(ComponentName)' before using this macro!");         \
+        ReflectionComponent& reflectionComponent = SceneReflectionRegistry::CreateComponentFromUUID(Metadata::ComponentUUID);                 \
+        reflectionComponent.SetComponentUUID(Metadata::ComponentUUID);                                                                        \
+        reflectionComponent.SetName(VIEW(#ComponentName));                                                                                    \
+        reflectionComponent.SetConstructFunction([](void* dstMemoryBlock) { new (dstMemoryBlock) ComponentName(); });                         \
+        reflectionComponent.SetDestructFunction([](void* dstMemoryBlock) { static_cast<ComponentName*>(dstMemoryBlock)->~ComponentName(); }); \
+        reflectionComponent.SetCopyFunction(                                                                                                  \
+            [](void* dstMemoryBlock, const void* srcMemoryBlock)                                                                              \
+            {                                                                                                                                 \
+                const ComponentName* src = static_cast<const ComponentName*>(srcMemoryBlock);                                                 \
+                new (dstMemoryBlock) ComponentName(*src);                                                                                     \
+            });                                                                                                                               \
+        ReflectionStruct& reflectionStruct = reflectionComponent.GetStruct();                                                                 \
+        reflectionStruct.SetStructureByteCount(sizeof(ComponentName));                                                                        \
         using StructType = ComponentName;
 
-#define SE_COMPONENT_FIELD(FieldName)                                                                                                   \
-        SE_STRUCT_FIELD(FieldName)
+#define SE_COMPONENT_FIELD(FieldName) SE_STRUCT_FIELD(FieldName)
 
-#define SE_END_COMPONENT_REFLECTION()                                                                                                   \
-    }
+#define SE_END_COMPONENT_REFLECTION() }
 
-}
+} // namespace SE
