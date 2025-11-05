@@ -130,7 +130,7 @@ public:
     NODISCARD ALWAYS_INLINE T* operator->() { return &Value(); }
     NODISCARD ALWAYS_INLINE const T* operator->() const { return &Value(); }
 
-    NODISCARD ALWAYS_INLINE const T& ValueOr(const T& fallbackValue) const
+    NODISCARD ALWAYS_INLINE T ValueOr(const T& fallbackValue) const
     {
         if (m_HasValue)
             return UncheckedValue();
@@ -235,7 +235,7 @@ public:
     NODISCARD ALWAYS_INLINE T* operator->() { return &Value(); }
     NODISCARD ALWAYS_INLINE const T* operator->() const { return &Value(); }
 
-    NODISCARD ALWAYS_INLINE const T& ValueOr(const T& fallbackValue) const
+    NODISCARD ALWAYS_INLINE T ValueOr(const T& fallbackValue) const
     {
         if (HasValue())
             return *m_Value;
