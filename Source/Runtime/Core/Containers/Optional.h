@@ -12,8 +12,13 @@ template<typename T>
 class Optional
 {
 public:
+    template<typename Q>
+    friend class Optional;
+
+public:
     ALWAYS_INLINE Optional()
-        : m_HasValue(false)
+        : m_ValueBuffer {}
+        , m_HasValue(false)
     {}
 
     ALWAYS_INLINE Optional(const Optional& other)
@@ -26,13 +31,34 @@ public:
     }
 
     ALWAYS_INLINE Optional(Optional&& other) noexcept
-        : m_HasValue(other.m_HasValue)
+        : m_ValueBuffer {}
+        , m_HasValue(other.m_HasValue)
     {
         if (m_HasValue)
         {
             new (m_ValueBuffer) T(Move(other.UncheckedValue()));
             other.UncheckedValue().~T();
             other.m_HasValue = false;
+        }
+    }
+
+    ALWAYS_INLINE Optional(const Optional<T&>& other)
+        : m_ValueBuffer {}
+        , m_HasValue(other.HasValue())
+    {
+        if (m_HasValue)
+        {
+            new (m_ValueBuffer) T(other.Value());
+        }
+    }
+
+    ALWAYS_INLINE Optional(const Optional<const T&>& other)
+        : m_ValueBuffer {}
+        , m_HasValue(other.HasValue())
+    {
+        if (m_HasValue)
+        {
+            new (m_ValueBuffer) T(other.Value());
         }
     }
 
@@ -48,10 +74,7 @@ public:
         new (m_ValueBuffer) T(Move(value));
     }
 
-    ALWAYS_INLINE ~Optional()
-    {
-        Clear();
-    }
+    ALWAYS_INLINE ~Optional() { Clear(); }
 
     ALWAYS_INLINE Optional& operator=(const Optional& other)
     {
@@ -164,8 +187,7 @@ public:
         : m_Value(nullptr)
     {}
 
-    ALWAYS_INLINE ~Optional()
-    {}
+    ALWAYS_INLINE ~Optional() {}
 
     ALWAYS_INLINE Optional(const Optional& other)
         : m_Value(other.m_Value)
@@ -192,8 +214,8 @@ public:
         // Handle the self-assignment case.
         if (this == &other)
             return *this;
-        
-        m_Value = other.m_Value;
+
+        m_Value       = other.m_Value;
         other.m_Value = nullptr;
 
         return *this;
@@ -206,10 +228,7 @@ public:
     }
 
 public:
-    NODISCARD ALWAYS_INLINE bool HasValue() const
-    {
-        return (m_Value != nullptr);
-    }
+    NODISCARD ALWAYS_INLINE bool HasValue() const { return (m_Value != nullptr); }
 
     NODISCARD ALWAYS_INLINE T& Value()
     {
@@ -243,13 +262,10 @@ public:
     }
 
 public:
-    ALWAYS_INLINE void Clear()
-    {
-        m_Value = nullptr;
-    }
+    ALWAYS_INLINE void Clear() { m_Value = nullptr; }
 
 private:
     T* m_Value;
 };
 
-}
+} // namespace SE
