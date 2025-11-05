@@ -5,11 +5,11 @@ AlignArrayOfStructures: Left
 AlignConsecutiveAssignments:
   Enabled: true
   AcrossComments: false
-  AcrossEmptyLines: true
+  AcrossEmptyLines: false
 AlignConsecutiveBitFields:
   Enabled: true
   AcrossComments: false
-  AcrossEmptyLines: true
+  AcrossEmptyLines: false
 AlignConsecutiveDeclarations:
   Enabled: true
   AcrossComments: false
