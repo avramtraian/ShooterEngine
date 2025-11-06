@@ -12,7 +12,14 @@ namespace SE
 /////////////// REFLECTION SCRIPT.
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-using PFN_ConstructScript = Script* (*)(void*);
+struct ScriptInitializationInfo
+{
+    UUID                ReflectionStructUUID;
+    UUID                EntityID;
+    StrongRefPtr<Scene> SceneContext;
+};
+
+using PFN_ConstructScript = Script* (*)(void*, const ScriptInitializationInfo&);
 
 class ReflectionScript
 {
@@ -41,7 +48,7 @@ public:
     RUNTIME_API void SetName(String name);
 
     RUNTIME_API void SetConstructFunction(PFN_ConstructScript function);
-    RUNTIME_API Script* ExecuteConstruct(void* dstMemoryBlock) const;
+    RUNTIME_API Script* ExecuteConstruct(void* dstMemoryBlock, const ScriptInitializationInfo& initializationInfo) const;
 
 private:
     // NOTE: Invoked on-demand when the 'GetParentHierarchiyUUIDs' function is called, the hierarchiy UUID list is empty,
@@ -101,22 +108,23 @@ public:
 /////////////// REFLECTION SCRIPT MACROS.
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define SE_BEGIN_SCRIPT_REFLECTION(ScriptName)                                                                                    \
-    {                                                                                                                             \
-        using Metadata = ReflectionScriptMetadata<ScriptName>;                                                                    \
-        static_assert(Metadata::IsSpecialized, "Declare 'SE_REFLECTION_SCRIPT_METADATA(ScriptName)' before using this macro!");   \
-        ReflectionScript& reflectionScript = SceneReflectionRegistry::CreateScriptFromUUID(Metadata::ScriptUUID);                 \
-        reflectionScript.SetScriptUUID(Metadata::ScriptUUID);                                                                     \
-        if constexpr (!std::is_same_v<Metadata::ParentType, void>)                                                                \
-        {                                                                                                                         \
-            constexpr UUID parentScriptUUID = ReflectionScriptMetadata<Metadata::ParentType>::ScriptUUID;                         \
-            SE_ASSERT(parentScriptUUID != UUID::Invalid());                                                                       \
-            reflectionScript.SetParentScriptUUID(parentScriptUUID);                                                               \
-        }                                                                                                                         \
-        reflectionScript.SetName(VIEW(#ScriptName));                                                                              \
-        reflectionScript.SetConstructFunction([](void* dstMemoryBlock) -> Script* { return new (dstMemoryBlock) ScriptName(); }); \
-        ReflectionStruct& reflectionStruct = reflectionScript.GetStruct();                                                        \
-        reflectionStruct.SetStructureByteCount(sizeof(ScriptName));                                                               \
+#define SE_BEGIN_SCRIPT_REFLECTION(ScriptName)                                                                                        \
+    {                                                                                                                                 \
+        using Metadata = ReflectionScriptMetadata<ScriptName>;                                                                        \
+        static_assert(Metadata::IsSpecialized, "Declare 'SE_REFLECTION_SCRIPT_METADATA(ScriptName)' before using this macro!");       \
+        ReflectionScript& reflectionScript = SceneReflectionRegistry::CreateScriptFromUUID(Metadata::ScriptUUID);                     \
+        reflectionScript.SetScriptUUID(Metadata::ScriptUUID);                                                                         \
+        if constexpr (!std::is_same_v<Metadata::ParentType, void>)                                                                    \
+        {                                                                                                                             \
+            constexpr UUID parentScriptUUID = ReflectionScriptMetadata<Metadata::ParentType>::ScriptUUID;                             \
+            SE_ASSERT(parentScriptUUID != UUID::Invalid());                                                                           \
+            reflectionScript.SetParentScriptUUID(parentScriptUUID);                                                                   \
+        }                                                                                                                             \
+        reflectionScript.SetName(VIEW(#ScriptName));                                                                                  \
+        reflectionScript.SetConstructFunction([](void* dstMemoryBlock, const ScriptInitializationInfo& initializationInfo) -> Script* \
+                                              { return new (dstMemoryBlock) ScriptName(initializationInfo); });                       \
+        ReflectionStruct& reflectionStruct = reflectionScript.GetStruct();                                                            \
+        reflectionStruct.SetStructureByteCount(sizeof(ScriptName));                                                                   \
         using StructType = ScriptName;
 
 #define SE_SCRIPT_FIELD(FieldName) SE_STRUCT_FIELD(FieldName)

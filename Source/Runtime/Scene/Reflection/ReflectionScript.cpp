@@ -41,10 +41,10 @@ void ReflectionScript::SetConstructFunction(PFN_ConstructScript function)
     m_ConstructFunction = function;
 }
 
-Script* ReflectionScript::ExecuteConstruct(void* dstMemoryBlock) const
+Script* ReflectionScript::ExecuteConstruct(void* dstMemoryBlock, const ScriptInitializationInfo& initializationInfo) const
 {
     SE_ASSERT(m_ConstructFunction != nullptr);
-    return m_ConstructFunction(dstMemoryBlock);
+    return m_ConstructFunction(dstMemoryBlock, initializationInfo);
 }
 
 void ReflectionScript::RecursiveFillHierarchiyUUIDs() const
