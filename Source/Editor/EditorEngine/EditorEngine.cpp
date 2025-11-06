@@ -21,12 +21,12 @@ bool EditorEngine::Initialize()
     }
 
     m_EditorWindow = Window::Create(WindowInfo()
-        .SetStartMode(WindowMode::Maximized)
+                                        .SetStartMode(WindowMode::Maximized)
 #if SE_CONFIGURATION_DEBUG
-        .SetTitle(VIEW("ShooterEditor - Windows 64-bit - EditorDebug | Untitled Project"))
+                                        .SetTitle(VIEW("ShooterEditor - Windows 64-bit - EditorDebug | Untitled Project"))
 #endif // SE_CONFIGURATION_DEBUG
 #if SE_CONFIGURATION_DEVELOPMENT
-        .SetTitle(VIEW("ShooterEditor - Windows 64-bit - EditorDevelopment | Untitled Project"))
+                                        .SetTitle(VIEW("ShooterEditor - Windows 64-bit - EditorDevelopment | Untitled Project"))
 #endif // SE_CONFIGURATION_DEVELOPMENT
     );
     if (!m_EditorWindow.IsValid())
@@ -49,9 +49,7 @@ bool EditorEngine::Initialize()
     Input::AddSourceWindow(m_EditorWindow);
     SE_LOG_INFO("The input system was initialized successfully.");
 
-    const bool renderingDriverInitializeResult = RenderingDriver::Initialize(RenderingDriverInfo()
-        .SetBackend(RenderingDriverBackend::Vulkan)
-    );
+    const bool renderingDriverInitializeResult = RenderingDriver::Initialize(RenderingDriverInfo().SetBackend(RenderingDriverBackend::Vulkan));
     if (!renderingDriverInitializeResult)
     {
         // Failed to initialize the rendering driver. As nothing can be rendered to the screen, there
@@ -61,11 +59,8 @@ bool EditorEngine::Initialize()
     }
     SE_LOG_INFO("The rendering driver was initialized successfully.");
 
-    m_EditorRenderingSurface = g_RenderingDriver->CreateSurface(RenderingSurfaceInfo()
-        .SetTargetWindow(m_EditorWindow)
-        .SetSwapchainMinImageCount(3)
-        .SetMaxFramesInFlight(2)
-    );
+    m_EditorRenderingSurface =
+        g_RenderingDriver->CreateSurface(RenderingSurfaceInfo().SetTargetWindow(m_EditorWindow).SetSwapchainMinImageCount(3).SetMaxFramesInFlight(2));
     if (!m_EditorRenderingSurface.IsValid())
     {
         // Failed to create the rendering surface. As the user can't see anything on the screen without
@@ -80,7 +75,8 @@ bool EditorEngine::Initialize()
     {
         // The engine might not require to access any shaders, so this is not a critical error.
         // Don't exit the engine initialization process yet.
-        SE_LOG_ERROR("Failed to initilize the shader library!");
+        SE_LOG_ERROR("Failed to initialize the shader library!");
+        return false;
     }
 
     return true;
@@ -92,8 +88,8 @@ void EditorEngine::Shutdown()
 
     // NOTE(Traian): In order to safely destruct command lists we must ensure that they have finished execution.
     // Since currently we have no mechanism to track if a command list is still executing on a queue or not, and
-    // it is the responsability of the appliction to ensure that a command list is not deleted until it finished
-    // execution, we simmply block the current (main) thread until all operations on the GPU have finished.
+    // it is the responsibility of the appliction to ensure that a command list is not deleted until it finished
+    // execution, we simply block the current (main) thread until all operations on the GPU have finished.
     g_RenderingDriver->WaitForDeviceIdle();
 
     // Shutdown rendering subsystems and driver.
@@ -125,7 +121,7 @@ void EditorEngine::Execute()
 
         currentFrameTimer.Stop();
         const TimeDuration frameDeltaTime = currentFrameTimer.GetElapsed();
-        lastFrameDeltaTime = frameDeltaTime.ToSeconds();
+        lastFrameDeltaTime                = frameDeltaTime.ToSeconds();
     }
 }
 
@@ -141,4 +137,4 @@ void EditorEngine::OnUpdate(float deltaTime)
     Input::OnPostUpdate(deltaTime);
 }
 
-}
+} // namespace SE
