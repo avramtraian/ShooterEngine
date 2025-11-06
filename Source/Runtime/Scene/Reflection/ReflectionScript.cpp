@@ -1,9 +1,17 @@
 // Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
 #include <Runtime/Scene/Reflection/ReflectionScript.h>
+#include <Runtime/Scene/Reflection/SceneReflectionRegistry.h>
 
 namespace SE
 {
+
+const HashSet<UUID>& ReflectionScript::GetParentHierarchiyUUIDs() const
+{
+    if (m_ParentScriptUUID != UUID::Invalid() && m_ParentHierarchiyUUIDs.IsEmpty())
+        RecursiveFillHierarchiyUUIDs();
+    return m_ParentHierarchiyUUIDs;
+}
 
 void ReflectionScript::SetScriptUUID(UUID scriptUUID)
 {
@@ -39,4 +47,17 @@ Script* ReflectionScript::ExecuteConstruct(void* dstMemoryBlock) const
     return m_ConstructFunction(dstMemoryBlock);
 }
 
+void ReflectionScript::RecursiveFillHierarchiyUUIDs() const
+{
+    SE_ASSERT(m_ParentScriptUUID != UUID::Invalid());
+    SE_ASSERT(m_ParentHierarchiyUUIDs.IsEmpty());
+
+    const auto& parentHierarchiyUUIDs = SceneReflectionRegistry::GetScriptFromUUID(m_ParentScriptUUID).GetParentHierarchiyUUIDs();
+    m_ParentHierarchiyUUIDs.EnsureCapacity(parentHierarchiyUUIDs.Count() + 2);
+    for (UUID scriptUUID : parentHierarchiyUUIDs)
+        m_ParentHierarchiyUUIDs.Add(scriptUUID);
+    m_ParentHierarchiyUUIDs.Add(m_ScriptUUID);
+    m_ParentHierarchiyUUIDs.Add(m_ParentScriptUUID);
 }
+
+} // namespace SE
