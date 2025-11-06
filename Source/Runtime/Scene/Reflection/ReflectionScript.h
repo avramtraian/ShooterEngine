@@ -2,8 +2,8 @@
 
 #pragma once
 
+#include <Runtime/Scene/Forward.h>
 #include <Runtime/Scene/Reflection/ReflectionStruct.h>
-#include <Runtime/Scene/Script.h>
 
 namespace SE
 {

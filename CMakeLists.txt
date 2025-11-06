@@ -186,6 +186,7 @@ set(SE_RUNTIME_SOURCE_FILES
     Source/Runtime/Renderer/ShaderLibrary.cpp
     Source/Runtime/Renderer/ShaderLibrary.h
 
+    Source/Runtime/Scene/Forward.h
     Source/Runtime/Scene/Reflection/Fields/Field.h
     Source/Runtime/Scene/Reflection/Fields/FieldType.h
     Source/Runtime/Scene/Reflection/Fields/FieldTypeFinder.h
