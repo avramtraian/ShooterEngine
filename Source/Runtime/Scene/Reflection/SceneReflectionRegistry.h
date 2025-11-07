@@ -28,6 +28,12 @@ public:
     NODISCARD RUNTIME_API static const ReflectionSystem& GetSystemFromUUID(UUID systemUUID);
     NODISCARD RUNTIME_API static const ReflectionScript& GetScriptFromUUID(UUID scriptUUID);
 
+    NODISCARD RUNTIME_API static Vector<const ReflectionComponent*> GetRegisteredComponents();
+    NODISCARD RUNTIME_API static Vector<const ReflectionSystem*> GetRegisteredSystems();
+    NODISCARD RUNTIME_API static Vector<const ReflectionScript*> GetRegisteredScripts();
+
+    NODISCARD RUNTIME_API static Vector<const ReflectionScript*> GetRegisteredScriptsDerivedFrom(UUID baseReflectionScriptUUID);
+
 public:
     NODISCARD RUNTIME_API static ReflectionEnum& CreateEnumFromUUID(UUID enumUUID);
     NODISCARD RUNTIME_API static ReflectionStruct& CreateStructFromUUID(UUID structUUID);
@@ -37,4 +43,4 @@ public:
     NODISCARD RUNTIME_API static ReflectionScript& CreateScriptFromUUID(UUID scriptUUID);
 };
 
-}
+} // namespace SE

@@ -10,13 +10,13 @@ namespace SE
 struct SceneReflectionRegistryData
 {
     // Raw (C++) types.
-    HashMap<UUID, OwnPtr<ReflectionEnum>> Enums;
+    HashMap<UUID, OwnPtr<ReflectionEnum>>   Enums;
     HashMap<UUID, OwnPtr<ReflectionStruct>> Structs;
 
     // Engine (ECS) types.
     HashMap<UUID, OwnPtr<ReflectionComponent>> Components;
-    HashMap<UUID, OwnPtr<ReflectionSystem>> Systems;
-    HashMap<UUID, OwnPtr<ReflectionScript>> Scripts;
+    HashMap<UUID, OwnPtr<ReflectionSystem>>    Systems;
+    HashMap<UUID, OwnPtr<ReflectionScript>>    Scripts;
 };
 static SceneReflectionRegistryData* s_SceneReflectionRegistry;
 
@@ -79,6 +79,47 @@ const ReflectionScript& SceneReflectionRegistry::GetScriptFromUUID(UUID scriptUU
     return *reflectionScript.Value();
 }
 
+Vector<const ReflectionComponent*> SceneReflectionRegistry::GetRegisteredComponents()
+{
+    Vector<const ReflectionComponent*> components;
+    components.EnsureCapacity(s_SceneReflectionRegistry->Components.Count());
+    for (auto& [reflectionComponentUUID, reflectionComponent] : s_SceneReflectionRegistry->Components)
+        components.Add(reflectionComponent.Get());
+    return components;
+}
+
+Vector<const ReflectionSystem*> SceneReflectionRegistry::GetRegisteredSystems()
+{
+    Vector<const ReflectionSystem*> systems;
+    systems.EnsureCapacity(s_SceneReflectionRegistry->Systems.Count());
+    for (auto& [reflectionSystemUUID, reflectionSystem] : s_SceneReflectionRegistry->Systems)
+        systems.Add(reflectionSystem.Get());
+    return systems;
+}
+
+Vector<const ReflectionScript*> SceneReflectionRegistry::GetRegisteredScripts()
+{
+    Vector<const ReflectionScript*> scripts;
+    scripts.EnsureCapacity(s_SceneReflectionRegistry->Scripts.Count());
+    for (auto& [reflectionScriptUUID, reflectionScript] : s_SceneReflectionRegistry->Scripts)
+        scripts.Add(reflectionScript.Get());
+    return scripts;
+}
+
+Vector<const ReflectionScript*> SceneReflectionRegistry::GetRegisteredScriptsDerivedFrom(UUID baseReflectionScriptUUID)
+{
+    Vector<const ReflectionScript*> scriptsDerivedFrom;
+    scriptsDerivedFrom.EnsureCapacity(s_SceneReflectionRegistry->Scripts.Count());
+
+    for (auto& [reflectionScriptUUID, reflectionScript] : s_SceneReflectionRegistry->Scripts)
+    {
+        if (reflectionScript->GetParentHierarchiyUUIDs().Contains(baseReflectionScriptUUID))
+            scriptsDerivedFrom.Add(reflectionScript.Get());
+    }
+
+    return scriptsDerivedFrom;
+}
+
 ReflectionEnum& SceneReflectionRegistry::CreateEnumFromUUID(UUID enumUUID)
 {
     if (s_SceneReflectionRegistry->Enums.Contains(enumUUID))
@@ -134,4 +175,4 @@ ReflectionScript& SceneReflectionRegistry::CreateScriptFromUUID(UUID scriptUUID)
     return *s_SceneReflectionRegistry->Scripts.Add(scriptUUID, CreateOwn<ReflectionScript>());
 }
 
-}
+} // namespace SE
