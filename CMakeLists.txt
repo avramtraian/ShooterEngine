@@ -186,6 +186,8 @@ set(SE_RUNTIME_SOURCE_FILES
     Source/Runtime/Renderer/ShaderLibrary.cpp
     Source/Runtime/Renderer/ShaderLibrary.h
 
+    Source/Runtime/Scene/Entity.cpp
+    Source/Runtime/Scene/Entity.h
     Source/Runtime/Scene/Forward.h
     Source/Runtime/Scene/Reflection/Fields/Field.h
     Source/Runtime/Scene/Reflection/Fields/FieldType.h
@@ -203,6 +205,8 @@ set(SE_RUNTIME_SOURCE_FILES
     Source/Runtime/Scene/Reflection/ReflectionSystem.h
     Source/Runtime/Scene/Reflection/SceneReflectionRegistry.cpp
     Source/Runtime/Scene/Reflection/SceneReflectionRegistry.h
+    Source/Runtime/Scene/Scene.cpp
+    Source/Runtime/Scene/Scene.h
     Source/Runtime/Scene/Script.cpp
     Source/Runtime/Scene/Script.h
     Source/Runtime/Scene/System.cpp
