@@ -7,8 +7,7 @@
 #include <Runtime/Renderer/RHI/RenderingDriver.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCommandPool.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
-#include <Runtime/Renderer/RHI/Vulkan/VulkanPipeline.h>
-#include <Runtime/Renderer/RHI/Vulkan/VulkanRenderPass.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanTexture.h>
 
 namespace SE
 {
@@ -18,11 +17,11 @@ class VulkanRenderingDriver : public RenderingDriver
 public:
     struct PhysicalDevice
     {
-        VkPhysicalDevice Handle { VK_NULL_HANDLE };
-        VkPhysicalDeviceProperties Properties;
-        VkPhysicalDeviceFeatures Features;
-        Vector<VkQueueFamilyProperties> QueueFamilyProperties;
-        Vector<VkExtensionProperties> AvailableExtensions;
+        VkPhysicalDevice                 Handle { VK_NULL_HANDLE };
+        VkPhysicalDeviceProperties       Properties;
+        VkPhysicalDeviceFeatures         Features;
+        Vector<VkQueueFamilyProperties>  QueueFamilyProperties;
+        Vector<VkExtensionProperties>    AvailableExtensions;
         VkPhysicalDeviceMemoryProperties MemoryProperties;
     };
 
@@ -30,12 +29,12 @@ public:
     {
         int32 Graphics { -1 };
         int32 Transfer { -1 };
-        int32 Compute  { -1 };
-        int32 Present  { -1 };
+        int32 Compute { -1 };
+        int32 Present { -1 };
     };
 
 public:
-    VulkanRenderingDriver() = default;
+    VulkanRenderingDriver()                   = default;
     virtual ~VulkanRenderingDriver() override = default;
 
     NODISCARD ALWAYS_INLINE VkInstance GetInstance() const { return m_Instance; }
@@ -58,7 +57,7 @@ public:
 
 public:
     virtual RefPtr<RenderingSurface> CreateSurface(const RenderingSurfaceInfo& info) override;
-    
+
     virtual RefPtr<CommandList> CreateCommandList(const CommandListInfo& info) override;
     virtual RefPtr<IndexBuffer> CreateIndexBuffer(const IndexBufferInfo& info) override;
     virtual RefPtr<RenderPass> CreateRenderPass(const RenderPassInfo& info) override;
@@ -82,6 +81,10 @@ public:
     virtual void ResetFence(FenceHandle fence) override;
     virtual void WaitForDeviceIdle() override;
 
+    virtual StrongRefPtr<Texture2D> GetWhiteTexture() override;
+    virtual StrongRefPtr<Texture2D> GetTransparentBlackTexture() override;
+    virtual StrongRefPtr<Texture2D> GetOpaqueBlackTexture() override;
+
 private:
     virtual bool InitializeBackend(const RenderingDriverInfo& info) override;
     virtual void ShutdownBackend() override;
@@ -92,33 +95,38 @@ private:
     bool CreateLogicalDevice();
     bool CreateQueues();
     bool CreateDescriptorPool();
+    bool CreateDefaultTextures();
 
     bool CreateCommandPools(const RenderingDriverInfo& info);
 
 private:
-    VkInstance m_Instance;
+    VkInstance               m_Instance;
     VkDebugUtilsMessengerEXT m_DebugMessenger;
-    PhysicalDevice m_PhysicalDevice;
-    QueueFamilyIndices m_QueueFamilyIndices;
-    VkDevice m_LogicalDevice;
+    PhysicalDevice           m_PhysicalDevice;
+    QueueFamilyIndices       m_QueueFamilyIndices;
+    VkDevice                 m_LogicalDevice;
 
     VkQueue m_QueueGraphics;
     VkQueue m_QueueTransfer;
     VkQueue m_QueueCompute;
     VkQueue m_QueuePresent;
 
-    /* NOTE(Traian): The driver currently only creates one commnd pool per queue family index.
-     * Once we will start extending the renderer to be multi-threaded, this architecture must
-     * be expanded to allow for multiple command pools per queue family index (one for each
-     * active thread for example). */
+    // NOTE(Traian): The driver currently only creates one command pool per queue family index.
+    // Once we will start extending the renderer to be multithreaded, this architecture must
+    // be expanded to allow for multiple command pools per queue family index (one for each
+    // active thread for example).
     HashMap<uint32, RefPtr<VulkanCommandPool>> m_CommandPoolForQueueFamilyIndex;
 
-    VulkanObjectPool<VkFence> m_FencePool;
+    VulkanObjectPool<VkFence>     m_FencePool;
     VulkanObjectPool<VkSemaphore> m_SemaphorePool;
 
     VkDescriptorPool m_DescriptorPool;
+
+    StrongRefPtr<VulkanTexture2D> m_WhiteTexture;
+    StrongRefPtr<VulkanTexture2D> m_TransparentBlackTexture;
+    StrongRefPtr<VulkanTexture2D> m_OpaqueBlackTexture;
 };
 
 RUNTIME_API extern VulkanRenderingDriver* g_VulkanDriver;
 
-}
+} // namespace SE

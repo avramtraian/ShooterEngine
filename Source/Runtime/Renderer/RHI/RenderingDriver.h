@@ -5,8 +5,8 @@
 #include <Runtime/Core/Containers/OwnPtr.h>
 #include <Runtime/Renderer/RHI/Buffer.h>
 #include <Runtime/Renderer/RHI/CommandList.h>
-#include <Runtime/Renderer/RHI/RenderPass.h>
 #include <Runtime/Renderer/RHI/RHICore.h>
+#include <Runtime/Renderer/RHI/RenderPass.h>
 #include <Runtime/Renderer/RHI/Shader.h>
 #include <Runtime/Renderer/RHI/Synchronization.h>
 #include <Runtime/Renderer/RHI/Texture.h>
@@ -24,11 +24,13 @@ enum class RenderingDriverBackend : uint8
 struct RenderingDriverInfo
 {
 public:
-    RenderingDriverBackend Backend  { RenderingDriverBackend::None };
-    uint32 MaxCommandBuffersPerPool { 8 };
+    RenderingDriverBackend Backend                  = RenderingDriverBackend::None;
+    uint32                 MaxCommandBuffersPerPool = 8;
 
 public:
+    // clang-format off
     inline RenderingDriverInfo& SetBackend(RenderingDriverBackend backend) { Backend = backend; return *this; }
+    // clang-format on
 };
 
 class RenderingDriver
@@ -40,8 +42,9 @@ public:
     RUNTIME_API static void Shutdown();
 
 public:
+    // clang-format off
     virtual RefPtr<RenderingSurface>            CreateSurface                       (const RenderingSurfaceInfo& info)          = 0;
-    
+
     virtual RefPtr<CommandList>                 CreateCommandList                   (const CommandListInfo& info)               = 0;
     virtual RefPtr<IndexBuffer>                 CreateIndexBuffer                   (const IndexBufferInfo& info)               = 0;
     virtual RefPtr<RenderPass>                  CreateRenderPass                    (const RenderPassInfo& info)                = 0;
@@ -67,11 +70,16 @@ public:
     virtual void                                ResetFence                          (FenceHandle fence)                         = 0;
     virtual void                                WaitForDeviceIdle                   ()                                          = 0;
 
+    virtual StrongRefPtr<Texture2D>             GetWhiteTexture                     ()                                          = 0;
+    virtual StrongRefPtr<Texture2D>             GetTransparentBlackTexture          ()                                          = 0;
+    virtual StrongRefPtr<Texture2D>             GetOpaqueBlackTexture               ()                                          = 0;
+    // clang-format on
+
 private:
     virtual bool InitializeBackend(const RenderingDriverInfo& info) = 0;
-    virtual void ShutdownBackend() = 0;
+    virtual void ShutdownBackend()                                  = 0;
 };
 
 RUNTIME_API extern RenderingDriver* g_RenderingDriver;
 
-}
+} // namespace SE

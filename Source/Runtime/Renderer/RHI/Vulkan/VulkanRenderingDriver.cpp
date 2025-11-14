@@ -16,8 +16,10 @@ namespace SE
 
 RUNTIME_API VulkanRenderingDriver* g_VulkanDriver;
 
-static VkBool32 VulkanDebugMessengerCallback(VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity, VkDebugUtilsMessageTypeFlagsEXT,
-                                             const VkDebugUtilsMessengerCallbackDataEXT* callbackData, void*)
+static VkBool32 VulkanDebugMessengerCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                             VkDebugUtilsMessageTypeFlagsEXT,
+                                             const VkDebugUtilsMessengerCallbackDataEXT* callbackData,
+                                             void*)
 {
     switch (messageSeverity)
     {
@@ -334,8 +336,17 @@ bool VulkanRenderingDriver::FindQueueFamilyIndices()
     windowClass.lpfnWndProc   = DefWindowProcA;
     RegisterClassA(&windowClass);
 
-    HWND dummyWindow = CreateWindowA("ShooterVulkanDummyWindowClass", "", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                                     nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
+    HWND dummyWindow = CreateWindowA("ShooterVulkanDummyWindowClass",
+                                     "",
+                                     WS_OVERLAPPEDWINDOW,
+                                     CW_USEDEFAULT,
+                                     CW_USEDEFAULT,
+                                     CW_USEDEFAULT,
+                                     CW_USEDEFAULT,
+                                     nullptr,
+                                     nullptr,
+                                     GetModuleHandle(nullptr),
+                                     nullptr);
 
     VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
     surfaceCreateInfo.sType                       = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
@@ -366,7 +377,7 @@ bool VulkanRenderingDriver::FindQueueFamilyIndices()
         queueFamily.Index                          = familyIndex;
         queueFamily.SupportedTypeCount             = 0;
 
-        VkBool32 presentSupport                    = false;
+        VkBool32 presentSupport = false;
         SE_VULKAN_CHECK(vkGetPhysicalDeviceSurfaceSupportKHR(m_PhysicalDevice.Handle, familyIndex, dummySurface, &presentSupport));
 
         if (properties.queueFlags & VK_QUEUE_GRAPHICS_BIT)
@@ -406,12 +417,12 @@ bool VulkanRenderingDriver::FindQueueFamilyIndices()
 
     /* Destroy the dummy surface. */
     vkDestroySurfaceKHR(m_Instance, dummySurface, nullptr);
-    dummySurface                                = VK_NULL_HANDLE;
+    dummySurface = VK_NULL_HANDLE;
 
     auto getLowestSupportedTypeCountFamilyIndex = [&](QueueFamilyType type) -> uint32
     {
-        uint32 lowestCount                       = UINT32_MAX;
-        uint32 lowestCountEntryIndex             = 0;
+        uint32 lowestCount           = UINT32_MAX;
+        uint32 lowestCountEntryIndex = 0;
 
         const Vector<QueueFamily>& queueFamilies = queueFamilyMap[type];
         for (uint32 index = 0; index < queueFamilies.Count(); ++index)
@@ -542,13 +553,13 @@ bool VulkanRenderingDriver::CreateDescriptorPool()
     const uint32                 descriptorPoolMaxSets = 1024;
     Vector<VkDescriptorPoolSize> descriptorPoolSizes;
 
-    VkDescriptorPoolSize& uniformBufferPool             = descriptorPoolSizes.Emplace();
-    uniformBufferPool.type                              = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uniformBufferPool.descriptorCount                   = 512;
+    VkDescriptorPoolSize& uniformBufferPool = descriptorPoolSizes.Emplace();
+    uniformBufferPool.type                  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    uniformBufferPool.descriptorCount       = 512;
 
-    VkDescriptorPoolSize& combinedImageSamplerPool      = descriptorPoolSizes.Emplace();
-    combinedImageSamplerPool.type                       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    combinedImageSamplerPool.descriptorCount            = 512;
+    VkDescriptorPoolSize& combinedImageSamplerPool = descriptorPoolSizes.Emplace();
+    combinedImageSamplerPool.type                  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    combinedImageSamplerPool.descriptorCount       = 512;
 
     VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
     descriptorPoolCreateInfo.sType                      = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -578,6 +589,39 @@ bool VulkanRenderingDriver::CreateCommandPools(const RenderingDriverInfo& info)
     return true;
 }
 
+bool VulkanRenderingDriver::CreateDefaultTextures()
+{
+    const uint8 whiteTextureData[]              = { 0xFF, 0xFF, 0xFF, 0xFF };
+    const uint8 transparentBlackTextureData[]   = { 0x00, 0x00, 0x00, 0x00 };
+    const uint8 opaqueBlackTextureData[]        = { 0x00, 0x00, 0x00, 0xFF };
+    auto        whiteTextureDataView            = ConstVectorView(whiteTextureData, SE_ARRAY_COUNT(whiteTextureData));
+    auto        transparentBlackTextureDataView = ConstVectorView(transparentBlackTextureData, SE_ARRAY_COUNT(transparentBlackTextureData));
+    auto        opaqueBlackTextureDataView      = ConstVectorView(opaqueBlackTextureData, SE_ARRAY_COUNT(opaqueBlackTextureData));
+
+    // clang-format off
+    m_WhiteTexture = CreateTexture2D(Texture2DInfo()
+                                         .SetFormat(TextureFormat::R8G8B8A8)
+                                         .SetFlags(TEXTURE_FLAG_SHADER_RESOURCE)
+                                         .SetSize(1, 1)
+                                         .SetInitialData(whiteTextureDataView))
+                     .As<VulkanTexture2D>();
+    m_TransparentBlackTexture = CreateTexture2D(Texture2DInfo()
+                                                    .SetFormat(TextureFormat::R8G8B8A8)
+                                                    .SetFlags(TEXTURE_FLAG_SHADER_RESOURCE)
+                                                    .SetSize(1, 1)
+                                                    .SetInitialData(transparentBlackTextureDataView))
+                                .As<VulkanTexture2D>();
+    m_OpaqueBlackTexture = CreateTexture2D(Texture2DInfo()
+                                               .SetFormat(TextureFormat::R8G8B8A8)
+                                               .SetFlags(TEXTURE_FLAG_SHADER_RESOURCE)
+                                               .SetSize(1, 1)
+                                               .SetInitialData(opaqueBlackTextureDataView))
+                           .As<VulkanTexture2D>();
+    // clang-format on
+
+    return true;
+}
+
 bool VulkanRenderingDriver::InitializeBackend(const RenderingDriverInfo& info)
 {
     SE_LOG_INFO("Initializing the [Vulkan] rendering driver backend...");
@@ -599,11 +643,12 @@ bool VulkanRenderingDriver::InitializeBackend(const RenderingDriverInfo& info)
 
     g_VulkanDriver = this;
 
-    /* Initialize rendering subsystems. */
-    if (!CreateCommandPools(info))
-    {
-        return false;
-    }
+    // NOTE: Initialize rendering subsystems.
+
+    // clang-format off
+    if (!CreateCommandPools(info)) { return false; }
+    if (!CreateDefaultTextures())  { return false; }
+    // clang-format on
 
     return true;
 }
@@ -612,12 +657,16 @@ void VulkanRenderingDriver::ShutdownBackend()
 {
     if (g_VulkanDriver != this)
     {
-        SE_LOG_WARN("Trying to shutdown the [Vulkan] rendering driver backend but it has already been shutted down!");
+        SE_LOG_WARN("Trying to shutdown the [Vulkan] rendering driver backend but it has already been shut down!");
         return;
     }
 
     /* Ensure all GPU operations have finished and all resources can safely be destroyed. */
     WaitForDeviceIdle();
+
+    m_WhiteTexture.Release();
+    m_TransparentBlackTexture.Release();
+    m_OpaqueBlackTexture.Release();
 
     /* Destroy synchronization objects. */
     {
@@ -656,7 +705,7 @@ void VulkanRenderingDriver::ShutdownBackend()
 
     /* Destroy the instance/ */
     vkDestroyInstance(m_Instance, nullptr);
-    m_Instance     = VK_NULL_HANDLE;
+    m_Instance = VK_NULL_HANDLE;
 
     g_VulkanDriver = nullptr;
 }
@@ -714,13 +763,13 @@ FenceHandle VulkanRenderingDriver::AcquireFence()
     }
 
     VkFence fence = m_FencePool.Acquire();
-    SE_ASSERT(IsFenceSignaled((FenceHandle)fence));
-    return (FenceHandle)fence;
+    SE_ASSERT(IsFenceSignaled(static_cast<FenceHandle>(fence)));
+    return static_cast<FenceHandle>(fence);
 }
 
 void VulkanRenderingDriver::RetireFence(FenceHandle fenceHandle)
 {
-    if (!IsFenceSignaled((FenceHandle)fenceHandle))
+    if (!IsFenceSignaled(static_cast<FenceHandle>(fenceHandle)))
     {
         SE_LOG_ERROR("Trying to retire a fence that isn't signaled!");
         SE_ASSERT_NOT_REACHED;
@@ -743,7 +792,7 @@ SemaphoreHandle VulkanRenderingDriver::AcquireSemaphore()
     }
 
     VkSemaphore semaphore = m_SemaphorePool.Acquire();
-    return (SemaphoreHandle)semaphore;
+    return static_cast<SemaphoreHandle>(semaphore);
 }
 
 void VulkanRenderingDriver::RetireSemaphore(SemaphoreHandle semaphoreHandle)
@@ -793,7 +842,7 @@ void VulkanRenderingDriver::ExecuteCommandList(const RefPtr<CommandList>& comman
     submitInfo.signalSemaphoreCount = static_cast<uint32>(signalSemaphores.Count());
     submitInfo.pSignalSemaphores    = signalSemaphores.Elements();
 
-    VkQueue submissionQueue         = VK_NULL_HANDLE;
+    VkQueue submissionQueue = VK_NULL_HANDLE;
     switch (commandList->GetFamily())
     {
         case CommandListFamily::Graphics: submissionQueue = m_QueueGraphics; break;
@@ -843,6 +892,24 @@ void VulkanRenderingDriver::ResetFence(FenceHandle fence)
 void VulkanRenderingDriver::WaitForDeviceIdle()
 {
     SE_VULKAN_CHECK(vkDeviceWaitIdle(m_LogicalDevice));
+}
+
+StrongRefPtr<Texture2D> VulkanRenderingDriver::GetWhiteTexture()
+{
+    SE_ASSERT(m_WhiteTexture.IsValid());
+    return m_WhiteTexture;
+}
+
+StrongRefPtr<Texture2D> VulkanRenderingDriver::GetTransparentBlackTexture()
+{
+    SE_ASSERT(m_TransparentBlackTexture.IsValid());
+    return m_TransparentBlackTexture;
+}
+
+StrongRefPtr<Texture2D> VulkanRenderingDriver::GetOpaqueBlackTexture()
+{
+    SE_ASSERT(m_OpaqueBlackTexture.IsValid());
+    return m_OpaqueBlackTexture;
 }
 
 } // namespace SE
