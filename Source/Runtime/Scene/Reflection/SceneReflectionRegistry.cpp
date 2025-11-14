@@ -1,6 +1,8 @@
 // Copyright (c) 2024-2025 Traian Avram. All rights reserved.
 
 #include <Runtime/Core/Log.h>
+#include <Runtime/Scene/Components/SpriteRendererComponent.h>
+#include <Runtime/Scene/Components/TransformComponent.h>
 #include <Runtime/Scene/Reflection/Fields/FieldTypeFinder.h>
 #include <Runtime/Scene/Reflection/SceneReflectionRegistry.h>
 
@@ -20,6 +22,20 @@ struct SceneReflectionRegistryData
 };
 static SceneReflectionRegistryData* s_SceneReflectionRegistry;
 
+static void RegisterEngineComponents()
+{
+    SE_BEGIN_COMPONENT_REFLECTION(TransformComponent);
+    SE_COMPONENT_FIELD(Translation);
+    SE_COMPONENT_FIELD(Rotation);
+    SE_COMPONENT_FIELD(Scale);
+    SE_END_COMPONENT_REFLECTION();
+
+    SE_BEGIN_COMPONENT_REFLECTION(SpriteRendererComponent);
+    SE_COMPONENT_FIELD(TintColor);
+    SE_COMPONENT_FIELD(TilingFactor);
+    SE_END_COMPONENT_REFLECTION();
+}
+
 bool SceneReflectionRegistry::Initialize()
 {
     if (s_SceneReflectionRegistry)
@@ -28,6 +44,8 @@ bool SceneReflectionRegistry::Initialize()
         return false;
     }
     s_SceneReflectionRegistry = new SceneReflectionRegistryData();
+
+    RegisterEngineComponents();
 
     return true;
 }

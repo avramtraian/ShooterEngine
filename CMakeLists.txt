@@ -186,6 +186,8 @@ set(SE_RUNTIME_SOURCE_FILES
     Source/Runtime/Renderer/ShaderLibrary.cpp
     Source/Runtime/Renderer/ShaderLibrary.h
 
+    Source/Runtime/Scene/Components/SpriteRendererComponent.h
+    Source/Runtime/Scene/Components/TransformComponent.h
     Source/Runtime/Scene/Entity.cpp
     Source/Runtime/Scene/Entity.h
     Source/Runtime/Scene/Forward.h
