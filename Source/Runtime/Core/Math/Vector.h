@@ -87,8 +87,15 @@ public:
 struct Vector3
 {
 public:
-    float X;
-    float Y;
+    union
+    {
+        struct
+        {
+            float X;
+            float Y;
+        };
+        Vector2 XY;
+    };
     float Z;
 
 public:
@@ -127,9 +134,23 @@ public:
 struct Vector4
 {
 public:
-    float X;
-    float Y;
-    float Z;
+    union
+    {
+        struct
+        {
+            union
+            {
+                struct
+                {
+                    float X;
+                    float Y;
+                };
+                Vector2 XY;
+            };
+            float Z;
+        };
+        Vector3 XYZ;
+    };
     float W;
 
 public:
@@ -165,4 +186,4 @@ public:
     }
 };
 
-}
+} // namespace SE
