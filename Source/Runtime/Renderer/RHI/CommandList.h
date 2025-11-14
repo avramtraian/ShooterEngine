@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include <Runtime/Renderer/RHI/RenderPass.h>
 #include <Runtime/Renderer/RHI/Buffer.h>
-#include <Runtime/Renderer/RHI/Synchronization.h>
+#include <Runtime/Renderer/RHI/RenderPass.h>
 #include <Runtime/Renderer/RHI/Shader.h>
+#include <Runtime/Renderer/RHI/Synchronization.h>
 #include <Runtime/Renderer/RHI/Texture.h>
 
 namespace SE
@@ -14,12 +14,13 @@ namespace SE
 struct CommandListExecuteInfo
 {
 public:
-    Vector<SemaphoreHandle> WaitSemaphores;
+    Vector<SemaphoreHandle>   WaitSemaphores;
     Vector<PipelineStageBits> WaitStageBits;
-    Vector<SemaphoreHandle> SignalSemaphores;
-    FenceHandle SignalFence { nullptr };
+    Vector<SemaphoreHandle>   SignalSemaphores;
+    FenceHandle               SignalFence = nullptr;
 
 public:
+    // clang-format off
     inline CommandListExecuteInfo& AddSignalSemaphore (SemaphoreHandle semaphore) { SignalSemaphores.Add(semaphore); return *this; }
     inline CommandListExecuteInfo& SetSignalFence     (FenceHandle fence)         { SignalFence = fence;             return *this; }
     
@@ -29,6 +30,7 @@ public:
         WaitStageBits.Add(stageBits);
         return *this;
     }
+    // clang-format on
 };
 
 enum class CommandListFamily : uint8
@@ -43,14 +45,15 @@ struct TransitionTextureInfo
 {
 public:
     RefPtr<Texture2D> Texture;
-    TextureLayout     OldLayout         { TextureLayout::Undefined };
-    TextureLayout     NewLayout         { TextureLayout::Undefined };
-    PipelineStageBits SrcPipelineStages { PIPELINE_STAGE_TOP_OF_PIPE_BIT };
-    PipelineStageBits DstPipelineStages { PIPELINE_STAGE_TOP_OF_PIPE_BIT };
-    AccessFlagsBits   SrcAccessFlags    { ACCESS_FLAG_NONE_BIT };
-    AccessFlagsBits   DstAccessFlags    { ACCESS_FLAG_NONE_BIT };
+    TextureLayout     OldLayout         = TextureLayout::Undefined;
+    TextureLayout     NewLayout         = TextureLayout::Undefined;
+    PipelineStageBits SrcPipelineStages = PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+    PipelineStageBits DstPipelineStages = PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+    AccessFlagsBits   SrcAccessFlags    = ACCESS_FLAG_NONE_BIT;
+    AccessFlagsBits   DstAccessFlags    = ACCESS_FLAG_NONE_BIT;
 
 public:
+    // clang-format off
     inline TransitionTextureInfo& SetTexture           (const RefPtr<Texture2D>& texture) { Texture = texture;             return *this; }
     inline TransitionTextureInfo& SetOldLayout         (TextureLayout layout)             { OldLayout = layout;            return *this; }
     inline TransitionTextureInfo& SetNewLayout         (TextureLayout layout)             { NewLayout = layout;            return *this; }
@@ -83,52 +86,61 @@ public:
         DstAccessFlags = dstAccessFlags;
         return *this;
     }
+    // clang-format on
 };
 
 struct ShaderResourceTexture
 {
 public:
-    uint32 SetIndex { 0 };
-    uint32 BindingIndex { 0 };
+    uint32            SetIndex { 0 };
+    uint32            BindingIndex { 0 };
     RefPtr<Texture2D> Texture;
 
 public:
-    inline ShaderResourceTexture& SetSetIndex     (uint32 setIndex)           { SetIndex = setIndex;          return *this; }
-    inline ShaderResourceTexture& SetBindingIndex (uint32 bindingIndex)       { BindingIndex = bindingIndex;  return *this; }
-    inline ShaderResourceTexture& SetTexture      (RefPtr<Texture2D> texture) { Texture = std::move(texture); return *this; }
+    // clang-format off
+    inline ShaderResourceTexture& SetSetIndex     (uint32 setIndex)           { SetIndex = setIndex;         return *this; }
+    inline ShaderResourceTexture& SetBindingIndex (uint32 bindingIndex)       { BindingIndex = bindingIndex; return *this; }
+    inline ShaderResourceTexture& SetTexture      (RefPtr<Texture2D> texture) { Texture = Move(texture);     return *this; }
+    // clang-format on
 };
 
 struct ShaderResourceUniformBuffer
 {
 public:
-    uint32 SetIndex { 0 };
-    uint32 BindingIndex { 0 };
+    uint32                SetIndex     = 0;
+    uint32                BindingIndex = 0;
     RefPtr<UniformBuffer> Buffer;
 
 public:
+    // clang-format off
     inline ShaderResourceUniformBuffer& SetSetIndex      (uint32 setIndex)       { SetIndex = setIndex;         return *this; }
     inline ShaderResourceUniformBuffer& SetBindingIndex  (uint32 bindingIndex)   { BindingIndex = bindingIndex; return *this; }
-    inline ShaderResourceUniformBuffer& SetBuffer (RefPtr<UniformBuffer> buffer) { Buffer = std::move(buffer);  return *this; }
+    inline ShaderResourceUniformBuffer& SetBuffer (RefPtr<UniformBuffer> buffer) { Buffer = Move(buffer);       return *this; }
+    // clang-format on
 };
 
 struct ShaderResourcesBindPack
 {
 public:
-    Vector<ShaderResourceTexture> Textures;
+    Vector<ShaderResourceTexture>       Textures;
     Vector<ShaderResourceUniformBuffer> UniformBuffers;
 
 public:
-    inline ShaderResourcesBindPack& AddTexture       (ShaderResourceTexture texture)             { Textures.Add(std::move(texture));             return *this; }
-    inline ShaderResourcesBindPack& AddUniformBuffer (ShaderResourceUniformBuffer uniformBuffer) { UniformBuffers.Add(std::move(uniformBuffer)); return *this; }
+    // clang-format off
+    inline ShaderResourcesBindPack& AddTexture       (ShaderResourceTexture texture)             { Textures.Add(Move(texture));             return *this; }
+    inline ShaderResourcesBindPack& AddUniformBuffer (ShaderResourceUniformBuffer uniformBuffer) { UniformBuffers.Add(Move(uniformBuffer)); return *this; }
+    // clang-format on
 };
 
 struct CommandListInfo
 {
 public:
-    CommandListFamily Family { CommandListFamily::Unknown };
+    CommandListFamily Family = CommandListFamily::Unknown;
 
 public:
+    // clang-format off
     inline CommandListInfo& SetFamily(CommandListFamily family) { Family = family; return *this; }
+    // clang-format on
 };
 
 class CommandList : public RefCounted
@@ -138,12 +150,12 @@ class CommandList : public RefCounted
 public:
     struct DrawStatistics
     {
-        uint32 DrawCalls { 0 };
-        uint32 Triangles { 0 };
-        uint32 Vertices { 0 };
+        uint32 DrawCalls = 0;
+        uint32 Triangles = 0;
+        uint32 Vertices  = 0;
     };
 
-    enum class AccumultateStatisticsPolicy : uint8
+    enum class AccumulateStatisticsPolicy : uint8
     {
         PerBeginEndCycle,
         PerLifetime,
@@ -153,17 +165,17 @@ public:
     NODISCARD virtual CommandListFamily GetFamily() const = 0;
 
     virtual void Begin() = 0;
-    virtual void End() = 0;
+    virtual void End()   = 0;
 
     virtual void BeginRenderPass(const RefPtr<RenderPass>& renderPass, const RenderPassBeginInfo& beginInfo) = 0;
-    virtual void EndRenderPass() = 0;
+    virtual void EndRenderPass()                                                                             = 0;
 
     virtual void BindGraphicsState(const GraphicsState& graphicsState, const RefPtr<Shader>& shader) = 0;
 
     virtual void BindShaderResources(const ShaderResourcesBindPack& bindInfo) = 0;
 
     virtual void BindVertexBuffer(const RefPtr<VertexBuffer>& vertexBuffer) = 0;
-    virtual void BindIndexBuffer(const RefPtr<IndexBuffer>& indexBuffer) = 0;
+    virtual void BindIndexBuffer(const RefPtr<IndexBuffer>& indexBuffer)    = 0;
 
     virtual void DrawIndexed(uint32 firstIndex, uint32 indexCount) = 0;
 
@@ -172,10 +184,10 @@ public:
 
 public:
     NODISCARD virtual const DrawStatistics& GetDrawStatistics() const = 0;
-    virtual void ResetDrawStatistics() = 0;
+    virtual void ResetDrawStatistics()                                = 0;
 
-    virtual void SetAccumulateStatisticsPolicy(AccumultateStatisticsPolicy policy) = 0;
-    NODISCARD virtual AccumultateStatisticsPolicy GetAccumulateStatisticsPolicy() const = 0;
+    virtual void SetAccumulateStatisticsPolicy(AccumulateStatisticsPolicy policy)      = 0;
+    NODISCARD virtual AccumulateStatisticsPolicy GetAccumulateStatisticsPolicy() const = 0;
 };
 
-}
+} // namespace SE

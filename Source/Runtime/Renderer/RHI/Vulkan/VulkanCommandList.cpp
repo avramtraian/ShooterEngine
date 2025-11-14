@@ -18,7 +18,7 @@ VulkanCommandList::VulkanCommandList(const CommandListInfo& info)
     , m_ActivePipeline(nullptr)
     , m_IsVertexBufferBound(false)
     , m_IsIndexBufferBound(false)
-    , m_AccumulateStatisticsPolicy(AccumultateStatisticsPolicy::PerBeginEndCycle)
+    , m_AccumulateStatisticsPolicy(AccumulateStatisticsPolicy::PerBeginEndCycle)
 {
     if (m_Family == CommandListFamily::Unknown)
     {
@@ -77,7 +77,7 @@ void VulkanCommandList::Begin()
     ReleaseObjectReferences();
 
     /* Reset draw statistics if necessary. */
-    if (m_AccumulateStatisticsPolicy == AccumultateStatisticsPolicy::PerBeginEndCycle)
+    if (m_AccumulateStatisticsPolicy == AccumulateStatisticsPolicy::PerBeginEndCycle)
         ResetDrawStatistics();
 
     /* Reset the command buffer before reusing it. */
@@ -573,7 +573,7 @@ void VulkanCommandList::ResetDrawStatistics()
     m_DrawStatistics = {};
 }
 
-void VulkanCommandList::SetAccumulateStatisticsPolicy(AccumultateStatisticsPolicy policy)
+void VulkanCommandList::SetAccumulateStatisticsPolicy(AccumulateStatisticsPolicy policy)
 {
     m_AccumulateStatisticsPolicy = policy;
 }

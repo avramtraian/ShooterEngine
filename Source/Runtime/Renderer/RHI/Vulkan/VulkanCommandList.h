@@ -43,10 +43,10 @@ public:
 
 public:
     NODISCARD ALWAYS_INLINE virtual const DrawStatistics& GetDrawStatistics() const override { return m_DrawStatistics; }
-    NODISCARD ALWAYS_INLINE virtual AccumultateStatisticsPolicy GetAccumulateStatisticsPolicy() const override { return m_AccumulateStatisticsPolicy; }
+    NODISCARD ALWAYS_INLINE virtual AccumulateStatisticsPolicy GetAccumulateStatisticsPolicy() const override { return m_AccumulateStatisticsPolicy; }
 
     virtual void ResetDrawStatistics() override;
-    virtual void SetAccumulateStatisticsPolicy(AccumultateStatisticsPolicy policy) override;
+    virtual void SetAccumulateStatisticsPolicy(AccumulateStatisticsPolicy policy) override;
 
 private:
     void ReleaseObjectReferences();
@@ -80,7 +80,7 @@ private:
     Vector<OwnPtr<VulkanBuffer>> m_StagingBuffers;
 
     DrawStatistics m_DrawStatistics;
-    AccumultateStatisticsPolicy m_AccumulateStatisticsPolicy;
+    AccumulateStatisticsPolicy m_AccumulateStatisticsPolicy;
 };
 
 }
