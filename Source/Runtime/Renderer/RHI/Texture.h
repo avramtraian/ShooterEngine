@@ -21,7 +21,9 @@ enum class TextureFormat : uint8
 
 NODISCARD ALWAYS_INLINE bool IsTextureDepthFormat(TextureFormat format)
 {
+    // clang-format off
     if (format == TextureFormat::D24S8) { return true; }
+    // clang-format on
 
     return false;
 }
@@ -52,28 +54,29 @@ enum class TextureAddressMode : uint8
 struct Texture2DInfo
 {
 public:
-    TextureFormat          Format       { TextureFormat::Unknown };
-    TextureFlags           Flags        { TEXTURE_FLAG_NONE };
-    uint32                 SizeX        { 0 };
-    uint32                 SizeY        { 0 };
-    TextureFilter          MinFilter    { TextureFilter::Linear };
-    TextureFilter          MagFilter    { TextureFilter::Linear };
-    TextureAddressMode     AddressModeU { TextureAddressMode::Repeat };
-    TextureAddressMode     AddressModeV { TextureAddressMode::Repeat };
+    TextureFormat          Format       = TextureFormat::Unknown;
+    TextureFlags           Flags        = TEXTURE_FLAG_NONE;
+    uint32                 SizeX        = 0;
+    uint32                 SizeY        = 0;
+    TextureFilter          MinFilter    = TextureFilter::Linear;
+    TextureFilter          MagFilter    = TextureFilter::Linear;
+    TextureAddressMode     AddressModeU = TextureAddressMode::Repeat;
+    TextureAddressMode     AddressModeV = TextureAddressMode::Repeat;
     ConstVectorView<uint8> InitialData;
 
 public:
-    inline Texture2DInfo& SetFormat       (TextureFormat format)          { Format = format;              return *this; }
-    inline Texture2DInfo& SetFlags        (TextureFlags flags)            { Flags = flags;                return *this; }
-    inline Texture2DInfo& SetSizeX        (uint32 sizeX)                  { SizeX = sizeX;                return *this; }
-    inline Texture2DInfo& SetSizeY        (uint32 sizeY)                  { SizeY = sizeY;                return *this; }
-    inline Texture2DInfo& SetSize         (uint32 sizeX, uint32 sizeY)    { SizeX = sizeX; SizeY = sizeY; return *this; }
-    inline Texture2DInfo& AddFlags        (TextureFlags flags)            { Flags |= flags;               return *this; }
-    inline Texture2DInfo& SetMinFilter    (TextureFilter filter)          { MinFilter = filter;           return *this; }
-    inline Texture2DInfo& SetMagFilter    (TextureFilter filter)          { MagFilter = filter;           return *this; }
-    inline Texture2DInfo& SetAddressModeU (TextureAddressMode adressMode) { AddressModeU = adressMode;    return *this; }
-    inline Texture2DInfo& SetAddressModeV (TextureAddressMode adressMode) { AddressModeV = adressMode;    return *this; }
-    inline Texture2DInfo& SetInitialData  (ConstVectorView<uint8> data)   { InitialData = data;           return *this; }
+    // clang-format off
+    inline Texture2DInfo& SetFormat       (TextureFormat format)           { Format = format;              return *this; }
+    inline Texture2DInfo& SetFlags        (TextureFlags flags)             { Flags = flags;                return *this; }
+    inline Texture2DInfo& SetSizeX        (uint32 sizeX)                   { SizeX = sizeX;                return *this; }
+    inline Texture2DInfo& SetSizeY        (uint32 sizeY)                   { SizeY = sizeY;                return *this; }
+    inline Texture2DInfo& SetSize         (uint32 sizeX, uint32 sizeY)     { SizeX = sizeX; SizeY = sizeY; return *this; }
+    inline Texture2DInfo& AddFlags        (TextureFlags flags)             { Flags |= flags;               return *this; }
+    inline Texture2DInfo& SetMinFilter    (TextureFilter filter)           { MinFilter = filter;           return *this; }
+    inline Texture2DInfo& SetMagFilter    (TextureFilter filter)           { MagFilter = filter;           return *this; }
+    inline Texture2DInfo& SetAddressModeU (TextureAddressMode addressMode) { AddressModeU = addressMode;   return *this; }
+    inline Texture2DInfo& SetAddressModeV (TextureAddressMode addressMode) { AddressModeV = addressMode;   return *this; }
+    inline Texture2DInfo& SetInitialData  (ConstVectorView<uint8> data)    { InitialData = data;           return *this; }
 
     inline Texture2DInfo& SetFilters      (TextureFilter minFilter, TextureFilter magFilter)
     {
@@ -88,6 +91,7 @@ public:
         AddressModeV = addressModeV;
         return *this;
     }
+    // clang-format on
 };
 
 enum class Texture2DUploadDataPolicy : uint8
@@ -114,9 +118,10 @@ class Texture2D : public ShaderResource
 
 public:
     NODISCARD virtual TextureFormat GetFormat() const = 0;
-    NODISCARD virtual TextureFlags GetFlags() const = 0;
-    NODISCARD virtual uint32 GetSizeX() const = 0;
-    NODISCARD virtual uint32 GetSizeY() const = 0;
+    NODISCARD virtual TextureFlags GetFlags() const   = 0;
+    NODISCARD virtual uint32 GetSizeX() const         = 0;
+    NODISCARD virtual uint32 GetSizeY() const         = 0;
+    NODISCARD virtual bool IsSwapchainTarget() const  = 0;
 
     // Can only be called when the texture hasn't been created with the 'TEXTURE_FLAG_RENDER_TARGET' flag.
     // Textures that represent render targets can't be updated, and the single time you can upload data to
@@ -124,4 +129,4 @@ public:
     virtual void UploadData(ConstVectorView<uint8> textureData, Texture2DUploadDataPolicy policy) = 0;
 };
 
-}
+} // namespace SE

@@ -4,8 +4,8 @@
 
 #include <Runtime/Core/Memory/Buffer.h>
 #include <Runtime/Renderer/RHI/Texture.h>
-#include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanBuffer.h>
+#include <Runtime/Renderer/RHI/Vulkan/VulkanCore.h>
 #include <Runtime/Renderer/RHI/Vulkan/VulkanSwapchain.h>
 
 namespace SE
@@ -19,11 +19,11 @@ NODISCARD static inline VkFormat TextureFormatToVulkan(TextureFormat textureForm
 {
     switch (textureFormat)
     {
-        case TextureFormat::Unknown:         return VK_FORMAT_UNDEFINED;
-        case TextureFormat::R8G8B8A8:        return VK_FORMAT_R8G8B8A8_UNORM;
-        case TextureFormat::R8G8B8:          return VK_FORMAT_R8G8B8_UNORM;
-        case TextureFormat::B8G8R8A8:        return VK_FORMAT_B8G8R8A8_UNORM;
-        case TextureFormat::D24S8:           return VK_FORMAT_D24_UNORM_S8_UINT;
+        case TextureFormat::Unknown:  return VK_FORMAT_UNDEFINED;
+        case TextureFormat::R8G8B8A8: return VK_FORMAT_R8G8B8A8_UNORM;
+        case TextureFormat::R8G8B8:   return VK_FORMAT_R8G8B8_UNORM;
+        case TextureFormat::B8G8R8A8: return VK_FORMAT_B8G8R8A8_UNORM;
+        case TextureFormat::D24S8:    return VK_FORMAT_D24_UNORM_S8_UINT;
     }
 
     SE_ASSERT_NOT_REACHED;
@@ -34,11 +34,11 @@ NODISCARD static inline TextureFormat TextureFormatFromVulkan(VkFormat format)
 {
     switch (format)
     {
-        case VK_FORMAT_UNDEFINED:           return TextureFormat::Unknown;
-        case VK_FORMAT_R8G8B8_UNORM:        return TextureFormat::R8G8B8;
-        case VK_FORMAT_R8G8B8A8_UNORM:      return TextureFormat::R8G8B8A8;
-        case VK_FORMAT_B8G8R8A8_UNORM:      return TextureFormat::B8G8R8A8;
-        case VK_FORMAT_D24_UNORM_S8_UINT:   return TextureFormat::D24S8;
+        case VK_FORMAT_UNDEFINED:         return TextureFormat::Unknown;
+        case VK_FORMAT_R8G8B8_UNORM:      return TextureFormat::R8G8B8;
+        case VK_FORMAT_R8G8B8A8_UNORM:    return TextureFormat::R8G8B8A8;
+        case VK_FORMAT_B8G8R8A8_UNORM:    return TextureFormat::B8G8R8A8;
+        case VK_FORMAT_D24_UNORM_S8_UINT: return TextureFormat::D24S8;
     }
 
     SE_ASSERT_NOT_REACHED;
@@ -80,21 +80,24 @@ class VulkanTexture2D : public Texture2D
 public:
     struct Handle
     {
-        VkImage     Image { VK_NULL_HANDLE };
-        VkImageView View  { VK_NULL_HANDLE };
+        VkImage     Image = VK_NULL_HANDLE;
+        VkImageView View  = VK_NULL_HANDLE;
     };
 
     struct Properties
     {
-        TextureFormat Format { TextureFormat::Unknown };
-        TextureFlags  Flags  { TEXTURE_FLAG_NONE };
-        uint32        SizeX  { 0 };
-        uint32        SizeY  { 0 };
+        TextureFormat Format = TextureFormat::Unknown;
+        TextureFlags  Flags  = TEXTURE_FLAG_NONE;
+        uint32        SizeX  = 0;
+        uint32        SizeY  = 0;
     };
 
 public:
-    VulkanTexture2D(VulkanTexture2DType type) : m_Type(type) {}
+    VulkanTexture2D(VulkanTexture2DType type)
+        : m_Type(type)
+    {}
     virtual ~VulkanTexture2D() override = default;
+
     NODISCARD ALWAYS_INLINE VulkanTexture2DType GetType() const { return m_Type; }
 
     NODISCARD ALWAYS_INLINE const Handle& GetHandle() const { return m_Handle; }
@@ -107,8 +110,8 @@ public:
 
 protected:
     VulkanTexture2DType m_Type;
-    Handle m_Handle;
-    Properties m_Properties;
+    Handle              m_Handle;
+    Properties          m_Properties;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -120,9 +123,9 @@ class VulkanStorageTexture2D : public VulkanTexture2D
 public:
     struct Sampler
     {
-        VkSampler          Handle       { VK_NULL_HANDLE };
-        TextureFilter      MinFilter    { TextureFilter::Linear };
-        TextureFilter      MagFilter    { TextureFilter::Linear };
+        VkSampler          Handle { VK_NULL_HANDLE };
+        TextureFilter      MinFilter { TextureFilter::Linear };
+        TextureFilter      MagFilter { TextureFilter::Linear };
         TextureAddressMode AddressModeU { TextureAddressMode::Repeat };
         TextureAddressMode AddressModeV { TextureAddressMode::Repeat };
     };
@@ -130,6 +133,7 @@ public:
 public:
     VulkanStorageTexture2D(const Texture2DInfo& info);
     virtual ~VulkanStorageTexture2D() override;
+    NODISCARD ALWAYS_INLINE virtual bool IsSwapchainTarget() const override { return false; }
     NODISCARD ALWAYS_INLINE static VulkanTexture2DType GetStaticType() { return VulkanTexture2DType::Storage; }
 
     NODISCARD ALWAYS_INLINE VkDeviceMemory GetTextureMemory() const { return m_TextureMemory; }
@@ -151,9 +155,9 @@ private:
 
 private:
     VkDeviceMemory m_TextureMemory;
-    Sampler m_Sampler;
+    Sampler        m_Sampler;
 
-    bool m_IsPendingUploadData;
+    bool   m_IsPendingUploadData;
     Buffer m_PendingTextureData;
 };
 
@@ -166,13 +170,14 @@ class VulkanSwapchainTexture2D : public VulkanTexture2D
 public:
     VulkanSwapchainTexture2D(const RefPtr<VulkanSwapchain>& swapchain, uint32 imageIndex);
     virtual ~VulkanSwapchainTexture2D() override;
+    NODISCARD ALWAYS_INLINE virtual bool IsSwapchainTarget() const override { return true; }
     NODISCARD ALWAYS_INLINE static VulkanTexture2DType GetStaticType() { return VulkanTexture2DType::Swapchain; }
 
     virtual void UploadData(ConstVectorView<uint8> textureData, Texture2DUploadDataPolicy policy) override;
 
 private:
     RefPtr<VulkanSwapchain> m_Swapchain;
-    uint32 m_ImageIndex;
+    uint32                  m_ImageIndex;
 };
 
-}
+} // namespace SE
