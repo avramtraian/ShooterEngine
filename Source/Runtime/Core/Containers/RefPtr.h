@@ -2,89 +2,136 @@
 
 #pragma once
 
+#include "RefPtr.h"
+
 #include <Runtime/Core/CoreAssertions.h>
 #include <Runtime/Core/CoreTypes.h>
 
 namespace SE
 {
 
-// Forward declarations.
-template<typename T> class StrongRefPtr;
-template<typename T> class WeakRefPtr;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////// REF COUNTED CLASS. ///////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////
+//========================================================================================================================================//
+//----------------------------------------------------- REF COUNTED BASE AND CONTROL -----------------------------------------------------//
+//========================================================================================================================================//
 
 class RefCounted
 {
     SE_MAKE_NONCOPYABLE(RefCounted);
     SE_MAKE_NONMOVABLE(RefCounted);
-    
-    template<typename T> friend class StrongRefPtr;
-    template<typename T> friend class WeakRefPtr;
-
-    template<typename Q>                   friend StrongRefPtr<Q> AdoptStrongRef  (Q*);
-    template<typename Q, typename... Args> friend StrongRefPtr<Q> CreateStrongRef (Args&&...);
-    template<typename Q>                   friend WeakRefPtr<Q>   AdoptWeakRef    (Q*);
 
 public:
+    RefCounted()          = default;
     virtual ~RefCounted() = default;
+};
 
-protected:
-    ALWAYS_INLINE RefCounted()
-        : m_StrongReferenceCount(1)
-        , m_WeakReferenceCount(0)
-    {}
+class RefCountedControlBlock
+{
+    SE_MAKE_NONCOPYABLE(RefCountedControlBlock);
+    SE_MAKE_NONMOVABLE(RefCountedControlBlock);
+
+public:
+    RefCountedControlBlock()  = default;
+    ~RefCountedControlBlock() = default;
 
 public:
     NODISCARD ALWAYS_INLINE uint32 GetStrongReferenceCount() const { return m_StrongReferenceCount; }
     NODISCARD ALWAYS_INLINE uint32 GetWeakReferenceCount() const { return m_WeakReferenceCount; }
 
-private:
-    ALWAYS_INLINE void IncrementStrongReferenceCount() { ++m_StrongReferenceCount; }
-    ALWAYS_INLINE void DecrementStrongReferenceCount() { --m_StrongReferenceCount; }
+    ALWAYS_INLINE void IncrementStrongReferenceCount()
+    {
+        SE_ASSERT(0 < m_StrongReferenceCount && m_StrongReferenceCount < 1000);
+        ++m_StrongReferenceCount;
+    }
 
-    ALWAYS_INLINE void IncrementWeakReferenceCount() { ++m_WeakReferenceCount; }
-    ALWAYS_INLINE void DecrementWeakReferenceCount() { --m_WeakReferenceCount; }
+    ALWAYS_INLINE void DecrementStrongReferenceCount()
+    {
+        SE_ASSERT(0 < m_StrongReferenceCount && m_StrongReferenceCount < 1000);
+        --m_StrongReferenceCount;
+    }
+
+    ALWAYS_INLINE void IncrementWeakReferenceCount()
+    {
+        SE_ASSERT(m_WeakReferenceCount < 100);
+        ++m_WeakReferenceCount;
+    }
+
+    ALWAYS_INLINE void DecrementWeakReferenceCount()
+    {
+        SE_ASSERT(0 < m_WeakReferenceCount && m_WeakReferenceCount < 100);
+        --m_WeakReferenceCount;
+    }
 
 private:
-    uint32 m_StrongReferenceCount;
-    uint32 m_WeakReferenceCount;
+    uint32 m_StrongReferenceCount = 1;
+    uint32 m_WeakReferenceCount   = 0;
 };
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////// STRONG REF PTR CLASS. //////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////
+// Forward declarations.
+template<typename T>
+class StrongRefPtr;
+template<typename T>
+class WeakRefPtr;
+
+template<typename T>
+using RefPtr = StrongRefPtr<T>;
+
+//========================================================================================================================================//
+//------------------------------------------------------- STRONG REFERENCE POINTER -------------------------------------------------------//
+//========================================================================================================================================//
 
 template<typename T>
 class StrongRefPtr
 {
-    template<typename Q>                   friend class StrongRefPtr;
-    template<typename Q>                   friend class WeakRefPtr;
+public:
+    template<typename Q>
+    friend class StrongRefPtr;
 
-    template<typename Q>                   friend StrongRefPtr<Q> AdoptStrongRef                                  (Q*);
-    template<typename Q>                   friend StrongRefPtr<Q> AdoptStrongRefWithoutIncrementingReferenceCount (Q*);
-    template<typename Q, typename... Args> friend StrongRefPtr<Q> CreateStrongRef                                 (Args&&...);
+    template<typename Q>
+    friend class WeakRefPtr;
+
+    template<typename Q>
+    friend StrongRefPtr<Q> AdoptStrongRef(Q*);
+
+    template<typename Q, typename... Args>
+    friend StrongRefPtr<Q> CreateStrongRef(Args&&...);
+
+    template<typename Q, typename ConstructorFunction>
+    friend StrongRefPtr<Q> CreateStrongRefWithFunction(ConstructorFunction);
 
 public:
     ALWAYS_INLINE StrongRefPtr()
         : m_Instance(nullptr)
     {}
 
+    ALWAYS_INLINE StrongRefPtr(NullptrType)
+        : m_Instance(nullptr)
+    {}
+
     ALWAYS_INLINE ~StrongRefPtr()
     {
+        // The destructor is a wrapper around the 'Release' API.
         Release();
     }
 
-public:
     ALWAYS_INLINE StrongRefPtr(const StrongRefPtr& other)
         : m_Instance(other.m_Instance)
     {
         if (m_Instance)
         {
-            RefCounted* refCounted = (RefCounted*)m_Instance;
-            refCounted->IncrementStrongReferenceCount();
+            RefCountedControlBlock& controlBlock = GetControlBlock();
+            controlBlock.IncrementStrongReferenceCount();
+        }
+    }
+
+    template<typename Q>
+    requires (std::is_base_of_v<T, Q>)
+    ALWAYS_INLINE StrongRefPtr(const StrongRefPtr<Q>& other)
+        : m_Instance(other.m_Instance)
+    {
+        if (m_Instance)
+        {
+            RefCountedControlBlock& controlBlock = GetControlBlock();
+            controlBlock.IncrementStrongReferenceCount();
         }
     }
 
@@ -94,6 +141,18 @@ public:
         other.m_Instance = nullptr;
     }
 
+    template<typename Q>
+    requires (std::is_base_of_v<T, Q>)
+    ALWAYS_INLINE StrongRefPtr(StrongRefPtr<Q>&& other) noexcept
+        : m_Instance(other.m_Instance)
+    {
+        other.m_Instance = nullptr;
+    }
+
+    template<typename Q>
+    requires (std::is_base_of_v<T, Q>)
+    ALWAYS_INLINE StrongRefPtr(const WeakRefPtr<Q>& weakRefPtr);
+
     ALWAYS_INLINE StrongRefPtr& operator=(const StrongRefPtr& other)
     {
         // Handle the self-assignment case.
@@ -101,12 +160,30 @@ public:
             return *this;
 
         Release();
-
         m_Instance = other.m_Instance;
         if (m_Instance)
         {
-            RefCounted* refCounted = (RefCounted*)m_Instance;
-            refCounted->IncrementStrongReferenceCount();
+            RefCountedControlBlock& controlBlock = GetControlBlock();
+            controlBlock.IncrementStrongReferenceCount();
+        }
+
+        return *this;
+    }
+
+    template<typename Q>
+    requires (std::is_base_of_v<T, Q>)
+    ALWAYS_INLINE StrongRefPtr& operator=(const StrongRefPtr<Q>& other)
+    {
+        // Handle the self-assignment case.
+        if (static_cast<const void*>(this) == static_cast<const void*>(&other))
+            return *this;
+
+        Release();
+        m_Instance = other.m_Instance;
+        if (m_Instance)
+        {
+            RefCountedControlBlock& controlBlock = GetControlBlock();
+            controlBlock.IncrementStrongReferenceCount();
         }
 
         return *this;
@@ -119,96 +196,30 @@ public:
             return *this;
 
         Release();
-
-        m_Instance = other.m_Instance;
+        m_Instance       = other.m_Instance;
         other.m_Instance = nullptr;
 
         return *this;
     }
 
-public:
     template<typename Q>
-    requires(!std::is_same_v<T, Q> && std::is_base_of_v<T, Q>)
-    ALWAYS_INLINE StrongRefPtr(const StrongRefPtr<Q>& other)
-        : m_Instance(other.m_Instance)
-    {
-        if (m_Instance)
-        {
-            RefCounted* refCounted = (RefCounted*)m_Instance;
-            refCounted->IncrementStrongReferenceCount();
-        }
-    }
-
-    template<typename Q>
-    requires(!std::is_same_v<T, Q> && std::is_base_of_v<T, Q>)
-    ALWAYS_INLINE StrongRefPtr(StrongRefPtr<Q>&& other) noexcept
-        : m_Instance(other.m_Instance)
-    {
-        other.m_Instance = nullptr;
-    }
-
-    template<typename Q>
-    requires(!std::is_same_v<T, Q> && std::is_base_of_v<T, Q>)
-    ALWAYS_INLINE StrongRefPtr& operator=(const StrongRefPtr<Q>& other)
-    {
-        // Handle the self-assignment case.
-        if ((void*)this == (void*)(&other))
-            return *this;
-
-        Release();
-
-        m_Instance = other.m_Instance;
-        if (m_Instance)
-        {
-            RefCounted* refCounted = (RefCounted*)m_Instance;
-            refCounted->IncrementStrongReferenceCount();
-        }
-
-        return *this;
-    }
-
-    template<typename Q>
-    requires(!std::is_same_v<T, Q> && std::is_base_of_v<T, Q>)
+    requires (std::is_base_of_v<T, Q>)
     ALWAYS_INLINE StrongRefPtr& operator=(StrongRefPtr<Q>&& other) noexcept
     {
         // Handle the self-assignment case.
-        if ((void*)(this) == (void*)(&other))
+        if (static_cast<void*>(this) == static_cast<void*>(&other))
             return *this;
 
         Release();
-
-        m_Instance = other.m_Instance;
+        m_Instance       = other.m_Instance;
         other.m_Instance = nullptr;
 
         return *this;
     }
 
-public:
     template<typename Q>
-    requires(std::is_base_of_v<T, Q>)
-    ALWAYS_INLINE StrongRefPtr(const WeakRefPtr<Q>& weakRefPtr);
-
-    template<typename Q>
-    requires(std::is_base_of_v<T, Q>)
+    requires (std::is_base_of_v<T, Q>)
     ALWAYS_INLINE StrongRefPtr& operator=(const WeakRefPtr<Q>& weakRefPtr);
-
-    ALWAYS_INLINE StrongRefPtr(std::nullptr_t)
-        : m_Instance(nullptr)
-    {}
-
-    ALWAYS_INLINE StrongRefPtr& operator=(std::nullptr_t)
-    {
-        Release();
-        return *this;
-    }
-
-    template<typename Q>
-    requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
-    NODISCARD ALWAYS_INLINE bool operator==(const WeakRefPtr<Q>& weakRefPtr) const;
-
-    template<typename Q>
-    requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
-    NODISCARD ALWAYS_INLINE bool operator!=(const WeakRefPtr<Q>& weakRefPtr) const;
 
 public:
     NODISCARD ALWAYS_INLINE T* Get()
@@ -232,107 +243,152 @@ public:
     NODISCARD ALWAYS_INLINE T* operator->() { return Get(); }
     NODISCARD ALWAYS_INLINE const T* operator->() const { return Get(); }
 
-    NODISCARD ALWAYS_INLINE T& operator*() { return *Get(); }
-    NODISCARD ALWAYS_INLINE const T& operator*() const { return *Get(); }
+    NODISCARD ALWAYS_INLINE T& operator*() { return Get(); }
+    NODISCARD ALWAYS_INLINE const T& operator*() const { return Get(); }
 
 public:
     NODISCARD ALWAYS_INLINE bool IsValid() const
     {
-        return (m_Instance != nullptr);
+        // Check if the internal pointer is not null.
+        const bool internalPointerIsNull = (m_Instance == nullptr);
+        return !internalPointerIsNull;
     }
 
     ALWAYS_INLINE void Release()
     {
         if (m_Instance)
         {
-            RefCounted* refCounted = (RefCounted*)m_Instance;
-            m_Instance = nullptr;
+            // Get the relevant object pointers and invalidate this instance of a reference counted pointer container, since
+            // calling the destructor of the held object might invoke the 'Release' function again (re-entrant).
+            RefCountedControlBlock* controlBlock = &GetControlBlock();
+            RefCounted*             instance     = reinterpret_cast<RefCounted*>(m_Instance);
+            m_Instance                           = nullptr;
 
-            refCounted->DecrementStrongReferenceCount();
-            if (refCounted->GetStrongReferenceCount() == 0)
+            if (controlBlock->GetStrongReferenceCount() == 1)
             {
-                const uint32 weakReferenceCount = refCounted->GetWeakReferenceCount();
-                refCounted->~RefCounted();
-
-                if (weakReferenceCount > 0)
+                // We explicitly call the destructor before decrementing the strong reference count as the destructor might release the last weak
+                // reference of the same object, which would also free the memory block if both the strong and weak reference counts are zero.
+                // By leaving the strong reference count set to 1 when invoking the destructor we ensure that no weak ref pointer will modify the memory block.
+                instance->~RefCounted();
+                if (controlBlock->GetWeakReferenceCount() == 0)
                 {
-                    new (refCounted) RefCounted();
-                    refCounted->m_StrongReferenceCount = 0;
-                    refCounted->m_WeakReferenceCount = weakReferenceCount;
-                }
-                else
-                {
-                    ::operator delete(m_Instance);
+                    // The object is neither strongly nor weakly referenced anymore.
+                    ::operator delete(controlBlock);
+                    return;
                 }
             }
+
+            // Finally, decrement the strong reference count.
+            controlBlock->DecrementStrongReferenceCount();
         }
     }
 
     template<typename Q>
     NODISCARD ALWAYS_INLINE StrongRefPtr<Q> As() const
     {
-        StrongRefPtr<Q> casted;
-
         if (m_Instance)
         {
-            RefCounted* refCounted = (RefCounted*)m_Instance;
-            refCounted->IncrementStrongReferenceCount();
-            casted.m_Instance = static_cast<Q*>(m_Instance);
+            RefCountedControlBlock& controlBlock = GetControlBlock();
+            controlBlock.IncrementStrongReferenceCount();
         }
 
-        return casted;
+        Q* castedInstance = static_cast<Q*>(m_Instance);
+        return StrongRefPtr<Q>(castedInstance);
     }
 
+public:
     template<typename Q>
-    requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
+    requires (std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
     NODISCARD ALWAYS_INLINE bool operator==(const StrongRefPtr<Q>& other) const
     {
-        return (m_Instance == other.m_Instance);
+        const bool internalPointersAreEqual = (m_Instance == other.m_Instance);
+        return internalPointersAreEqual;
     }
 
     template<typename Q>
-    requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
+    requires (std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
     NODISCARD ALWAYS_INLINE bool operator!=(const StrongRefPtr<Q>& other) const
     {
         const bool areEqual = ((*this) == other);
         return !areEqual;
     }
 
+    template<typename Q>
+    requires (std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
+    NODISCARD ALWAYS_INLINE bool operator==(const WeakRefPtr<Q>& weakRefPtr) const;
+
+    template<typename Q>
+    requires (std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
+    NODISCARD ALWAYS_INLINE bool operator!=(const WeakRefPtr<Q>& weakRefPtr) const;
+
+private:
+    ALWAYS_INLINE explicit StrongRefPtr(T* instance)
+        : m_Instance(instance)
+    {}
+
+    NODISCARD ALWAYS_INLINE RefCountedControlBlock& GetControlBlock() const
+    {
+        void* controlBlockMemoryAddress = reinterpret_cast<uint8*>(m_Instance) - sizeof(RefCountedControlBlock);
+        return *static_cast<RefCountedControlBlock*>(controlBlockMemoryAddress);
+    }
+
 private:
     T* m_Instance;
 };
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////// WEAK REF PTR CLASS. ///////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////
+//========================================================================================================================================//
+//-------------------------------------------------------- WEAK REFERENCE POINTER --------------------------------------------------------//
+//========================================================================================================================================//
 
 template<typename T>
 class WeakRefPtr
 {
-    template<typename Q> friend class StrongRefPtr;
-    template<typename Q> friend class WeakRefPtr;
+public:
+    template<typename Q>
+    friend class StrongRefPtr;
 
-    template<typename Q> friend WeakRefPtr<Q> AdoptWeakRef (Q*);
+    template<typename Q>
+    friend class WeakRefPtr;
+
+    template<typename Q>
+    friend WeakRefPtr<Q> AdoptWeakRef(Q*);
 
 public:
     ALWAYS_INLINE WeakRefPtr()
         : m_Instance(nullptr)
     {}
 
+    ALWAYS_INLINE WeakRefPtr(NullptrType)
+        : m_Instance(nullptr)
+    {}
+
     ALWAYS_INLINE ~WeakRefPtr()
     {
+        // The destructor is a wrapper around the 'Release' API.
         Release();
     }
 
-public:
     ALWAYS_INLINE WeakRefPtr(const WeakRefPtr& other)
         : m_Instance(nullptr)
     {
         if (other.IsValid())
         {
-            RefCounted* refCounted = (RefCounted*)other.m_Instance;
-            refCounted->IncrementWeakReferenceCount();
-            m_Instance = other.m_Instance;
+            m_Instance                           = other.m_Instance;
+            RefCountedControlBlock& controlBlock = GetControlBlock();
+            controlBlock.IncrementWeakReferenceCount();
+        }
+    }
+
+    template<typename Q>
+    requires (std::is_base_of_v<T, Q>)
+    ALWAYS_INLINE WeakRefPtr(const WeakRefPtr<Q>& other)
+        : m_Instance(nullptr)
+    {
+        if (other.IsValid())
+        {
+            m_Instance                           = other.m_Instance;
+            RefCountedControlBlock& controlBlock = GetControlBlock();
+            controlBlock.IncrementWeakReferenceCount();
         }
     }
 
@@ -342,6 +398,18 @@ public:
         other.m_Instance = nullptr;
     }
 
+    template<typename Q>
+    requires (std::is_base_of_v<T, Q>)
+    ALWAYS_INLINE WeakRefPtr(WeakRefPtr<Q>&& other) noexcept
+        : m_Instance(other.m_Instance)
+    {
+        other.m_Instance = nullptr;
+    }
+
+    template<typename Q>
+    requires (std::is_base_of_v<T, Q>)
+    ALWAYS_INLINE WeakRefPtr(const StrongRefPtr<Q>& strongRefPtr);
+
     ALWAYS_INLINE WeakRefPtr& operator=(const WeakRefPtr& other)
     {
         // Handle the self-assignment case.
@@ -349,12 +417,30 @@ public:
             return *this;
 
         Release();
-
         if (other.IsValid())
         {
-            RefCounted* refCounted = (RefCounted*)other.m_Instance;
-            refCounted->IncrementWeakReferenceCount();
-            m_Instance = other.m_Instance;
+            m_Instance                           = other.m_Instance;
+            RefCountedControlBlock& controlBlock = GetControlBlock();
+            controlBlock.IncrementWeakReferenceCount();
+        }
+
+        return *this;
+    }
+
+    template<typename Q>
+    requires (std::is_base_of_v<T, Q>)
+    ALWAYS_INLINE WeakRefPtr& operator=(const WeakRefPtr<Q>& other)
+    {
+        // Handle the self-assignment case.
+        if (static_cast<const void*>(this) == static_cast<const void*>(&other))
+            return *this;
+
+        Release();
+        if (other.IsValid())
+        {
+            m_Instance                           = other.m_Instance;
+            RefCountedControlBlock& controlBlock = GetControlBlock();
+            controlBlock.IncrementWeakReferenceCount();
         }
 
         return *this;
@@ -367,97 +453,30 @@ public:
             return *this;
 
         Release();
-
-        m_Instance = other.m_Instance;
+        m_Instance       = other.m_Instance;
         other.m_Instance = nullptr;
 
         return *this;
     }
 
-public:
     template<typename Q>
-    requires(!std::is_same_v<T, Q> && std::is_base_of_v<T, Q>)
-    ALWAYS_INLINE WeakRefPtr(const WeakRefPtr<Q>& other)
-        : m_Instance(nullptr)
-    {
-        if (other.IsValid())
-        {
-            RefCounted* refCounted = (RefCounted*)other.m_Instance;
-            refCounted->IncrementWeakReferenceCount();
-            m_Instance = other.m_Instance;
-        }
-    }
-
-    template<typename Q>
-    requires(!std::is_same_v<T, Q> && std::is_base_of_v<T, Q>)
-    ALWAYS_INLINE WeakRefPtr(WeakRefPtr<Q>&& other) noexcept
-        : m_Instance(other.m_Instance)
-    {
-        other.m_Instance = nullptr;
-    }
-
-    template<typename Q>
-    requires(!std::is_same_v<T, Q> && std::is_base_of_v<T, Q>)
-    ALWAYS_INLINE WeakRefPtr& operator=(const WeakRefPtr<Q>& other)
-    {
-        // Handle the self-assignment case.
-        if (this == &other)
-            return *this;
-
-        Release();
-
-        if (other.IsValid())
-        {
-            RefCounted* refCounted = (RefCounted*)other.m_Instance;
-            refCounted->IncrementWeakReferenceCount();
-            m_Instance = other.m_Instance;
-        }
-
-        return *this;
-    }
-
-    template<typename Q>
-    requires(!std::is_same_v<T, Q> && std::is_base_of_v<T, Q>)
+    requires (std::is_base_of_v<T, Q>)
     ALWAYS_INLINE WeakRefPtr& operator=(WeakRefPtr<Q>&& other) noexcept
     {
         // Handle the self-assignment case.
-        if (this == &other)
+        if (static_cast<void*>(this) == static_cast<void*>(&other))
             return *this;
 
         Release();
-
-        m_Instance = other.m_Instance;
+        m_Instance       = other.m_Instance;
         other.m_Instance = nullptr;
 
         return *this;
     }
 
-public:
     template<typename Q>
-    requires(std::is_base_of_v<T, Q>)
-    ALWAYS_INLINE WeakRefPtr(const StrongRefPtr<Q>& strongRefPtr);
-
-    template<typename Q>
-    requires(std::is_base_of_v<T, Q>)
+    requires (std::is_base_of_v<T, Q>)
     ALWAYS_INLINE WeakRefPtr& operator=(const StrongRefPtr<Q>& strongRefPtr);
-
-    ALWAYS_INLINE WeakRefPtr(std::nullptr_t)
-        : m_Instance(nullptr)
-    {}
-
-    ALWAYS_INLINE WeakRefPtr& operator=(std::nullptr_t)
-    {
-        Release();
-        return *this;
-    }
-
-    template<typename Q>
-    requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
-    NODISCARD ALWAYS_INLINE bool operator==(const StrongRefPtr<Q>& strongRefPtr) const;
-
-    template<typename Q>
-    requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
-    NODISCARD ALWAYS_INLINE bool operator!=(const StrongRefPtr<Q>& strongRefPtr) const;
 
 public:
     NODISCARD ALWAYS_INLINE T* Get()
@@ -481,273 +500,185 @@ public:
     NODISCARD ALWAYS_INLINE T* operator->() { return Get(); }
     NODISCARD ALWAYS_INLINE const T* operator->() const { return Get(); }
 
-    NODISCARD ALWAYS_INLINE T& operator*() { return *Get(); }
-    NODISCARD ALWAYS_INLINE const T& operator*() const { return *Get(); }
+    NODISCARD ALWAYS_INLINE T& operator*() { return Get(); }
+    NODISCARD ALWAYS_INLINE const T& operator*() const { return Get(); }
 
 public:
     NODISCARD ALWAYS_INLINE bool IsValid() const
     {
-        if (m_Instance == nullptr)
+        // Check if the internal pointer is not null.
+        const bool internalPointerIsNull = (m_Instance == nullptr);
+        if (internalPointerIsNull)
             return false;
 
-        const RefCounted* refCounted = (const RefCounted*)m_Instance;
-        return (refCounted->GetStrongReferenceCount() > 0);
+        // Check whether the object is strongly referenced.
+        const RefCountedControlBlock& controlBlock               = GetControlBlock();
+        const bool                    objectIsStronglyReferenced = (controlBlock.GetStrongReferenceCount() > 0);
+        return objectIsStronglyReferenced;
     }
 
     ALWAYS_INLINE void Release()
     {
         if (m_Instance)
         {
-            RefCounted* refCounted = (RefCounted*)m_Instance;
+            // Decrement the weak reference count.
+            RefCountedControlBlock* controlBlock = &GetControlBlock();
+            controlBlock->DecrementWeakReferenceCount();
+
+            // The object is neither strongly nor weakly referenced anymore.
+            if (controlBlock->GetStrongReferenceCount() == 0 && controlBlock->GetWeakReferenceCount() == 0)
+                ::operator delete(controlBlock);
+
+            // Invalidate this weak reference pointer container.
             m_Instance = nullptr;
-
-            refCounted->DecrementWeakReferenceCount();
-            if (refCounted->GetStrongReferenceCount() == 0 && refCounted->GetWeakReferenceCount() == 0)
-            {
-                // NOTE(Traian): Since the strong reference count is zero, we know for sure that 'm_Instance' is actually a pointer to
-                // a plain 'RefCounted' object (not a derived class) and thus no destructor is required.
-
-                // NOTE(Traian): Another reason to not call the 'RefCounted' destructor is the following scenario: let's imagine we have
-                // one strong reference pointer and one weak reference pointer. When the strong pointer is released, the destructor of the
-                // instance (for whatever reason) also releases the weak pointer. This scenario would lead us exactly to this codepath, but
-                // the strong pointer doesn't yet replace the object stored at the 'm_Instance' address with a plain 'RefCounted' object.
-                // Because the 'RefCounted' destructor is marked as virtual, calling 'm_Instance->~RefCounted()' would invoke the object
-                // destructor AGAIN. So the bug would be that the same destructor is called twice!
-
-                ::operator delete((void*)refCounted);
-            }
         }
     }
 
     template<typename Q>
     NODISCARD ALWAYS_INLINE WeakRefPtr<Q> As() const
     {
-        WeakRefPtr<Q> casted;
-        if (m_Instance)
-        {
-            RefCounted* refCounted = (RefCounted*)m_Instance;
-            refCounted->IncrementWeakReferenceCount();
-            casted.m_Instance = static_cast<Q*>(m_Instance);
-        }
-        return casted;
+        Q* castedInstance = static_cast<Q*>(m_Instance);
+        return WeakRefPtr<Q>(castedInstance);
     }
 
+public:
     template<typename Q>
-    requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
+    requires (std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
     NODISCARD ALWAYS_INLINE bool operator==(const WeakRefPtr<Q>& other) const
     {
-        const bool thisIsValid = IsValid();
-        const bool otherIsValid = other.IsValid();
-
-        // One pointer is valid and the other is not valid, so they can't be the same.
-        if (thisIsValid != otherIsValid)
-            return false;
-
-        // Both pointers are not valid, and thus they are the same.
-        if (!thisIsValid)
-            return true;
-
-        return (m_Instance == other.m_Instance);
+        const bool internalPointersAreEqual = (m_Instance == other.m_Instance);
+        return internalPointersAreEqual;
     }
 
     template<typename Q>
-    requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
+    requires (std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
     NODISCARD ALWAYS_INLINE bool operator!=(const WeakRefPtr<Q>& other) const
     {
         const bool areEqual = ((*this) == other);
         return !areEqual;
     }
 
+    template<typename Q>
+    requires (std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
+    NODISCARD ALWAYS_INLINE bool operator==(const StrongRefPtr<Q>& strongRefPtr) const;
+
+    template<typename Q>
+    requires (std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
+    NODISCARD ALWAYS_INLINE bool operator!=(const StrongRefPtr<Q>& strongRefPtr) const;
+
+private:
+    ALWAYS_INLINE explicit WeakRefPtr(T* instance)
+        : m_Instance(instance)
+    {
+        if (m_Instance)
+        {
+            RefCountedControlBlock& controlBlock = GetControlBlock();
+            controlBlock.IncrementWeakReferenceCount();
+        }
+    }
+
+    NODISCARD ALWAYS_INLINE RefCountedControlBlock& GetControlBlock() const
+    {
+        void* controlBlockMemoryAddress = reinterpret_cast<uint8*>(m_Instance) - sizeof(RefCountedControlBlock);
+        return *static_cast<RefCountedControlBlock*>(controlBlockMemoryAddress);
+    }
+
 private:
     T* m_Instance;
 };
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////// STRONG REF PTR METHOD IMPLEMENTATIONS. /////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////
+//========================================================================================================================================//
+//------------------------------------------------ STRONG REFERENCE POINTER IMPLEMENTATION -----------------------------------------------//
+//========================================================================================================================================//
 
 template<typename T>
 template<typename Q>
-requires(std::is_base_of_v<T, Q>)
+requires (std::is_base_of_v<T, Q>)
 StrongRefPtr<T>::StrongRefPtr(const WeakRefPtr<Q>& weakRefPtr)
     : m_Instance(nullptr)
 {
     if (weakRefPtr.IsValid())
     {
-        m_Instance = weakRefPtr.m_Instance;
-        RefCounted* refCounted = (RefCounted*)m_Instance;
-        refCounted->IncrementStrongReferenceCount();
+        m_Instance                           = weakRefPtr.m_Instance;
+        RefCountedControlBlock& controlBlock = GetControlBlock();
+        controlBlock.IncrementStrongReferenceCount();
     }
 }
 
 template<typename T>
 template<typename Q>
-requires(std::is_base_of_v<T, Q>)
+requires (std::is_base_of_v<T, Q>)
 StrongRefPtr<T>& StrongRefPtr<T>::operator=(const WeakRefPtr<Q>& weakRefPtr)
 {
-    // Avoid redundant strong reference count decrement and increment.
-    if (m_Instance == weakRefPtr.m_Instance)
-        return *this;
-
     Release();
     if (weakRefPtr.IsValid())
     {
-        m_Instance = weakRefPtr.m_Instance;
-        RefCounted* refCounted = (RefCounted*)m_Instance;
-        refCounted->IncrementStrongReferenceCount();
+        m_Instance                           = weakRefPtr.m_Instance;
+        RefCountedControlBlock& controlBlock = GetControlBlock();
+        controlBlock.IncrementStrongReferenceCount();
     }
-
     return *this;
 }
 
 template<typename T>
 template<typename Q>
-requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
-bool StrongRefPtr<T>::operator==(const WeakRefPtr<Q>& weakRefPtr) const
+requires (std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
+NODISCARD ALWAYS_INLINE bool StrongRefPtr<T>::operator==(const WeakRefPtr<Q>& weakRefPtr) const
 {
-    // NOTE(Traian): Just comparing raw pointers is not enough, because a weak reference pointer can be invalid even
-    // when its internal instance pointer is not null (when the instance _strong_ reference count is zero while the
-    // _weak_ reference count is not), and thus the following check is required to ensure correct behaviour.
-    if (!IsValid() && !weakRefPtr.IsValid())
-        return true;
-
-    return (m_Instance == weakRefPtr.m_Instance);
+    const bool internalPointersAreEqual = (m_Instance == weakRefPtr.m_Instance);
+    return internalPointersAreEqual;
 }
 
 template<typename T>
 template<typename Q>
-requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
-bool StrongRefPtr<T>::operator!=(const WeakRefPtr<Q>& weakRefPtr) const
+requires (std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
+NODISCARD ALWAYS_INLINE bool StrongRefPtr<T>::operator!=(const WeakRefPtr<Q>& weakRefPtr) const
 {
     const bool areEqual = ((*this) == weakRefPtr);
     return !areEqual;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////// WEAK REF PTR METHOD IMPLEMENTATIONS. //////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
 template<typename T>
-template<typename Q>
-requires(std::is_base_of_v<T, Q>)
-WeakRefPtr<T>::WeakRefPtr(const StrongRefPtr<Q>& strongRefPtr)
-    : m_Instance(strongRefPtr.m_Instance)
+NODISCARD ALWAYS_INLINE StrongRefPtr<T> AdoptStrongRef(T* rawInstance)
 {
-    if (m_Instance)
+    StrongRefPtr<T> strongRefPtr = StrongRefPtr<T>(rawInstance);
+    if (rawInstance)
     {
-        RefCounted* refCounted = (RefCounted*)m_Instance;
-        refCounted->IncrementWeakReferenceCount();
+        RefCountedControlBlock& controlBlock = strongRefPtr.GetControlBlock();
+        controlBlock.IncrementStrongReferenceCount();
     }
-}
-
-template<typename T>
-template<typename Q>
-requires(std::is_base_of_v<T, Q>)
-WeakRefPtr<T>& WeakRefPtr<T>::operator=(const StrongRefPtr<Q>& strongRefPtr)
-{
-    // Avoid redundant weak reference count decrement and increment.
-    if (m_Instance == strongRefPtr.m_Instance)
-        return *this;
-
-    Release();
-
-    m_Instance = strongRefPtr.m_Instance;
-    if (m_Instance)
-    {
-        RefCounted* refCounted = (RefCounted*)m_Instance;
-        refCounted->IncrementWeakReferenceCount();
-    }
-
-    return *this;
-}
-
-template<typename T>
-template<typename Q>
-requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
-bool WeakRefPtr<T>::operator==(const StrongRefPtr<Q>& strongRefPtr) const
-{
-    // NOTE(Traian): Just comparing raw pointers is not enough, because a weak reference pointer can be invalid even
-    // when its internal instance pointer is not null (when the instance _strong_ reference count is zero while the
-    // _weak_ reference count is not), and thus the following check is required to ensure correct behaviour.
-    if (!IsValid() && !strongRefPtr.IsValid())
-        return true;
-
-    return (m_Instance == strongRefPtr.m_Instance);
-}
-
-template<typename T>
-template<typename Q>
-requires(std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
-bool WeakRefPtr<T>::operator!=(const StrongRefPtr<Q>& strongRefPtr) const
-{
-    const bool areEqual = ((*this) == strongRefPtr);
-    return !areEqual;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////// CREATION AND ADOPTION. //////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-template<typename T>
-NODISCARD ALWAYS_INLINE StrongRefPtr<T> AdoptStrongRef(T* instance)
-{
-    StrongRefPtr<T> strongRefPtr;
-    if (instance)
-    {
-        strongRefPtr.m_Instance = instance;
-        RefCounted* refCounted = (RefCounted*)instance;
-        refCounted->IncrementStrongReferenceCount();
-    }
-    return strongRefPtr;
-}
-
-template<typename T>
-NODISCARD ALWAYS_INLINE StrongRefPtr<T> AdoptStrongRefWithoutIncrementingReferenceCount(T* instance)
-{
-    StrongRefPtr<T> strongRefPtr;
-    strongRefPtr.m_Instance = instance;
     return strongRefPtr;
 }
 
 template<typename T, typename... Args>
 NODISCARD ALWAYS_INLINE StrongRefPtr<T> CreateStrongRef(Args&&... args)
 {
-    // NOTE(Traian): The default constructor of the RefCounted class initializes the strong reference count
-    // to 1, so no increment is required here. The reason behind this decision is that the pointer can be adopted
-    // during the object constructor. When the adoption happens, the reference count would be incresed from zero to
-    // one, and if the strong ref ptr that adopted it is also destroyed during the constructor, the reference count
-    // would go from one to zero, and thus the object will be destroyed!
+    static_assert(sizeof(RefCountedControlBlock) % alignof(T) == 0);
+    const usize allocationByteCount = sizeof(RefCountedControlBlock) + sizeof(T);
+    uint8*      allocation          = static_cast<uint8*>(::operator new(allocationByteCount));
 
-    StrongRefPtr<T> strongRefPtr;
-    strongRefPtr.m_Instance = new T(Forward<Args>(args)...);
-    return strongRefPtr;
+    new (allocation) RefCountedControlBlock();
+    T* instance = new (allocation + sizeof(RefCountedControlBlock)) T(Forward<Args>(args)...);
+    return StrongRefPtr<T>(instance);
+}
+
+template<typename T, typename ConstructFunction>
+NODISCARD ALWAYS_INLINE StrongRefPtr<T> CreateStrongRefWithFunction(ConstructFunction constructFunction)
+{
+    static_assert(sizeof(RefCountedControlBlock) % alignof(T) == 0);
+    const usize allocationByteCount = sizeof(RefCountedControlBlock) + sizeof(T);
+    uint8*      allocation          = static_cast<uint8*>(::operator new(allocationByteCount));
+    T*          instance            = reinterpret_cast<T*>(allocation + sizeof(RefCountedControlBlock));
+
+    new (allocation) RefCountedControlBlock();
+    constructFunction(static_cast<void*>(instance));
+    return StrongRefPtr<T>(instance);
 }
 
 template<typename T>
-NODISCARD ALWAYS_INLINE WeakRefPtr<T> AdoptWeakRef(T* instance)
+NODISCARD ALWAYS_INLINE RefPtr<T> AdoptRef(T* rawInstance)
 {
-    WeakRefPtr<T> weakRefPtr;
-    if (instance)
-    {
-        weakRefPtr.m_Instance = instance;
-        RefCounted* refCounted = (RefCounted*)instance;
-        SE_ENSURE(refCounted->GetStrongReferenceCount() > 0);
-        refCounted->IncrementWeakReferenceCount();
-    }
-    return weakRefPtr;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////// LEGACY POINTER NAMES. //////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-template<typename T>
-using RefPtr = StrongRefPtr<T>;
-
-template<typename T>
-NODISCARD ALWAYS_INLINE RefPtr<T> AdoptRef(T* instance)
-{
-    return AdoptStrongRef<T>(instance);
+    return AdoptStrongRef<T>(rawInstance);
 }
 
 template<typename T, typename... Args>
@@ -756,4 +687,66 @@ NODISCARD ALWAYS_INLINE RefPtr<T> CreateRef(Args&&... args)
     return CreateStrongRef<T>(Forward<Args>(args)...);
 }
 
+template<typename T, typename ConstructFunction>
+NODISCARD ALWAYS_INLINE RefPtr<T> CreateRefWithFunction(ConstructFunction constructFunction)
+{
+    return CreateStrongRefWithFunction<T>(Move(constructFunction));
 }
+
+//========================================================================================================================================//
+//------------------------------------------------- WEAK REFERENCE POINTER IMPLEMENTATION ------------------------------------------------//
+//========================================================================================================================================//
+
+template<typename T>
+template<typename Q>
+requires (std::is_base_of_v<T, Q>)
+WeakRefPtr<T>::WeakRefPtr(const StrongRefPtr<Q>& strongRefPtr)
+    : m_Instance(strongRefPtr.m_Instance)
+{
+    if (m_Instance)
+    {
+        RefCountedControlBlock& controlBlock = GetControlBlock();
+        controlBlock.IncrementWeakReferenceCount();
+    }
+}
+
+template<typename T>
+template<typename Q>
+requires (std::is_base_of_v<T, Q>)
+WeakRefPtr<T>& WeakRefPtr<T>::operator=(const StrongRefPtr<Q>& strongRefPtr)
+{
+    Release();
+    m_Instance = strongRefPtr.m_Instance;
+    if (m_Instance)
+    {
+        RefCountedControlBlock& controlBlock = GetControlBlock();
+        controlBlock.IncrementWeakReferenceCount();
+    }
+    return *this;
+}
+
+template<typename T>
+template<typename Q>
+requires (std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
+NODISCARD ALWAYS_INLINE bool WeakRefPtr<T>::operator==(const StrongRefPtr<Q>& strongRefPtr) const
+{
+    const bool internalPointersAreEqual = (m_Instance == strongRefPtr.m_Instance);
+    return internalPointersAreEqual;
+}
+
+template<typename T>
+template<typename Q>
+requires (std::is_base_of_v<T, Q> || std::is_base_of_v<Q, T>)
+NODISCARD ALWAYS_INLINE bool WeakRefPtr<T>::operator!=(const StrongRefPtr<Q>& strongRefPtr) const
+{
+    const bool areEqual = ((*this) == strongRefPtr);
+    return !areEqual;
+}
+
+template<typename T>
+NODISCARD ALWAYS_INLINE WeakRefPtr<T> AdoptWeakRef(T* rawInstance)
+{
+    return WeakRefPtr<T>(rawInstance);
+}
+
+} // namespace SE
