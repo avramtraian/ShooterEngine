@@ -81,12 +81,28 @@ bool EditorEngine::Initialize()
         return false;
     }
 
+    const uint32 maxFramesInFlight = m_EditorRenderingSurface->GetMaxFramesInFlight();
+    m_EditorCommandLists.EnsureCapacity(maxFramesInFlight);
+    for (uint32 commandListIndex = 0; commandListIndex < maxFramesInFlight; ++commandListIndex)
+    {
+        RefPtr<CommandList> commandList = g_RenderingDriver->CreateCommandList(CommandListInfo().SetFamily(CommandListFamily::Graphics));
+        m_EditorCommandLists.Add(Move(commandList));
+    }
+
+    m_ActiveScene         = CreateRef<Scene>();
+    m_ActiveSceneRenderer = SceneRenderer::Create(SceneRendererInfo()
+                                                      .SetSceneContext(m_ActiveScene)
+                                                      .SetMaxFramesInFlight(maxFramesInFlight)
+                                                      .SetRenderToSwapchainTarget(true)
+                                                      .SetRenderTargetFormat(m_EditorRenderingSurface->GetSurfaceFormat()));
+
     return true;
 }
 
 void EditorEngine::Shutdown()
 {
     SE_LOG_INFO("Shutting down the engine systems...");
+    m_ActiveScene.Release();
 
     // NOTE(Traian): In order to safely destruct command lists we must ensure that they have finished execution.
     // Since currently we have no mechanism to track if a command list is still executing on a queue or not, and
@@ -94,9 +110,12 @@ void EditorEngine::Shutdown()
     // execution, we simply block the current (main) thread until all operations on the GPU have finished.
     g_RenderingDriver->WaitForDeviceIdle();
 
+    m_ActiveSceneRenderer.Release();
+    m_EditorRenderingSurface.Release();
+    m_EditorCommandLists.ClearAndShrink();
+
     // Shutdown rendering subsystems and driver.
     ShaderLibrary::Shutdown();
-    m_EditorRenderingSurface.Release();
     RenderingDriver::Shutdown();
 
     // Shutdown the input system.
@@ -113,6 +132,8 @@ void EditorEngine::Execute()
     // Assume the first frame runs at 60FPS.
     float lastFrameDeltaTime = TimeDuration::FromMilliseconds(16).ToSeconds();
 
+    m_ActiveScene->OnBeginPlay();
+
     while (m_EditorWindow.IsValid() && !m_EditorWindow->IsRequestedToClose())
     {
         Timer currentFrameTimer;
@@ -125,6 +146,8 @@ void EditorEngine::Execute()
         const TimeDuration frameDeltaTime = currentFrameTimer.GetElapsed();
         lastFrameDeltaTime                = frameDeltaTime.ToSeconds();
     }
+
+    m_ActiveScene->OnEndPlay();
 }
 
 void EditorEngine::OnUpdate(float deltaTime)
@@ -134,6 +157,37 @@ void EditorEngine::OnUpdate(float deltaTime)
 
     // Run main update events for engine systems.
     Input::OnUpdate(deltaTime);
+
+    // Update the scene.
+    m_ActiveScene->OnUpdate(deltaTime);
+
+    // Render the scene.
+    if (m_EditorWindow->GetSizeX() > 0 && m_EditorWindow->GetSizeY() > 0)
+    {
+        // Begin the frame.
+        m_EditorRenderingSurface->BeginFrame();
+        const uint32        currentFrameIndex = m_EditorRenderingSurface->GetCurrentFrameIndex();
+        RefPtr<CommandList> commandList       = m_EditorCommandLists[currentFrameIndex];
+        commandList->Begin();
+
+        // Render the scene.
+        m_ActiveSceneRenderer->Render(SceneRendererRenderInfo()
+                                          .SetFrameIndex(currentFrameIndex)
+                                          .SetRenderTarget(m_EditorRenderingSurface->GetCurrentSurfaceTexture2D())
+                                          .SetCommandList(commandList)
+                                          .SetImageAvailableSemaphore(m_EditorRenderingSurface->GetImageAvailableSemaphore())
+                                          .SetRenderFinishedSemaphore(m_EditorRenderingSurface->GetRenderFinishedSemaphore())
+                                          .SetRenderFinishedFence(m_EditorRenderingSurface->GetRenderFinishedFence()));
+
+        // End the frame.
+        commandList->End();
+        g_RenderingDriver->ExecuteCommandList(
+            commandList, CommandListExecuteInfo()
+                             .AddWaitSemaphore(m_EditorRenderingSurface->GetImageAvailableSemaphore(), PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT)
+                             .AddSignalSemaphore(m_EditorRenderingSurface->GetRenderFinishedSemaphore())
+                             .SetSignalFence(m_EditorRenderingSurface->GetRenderFinishedFence()));
+        m_EditorRenderingSurface->EndFrame(true);
+    }
 
     // Run post-update events for engine systems.
     Input::OnPostUpdate(deltaTime);

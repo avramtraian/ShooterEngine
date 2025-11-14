@@ -3,9 +3,10 @@
 #pragma once
 
 #include <Runtime/Application/Window.h>
-#include <Runtime/Core/Containers/OwnPtr.h>
 #include <Runtime/Engine/Engine.h>
 #include <Runtime/Renderer/RHI/RenderingSurface.h>
+#include <Runtime/Renderer/SceneRenderer.h>
+#include <Runtime/Scene/Scene.h>
 
 namespace SE
 {
@@ -13,7 +14,7 @@ namespace SE
 class EditorEngine : public Engine
 {
 public:
-    EditorEngine() = default;
+    EditorEngine()                   = default;
     virtual ~EditorEngine() override = default;
 
     virtual bool Initialize() override;
@@ -26,9 +27,14 @@ private:
 
 private:
     RefPtr<Window> m_EditorWindow;
-    RefPtr<RenderingSurface> m_EditorRenderingSurface;
+
+    RefPtr<RenderingSurface>    m_EditorRenderingSurface;
+    Vector<RefPtr<CommandList>> m_EditorCommandLists;
+
+    RefPtr<Scene>         m_ActiveScene;
+    RefPtr<SceneRenderer> m_ActiveSceneRenderer;
 };
 
 extern EditorEngine* GEditorEngine;
 
-}
+} // namespace SE

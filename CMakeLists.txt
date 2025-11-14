@@ -133,6 +133,10 @@ set(SE_RUNTIME_SOURCE_FILES
     Source/Runtime/Engine/GameEngine.cpp
     Source/Runtime/Engine/GameEngine.h
 
+    Source/Runtime/Renderer/Renderer2D.cpp
+    Source/Runtime/Renderer/Renderer2D.h
+    Source/Runtime/Renderer/SceneRenderer.cpp
+    Source/Runtime/Renderer/SceneRenderer.h
     Source/Runtime/Renderer/RHI/Buffer.h
     Source/Runtime/Renderer/RHI/CommandList.h
     Source/Runtime/Renderer/RHI/GraphicsState.h
