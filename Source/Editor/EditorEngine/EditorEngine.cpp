@@ -36,6 +36,8 @@ bool EditorEngine::Initialize()
         SE_LOG_ERROR("Failed to initialize the primary game window! Aborting the initialization process.");
         return false;
     }
+    m_EditorWindow->GetOnWindowResizedDelegate().AddRaw([](StrongRefPtr<Window> window, uint32 newWindowSizeX, uint32 newWindowSizeY)
+                                                        { GEditorEngine->OnWindowResized(Move(window), newWindowSizeX, newWindowSizeY); });
     SE_LOG_INFO("The primary game window was created successfully.");
 
     const bool inputInitializeResult = Input::Initialize();
@@ -65,10 +67,10 @@ bool EditorEngine::Initialize()
     {
         // Failed to create the rendering surface. As the user can't see anything on the screen without
         // it, there is no point in trying to continue the engine initialization.
-        SE_LOG_ERROR("Failed to create the primary game rendering surface. Aborting the initialization process.");
+        SE_LOG_ERROR("Failed to create the primary editor rendering surface. Aborting the initialization process.");
         return false;
     }
-    SE_LOG_INFO("The primary game rendering surface was created successfully.");
+    SE_LOG_INFO("The primary editor rendering surface was created successfully.");
 
     const bool shaderLibraryInitializeResult = ShaderLibrary::Initialize();
     if (!shaderLibraryInitializeResult)
@@ -135,6 +137,13 @@ void EditorEngine::OnUpdate(float deltaTime)
 
     // Run post-update events for engine systems.
     Input::OnPostUpdate(deltaTime);
+}
+
+void EditorEngine::OnWindowResized(StrongRefPtr<Window> window, uint32 newWindowSizeX, uint32 newWindowSizeY)
+{
+    // Resize the rendering surface when the window is resized.
+    if (newWindowSizeX > 0 && newWindowSizeY > 0)
+        m_EditorRenderingSurface->Invalidate();
 }
 
 } // namespace SE

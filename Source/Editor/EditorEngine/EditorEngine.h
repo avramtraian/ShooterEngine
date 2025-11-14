@@ -22,6 +22,7 @@ public:
 
 private:
     void OnUpdate(float deltaTime);
+    void OnWindowResized(StrongRefPtr<Window> window, uint32 newWindowSizeX, uint32 newWindowSizeY);
 
 private:
     RefPtr<Window> m_EditorWindow;
