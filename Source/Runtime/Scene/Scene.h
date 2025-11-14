@@ -26,12 +26,6 @@ class ComponentPool
     SE_MAKE_NONMOVABLE(ComponentPool);
 
 public:
-    struct EmptySlotEntry
-    {
-        Optional<usize> NextEmptySlotByteOffset;
-    };
-
-public:
     RUNTIME_API ComponentPool(UUID reflectionComponentUUID, usize componentPoolCount);
 
     NODISCARD RUNTIME_API bool HasComponent(EntityID entityID) const;
@@ -106,6 +100,11 @@ public:
 
     // Utility functions for creating an entity utility object from an ID.
     NODISCARD ALWAYS_INLINE Entity GetEntityFromID(EntityID entityID) { return Entity(entityID, AdoptWeakRef(this)); }
+
+    // Returns a list of all currently used entity IDs, no matter the lifecycle of the entity.
+    // TODO: This is very inefficient from a memory usage perspective. This should be an iterator over the internal hash map
+    //       of entities instead of allocating a memory block just to store the entities IDs.
+    NODISCARD RUNTIME_API Vector<EntityID> QueryAllEntities() const;
 
 public:
     NODISCARD RUNTIME_API bool EntityIsPendingDestroy(EntityID entityID) const;

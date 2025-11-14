@@ -250,6 +250,15 @@ void Scene::DestroyEntityDeferred(EntityID entityID)
     m_PendingDestroyEntities.Add(entityID);
 }
 
+Vector<EntityID> Scene::QueryAllEntities() const
+{
+    Vector<EntityID> entityIDs;
+    entityIDs.EnsureCapacity(m_Entities.Count());
+    for (const auto& [entityID, entityMetadata] : m_Entities)
+        entityIDs.Add(entityID);
+    return entityIDs;
+}
+
 bool Scene::EntityIsPendingDestroy(EntityID entityID) const
 {
     SE_ASSERT(entityID != EntityID::Invalid());
