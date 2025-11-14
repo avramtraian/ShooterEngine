@@ -18,9 +18,9 @@ VulkanSurface::VulkanSurface(const RefPtr<Window>& targetWindow)
 {
 #if SE_PLATFORM_WINDOWS
     VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
-    surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-    surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
-    surfaceCreateInfo.hwnd = (HWND)m_TargetWindow->GetNativeHandle();
+    surfaceCreateInfo.sType                       = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+    surfaceCreateInfo.hinstance                   = GetModuleHandle(nullptr);
+    surfaceCreateInfo.hwnd                        = static_cast<HWND>(m_TargetWindow->GetNativeHandle());
 
     if (VkResult result = vkCreateWin32SurfaceKHR(g_VulkanDriver->GetInstance(), &surfaceCreateInfo, nullptr, &m_Handle); result != VK_SUCCESS)
     {
@@ -52,7 +52,7 @@ VulkanRenderingSurface::VulkanRenderingSurface(const RenderingSurfaceInfo& info)
     m_Surface = CreateRef<VulkanSurface>(info.TargetWindow);
 
     // Create the swapchain.
-    Invalidate();
+    VulkanRenderingSurface::Invalidate();
 
     // Create synchronization objects.
     m_RenderFinishedFences.EnsureCapacity(m_MaxFramesInFlight);
@@ -81,11 +81,10 @@ bool VulkanRenderingSurface::Invalidate()
 {
     // Create the swapchain.
     m_Swapchain = CreateRef<VulkanSwapchain>(VulkanSwapchainInfo()
-        .SetSurface(m_Surface)
-        .SetMinImageCount(m_SwapchainMinImageCount)
-        .SetMaxFramesInFlight(m_MaxFramesInFlight)
-        .SetOldSwapchain(m_Swapchain)
-    );
+                                                 .SetSurface(m_Surface)
+                                                 .SetMinImageCount(m_SwapchainMinImageCount)
+                                                 .SetMaxFramesInFlight(m_MaxFramesInFlight)
+                                                 .SetOldSwapchain(m_Swapchain));
 
     // Create the swapchain textures.
     m_SwapchainTextures.Clear();
@@ -114,34 +113,33 @@ void VulkanRenderingSurface::BeginFrame()
     }
 
     // Wait for the previous frame with the same index as this one to end.
-    VkFence renderFinishedFence = (VkFence)GetRenderFinishedFence();
+    VkFence renderFinishedFence = static_cast<VkFence>(GetRenderFinishedFence());
     g_VulkanDriver->WaitForFence(renderFinishedFence, UINT64_MAX);
     g_VulkanDriver->ResetFence(renderFinishedFence);
 
     // Acquire the swapchain image.
-    SE_VULKAN_CHECK(vkAcquireNextImageKHR(
-        g_VulkanDriver->GetDevice(),
-        m_Swapchain->GetHandle(),
-        UINT64_MAX,
-        (VkSemaphore)GetImageAvailableSemaphore(),
-        VK_NULL_HANDLE,
-        &m_CurrentSwapchainImageIndex));
+    SE_VULKAN_CHECK(vkAcquireNextImageKHR(g_VulkanDriver->GetDevice(),
+                                          m_Swapchain->GetHandle(),
+                                          UINT64_MAX,
+                                          static_cast<VkSemaphore>(GetImageAvailableSemaphore()),
+                                          VK_NULL_HANDLE,
+                                          &m_CurrentSwapchainImageIndex));
 }
 
 void VulkanRenderingSurface::EndFrame(bool waitForRenderFinishedSemaphore)
 {
-    VkSemaphore renderFinishedSemaphore = (VkSemaphore)GetRenderFinishedSemaphore();
-    VkSwapchainKHR swapchainHandle = m_Swapchain->GetHandle();
+    VkSemaphore    renderFinishedSemaphore = static_cast<VkSemaphore>(GetRenderFinishedSemaphore());
+    VkSwapchainKHR swapchainHandle         = m_Swapchain->GetHandle();
 
-    VkResult presentResult = VK_SUCCESS;
-    VkPresentInfoKHR presentInfo = {};
-    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    VkResult         presentResult = VK_SUCCESS;
+    VkPresentInfoKHR presentInfo   = {};
+    presentInfo.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
     presentInfo.waitSemaphoreCount = waitForRenderFinishedSemaphore ? 1 : 0;
-    presentInfo.pWaitSemaphores = waitForRenderFinishedSemaphore ? &renderFinishedSemaphore : 0;
-    presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = &swapchainHandle;
-    presentInfo.pImageIndices = &m_CurrentSwapchainImageIndex;
-    presentInfo.pResults = &presentResult;
+    presentInfo.pWaitSemaphores    = waitForRenderFinishedSemaphore ? &renderFinishedSemaphore : 0;
+    presentInfo.swapchainCount     = 1;
+    presentInfo.pSwapchains        = &swapchainHandle;
+    presentInfo.pImageIndices      = &m_CurrentSwapchainImageIndex;
+    presentInfo.pResults           = &presentResult;
 
     // Submit the presentation request to the present queue.
     const VkResult queuePresentResult = vkQueuePresentKHR(g_VulkanDriver->GetPresentQueue(), &presentInfo);
@@ -161,7 +159,7 @@ void VulkanRenderingSurface::EndFrame(bool waitForRenderFinishedSemaphore)
 // returned in any order and their selection is entirely determined by the driver! Frame indices however are managed entirely
 // by the rendering surface, and each new frame index is determined by incrementing the previous one and modulo-ing it by
 // the max number of frames in-flight. Thus, choosing which semaphore or fence to use in a specific frame boils down to which index
-// (image or frame) to chose.
+// (image or frame) to choose.
 //
 // 'vkAcquireNextImageKHR' requires a image-available semaphore. Since the image index is not known yet, it is obvious that we will
 // index into the image-available semaphores array using the frame index. But in order to ensure that the semaphore is not still in use
@@ -169,10 +167,10 @@ void VulkanRenderingSurface::EndFrame(bool waitForRenderFinishedSemaphore)
 // unknown, we will index into the render-finished fences array using the frame index.
 //
 // The render-finished semaphore is a bit more special because it is used (waiting for) by 'vkQueuePresentKHR'. Depending on many factors,
-// such as the present mode, the presentation might happens many frames later, and thus the semaphore is locked by the 'vkQueuePresentKHR'
+// such as the present mode, the presentation might happen many frames later, and thus the semaphore is locked by the 'vkQueuePresentKHR'
 // by a number of frames potentially greater than the max frames in-flight. If we index by the image index, since the image was just acquired,
 // we can be certain that it was already presented (At some point) and thus the corresponding semaphore is unused (since it must have been signaled,
-// as no presentation would have happen otherwise). This makes indexing by the image index _always_ safe.
+// as no presentation would have happened otherwise). This makes indexing by the image index _always_ safe.
 //
 
 SemaphoreHandle VulkanRenderingSurface::GetImageAvailableSemaphore()
@@ -190,4 +188,4 @@ FenceHandle VulkanRenderingSurface::GetRenderFinishedFence()
     return m_RenderFinishedFences[m_CurrentFrameIndex];
 }
 
-}
+} // namespace SE

@@ -48,7 +48,7 @@ public:
     NODISCARD ALWAYS_INLINE uint32 GetSizeY() const { return m_SizeY; }
     NODISCARD ALWAYS_INLINE const ImmutableProperties& GetImmutableProperties() const { return m_ImmutableProperties; }
     
-    NODISCARD ALWAYS_INLINE uint32 GetImageCount() const { return (uint32)m_Images.Count(); }
+    NODISCARD ALWAYS_INLINE uint32 GetImageCount() const { return static_cast<uint32>(m_Images.Count()); }
     NODISCARD ALWAYS_INLINE const Vector<VkImage>& GetImages() const { return m_Images; }
     NODISCARD ALWAYS_INLINE const Vector<VkImageView>& GetImageViews() const { return m_ImageViews; }
 
@@ -60,10 +60,10 @@ public:
     }
 
     NODISCARD ALWAYS_INLINE const Vector<SemaphoreHandle>& GetRenderFinishedSemaphores() const { return m_RenderFinishedSemaphores; }
-    NODISCARD ALWAYS_INLINE SemaphoreHandle GetRenderFinishedSemaphore(uint32 frameIndex) const
+    NODISCARD ALWAYS_INLINE SemaphoreHandle GetRenderFinishedSemaphore(uint32 imageIndex) const
     {
-        SE_ASSERT(frameIndex < m_RenderFinishedSemaphores.Count());
-        return m_RenderFinishedSemaphores.At(frameIndex);
+        SE_ASSERT(imageIndex < m_RenderFinishedSemaphores.Count());
+        return m_RenderFinishedSemaphores.At(imageIndex);
     }
 
 private:

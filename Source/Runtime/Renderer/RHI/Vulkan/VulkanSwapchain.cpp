@@ -70,7 +70,7 @@ VulkanSwapchain::VulkanSwapchain(const VulkanSwapchainInfo& info)
     swapchainCreateInfo.clipped                  = VK_FALSE;
     swapchainCreateInfo.oldSwapchain             = (info.OldSwapchain.IsValid()) ? info.OldSwapchain->GetHandle() : VK_NULL_HANDLE;
 
-    const VkResult swapchainCreateResult         = vkCreateSwapchainKHR(g_VulkanDriver->GetDevice(), &swapchainCreateInfo, nullptr, &m_Handle);
+    const VkResult swapchainCreateResult = vkCreateSwapchainKHR(g_VulkanDriver->GetDevice(), &swapchainCreateInfo, nullptr, &m_Handle);
     if (swapchainCreateResult != VK_SUCCESS)
     {
         SE_LOG_ERROR("Failed to create the [Vulkan] swapchain! (Result: %d)", swapchainCreateResult);
@@ -102,7 +102,7 @@ VulkanSwapchain::VulkanSwapchain(const VulkanSwapchainInfo& info)
         imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
         imageViewCreateInfo.subresourceRange.layerCount     = 1;
 
-        VkImageView imageViewHandle                         = VK_NULL_HANDLE;
+        VkImageView imageViewHandle = VK_NULL_HANDLE;
         if (VkResult result = vkCreateImageView(g_VulkanDriver->GetDevice(), &imageViewCreateInfo, nullptr, &imageViewHandle); result != VK_SUCCESS)
         {
             SE_LOG_ERROR("Failed to create [Vulkan] image view for swapchain image! (Result: %d)", result);
@@ -114,13 +114,12 @@ VulkanSwapchain::VulkanSwapchain(const VulkanSwapchainInfo& info)
     // Create the synchronization objects.
     {
         m_ImageAvailableSemaphores.EnsureCapacity(info.MaxFramesInFlight);
-        m_RenderFinishedSemaphores.EnsureCapacity(info.MaxFramesInFlight);
-
         for (uint32 frameIndex = 0; frameIndex < info.MaxFramesInFlight; ++frameIndex)
-        {
             m_ImageAvailableSemaphores.Add(g_VulkanDriver->AcquireSemaphore());
+
+        m_RenderFinishedSemaphores.EnsureCapacity(GetImageCount());
+        for (uint32 imageIndex = 0; imageIndex < GetImageCount(); ++imageIndex)
             m_RenderFinishedSemaphores.Add(g_VulkanDriver->AcquireSemaphore());
-        }
     }
 }
 
@@ -158,8 +157,8 @@ VkPresentModeKHR VulkanSwapchain::FindBestPresentMode(VkSurfaceKHR surface) cons
     if (getPresentModesResult == VK_SUCCESS)
     {
         availablePresentModes.SetCountDefaulted(availablePresentModeCount);
-        SE_VULKAN_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(g_VulkanDriver->GetPhysicalDevice().Handle, surface, &availablePresentModeCount,
-                                                                  availablePresentModes.Elements()));
+        SE_VULKAN_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(
+            g_VulkanDriver->GetPhysicalDevice().Handle, surface, &availablePresentModeCount, availablePresentModes.Elements()));
         SE_ENSURE(availablePresentModes.Count() == availablePresentModeCount);
     }
 
