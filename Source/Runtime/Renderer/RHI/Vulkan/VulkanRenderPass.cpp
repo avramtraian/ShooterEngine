@@ -113,13 +113,13 @@ VulkanFramebuffer* VulkanRenderPass::AcquireCompatibleFramebuffer(const RenderPa
     }
 
     Vector<RefPtr<Texture2D>> framebufferTextures;
-    framebufferTextures.EnsureCapacity(beginInfo.ColorAttachmentTextures.Count());
+    framebufferTextures.SetCountDefaulted(beginInfo.ColorAttachmentTextures.Count());
     for (const auto& [colorAttachmentIndex, colorAttachmentTexture] : beginInfo.ColorAttachmentTextures)
     {
         if (colorAttachmentIndex >= framebufferTextures.Count())
         {
             SE_LOG_ERROR(
-                "The begin info structure specifies a color attachment index that is not in the render pass specification! (AttachmetIndex: %d)",
+                "The begin info structure specifies a color attachment index that is not in the render pass specification! (AttachmentIndex: %d)",
                 colorAttachmentIndex
             );
             return nullptr;
@@ -146,8 +146,8 @@ VulkanFramebuffer* VulkanRenderPass::AcquireCompatibleFramebuffer(const RenderPa
         return invalidFramebuffer;
     }
 
-    // TODO(Traian): Try to destroy/invalidate existing but unused framebuffers instead of creating
-    // a new every time it is required. This can cause big memory leaks.
+    // TODO: Try to destroy/invalidate existing but unused framebuffers instead of creating
+    //       a new every time it is required. This can cause big memory leaks.
     SE_ASSERT(m_CachedFramebuffers.Count() < 1024);
 
     CachedFramebuffer& cachedFramebuffer = m_CachedFramebuffers.Emplace();
